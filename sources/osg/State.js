@@ -424,10 +424,25 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         }
     },
 
+    _createAttributeStack: function ( attributeMap, key, globalDefault ) {
+
+        var attributeStack = new Stack();
+
+        attributeMap[ key ] = attributeStack;
+        attributeMap[ key ].globalDefault = globalDefault;
+        attributeMap.dirty();
+
+        return attributeStack;
+
+    },
+
     haveAppliedAttribute: function ( attribute ) {
 
         var key = attribute.getTypeMember();
         var attributeStack = this.attributeMap[ key ];
+        if ( !attributeStack ) {
+            attributeStack = this._createAttributeStack( this.attributeMap, key, attribute.cloneType() );
+        }
         attributeStack.lastApplied = attribute;
         attributeStack.asChanged = true;
 
@@ -439,12 +454,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var attributeMap = this.attributeMap;
         var attributeStack = attributeMap[ key ];
-
         if ( !attributeStack ) {
-            attributeStack = new Stack();
-            attributeMap[ key ] = attributeStack;
-            attributeMap[ key ].globalDefault = attribute.cloneType();
-            this.attributeMap.dirty();
+            attributeStack = this._createAttributeStack( this.attributeMap, key, attribute.cloneType() );
         }
 
         if ( attributeStack.lastApplied !== attribute ) {
@@ -464,21 +475,14 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         gl.activeTexture( gl.TEXTURE0 + unit );
         var key = attribute.getTypeMember();
 
-
         if ( !this.textureAttributeMapList[ unit ] ) {
             this.textureAttributeMapList[ unit ] = new Map();
         }
 
         var textureUnitAttributeMap = this.getOrCreateTextureAttributeMap( unit );
         var attributeStack = textureUnitAttributeMap[ key ];
-
         if ( !attributeStack ) {
-
-            attributeStack = new Stack();
-            textureUnitAttributeMap[ key ] = attributeStack;
-            textureUnitAttributeMap.dirty();
-            attributeStack.globalDefault = attribute.cloneType();
-
+            attributeStack = this._createAttributeStack( textureUnitAttributeMap, key, attribute.cloneType() );
         }
 
         if ( attributeStack.lastApplied !== attribute ) {
@@ -605,10 +609,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var uniformPair = stateSetUniformMap[ key ];
             uniform = uniformPair.getUniform();
             name = uniform.getName();
-            if ( uniformMap[ name ] === undefined ) {
-                uniformMap[ name ] = new Stack();
-                uniformMap[ name ].globalDefault = uniform;
-                uniformMap.dirty();
+            if ( !uniformMap[ name ] ) {
+                this._createAttributeStack( uniformMap, name, uniform );
             }
 
             this.pushCheckOverride( uniformMap[ name ], uniform, uniformPair.getValue() );
@@ -701,11 +703,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var attributeMap = this.attributeMap;
 
         if ( attributeMap[ typeMember ] === undefined ) {
-            attributeMap[ typeMember ] = new Stack();
-            attributeMap.dirty();
+            this._createAttributeStack( attributeMap, typeMember, attribute );
+        } else {
+            attributeMap[ typeMember ].globalDefault = attribute;
         }
-
-        attributeMap[ typeMember ].globalDefault = attribute;
     },
 
     getGlobalDefaultAttribute: function ( typeMember ) {
@@ -719,13 +720,13 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var attributeMap = this.getOrCreateTextureAttributeMap( unit );
 
         var typeMember = attribute.getTypeMember();
+
         if ( attributeMap[ typeMember ] === undefined ) {
-            attributeMap[ typeMember ] = new Stack();
-            attributeMap.dirty();
+            this._createAttributeStack( attributeMap, typeMember, attribute );
+        } else {
+            attributeMap[ typeMember ].globalDefault = attribute;
         }
 
-        var as = attributeMap[ typeMember ];
-        as.globalDefault = attribute;
     },
 
     getGlobalDefaultTextureAttribute: function ( unit, typeMember ) {
@@ -751,10 +752,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var attribute = attributePair.getAttribute();
 
             if ( attributeMap[ type ] === undefined ) {
-                attributeMap[ type ] = new Stack();
-                attributeMap[ type ].globalDefault = attribute.cloneType();
-
-                attributeMap.dirty();
+                this._createAttributeStack( attributeMap, type, attribute.cloneType() );
             }
 
             attributeStack = attributeMap[ type ];
