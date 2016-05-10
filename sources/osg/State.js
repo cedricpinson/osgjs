@@ -485,6 +485,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             attributeStack = this._createAttributeStack( textureUnitAttributeMap, key, attribute.cloneType() );
         }
 
+
         if ( attributeStack.lastApplied !== attribute ) {
 
             if ( attribute.apply ) {
