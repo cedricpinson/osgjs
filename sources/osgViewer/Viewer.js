@@ -114,7 +114,6 @@ var Viewer = function ( canvas, userOptions, error ) {
     this.setUpView( gl.canvas, options );
 
     this._hmd = null;
-    this._useVR = false; // if we use custom requestAnimationFrame
 
     this._contextLost = false;
 };
@@ -406,14 +405,16 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         var render = function () {
             if ( !self.done() ) {
 
-                if ( self._useVR )
+                var isPresentingVR = self._hmd && self._hmd.isPresenting;
+
+                if ( isPresentingVR )
                     self._requestID = self._hmd.requestAnimationFrame( render );
                 else
                     self._requestID = window.requestAnimationFrame( render, self.getGraphicContext().canvas );
 
                 self.frame();
 
-                if ( self._useVR )
+                if ( isPresentingVR )
                     self._hmd.submitFrame( self._eventProxy.WebVR._lastPose );
             }
         };
@@ -422,6 +423,10 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
     setVRDisplay: function ( hmd ) {
         this._hmd = hmd;
+    },
+
+    getVRDisplay: function () {
+        return this._hmd;
     },
 
     setPresentVR: function ( bool ) {
@@ -436,12 +441,12 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         if ( !this._hmd.capabilities.canPresent )
             return;
 
-        this._useVR = bool;
-
         if ( bool ) {
-            this._hmd.requestPresent( [ {
+            var layers = [ {
                 source: this.getGraphicContext().canvas
-            } ] );
+            } ];
+            this._hmd.requestPresent( layers );
+
         } else {
             this._hmd.exitPresent();
         }

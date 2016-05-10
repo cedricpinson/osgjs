@@ -7,9 +7,8 @@ var FirstPersonManipulatorWebVRController = function ( manipulator ) {
 
 FirstPersonManipulatorWebVRController.prototype = {
     init: function () {},
-    update: function ( quaternion ) {
-
-        this._manipulator.setRotationBaseFromQuat( quaternion );
+    update: function ( quat, position ) {
+        this._manipulator.setPoseVR( quat, position );
     }
 };
 

@@ -1,5 +1,6 @@
 'use strict';
 var Quat = require( 'osg/Quat' );
+var Vec3 = require( 'osg/Vec3' );
 
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
@@ -128,12 +129,13 @@ FirstPersonManipulatorDeviceOrientationController.prototype = {
     init: function () {
         this._stepFactor = 1.0; // meaning radius*stepFactor to move
         this._quat = Quat.create();
+        this._pos = Vec3.create();
     },
 
     update: function ( deviceOrientation, screenOrientation ) {
 
         FirstPersonManipulatorDeviceOrientationController.computeQuaternion( this._quat, deviceOrientation, screenOrientation );
-        this._manipulator.setRotationBaseFromQuat( this._quat );
+        this._manipulator.setPoseVR( this._quat, this._pos );
     }
 
 };

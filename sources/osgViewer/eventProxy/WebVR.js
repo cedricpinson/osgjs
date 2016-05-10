@@ -1,6 +1,7 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
 var Quat = require( 'osg/Quat' );
+var Vec3 = require( 'osg/Vec3' );
 
 
 var WebVR = function ( viewer ) {
@@ -11,11 +12,18 @@ var WebVR = function ( viewer ) {
     this._hmd = undefined;
     this._sensor = undefined;
 
-    this._quat = Quat.create();
     this._lastPose = undefined; // so that we can pass it to the submitFrame call
+    this._quat = Quat.create();
+    this._pos = Vec3.create();
+
+    this._worldScale = 1.0;
 };
 
 WebVR.prototype = {
+
+    setWorldScale: function ( val ) {
+        this._worldScale = val;
+    },
 
     setEnable: function ( bool ) {
         this._enable = bool;
@@ -73,22 +81,30 @@ WebVR.prototype = {
         if ( !manipulatorAdapter.update )
             return;
 
-        if ( !this._hmd.capabilities.hasOrientation )
+        if ( !this._hmd.capabilities.hasOrientation || !this._hmd.capabilities.hasPosition )
             return;
 
         this._lastPose = this._hmd.getPose(); // if no prediction, call this._hmd.getImmediatePose()
 
+        // WebVR up vector is Y
+        // OSGJS up vector is Z
+
         var quat = this._lastPose.orientation;
-        if ( !quat ) return;
+        if ( quat ) {
+            this._quat[ 0 ] = quat[ 0 ];
+            this._quat[ 1 ] = -quat[ 2 ];
+            this._quat[ 2 ] = quat[ 1 ];
+            this._quat[ 3 ] = quat[ 3 ];
+        }
 
-        // On oculus the up vector is [0,1,0]
-        // On osgjs the up vector is [0,0,1]
-        this._quat[ 0 ] = quat[ 0 ];
-        this._quat[ 1 ] = -quat[ 2 ];
-        this._quat[ 2 ] = quat[ 1 ];
-        this._quat[ 3 ] = quat[ 3 ];
+        var pos = this._lastPose.position;
+        if ( pos ) {
+            this._pos[ 0 ] = pos[ 0 ] * this._worldScale;
+            this._pos[ 1 ] = -pos[ 2 ] * this._worldScale;
+            this._pos[ 2 ] = pos[ 1 ] * this._worldScale;
+        }
 
-        manipulatorAdapter.update( this._quat );
+        manipulatorAdapter.update( this._quat, this._pos );
     },
 
     getHmd: function () {

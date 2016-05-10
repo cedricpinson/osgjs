@@ -5,6 +5,7 @@ var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
 var Matrix = require( 'osg/Matrix' );
 var Vec2 = require( 'osg/Vec2' );
 var Vec3 = require( 'osg/Vec3' );
+var Quat = require( 'osg/Quat' );
 var FirstPersonManipulatorDeviceOrientationController = require( 'osgGA/FirstPersonManipulatorDeviceOrientationController' );
 var FirstPersonManipulatorHammerController = require( 'osgGA/FirstPersonManipulatorHammerController' );
 var FirstPersonManipulatorWebVRController = require( 'osgGA/FirstPersonManipulatorWebVRController' );
@@ -56,14 +57,17 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         this._zoom = new OrbitManipulator.Interpolator( 1 );
 
         this._stepFactor = 1.0; // meaning radius*stepFactor to move
-        this._target = Vec3.create();
         this._angleVertical = 0.0;
         this._angleHorizontal = 0.0;
 
         // tmp value use for computation
         this._tmpGetTargetDir = Vec3.create();
 
-        this._rotBase = Matrix.create();
+        // vr controls
+        this._vrEnable = false;
+        this._vrRot = Quat.create(); // absolute orientation
+        this._vrPos = Vec3.create(); // absolute position
+        this._vrTrans = Vec3.create(); // delta translation since last update
 
         var self = this;
 
@@ -105,9 +109,6 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
     },
 
     setTarget: function ( pos ) {
-        this._target[ 0 ] = pos[ 0 ];
-        this._target[ 1 ] = pos[ 1 ];
-        this._target[ 2 ] = pos[ 2 ];
         var dir = this._tmpGetTargetDir;
         Vec3.sub( pos, this._eye, dir );
         dir[ 2 ] = 0.0;
@@ -145,7 +146,6 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
 
     computeRotation: ( function () {
         var first = Matrix.create();
-        var second = Matrix.create();
         var rotMat = Matrix.create();
 
         var upy = Vec3.createAndSet( 0.0, 1.0, 0.0 );
@@ -157,17 +157,20 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             if ( this._angleVertical > LIMIT ) this._angleVertical = LIMIT;
             else if ( this._angleVertical < -LIMIT ) this._angleVertical = -LIMIT;
 
-            Matrix.makeRotate( -this._angleVertical, 1.0, 0.0, 0.0, first );
-            Matrix.makeRotate( -this._angleHorizontal, 0.0, 0.0, 1.0, second );
-            Matrix.mult( second, first, rotMat );
+            if ( this._vrEnable ) {
+                Quat.transformVec3( this._vrRot, upy, this._direction );
+                Vec3.normalize( this._direction, this._direction );
+                Quat.transformVec3( this._vrRot, upz, this._up );
 
-            // TOTO refactor the way the rotation matrix is managed
-            Matrix.preMult( rotMat, this._rotBase );
+            } else {
+                Matrix.makeRotate( -this._angleVertical, 1.0, 0.0, 0.0, first );
+                Matrix.makeRotate( -this._angleHorizontal, 0.0, 0.0, 1.0, rotMat );
+                Matrix.preMult( rotMat, first );
 
-            Matrix.transformVec3( rotMat, upy, this._direction );
-            Vec3.normalize( this._direction, this._direction );
-
-            Matrix.transformVec3( rotMat, upz, this._up );
+                Matrix.transformVec3( rotMat, upy, this._direction );
+                Vec3.normalize( this._direction, this._direction );
+                Matrix.transformVec3( rotMat, upz, this._up );
+            }
         };
     } )(),
     reset: function () {
@@ -183,23 +186,19 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         this._stepFactor = t;
     },
 
-    update: ( function () {
-        var vec = Vec2.createAndSet( 0.0, 0.0 );
-        return function ( nv ) {
-            var dt = nv.getFrameStamp().getDeltaTime();
+    computePosition: ( function () {
+        var vec = Vec2.create();
 
+        return function ( dt ) {
             this._forward.update( dt );
             this._side.update( dt );
-            var delta = this._lookPosition.update( dt );
-
-            this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
 
             // TDOO why check with epsilon ?
             var factor = this._distance < 1e-3 ? 1e-3 : this._distance;
 
             // see comment in orbitManipulator for fov modulation speed
             var proj = this._camera.getProjectionMatrix();
-            var vFov = proj[ 15 ] === 1 ? 1.0 : 2.00 / proj[ 5 ];
+            var vFov = proj[ 15 ] === 1 ? 1.0 : 2.0 / proj[ 5 ];
 
             // time based displacement vector
             vec[ 0 ] = this._forward.getCurrent()[ 0 ];
@@ -218,14 +217,35 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             this.strafe( vec[ 1 ] * timeFactor - pan[ 0 ] * directFactor );
             this.strafeVertical( -pan[ 1 ] * directFactor );
 
-            Vec3.add( this._eye, this._direction, this._target );
-
-            Matrix.makeLookAt( this._eye, this._target, this._up, this._inverseMatrix );
+            if ( this._vrEnable )
+                Vec3.add( this._eye, this._vrTrans, this._eye );
         };
     } )(),
 
-    setRotationBaseFromQuat: function ( quat ) {
-        Matrix.makeRotateFromQuat( quat, this._rotBase );
+
+    update: ( function () {
+        var tmpTarget = Vec3.create();
+
+        return function ( nv ) {
+
+            var dt = nv.getFrameStamp().getDeltaTime();
+
+            var delta = this._lookPosition.update( dt );
+            this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
+            this.computePosition( dt );
+
+            Vec3.add( this._eye, this._direction, tmpTarget );
+            Matrix.makeLookAt( this._eye, tmpTarget, this._up, this._inverseMatrix );
+
+            this._vrEnable = false; // setPoseVR is called on each frame
+        };
+    } )(),
+
+    setPoseVR: function ( quat, pos ) {
+        this._vrEnable = true;
+        Quat.copy( quat, this._vrRot );
+        Vec3.sub( pos, this._vrPos, this._vrTrans );
+        Vec3.copy( pos, this._vrPos );
     },
 
     moveForward: ( function () {

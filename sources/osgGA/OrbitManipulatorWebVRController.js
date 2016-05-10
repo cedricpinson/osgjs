@@ -7,11 +7,9 @@ var OrbitManipulatorWebVRController = function ( manipulator ) {
 
 OrbitManipulatorWebVRController.prototype = {
     init: function () {},
-    update: function ( quaternion ) {
-
-        this._manipulator.setRotationBaseFromQuat( quaternion );
+    update: function ( quat, position ) {
+        this._manipulator.setPoseVR( quat, position );
     }
-
 };
 
 module.exports = OrbitManipulatorWebVRController;
