@@ -124,7 +124,8 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._rotation = Matrix.create();
         Matrix.mult( rot1, rot2, this._rotation );
         this._time = 0.0;
-        this._rotBase = Matrix.create();
+
+        this._vrMatrix = Matrix.create();
 
         this._rotate = new OrbitManipulator.Interpolator( 2 );
         this._pan = new OrbitManipulator.Interpolator( 2 );
@@ -256,9 +257,6 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         return this._distance;
     },
 
-    setRotationBaseFromQuat: function ( quat ) {
-        Matrix.makeRotateFromQuat( quat, this._rotBase );
-    },
     getSpeedFactor: function () {
         return Math.max( this._distance, this._minSpeed );
     },
@@ -401,22 +399,29 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             var distance = this._distance;
 
             /* 1. Works but bypass other manipulators */
-            // Matrix.copy( this._rotBase, this._inverseMatrix );
+            // Matrix.copy( this._vrMatrix, this._inverseMatrix );
 
             /* 2. Works but gets broken by other manipulators */
             Matrix.inverse( this._rotation, this._inverseMatrix );
-            Matrix.postMult( this._rotBase, this._inverseMatrix );
+            Matrix.postMult( this._vrMatrix, this._inverseMatrix );
 
             /* 3. Doesnt' work */
-            // Matrix.preMult( this._rotBase, this._rotation );
-            // Matrix.inverse( this._rotBase, this._inverseMatrix );
+            // Matrix.preMult( this._vrMatrix, this._rotation );
+            // Matrix.inverse( this._vrMatrix, this._inverseMatrix );
 
             Vec3.set( 0.0, distance, 0.0, eye );
             Matrix.transformVec3( this._inverseMatrix, eye, eye );
 
             Matrix.makeLookAt( Vec3.add( target, eye, eye ), target, this._upz, this._inverseMatrix );
         };
-    } )()
+    } )(),
+
+    setPoseVR: function ( quat /*, pos*/ ) {
+        Matrix.makeRotateFromQuat( quat, this._vrMatrix );
+        // this._vrMatrix[ 12 ] = pos[ 0 ];
+        // this._vrMatrix[ 13 ] = pos[ 1 ];
+        // this._vrMatrix[ 14 ] = pos[ 2 ];
+    }
 } );
 
 OrbitManipulator.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
