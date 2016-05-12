@@ -3,12 +3,20 @@ var QUnit = require( 'qunit' );
 var mockup = require( 'tests/mockup/mockup' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Texture = require( 'osg/Texture' );
+var WebglCaps = require( 'osg/WebGLCaps' );
 
 
 module.exports = function () {
     QUnit.module( 'osg' );
 
+
     QUnit.test( 'FrameBufferObject', function () {
+
+        var maxRenderBufferSize = WebglCaps.instance().getWebGLParameter( 'MAX_RENDERBUFFER_SIZE' );
+        if ( maxRenderBufferSize === undefined ) {
+            WebglCaps.instance().getWebGLParameters()[ 'MAX_RENDERBUFFER_SIZE' ] = 1;
+            maxRenderBufferSize = 1;
+        }
 
         ( function () {
             var gl = mockup.createFakeRenderer();
@@ -23,18 +31,27 @@ module.exports = function () {
             var b = new FrameBufferObject();
             b.setAttachment( {
                 texture: {
+                    isDirty: function () {
+                        return false;
+                    },
                     getTextureObject: function () {
                         return {
                             id: function () {}
                         };
+                    },
+                    getWidth: function () {
+                        return 1;
+                    },
+                    getHeight: function () {
+                        return 1;
                     }
                 },
                 textureTarget: 'textureTarget'
             } );
             b.setAttachment( {
                 format: 'texture',
-                width: 512,
-                height: 512
+                width: 1,
+                height: 1
             } );
 
             b.dirty();
@@ -43,6 +60,36 @@ module.exports = function () {
             ok( b.getFrameBufferObject() !== undefined, 'Check we created gl framebuffer' );
             b.releaseGLObjects();
             ok( b.getFrameBufferObject() === undefined, 'Check we released gl famebuffer' );
+
+            // check wrong frame buffer sizes
+            b.setAttachment( {
+                texture: {
+                    isDirty: function () {
+                        return false;
+                    },
+                    getTextureObject: function () {
+                        return {
+                            id: function () {}
+                        };
+                    },
+                    getWidth: function () {
+                        return maxRenderBufferSize + 1;
+                    },
+                    getHeight: function () {
+                        return maxRenderBufferSize + 1;
+                    }
+                },
+                textureTarget: 'textureTarget'
+            } );
+            b.setAttachment( {
+                format: 'texture',
+                width: maxRenderBufferSize + 1,
+                height: maxRenderBufferSize + 1
+            } );
+
+            b.dirty();
+            b.apply( state );
+            ok( b.getFrameBufferObject() === undefined, 'Check we did not created gl framebuffer' );
 
 
         } )();

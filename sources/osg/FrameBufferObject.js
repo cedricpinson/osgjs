@@ -4,19 +4,21 @@ var MACROUTILS = require( 'osg/Utils' );
 var GLObject = require( 'osg/GLObject' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Timer = require( 'osg/Timer' );
-
+var WebglCaps = require( 'osg/WebGLCaps' );
 
 /**
  * FrameBufferObject manage fbo / rtt
  * @class FrameBufferObject
  */
 var FrameBufferObject = function () {
+
     GLObject.call( this );
     StateAttribute.call( this );
     this._fbo = undefined;
     this._rbo = undefined;
     this._attachments = [];
     this._dirty = true;
+
 };
 
 FrameBufferObject.COLOR_ATTACHMENT0 = 0x8CE0;
@@ -216,7 +218,14 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         var gl = this._gl;
 
         // apply on unit 1 to init it
+        // make sure we do bind it whatever state stack
+        // texture is cached
         state.applyTextureAttribute( 1, texture );
+
+        if ( texture.isDirty() || !texture.getTextureObject() ) {
+            // image wasn't ready, texture not allocated due to lack of gpu MEM
+            return false;
+        }
 
         gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment, textureTarget, texture.getTextureObject().id(), 0 );
 
@@ -227,6 +236,8 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
             Notify.log( 'FBO: texture: ' + texture.getName() + ' : ' + texture.getTextureObject().id().trackedObject.defaultName + ' fbo: ' + this._fbo.trackedObject.defaultName );
         }
         /* develblock:end */
+
+        return true;
     },
 
     bindFrameBufferObject: function () {
@@ -241,6 +252,19 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         if ( status !== 0x8CD5 ) {
             this._reportFrameBufferError( status );
         }
+
+    },
+
+    _checkAllowedSize: function ( w, h ) {
+
+        var maxSize = WebglCaps.instance().getWebGLParameter( 'MAX_RENDERBUFFER_SIZE' );
+
+        if ( w === 0 || h === 0 || h > maxSize || w > maxSize ) {
+            Notify.error( 'width (' + w + ') or height (' + w + ') makes frame buffer not bindable. Max RenderBuffer is "' + maxSize + '"' );
+            return false;
+        }
+
+        return true;
 
     },
 
@@ -270,6 +294,11 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                     // render buffer
                     if ( !attachment.texture ) {
 
+                        if ( !this._checkAllowedSize( attachment.width, attachment.height ) ) {
+                            this.releaseGLObjects();
+                            return;
+                        }
+
                         this._rbo = this.createRenderBuffer( attachment.format, attachment.width, attachment.height );
                         this.framebufferRenderBuffer( attachment.attachment, this._rbo );
                         hasRenderBuffer = true;
@@ -278,7 +307,18 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
                         // use texture
                         var texture = attachment.texture;
-                        this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture );
+
+                        if ( !this._checkAllowedSize( texture.getWidth(), texture.getHeight() ) ) {
+                            this.releaseGLObjects();
+                            return;
+                        }
+
+                        if ( !this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture ) ) {
+                            this.releaseGLObjects();
+                            return;
+
+                        }
+
 
                     }
 

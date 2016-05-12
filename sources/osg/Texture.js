@@ -8,6 +8,7 @@ var GLObject = require( 'osg/GLObject' );
 var ReaderParser = require( 'osgDB/ReaderParser' );
 var CustomMap = require( 'osg/Map' );
 var TextureManager = require( 'osg/TextureManager' );
+var WebglCaps = require( 'osg/WebGLCaps' );
 
 
 // helper
@@ -235,9 +236,20 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
     setTextureSize: function ( w, h ) {
 
-        if ( w !== undefined ) this._textureWidth = w;
-        if ( h !== undefined ) this._textureHeight = h;
+        var maxSize = WebglCaps.instance().getWebGLParameter( 'MAX_TEXTURE_SIZE' );
 
+        if ( w !== undefined ) {
+            if ( w > maxSize ) {
+                Notify.error( 'width (' + w + ') too big for GPU. Max Texture Size is "' + maxSize + '"' );
+            }
+            this._textureWidth = w;
+        }
+        if ( h !== undefined ) {
+            if ( h > maxSize ) {
+                Notify.error( 'height (' + h + ') too big for GPU. Max Texture Size is "' + maxSize + '"' );
+            }
+            this._textureHeight = h;
+        }
         this._textureNull = false;
     },
 
