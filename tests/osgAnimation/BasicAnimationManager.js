@@ -6,6 +6,7 @@ var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
 var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
 var StackedRotateAxis = require( 'osgAnimation/StackedRotateAxis' );
 var StackedMatrix = require( 'osgAnimation/StackedMatrix' );
+var Matrix = require( 'osg/Matrix' );
 
 
 module.exports = function () {
@@ -134,7 +135,7 @@ module.exports = function () {
         basicAnimationManager.update( null, nv );
         equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
 
-        deepEqual( animationCallback._matrix, [ 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 'check matrix computed' );
+        deepEqual( animationCallback._matrix, Matrix.createAndSet( 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ), 'check matrix computed' );
 
     } );
 
@@ -158,6 +159,7 @@ module.exports = function () {
             managerTime = t;
         };
 
+        var time = 0.0;
         var pause = false;
         var togglePause = function () {
             pause = !pause;
@@ -167,7 +169,6 @@ module.exports = function () {
         };
 
         //mockup a node visitor
-        var time = 0.0;
         var nv = {
             getFrameStamp: function () {
                 return {

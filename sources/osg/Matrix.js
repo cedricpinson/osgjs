@@ -30,6 +30,28 @@ var Matrix = {
         out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
         return out;
     },
+
+    createAndSet: function ( x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15 ) {
+        var out = Matrix.create();
+        out[ 0 ] = x0;
+        out[ 1 ] = x1;
+        out[ 2 ] = x2;
+        out[ 3 ] = x3;
+        out[ 4 ] = x4;
+        out[ 5 ] = x5;
+        out[ 6 ] = x6;
+        out[ 7 ] = x7;
+        out[ 8 ] = x8;
+        out[ 9 ] = x9;
+        out[ 10 ] = x10;
+        out[ 11 ] = x11;
+        out[ 12 ] = x12;
+        out[ 13 ] = x13;
+        out[ 14 ] = x14;
+        out[ 15 ] = x15;
+        return out;
+    },
+
     isIdentity: function ( matrix ) {
         for ( var i = 0; i < 16; i++ ) {
             if ( matrix[ i ] !== Matrix.identity[ i ] ) {
@@ -1417,10 +1439,10 @@ var Matrix = {
         var x = 1.0 / projectionMatrix[ 0 ];
         var y = 1.0 / projectionMatrix[ 1 * 4 + 1 ];
 
-        vectorsArray[ 0 ] = [ -x, y, 1.0 ];
-        vectorsArray[ 1 ] = [ -x, -y, 1.0 ];
-        vectorsArray[ 2 ] = [ x, -y, 1.0 ];
-        vectorsArray[ 3 ] = [ x, y, 1.0 ];
+        vectorsArray[ 0 ] = Vec3.createAndSet( -x, y, 1.0 );
+        vectorsArray[ 1 ] = Vec3.createAndSet( -x, -y, 1.0 );
+        vectorsArray[ 2 ] = Vec3.createAndSet( x, -y, 1.0 );
+        vectorsArray[ 3 ] = Vec3.createAndSet( x, y, 1.0 );
         return vectorsArray;
     },
 
