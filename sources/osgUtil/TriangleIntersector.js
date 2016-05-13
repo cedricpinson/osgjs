@@ -142,7 +142,7 @@ TriangleIntersector.prototype = {
                 ratio: r,
                 backface: det < 0.0,
                 nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
-                TriangleIntersection: new TriangleIntersection( normal.slice( 0 ), i0, i1, i2, r0, r1, r2 ),
+                TriangleIntersection: new TriangleIntersection( Vec3.copy( normal, Vec3.create() ), i0, i1, i2, r0, r1, r2 ),
                 point: Vec3.createAndSet( interX, interY, interZ )
             } );
             this.hit = true;

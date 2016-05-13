@@ -11,11 +11,24 @@ var Vec4 = require( 'osg/Vec4' );
 var Mabs = Math.abs;
 var NMIN_VALUE = Number.MIN_VALUE;
 
+// call by closur'd variables because Matrix object is not
+// resolved yet, a workaround would be to define Matrix such as:
+// var Matrix = {};
+// Matrix.create = function... ;
+// Matrix.func2 = function... ;
+var matrixCreate = function () {
+    var out = new Float32Array( 16 );
+    out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
+    return out;
+};
+
 /** @class Matrix Operations */
 var Matrix = {
 
     create: function () {
-        return [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var out = new Float32Array( 16 );
+        out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
+        return out;
     },
     isIdentity: function ( matrix ) {
         for ( var i = 0; i < 16; i++ ) {
@@ -446,10 +459,10 @@ var Matrix = {
     },
 
     getLookAt: ( function () {
-        var inv = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var inv = matrixCreate();
         var v1 = Vec3.create();
-        var v2 = [ 0.0, 1.0, 0.0 ];
-        var v3 = [ 0.0, 0.0, -1.0 ];
+        var v2 = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+        var v3 = Vec3.createAndSet( 0.0, 0.0, -1.0 );
 
         return function ( matrix, eye, center, up, distance ) {
             if ( distance === undefined ) {
@@ -469,12 +482,12 @@ var Matrix = {
 
     //getRotate_David_Spillings_Mk1
     getRotate: ( function () {
-        var tq = [ 0.0, 0.0, 0.0, 0.0 ];
+        var tq = Quat.create();
 
         return function ( mat, quatResult ) {
             if ( quatResult === undefined ) {
                 Notify.warn( 'no quat destination !' );
-                quatResult = [ 0.0, 0.0, 0.0, 0.0 ];
+                quatResult = Quat.create();
             }
 
             var s;
@@ -788,7 +801,7 @@ var Matrix = {
     },
 
     inverse: ( function () {
-        var tmp = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var tmp = matrixCreate();
 
         return function ( matrix, result ) {
             if ( result === matrix ) {
@@ -932,7 +945,7 @@ var Matrix = {
   */
 
     inverse4x3: ( function () {
-        var inv = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var inv = matrixCreate();
 
         return function ( matrix, result ) {
 
@@ -1092,10 +1105,9 @@ var Matrix = {
 
     getFrustumPlanes: ( function () {
 
-        var mvp;
+        var mvp = matrixCreate();
 
         return function ( projection, view, result, withNearFar ) {
-            mvp = mvp ? mvp : Matrix.create();
             Matrix.mult( projection, view, mvp );
 
             if ( withNearFar === undefined )
@@ -1528,6 +1540,6 @@ var Matrix = {
     }
 };
 
-Matrix.identity = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+Matrix.identity = Matrix.create();
 
 module.exports = Matrix;

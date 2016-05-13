@@ -11,12 +11,12 @@ var Msin = Math.sin;
 var Quat = {
 
     create: function () {
-        return [ 0.0, 0.0, 0.0, 1.0 ];
+        var out = new Float32Array( 4 );
+        out[ 3 ] = 1.0;
+        return out;
     },
 
-    createAndSet: function ( x, y, z, w ) {
-        return [ x, y, z, w ];
-    },
+    createAndSet: Vec4.createAndSet,
 
     makeIdentity: function ( element ) {
         return Quat.init( element );
@@ -123,7 +123,6 @@ var Quat = {
     //
     slerp: ( function () {
 
-        var b2 = [ 0.0, 0.0, 0.0, 1.0 ];
         var epsilon = 0.00001;
         // a and be must be normalized
         // (otherwise they're not rotation...)
@@ -133,9 +132,9 @@ var Quat = {
             var cos = this.dot( a, b );
             var b3 = b;
 
+            var invTB = false;
             // shortest path
             if ( cos < 0.0 ) {
-                b3 = this.neg( b, b2 );
                 cos = -cos;
             }
 
@@ -165,6 +164,8 @@ var Quat = {
                 ta = Math.sin( ( 1.0 - t ) * angle ) * oneOverSin;
                 tb = Math.sin( t * angle ) * oneOverSin;
             }
+
+            tb *= invTB;
 
             r[ 0 ] = a[ 0 ] * ta + b3[ 0 ] * tb;
             r[ 1 ] = a[ 1 ] * ta + b3[ 1 ] * tb;

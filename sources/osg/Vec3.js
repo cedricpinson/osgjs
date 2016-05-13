@@ -6,11 +6,15 @@ var osgMath = require( 'osg/Math' );
 var Vec3 = {
 
     create: function () {
-        return [ 0.0, 0.0, 0.0 ];
+        return new Float32Array( 3 );
     },
 
     createAndSet: function ( x, y, z ) {
-        return [ x, y, z ];
+        var out = Vec3.create();
+        out[ 0 ] = x;
+        out[ 1 ] = y;
+        out[ 2 ] = z;
+        return out;
     },
 
     init: function ( a ) {

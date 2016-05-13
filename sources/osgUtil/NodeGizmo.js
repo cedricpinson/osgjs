@@ -874,7 +874,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     updateTranslateEdit: ( function () {
         var vec = Vec2.create();
-        var tra = Vec2.create();
+        var tra = Vec3.create();
 
         return function ( e ) {
 
