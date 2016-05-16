@@ -183,57 +183,28 @@ Utils.Uint8Array = typeof Uint8Array !== 'undefined' ? Uint8Array : null;
 Utils.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
 Utils.Uint32Array = typeof Uint32Array !== 'undefined' ? Uint32Array : null;
 
-Utils.timeStamp = function () {
-
-    var fn = Notify.console.timeStamp || Notify.console.markTimeline || function () {};
-    return fn.apply( Notify.console, arguments );
-
-};
-
 var times = {};
 
-Utils.time = function () {
+// we bind the function to Notify.console once and for all to avoid costly apply function
 
-    var fn = Notify.console.time || function ( name ) {
-        times[ name ] = Timer.instance().tick();
-    };
-    return fn.apply( Notify.console, arguments );
+Utils.time = ( Notify.console.time || function ( name ) {
+    times[ name ] = Timer.instance().tick();
+} ).bind( Notify.console );
 
-};
+Utils.timeEnd = ( Notify.console.timeEnd || function ( name ) {
 
-Utils.timeEnd = function () {
+    if ( times[ name ] === undefined )
+        return;
 
-    var fn = Notify.console.timeEnd || function ( name ) {
+    var duration = Timer.instance().deltaM( times[ name ], Timer.instance().tick() );
 
-        if ( times[ name ] === undefined )
-            return;
+    Notify.debug( name + ': ' + duration + 'ms' );
+    times[ name ] = undefined;
 
-        var duration = Timer.instance().deltaM( times[ name ], Timer.instance().tick() );
+} ).bind( Notify.console );
 
-        Notify.debug( name + ': ' + duration + 'ms' );
-        times[ name ] = undefined;
-
-    };
-    return fn.apply( Notify.console, arguments );
-
-};
-
-Utils.profile = ( function () {
-
-    var fn = Notify.console.profile || function () {};
-    return function () {
-        return fn.apply( Notify.console, arguments );
-    };
-
-} )();
-
-Utils.profileEnd = ( function () {
-
-    var fn = Notify.console.profileEnd || function () {};
-    return function () {
-        return fn.apply( Notify.console, arguments );
-    };
-
-} )();
+Utils.timeStamp = ( Notify.console.timeStamp || Notify.console.markTimeline || function () {} ).bind( Notify.console );
+Utils.profile = ( Notify.console.profile || function () {} ).bind( Notify.console );
+Utils.profileEnd = ( Notify.console.profileEnd || function () {} ).bind( Notify.console );
 
 module.exports = Utils;

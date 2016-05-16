@@ -4,7 +4,7 @@ var utils = require( 'osgShader/utils' );
 var Node = require( 'osgShader/node/Node' );
 
 var NodeTextures = function () {
-    Node.apply( this );
+    Node.call( this );
 };
 
 NodeTextures.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -38,7 +38,7 @@ NodeTextures.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
 
 var TextureRGB = function () {
-    NodeTextures.apply( this );
+    NodeTextures.call( this );
 };
 
 TextureRGB.prototype = MACROUTILS.objectInherit( NodeTextures.prototype, {
@@ -51,7 +51,7 @@ TextureRGB.prototype = MACROUTILS.objectInherit( NodeTextures.prototype, {
 
 
 var TextureRGBA = function () {
-    TextureRGB.apply( this );
+    TextureRGB.call( this );
 };
 
 TextureRGBA.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -63,7 +63,7 @@ TextureRGBA.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
 
 
 var TextureAlpha = function () {
-    TextureRGB.apply( this );
+    TextureRGB.call( this );
 };
 
 TextureAlpha.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -76,7 +76,7 @@ TextureAlpha.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
 
 
 var TextureIntensity = function () {
-    TextureRGB.apply( this );
+    TextureRGB.call( this );
 };
 
 TextureIntensity.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {

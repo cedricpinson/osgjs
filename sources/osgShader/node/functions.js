@@ -8,7 +8,7 @@ var sprintf = utils.sprintf;
 // base to avoid redundant global declarations
 // it's to keep node more readable
 var NodeFunctions = function () {
-    Node.apply( this );
+    Node.call( this );
 };
 
 NodeFunctions.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -21,7 +21,7 @@ NodeFunctions.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
 
 var Normalize = function () {
-    NodeFunctions.apply( this );
+    NodeFunctions.call( this );
 };
 Normalize.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
     type: 'Normalize',
@@ -34,7 +34,7 @@ Normalize.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
 
 
 var sRGBToLinear = function () {
-    NodeFunctions.apply( this );
+    NodeFunctions.call( this );
 };
 
 sRGBToLinear.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
@@ -58,7 +58,7 @@ sRGBToLinear.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
 } );
 
 var LinearTosRGB = function () {
-    sRGBToLinear.apply( this );
+    sRGBToLinear.call( this );
 };
 
 LinearTosRGB.prototype = MACROUTILS.objectInherit( sRGBToLinear.prototype, {
@@ -69,7 +69,7 @@ LinearTosRGB.prototype = MACROUTILS.objectInherit( sRGBToLinear.prototype, {
 } );
 
 var FrontNormal = function () {
-    NodeFunctions.apply( this );
+    NodeFunctions.call( this );
 };
 
 FrontNormal.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
@@ -91,7 +91,7 @@ var getVec3 = function ( vec ) {
     return vec.getType && vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
 };
 var EncodeRGBM = function () {
-    NodeFunctions.apply( this );
+    NodeFunctions.call( this );
 };
 EncodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
     type: 'EncodeRGBM',
@@ -103,7 +103,7 @@ EncodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
 } );
 
 var DecodeRGBM = function () {
-    NodeFunctions.apply( this );
+    NodeFunctions.call( this );
 };
 DecodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
     type: 'DecodeRGBM',
@@ -115,7 +115,7 @@ DecodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
 } );
 
 var Define = function ( name ) {
-    Node.apply( this );
+    Node.call( this );
     this._defineName = name;
     this._defineValue = '';
 };

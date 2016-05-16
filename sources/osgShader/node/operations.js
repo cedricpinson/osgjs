@@ -14,7 +14,7 @@ var sprintf = utils.sprintf;
 // arg2 = input1
 // ...
 var BaseOperator = function () {
-    Node.apply( this );
+    Node.call( this );
 };
 
 BaseOperator.prototype = Node.prototype;
@@ -25,7 +25,7 @@ BaseOperator.prototype = Node.prototype;
 // new Add( output, [ inputs ] )
 // glsl code output = input0 + input1 +...
 var Add = function () {
-    BaseOperator.apply( this );
+    BaseOperator.call( this );
 };
 
 Add.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
@@ -65,7 +65,7 @@ Add.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
 // Mult works like Add
 // glsl code output = input0 * input1 * ...
 var Mult = function () {
-    Add.apply( this );
+    Add.call( this );
 };
 
 Mult.prototype = MACROUTILS.objectInherit( Add.prototype, {
@@ -76,7 +76,7 @@ Mult.prototype = MACROUTILS.objectInherit( Add.prototype, {
 // basic assignement alias: output = input
 // glsl code output = input0
 var SetFromNode = function () {
-    Add.apply( this );
+    Add.call( this );
 };
 SetFromNode.prototype = MACROUTILS.objectInherit( Add.prototype, {
     type: 'SetFromNode'
@@ -87,7 +87,7 @@ SetFromNode.prototype = MACROUTILS.objectInherit( Add.prototype, {
 // if needed
 // glsl code output = matrix * vector4(vec.xyz, 0)
 var MatrixMultDirection = function () {
-    Add.apply( this );
+    Add.call( this );
     this._overwriteW = true; // if set to false, we copy the input alpha in the output alpha
     this._forceComplement = true;
     this._inverseOp = false;
@@ -147,7 +147,7 @@ MatrixMultDirection.prototype = MACROUTILS.objectInherit( Add.prototype, {
 // override only for complement.
 // glsl code output = matrix * vector4(vec.xyz, 1)
 var MatrixMultPosition = function () {
-    MatrixMultDirection.apply( this );
+    MatrixMultDirection.call( this );
     this._forceComplement = false;
 };
 MatrixMultPosition.prototype = MACROUTILS.objectInherit( MatrixMultDirection.prototype, {
@@ -167,7 +167,7 @@ MatrixMultPosition.prototype = MACROUTILS.objectInherit( MatrixMultDirection.pro
 // glsl code glPointSize = unitFloat;
 //
 var InlineCode = function () {
-    Node.apply( this );
+    Node.call( this );
 };
 
 InlineCode.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -210,7 +210,7 @@ InlineCode.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
 // glsl code  output = vec4( color.rgb, alpha )
 var SetAlpha = function () {
-    BaseOperator.apply( this );
+    BaseOperator.call( this );
 };
 
 SetAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
@@ -232,7 +232,7 @@ SetAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
 // alpha is optional, if not provided the following operation is generated:
 // glsl code output.rgb = color.rgb * color.a;
 var PreMultAlpha = function () {
-    BaseOperator.apply( this );
+    BaseOperator.call( this );
 };
 
 // TODO put the code in glsl

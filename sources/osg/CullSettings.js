@@ -7,7 +7,7 @@ var CullSettings = function () {
     // because of multiple inheritance
     // it will call the wrong reset
     // cullstack reset for isntance()
-    CullSettings.prototype.reset.apply( this );
+    CullSettings.prototype.reset.call( this );
 
 };
 

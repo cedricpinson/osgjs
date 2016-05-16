@@ -298,15 +298,19 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
     },
 
     // matrixCreate allow user handling of garbage collection of matrices
-    getWorldMatrices: function ( halt, matrixCreate ) {
-        var CollectParentPaths = function ( halt ) {
+    getWorldMatrices: ( function () {
+        var CollectParentPaths = function () {
             this.nodePaths = [];
-            this.halt = halt;
+            this.halt = undefined;
             NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
         };
         CollectParentPaths.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+            reset: function () {
+                this.nodePath.length = 0;
+                this.nodePaths.length = 0;
+            },
             apply: function ( node ) {
-                if ( node.parents.length === 0 || node === this.halt || ( node.referenceFrame !== undefined && node.referenceFrame === TransformEnums.ABSOLUTE_RF ) ) {
+                if ( node.parents.length === 0 || node === this.halt || node.referenceFrame === TransformEnums.ABSOLUTE_RF ) {
                     // copy
                     this.nodePaths.push( this.nodePath.slice( 0 ) );
                 } else {
@@ -314,23 +318,29 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
                 }
             }
         } );
-        var collected = new CollectParentPaths( halt );
-        this.accept( collected );
-        var matrixList = [];
+        var collected = new CollectParentPaths();
 
-        var matrixGenerator = matrixCreate ? matrixCreate : Matrix.create;
-        for ( var i = 0, l = collected.nodePaths.length; i < l; i++ ) {
-            var np = collected.nodePaths[ i ];
-            var m = matrixGenerator();
-            if ( np.length !== 0 ) {
-                ComputeMatrixFromNodePath.computeLocalToWorld( np, true, m );
+        return function ( halt, matrixCreate ) {
+            collected.reset();
+            collected.halt = halt;
+
+            this.accept( collected );
+            var matrixList = [];
+
+            var matrixGenerator = matrixCreate || Matrix.create;
+            for ( var i = 0, l = collected.nodePaths.length; i < l; i++ ) {
+                var np = collected.nodePaths[ i ];
+                var m = matrixGenerator();
+                if ( np.length !== 0 ) {
+                    ComputeMatrixFromNodePath.computeLocalToWorld( np, true, m );
+                }
+                matrixList.push( m );
             }
-            matrixList.push( m );
-        }
 
-        return matrixList;
+            return matrixList;
+        };
 
-    },
+    } )(),
 
     // same as getWorldMatrices GC: Perf WIN
     getWorldMatrix: function ( halt, matrix ) {

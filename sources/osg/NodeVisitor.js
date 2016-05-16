@@ -59,6 +59,11 @@ NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function 
 
 NodeVisitor.prototype = {
 
+    reset: function () {
+        // to be used when you want to re-use a nv
+        this.nodePath.length = 0;
+    },
+
     setFrameStamp: function ( frameStamp ) {
         this._frameStamp = frameStamp;
     },
