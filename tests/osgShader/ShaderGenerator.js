@@ -84,8 +84,8 @@ module.exports = function () {
                     new Shader( 'VERTEX_SHADER', vertexshader ),
                     new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
-                program.trackAttributes = {};
-                program.trackAttributes.attributeKeys = [];
+                program.setTrackAttributes( {} );
+                program.getTrackAttributes().attributeKeys = [];
 
                 return program;
             }

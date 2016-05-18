@@ -239,7 +239,7 @@ ShaderGenerator.prototype = {
                 new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
 
             program.hash = hash;
-            program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
+            program.setActiveUniforms( this.getActiveUniforms( state, attributes, textureAttributes ) );
             program.generated = true;
 
             this._cache.set( hash, program );

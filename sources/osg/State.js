@@ -214,7 +214,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             if ( this._modelViewMatrix === matrix ) return false;
 
             var program = this.getLastProgramApplied();
-            var uniformCache = program._uniformsCache;
+            var uniformCache = program.getUniformsCache();
             var mu = this.modelViewMatrix;
             var mul = uniformCache.ModelViewMatrix;
             var gc = this.getGraphicContext();
@@ -297,7 +297,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var program = this.getLastProgramApplied();
 
             var mu = this.modelViewMatrix;
-            var mul = program._uniformsCache.ModelViewMatrix;
+            var mul = program.getUniformsCache().ModelViewMatrix;
             if ( mul ) {
 
                 mu.setInternalArray( matrix );
@@ -320,7 +320,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
             if ( sendNormal ) {
                 mu = this.normalMatrix;
-                mul = program._uniformsCache.NormalMatrix;
+                mul = program.getUniformsCache().NormalMatrix;
                 if ( mul ) {
 
                     // Matrix.copy( matrix, normal );
@@ -366,7 +366,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var program = this.getLastProgramApplied();
         var mu = this.projectionMatrix;
 
-        var mul = program._uniformsCache[ mu.getName() ];
+        var mul = program.getUniformsCache()[ mu.getName() ];
         if ( mul ) {
 
             mu.setInternalArray( matrix );
@@ -807,8 +807,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var program = this.attributeMap.Program.lastApplied;
 
-        if ( !program._uniformsCache.ArrayColorEnabled ||
-            !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
+        if ( !program.getUniformsCache().ArrayColorEnabled ||
+            !program.getAttributesCache().Color ) return; // no color uniform or attribute used, exit
 
         // update uniform
         var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
@@ -817,7 +817,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         if ( !previousColorEnabled ) {
             uniform.setFloat( 1.0 );
-            uniform.apply( this.getGraphicContext(), program._uniformsCache.ArrayColorEnabled );
+            uniform.apply( this.getGraphicContext(), program.getUniformsCache().ArrayColorEnabled );
             this._previousColorAttribPair[ program.getInstanceID() ] = true;
         }
 
@@ -828,8 +828,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var program = this.attributeMap.Program.lastApplied;
 
-        if ( !program._uniformsCache.ArrayColorEnabled ||
-            !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
+        if ( !program.getUniformsCache().ArrayColorEnabled ||
+            !program.getAttributesCache().Color ) return; // no color uniform or attribute used, exit
 
         // update uniform
         var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
@@ -838,7 +838,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         if ( previousColorEnabled ) {
             uniform.setFloat( 0.0 );
-            uniform.apply( this.getGraphicContext(), program._uniformsCache.ArrayColorEnabled );
+            uniform.apply( this.getGraphicContext(), program.getUniformsCache().ArrayColorEnabled );
             this._previousColorAttribPair[ program.getInstanceID() ] = false;
         }
 
@@ -936,7 +936,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var attributeMapStack = this.attributeMap;
 
-        var attributeKeys = program.trackAttributes.attributeKeys;
+        var attributeKeys = program.getTrackAttributes().attributeKeys;
 
         if ( attributeKeys.length > 0 ) {
 
@@ -967,7 +967,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     _getActiveUniformsFromProgramTextureAttributes: function ( program, activeUniformsList ) {
 
-        var textureAttributeKeysList = program.trackAttributes.textureAttributeKeys;
+        var textureAttributeKeysList = program.getTrackAttributes().textureAttributeKeys;
         if ( textureAttributeKeysList === undefined ) return;
 
         for ( var unit = 0, nbUnit = textureAttributeKeysList.length; unit < nbUnit; unit++ ) {
@@ -1039,11 +1039,11 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             activeUniformsList.length = 0;
 
             // fill the program with cached active uniforms map from attributes and texture attributes
-            if ( program.trackAttributes !== undefined && program.trackUniforms === undefined ) {
+            if ( program.getTrackAttributes() !== undefined && program.trackUniforms === undefined ) {
                 this._cacheUniformsForCustomProgram( program, activeUniformsList );
             }
 
-            var programUniformMap = program._uniformsCache;
+            var programUniformMap = program.getUniformsCache();
             var programUniformKeys = programUniformMap.getKeys();
             var uniformMapStackContent = this.uniforms;
 
@@ -1148,12 +1148,12 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     _cacheUniformsForGeneratedProgram: function ( program ) {
 
-        var foreignUniforms = this._computeForeignUniforms( program._uniformsCache, program.activeUniforms );
-        program.foreignUniforms = foreignUniforms;
+        var foreignUniforms = this._computeForeignUniforms( program.getUniformsCache(), program.getActiveUniforms() );
+        program.setForeignUniforms( foreignUniforms );
 
 
         // remove uniforms listed by attributes (getActiveUniforms) but not required by the program
-        this._removeUniformsNotRequiredByProgram( program.activeUniforms, program._uniformsCache );
+        this._removeUniformsNotRequiredByProgram( program.getActiveUniforms(), program.getUniformsCache() );
 
     },
 
@@ -1166,15 +1166,15 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         // typically the following code will be executed once on the first execution of generated program
 
-        var foreignUniformKeys = program.foreignUniforms;
+        var foreignUniformKeys = program.getForeignUniforms();
         if ( !foreignUniformKeys ) {
             this._cacheUniformsForGeneratedProgram( program );
-            foreignUniformKeys = program.foreignUniforms;
+            foreignUniformKeys = program.getForeignUniforms();
         }
 
 
-        var programUniformMap = program._uniformsCache;
-        var activeUniformMap = program.activeUniforms;
+        var programUniformMap = program.getUniformsCache();
+        var activeUniformMap = program.getActiveUniforms();
 
 
         // apply active uniforms
