@@ -81,7 +81,7 @@ WebVR.prototype = {
         if ( !manipulatorAdapter.update )
             return;
 
-        if ( !this._hmd.capabilities.hasOrientation || !this._hmd.capabilities.hasPosition )
+        if ( !this._hmd.capabilities.hasOrientation && !this._hmd.capabilities.hasPosition )
             return;
 
         this._lastPose = this._hmd.getPose(); // if no prediction, call this._hmd.getImmediatePose()
