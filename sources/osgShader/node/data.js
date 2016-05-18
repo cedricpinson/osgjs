@@ -10,7 +10,7 @@ var sprintf = utils.sprintf;
 // type {string} vec3/4/2, float, int, etc.
 // prefix {string} vec3/4/2, float, int, etc.
 var Variable = function ( type, prefix ) {
-    Node.apply( this );
+    Node.call( this );
     this._name = 'Variable';
     this._prefix = prefix;
     this._type = type;

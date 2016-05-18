@@ -6,7 +6,7 @@ var Node = require( 'osgShader/node/Node' );
 // base class for all point based light: Point/Directional/Spot/Hemi
 // avoid duplicate code
 var NodeLights = function () {
-    Node.apply( this );
+    Node.call( this );
 };
 
 NodeLights.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -23,7 +23,7 @@ var getVec3 = function ( vec ) {
 };
 
 var PointLight = function () {
-    NodeLights.apply( this );
+    NodeLights.call( this );
 };
 
 PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
@@ -87,7 +87,7 @@ PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
 
 var SpotLight = function () {
-    NodeLights.apply( this );
+    NodeLights.call( this );
 };
 
 SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
@@ -159,7 +159,7 @@ SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
 
 var SunLight = function () {
-    NodeLights.apply( this );
+    NodeLights.call( this );
 };
 
 SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
@@ -216,7 +216,7 @@ SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 } );
 
 var HemiLight = function () {
-    NodeLights.apply( this );
+    NodeLights.call( this );
 };
 
 HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {

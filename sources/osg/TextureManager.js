@@ -252,11 +252,10 @@ TextureManager.prototype = {
     },
 
     flushDeletedTextureObjects: function ( gl, availableTimeArg ) {
-        var key;
         var availableTime = availableTimeArg;
-        for ( var i = 0, j = window.Object.keys( this._textureSetMap ).length; i < j && availableTime > 0.0; i++ ) {
-            key = window.Object.keys( this._textureSetMap )[ i ];
-            availableTime = this._textureSetMap[ key ].flushDeletedTextureObjects( gl, availableTime );
+        var keys = window.Object.keys( this._textureSetMap );
+        for ( var i = 0, j = keys.length; i < j && availableTime > 0.0; i++ ) {
+            availableTime = this._textureSetMap[ keys[ i ] ].flushDeletedTextureObjects( gl, availableTime );
         }
         return availableTime;
     },

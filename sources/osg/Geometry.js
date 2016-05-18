@@ -222,7 +222,10 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             return primitiveSetup.concat( [
                 'var primitive = this._primitives[ 0 ];',
                 'var indexes = primitive.getIndices();',
-                'if ( indexes.isDirty() ) indexes.compile( gl );',
+                'if ( indexes.isDirty() ) {;',
+                '  indexes.bind( gl );',
+                '  indexes.compile( gl );',
+                '};',
                 'primitive.drawElements( state );'
             ] );
         }
@@ -328,7 +331,10 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
                 ];
                 for ( j = 0, m = listVABuff.length; j < m; j++ ) {
                     vaoSetup.push( '  va = vaList[ ' + j + '];' );
-                    vaoSetup.push( '  if ( va.isDirty() ) va.compile( gl );' );
+                    vaoSetup.push( '  if ( va.isDirty() ) {;' );
+                    vaoSetup.push( '    va.bind( gl );' );
+                    vaoSetup.push( '    va.compile( gl );' );
+                    vaoSetup.push( '  };' );
                 }
                 vaoSetup.push( '}' );
 

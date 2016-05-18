@@ -4,7 +4,7 @@ var ShaderUtils = require( 'osgShader/utils' );
 var Node = require( 'osgShader/node/Node' );
 
 var ShadowReceive = function () {
-    Node.apply( this );
+    Node.call( this );
 
 };
 
@@ -64,7 +64,7 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
 } );
 
 var ShadowCast = function () {
-    Node.apply( this );
+    Node.call( this );
 
 };
 

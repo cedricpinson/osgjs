@@ -4,7 +4,7 @@ var ShaderUtils = require( 'osgShader/utils' );
 var Node = require( 'osgShader/node/Node' );
 
 var Skinning = function () {
-    Node.apply( this );
+    Node.call( this );
 };
 
 Skinning.prototype = MACROUTILS.objectInherit( Node.prototype, {

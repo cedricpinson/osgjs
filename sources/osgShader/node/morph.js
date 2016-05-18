@@ -4,7 +4,7 @@ var ShaderUtils = require( 'osgShader/utils' );
 var Node = require( 'osgShader/node/Node' );
 
 var Morph = function () {
-    Node.apply( this );
+    Node.call( this );
 };
 
 var getVec3 = function ( vec ) {

@@ -60,11 +60,12 @@ SphereIntersector.prototype = {
             if ( node.computeTransformedVertices ) {
                 var vList = node.getVertexAttributeList();
                 var originVerts = vList.Vertex.getElements();
-                vList.Vertex.setElements( node.computeTransformedVertices() );
 
+                // temporarily hook vertex buffer for the tri intersections
+                // don't call setElements as it dirty some stuffs because of gl buffer 
+                vList.Vertex._elements = node.computeTransformedVertices();
                 ti.apply( node );
-
-                vList.Vertex.setElements( originVerts );
+                vList.Vertex._elements = originVerts;
             } else {
                 ti.apply( node );
             }
