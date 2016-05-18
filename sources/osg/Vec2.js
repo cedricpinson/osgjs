@@ -5,11 +5,14 @@ var osgMath = require( 'osg/Math' );
 /** @class Vec2 Operations */
 var Vec2 = {
     create: function () {
-        return [ 0.0, 0.0 ];
+        return new Float32Array( 2 );
     },
 
     createAndSet: function ( x, y ) {
-        return [ x, y ];
+        var out = Vec2.create();
+        out[ 0 ] = x;
+        out[ 1 ] = y;
+        return out;
     },
 
     copy: function ( a, r ) {

@@ -2,6 +2,8 @@
 var QUnit = require( 'qunit' );
 var mockup = require( 'tests/mockup/mockup' );
 var Matrix = require( 'osg/Matrix' );
+var Vec3 = require( 'osg/Vec3' );
+var Quat = require( 'osg/Quat' );
 var Notify = require( 'osg/Notify' );
 
 
@@ -10,53 +12,40 @@ module.exports = function () {
     QUnit.module( 'osg' );
 
     QUnit.test( 'Matrix.makeRotateFromQuat', function () {
-        var m = [];
-        Matrix.makeRotateFromQuat( [ 0.653281, 0.270598, -0.653281, 0.270598 ], m );
-        mockup.near( m, [ 1.66533e-16, 1.11022e-16, -1, 0,
-            0.707107, -0.707107, 0, 0, -0.707107, -0.707107, -1.66533e-16, 0,
-            0, 0, 0, 1
-        ] );
+        var m = Matrix.create();
+        Matrix.makeRotateFromQuat( Quat.createAndSet( 0.653281, 0.270598, -0.653281, 0.270598 ), m );
+        mockup.near( m, Matrix.createAndSet( 1.66533e-16, 1.11022e-16, -1, 0.0, 0.707107, -0.707107, 0.0, 0.0, -0.707107, -0.707107, -1.66533e-16, 0.0, 0.0, 0.0, 0.0, 1.0 ) );
     } );
 
     QUnit.test( 'Matrix.getRotate', function () {
-        var m = [];
-        Matrix.makeRotateFromQuat( [ 0.653281, 0.270598, -0.653281, 0.270598 ], m );
+        var m = Matrix.create();
+        Matrix.makeRotateFromQuat( Quat.createAndSet( 0.653281, 0.270598, -0.653281, 0.270598 ), m );
         var q = Matrix.getRotate( m );
-        mockup.near( q, [ 0.653281, 0.270598, -0.653281, 0.270598 ] );
+        mockup.near( q, Quat.createAndSet( 0.653281, 0.270598, -0.653281, 0.270598 ) );
 
     } );
 
     QUnit.test( 'Matrix.getPerspective', function () {
-        var m = [];
+        var m = Matrix.create();
         Matrix.makePerspective( 60, 800 / 200, 2.0, 500.0, m );
         var r = {};
         Matrix.getPerspective( m, r );
         mockup.near( r.zNear, 2.0 );
-        mockup.near( r.zFar, 500.0 );
+        mockup.near( r.zFar, 500.0, 0.1 );
         mockup.near( r.fovy, 60.0 );
         mockup.near( r.aspectRatio, 4.0 );
     } );
 
     QUnit.test( 'Matrix.makeLookAt', function () {
-        var m = Matrix.makeLookAt( [ 0, -10, 0 ], [ 0.0, 0.0, 0.0 ], [ 0.0, 0.0, 1.0 ] );
-        mockup.near( m, [ 1, 0, -0, 0,
-            0, 0, -1, 0,
-            0, 1, -0, 0,
-            0, 0, -10, 1
-        ] );
+        var m = Matrix.makeLookAt( Vec3.createAndSet( 0.0, -10, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 1.0 ) );
+        mockup.near( m, Matrix.createAndSet( 1.0, 0.0, -0, 0.0, 0.0, 0.0, -1, 0.0, 0.0, 1.0, -0, 0.0, 0.0, 0.0, -10, 1.0 ) );
 
-
-        var m2 = Matrix.makeLookAt( [ 0, 0, -10 ], [ 0.0, 0.0, 0.0 ], [ 0.0, 1.0, 0.0 ] );
-        mockup.near( m2, [ -1, 0, -0, 0,
-            0, 1, -0, 0,
-            0, -0, -1, 0,
-            0, 0, -10, 1
-        ] );
-
+        var m2 = Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ) );
+        mockup.near( m2, Matrix.createAndSet( -1, 0.0, -0, 0.0, 0.0, 1.0, -0, 0.0, 0.0, -0, -1, 0.0, 0.0, 0.0, -10, 1.0 ) );
     } );
 
     QUnit.test( 'Matrix.computeFustrumCornersVectors', function () {
-        var m = [];
+        var m = Matrix.create();
         var ratio = 16.0 / 9.0;
         Matrix.makePerspective( 45, ratio, 1.0, 100.0, m );
 
@@ -66,10 +55,10 @@ module.exports = function () {
         var xmax = ymax * ratio;
 
         var corners = [];
-        corners.push( [ xmin, ymax, 1.0 ] );
-        corners.push( [ xmin, ymin, 1.0 ] );
-        corners.push( [ xmax, ymin, 1.0 ] );
-        corners.push( [ xmax, ymax, 1.0 ] );
+        corners.push( Vec3.createAndSet( xmin, ymax, 1.0 ) );
+        corners.push( Vec3.createAndSet( xmin, ymin, 1.0 ) );
+        corners.push( Vec3.createAndSet( xmax, ymin, 1.0 ) );
+        corners.push( Vec3.createAndSet( xmax, ymax, 1.0 ) );
 
         var vectors = [];
         Matrix.computeFrustumCornersVectors( m, vectors );
@@ -83,35 +72,32 @@ module.exports = function () {
     } );
 
     QUnit.test( 'Matrix.getLookAt', function () {
-        var m = Matrix.makeLookAt( [ 0, -10, 0 ], [ 0.0, 5.0, 0.0 ], [ 0.0, 0.0, 1.0 ] );
-        var eye = [];
-        var target = [];
-        var up = [];
-        Matrix.getLookAt( m,
-            eye,
-            target,
-            up, 5.0 );
-        mockup.near( eye, [ 0, -10, 0 ] );
-        mockup.near( target, [ 0, -5.0, 0 ] ); // should be five but mimic same behaviour as OpenSceneGraph
-        mockup.near( up, [ 0, 0, 1 ] );
+        var m = Matrix.makeLookAt( Vec3.createAndSet( 0.0, -10, 0.0 ), Vec3.createAndSet( 0.0, 5.0, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 1.0 ) );
+        var eye = Vec3.create();
+        var target = Vec3.create();
+        var up = Vec3.create();
+        Matrix.getLookAt( m, eye, target, up, 5.0 );
+        mockup.near( eye, Vec3.createAndSet( 0.0, -10, 0.0 ) );
+        mockup.near( target, Vec3.createAndSet( 0.0, -5.0, 0.0 ) ); // should be five but mimic same behaviour as OpenSceneGraph
+        mockup.near( up, Vec3.createAndSet( 0.0, 0.0, 1.0 ) );
     } );
 
     QUnit.test( 'Matrix.transformVec3', function () {
-        var m = Matrix.makeRotate( -Math.PI / 2.0, 0, 1, 0, [] );
-        var vec = [ 0, 0, 10 ];
-        var inv = [];
+        var m = Matrix.makeRotate( -Math.PI / 2.0, 0.0, 1.0, 0.0, Matrix.create() );
+        var vec = Vec3.createAndSet( 0.0, 0.0, 10 );
+        var inv = Matrix.create();
         Matrix.inverse( m, inv );
-        var res = Matrix.transformVec3( inv, vec, [] );
-        mockup.near( res, [ 10, 0, 0 ] );
+        var res = Matrix.transformVec3( inv, vec, Matrix.create() );
+        mockup.near( res, Vec3.createAndSet( 10, 0.0, 0.0 ) );
 
-        var res2 = Matrix.transformVec3( m, res, [] );
-        mockup.near( res2, [ 0, 0, 10 ] );
+        var res2 = Matrix.transformVec3( m, res, Vec3.create() );
+        mockup.near( res2, Vec3.createAndSet( 0.0, 0.0, 10 ) );
 
 
-        m = [ -0.00003499092540543186, 0, 0, 0, 0, 0.00003499092540543186, 0, 0, 0, 0, 1.8163636363636322, -9.989999999999977, 0.013996370162172783, -0.010497277621629587, -1.7999999999999958, 9.999999999999977 ];
+        m = Matrix.createAndSet( -0.00003499092, 0.0, 0.0, 0.0, 0.0, 0.0000349909, 0.0, 0.0, 0.0, 0.0, 1.816363636, -9.989999999, 0.013996370, -0.010497277, -1.799999999, 9.9999999 );
         var preMultVec3 = function ( s, vec, result ) {
             if ( result === undefined ) {
-                result = [];
+                result = Matrix.create();
             }
             var d = 1.0 / ( s[ 3 ] * vec[ 0 ] + s[ 7 ] * vec[ 1 ] + s[ 11 ] * vec[ 2 ] + s[ 15 ] );
             result[ 0 ] = ( s[ 0 ] * vec[ 0 ] + s[ 4 ] * vec[ 1 ] + s[ 8 ] * vec[ 2 ] + s[ 12 ] ) * d;
@@ -119,47 +105,27 @@ module.exports = function () {
             result[ 2 ] = ( s[ 2 ] * vec[ 0 ] + s[ 6 ] * vec[ 1 ] + s[ 10 ] * vec[ 2 ] + s[ 14 ] ) * d;
             return result;
         };
-        var r0 = preMultVec3( m, [ 400, 300, 1 ] );
-        Matrix.transformVec3( m, [ 400, 300, 1 ], res );
+        var r0 = preMultVec3( m, Vec3.createAndSet( 400, 300, 1.0 ) );
+        Matrix.transformVec3( m, Vec3.createAndSet( 400, 300, 1.0 ), res );
         mockup.near( res, r0 );
 
     } );
 
     QUnit.test( 'Matrix.transpose', function () {
-        var m = [ 0, 1, 2, 3,
-            4, 5, 6, 7,
-            8, 9, 10, 11,
-            12, 13, 14, 15
-        ];
+        var m = Matrix.createAndSet( 0.0, 1.0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
         var res = Matrix.transpose( m, [] );
-        mockup.near( res, [ 0, 4, 8, 12,
-            1, 5, 9, 13,
-            2, 6, 10, 14,
-            3, 7, 11, 15
-        ] );
+        mockup.near( res, Matrix.createAndSet( 0.0, 4, 8, 12, 1.0, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 ) );
 
         var res2 = Matrix.transpose( m, [] );
-        mockup.near( res2, [ 0, 4, 8, 12,
-            1, 5, 9, 13,
-            2, 6, 10, 14,
-            3, 7, 11, 15
-        ] );
+        mockup.near( res2, Matrix.createAndSet( 0.0, 4, 8, 12, 1.0, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 ) );
 
         var res3 = Matrix.transpose( m, m );
-        mockup.near( res3, [ 0, 4, 8, 12,
-            1, 5, 9, 13,
-            2, 6, 10, 14,
-            3, 7, 11, 15
-        ] );
+        mockup.near( res3, Matrix.createAndSet( 0.0, 4, 8, 12, 1.0, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 ) );
     } );
 
     QUnit.test( 'Matrix.makeRotate', function () {
-        var res = Matrix.makeRotate( 0, 0, 0, 1, [] );
-        mockup.near( res, [ 1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ] );
+        var res = Matrix.makeRotate( 0.0, 0.0, 0.0, 1.0, Matrix.create() );
+        mockup.near( res, Matrix.create() );
     } );
 
     QUnit.test( 'Matrix.mult', function () {
@@ -172,29 +138,17 @@ module.exports = function () {
         Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
         Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
         Matrix.mult( scale, translate, res );
-        mockup.near( res, [ 400, 0, 0, 0,
-            0, 300, 0, 0,
-            0, 0, 0.5, 0,
-            400, 300, 0.5, 1
-        ] );
+        mockup.near( res, Matrix.createAndSet( 400, 0.0, 0.0, 0.0, 0.0, 300, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 400, 300, 0.5, 1.0 ) );
 
         Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
         Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
         Matrix.preMult( scale, translate, res );
-        ok( mockup.checkNear( res, [ 400, 0, 0, 0,
-            0, 300, 0, 0,
-            0, 0, 0.5, 0,
-            400, 300, 0.5, 1
-        ] ), 'check preMult' );
+        ok( mockup.checkNear( res, Matrix.createAndSet( 400, 0.0, 0.0, 0.0, 0.0, 300, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 400, 300, 0.5, 1.0 ) ), 'check preMult' );
 
         Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
         Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
         Matrix.postMult( scale, translate, res );
-        ok( mockup.checkNear( res, [ 400, 0, 0, 0,
-            0, 300, 0, 0,
-            0, 0, 0.5, 0,
-            400, 300, 0.5, 1
-        ] ), 'check postMult' );
+        ok( mockup.checkNear( res, Matrix.createAndSet( 400, 0.0, 0.0, 0.0, 0.0, 300, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 400, 300, 0.5, 1.0 ) ), 'check postMult' );
 
         // test to check equivalent
         Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
@@ -204,89 +158,41 @@ module.exports = function () {
         Matrix.preMult( ident, scale );
 
         Matrix.preMult( ident, translate );
-        mockup.near( ident, [ 400, 0, 0, 0,
-            0, 300, 0, 0,
-            0, 0, 0.5, 0,
-            400, 300, 0.5, 1
-        ] );
+        mockup.near( ident, Matrix.createAndSet( 400, 0.0, 0.0, 0.0, 0.0, 300, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 400, 300, 0.5, 1.0 ) );
         Matrix.preMult( scale, translate );
-        mockup.near( scale, [ 400, 0, 0, 0,
-            0, 300, 0, 0,
-            0, 0, 0.5, 0,
-            400, 300, 0.5, 1
-        ] );
+        mockup.near( scale, Matrix.createAndSet( 400, 0.0, 0.0, 0.0, 0.0, 300, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 400, 300, 0.5, 1.0 ) );
 
     } );
 
     test( 'Matrix.inverse4x3', function () {
 
-        var m = [ 1,
-            0,
-            0,
-            0,
-            0,
-            1,
-            0,
-            0,
-            0,
-            0,
-            1,
-            0,
-            10,
-            10,
-            10,
-            1
-        ];
+        var m = Matrix.createAndSet( 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 10, 10, 10, 1.0 );
 
         var result = [];
         var valid = Matrix.inverse4x3( m, result );
         ok( true, valid );
-        mockup.near( result, [ 1.0, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0, -10, -10, -10, 1
-        ] );
+        mockup.near( result, Matrix.createAndSet( 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -10, -10, -10, 1.0 ) );
 
-
-        var m1 = [ 0.0011258089383161401, 0.00131216109033401, -0.0012747534698732, 0, -0.0002278837182292197, 0.0015857257043203033, 0.0014309996929286388, 0,
-            0.0018151705324519383, -0.0006147558241282602, 0.0009702887644753271, 0,
-            0, 0, 0, 1
-        ];
+        var m1 = Matrix.createAndSet( 0.0011258089, 0.0013121610, -0.001274753, 0.0, -0.0002278837182, 0.001585725704, 0.001430999692, 0.0, 0.00181517053, -0.00061475582, 0.0009702887, 0.0, 0.0, 0.0, 0.0, 1.0 );
         var m1result = [];
         Matrix.inverse4x3( m1, m1result );
-        mockup.near( m1result, [ 243.988, -49.3875, 393.386, 0,
-            284.374, 343.661, -133.23, 0, -276.267, 310.128, 210.282, 0, -0, -0, -0, 1
-        ], 1e-3 );
+        mockup.near( m1result, Matrix.createAndSet( 243.988, -49.3875, 393.386, 0.0, 284.374, 343.661, -133.23, 0.0, -276.267, 310.128, 210.282, 0.0, -0, -0, -0, 1.0 ), 1e-3 );
 
-        var m2 = [ 0.0011258089383161401, -0.0002278837182292197, 0.0018151705324519383, 0,
-            0.00131216109033401, 0.0015857257043203033, -0.0006147558241282602, 0, -0.0012747534698732, 0.0014309996929286388, 0.0009702887644753271, 0,
-            0, 0, 0, 1
-        ];
+        var m2 = Matrix.createAndSet( 0.001125808, -0.0002278837, 0.00181517053, 0.0, 0.00131216, 0.00158572570, -0.000614755824, 0.0, -0.00127475, 0.0014309996, 0.000970288764, 0.0, 0.0, 0.0, 0.0, 1.0 );
         var m2result = [];
         Matrix.inverse4x3( m2, m2result );
-        mockup.near( m2result, [ 243.988, 284.374, -276.267, 0, -49.3875, 343.661, 310.128, 0,
-            393.386, -133.23, 210.282, 0, -0, -0, -0, 1
-        ], 1e-3 );
+        mockup.near( m2result, Matrix.createAndSet( 243.988, 284.374, -276.267, 0.0, -49.3875, 343.661, 310.128, 0.0, 393.386, -133.23, 210.282, 0.0, -0, -0, -0, 1.0 ), 1e-3 );
 
     } );
 
     test( 'Matrix.inverse', function () {
-        var result = [];
-        var m = [ -1144.3119511948212,
-            23.865014474735936, -0.12300358188893337, -0.12288057830704444, -1553.3126291998985, -1441.499918560778, -1.619653642392287, -1.6180339887498945,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            25190.498321578874,
-            13410.539616344166,
-            21.885543812039796,
-            21.963658268227753
-        ];
+        var result = Matrix.create();
+        var m = Matrix.createAndSet( -1144.3119, 23.8650, -0.12300, -0.12288, -1553.3126, -1441.499, -1.6196, -1.6180, 0.0, 0.0, 0.0, 0.0, 25190.498, 13410.539, 21.885, 21.963 );
 
         ok( true, Matrix.inverse( m, result ) );
 
-        var result2 = [];
-        var m2 = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1375333.5195828325, -4275596.259263198, 4514838.703939765, 1.0 ];
+        var result2 = Matrix.create();
+        var m2 = Matrix.createAndSet( 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1375333.5195828325, -4275596.259263198, 4514838.703939765, 1.0 );
         var valid = Matrix.inverse( m2, result2 );
         ok( true, valid );
         Notify.log( 'inverse ' + result2.toString() );
@@ -296,7 +202,7 @@ module.exports = function () {
     } );
 
     test( 'Matrix.makePerspective', function () {
-        var m = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0 ];
+        var m = Matrix.createAndSet( 1.299038105676658, 0.0, 0.0, 0.0, 0.0, 1.7320508075688774, 0.0, 0.0, 0.0, 0.0, -1.002002002002002, -1, 0.0, 0.0, -2.0020020020020022, 0.0 );
         var res = Matrix.makePerspective( 60, 800 / 600, 1.0, 1000 );
         ok( mockup.checkNear( res, m ), 'makePerspective should be ' + m + ' and is ' + res );
     } );

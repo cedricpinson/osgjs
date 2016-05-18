@@ -8,10 +8,10 @@ var Map = require( 'osg/Map' );
 // Define a material attribute
 var Material = function () {
     StateAttribute.call( this );
-    this._ambient = [ 0.2, 0.2, 0.2, 1.0 ];
-    this._diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
-    this._specular = [ 0.0, 0.0, 0.0, 1.0 ];
-    this._emission = [ 0.0, 0.0, 0.0, 1.0 ];
+    this._ambient = Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 );
+    this._diffuse = Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 );
+    this._specular = Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 );
+    this._emission = Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 );
     this._shininess = 12.5;
 };
 
@@ -32,10 +32,10 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
         if ( obj.uniforms ) return obj.uniforms;
 
         var uniformList = {
-            ambient: Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialAmbient' ),
-            diffuse: Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialDiffuse' ),
-            specular: Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialSpecular' ),
-            emission: Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialEmission' ),
+            ambient: Uniform.createFloat4( Vec4.create(), 'MaterialAmbient' ),
+            diffuse: Uniform.createFloat4( Vec4.create(), 'MaterialDiffuse' ),
+            specular: Uniform.createFloat4( Vec4.create(), 'MaterialSpecular' ),
+            emission: Uniform.createFloat4( Vec4.create(), 'MaterialEmission' ),
             shininess: Uniform.createFloat1( [ 0 ], 'MaterialShininess' )
         };
 

@@ -4,11 +4,16 @@
 var Vec4 = {
 
     create: function () {
-        return [ 0.0, 0.0, 0.0, 0.0 ];
+        return new Float32Array( 4 );
     },
 
     createAndSet: function ( x, y, z, w ) {
-        return [ x, y, z, w ];
+        var out = Vec4.create();
+        out[ 0 ] = x;
+        out[ 1 ] = y;
+        out[ 2 ] = z;
+        out[ 3 ] = w;
+        return out;
     },
 
     init: function ( a ) {

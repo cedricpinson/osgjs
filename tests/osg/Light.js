@@ -8,6 +8,8 @@ var Node = require( 'osg/Node' );
 var RenderStage = require( 'osg/RenderStage' );
 var StateGraph = require( 'osg/StateGraph' );
 var Matrix = require( 'osg/Matrix' );
+var Vec3 = require( 'osg/Vec3' );
+var Vec4 = require( 'osg/Vec4' );
 
 
 module.exports = function () {
@@ -22,23 +24,23 @@ module.exports = function () {
             l0.setLightNumber( 0 );
 
             l0.setLightAsPoint();
-            deepEqual( l0.getPosition(), [ 0, 0, 0, 1 ] );
+            deepEqual( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
             equal( l0.getSpotCutoff(), 180 );
             equal( l0.getLightType(), Light.POINT );
 
             l0.setLightAsDirection();
-            deepEqual( l0.getPosition(), [ 0, 0, 1, 0 ] );
+            deepEqual( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 ) );
             equal( l0.getLightType(), Light.DIRECTION );
 
             l0.setLightAsSpot();
-            deepEqual( l0.getPosition(), [ 0, 0, 0, 1 ] );
-            deepEqual( l0.getDirection(), [ 0, 0, -1 ] );
+            deepEqual( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
+            deepEqual( l0.getDirection(), Vec3.createAndSet( 0.0, 0.0, -1.0 ) );
             equal( l0.getSpotCutoff(), 90 );
             equal( l0.getLightType(), Light.SPOT );
 
-            deepEqual( l0.getAmbient(), [ 0.2, 0.2, 0.2, 1 ] );
-            deepEqual( l0.getDiffuse(), [ 0.8, 0.8, 0.8, 1 ] );
-            deepEqual( l0.getSpecular(), [ 0.2, 0.2, 0.2, 1 ] );
+            deepEqual( l0.getAmbient(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
+            deepEqual( l0.getDiffuse(), Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 ) );
+            deepEqual( l0.getSpecular(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
 
 
             equal( l0.getConstantAttenuation(), 1 );

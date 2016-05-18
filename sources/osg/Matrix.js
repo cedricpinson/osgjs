@@ -11,12 +11,47 @@ var Vec4 = require( 'osg/Vec4' );
 var Mabs = Math.abs;
 var NMIN_VALUE = Number.MIN_VALUE;
 
+// call by closur'd variables because Matrix object is not
+// resolved yet, a workaround would be to define Matrix such as:
+// var Matrix = {};
+// Matrix.create = function... ;
+// Matrix.func2 = function... ;
+var matrixCreate = function () {
+    var out = new Float32Array( 16 );
+    out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
+    return out;
+};
+
 /** @class Matrix Operations */
 var Matrix = {
 
     create: function () {
-        return [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var out = new Float32Array( 16 );
+        out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
+        return out;
     },
+
+    createAndSet: function ( x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15 ) {
+        var out = Matrix.create();
+        out[ 0 ] = x0;
+        out[ 1 ] = x1;
+        out[ 2 ] = x2;
+        out[ 3 ] = x3;
+        out[ 4 ] = x4;
+        out[ 5 ] = x5;
+        out[ 6 ] = x6;
+        out[ 7 ] = x7;
+        out[ 8 ] = x8;
+        out[ 9 ] = x9;
+        out[ 10 ] = x10;
+        out[ 11 ] = x11;
+        out[ 12 ] = x12;
+        out[ 13 ] = x13;
+        out[ 14 ] = x14;
+        out[ 15 ] = x15;
+        return out;
+    },
+
     isIdentity: function ( matrix ) {
         for ( var i = 0; i < 16; i++ ) {
             if ( matrix[ i ] !== Matrix.identity[ i ] ) {
@@ -446,10 +481,10 @@ var Matrix = {
     },
 
     getLookAt: ( function () {
-        var inv = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var inv = matrixCreate();
         var v1 = Vec3.create();
-        var v2 = [ 0.0, 1.0, 0.0 ];
-        var v3 = [ 0.0, 0.0, -1.0 ];
+        var v2 = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+        var v3 = Vec3.createAndSet( 0.0, 0.0, -1.0 );
 
         return function ( matrix, eye, center, up, distance ) {
             if ( distance === undefined ) {
@@ -469,12 +504,12 @@ var Matrix = {
 
     //getRotate_David_Spillings_Mk1
     getRotate: ( function () {
-        var tq = [ 0.0, 0.0, 0.0, 0.0 ];
+        var tq = Quat.create();
 
         return function ( mat, quatResult ) {
             if ( quatResult === undefined ) {
                 Notify.warn( 'no quat destination !' );
-                quatResult = [ 0.0, 0.0, 0.0, 0.0 ];
+                quatResult = Quat.create();
             }
 
             var s;
@@ -788,7 +823,7 @@ var Matrix = {
     },
 
     inverse: ( function () {
-        var tmp = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var tmp = matrixCreate();
 
         return function ( matrix, result ) {
             if ( result === matrix ) {
@@ -846,7 +881,7 @@ var Matrix = {
 
         var d1 = ( matrix[ 0 ] * t0 + matrix[ 4 ] * t1 + matrix[ 8 ] * t2 + matrix[ 12 ] * t3 );
         if ( Math.abs( d1 ) < Number.EPSILON ) {
-            Notify.log( 'Warning can\'t inverse matrix ' + matrix, false, true );
+            Notify.info( 'Warning can\'t inverse matrix ' + matrix, false, true );
             return false;
         }
         var d = 1.0 / d1;
@@ -932,7 +967,7 @@ var Matrix = {
   */
 
     inverse4x3: ( function () {
-        var inv = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        var inv = matrixCreate();
 
         return function ( matrix, result ) {
 
@@ -957,7 +992,7 @@ var Matrix = {
             // Compute determinant of rot from 3 elements just computed
             var det = ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
             if ( Math.abs( det ) < Number.EPSILON ) {
-                Notify.log( 'Warning can\'t inverse matrix ' + matrix, false, true );
+                Notify.info( 'Warning can\'t inverse matrix ' + matrix, false, true );
                 return false;
             }
 
@@ -1002,7 +1037,7 @@ var Matrix = {
                 tz = matrix[ 14 ];
                 det = ( d - ( tx * px + ty * py + tz * pz ) );
                 if ( Math.abs( det ) < Number.EPSILON ) {
-                    Notify.log( 'Warning can\'t inverse matrix ' + matrix );
+                    Notify.info( 'Warning can\'t inverse matrix ' + matrix );
                     return false;
                 }
                 var oneOverS = 1.0 / det;
@@ -1092,10 +1127,9 @@ var Matrix = {
 
     getFrustumPlanes: ( function () {
 
-        var mvp;
+        var mvp = matrixCreate();
 
         return function ( projection, view, result, withNearFar ) {
-            mvp = mvp ? mvp : Matrix.create();
             Matrix.mult( projection, view, mvp );
 
             if ( withNearFar === undefined )
@@ -1405,10 +1439,10 @@ var Matrix = {
         var x = 1.0 / projectionMatrix[ 0 ];
         var y = 1.0 / projectionMatrix[ 1 * 4 + 1 ];
 
-        vectorsArray[ 0 ] = [ -x, y, 1.0 ];
-        vectorsArray[ 1 ] = [ -x, -y, 1.0 ];
-        vectorsArray[ 2 ] = [ x, -y, 1.0 ];
-        vectorsArray[ 3 ] = [ x, y, 1.0 ];
+        vectorsArray[ 0 ] = Vec3.createAndSet( -x, y, 1.0 );
+        vectorsArray[ 1 ] = Vec3.createAndSet( -x, -y, 1.0 );
+        vectorsArray[ 2 ] = Vec3.createAndSet( x, -y, 1.0 );
+        vectorsArray[ 3 ] = Vec3.createAndSet( x, y, 1.0 );
         return vectorsArray;
     },
 
@@ -1528,6 +1562,6 @@ var Matrix = {
     }
 };
 
-Matrix.identity = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+Matrix.identity = Matrix.create();
 
 module.exports = Matrix;

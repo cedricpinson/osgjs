@@ -301,7 +301,7 @@ module.exports = function () {
             //      var projectionResult = [0.9742785792574936, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0]
 
 
-            var dFar = 21546781.959391922;
+            var dFar = 21546781.95939;
             var dNear = 267579.84430311248;
             //      var bbmax = [6353000, 6326310, 6317430];
             //      var bbmin = [-6131940, -6297390, -6356750];
@@ -346,9 +346,9 @@ module.exports = function () {
             cull.pushModelViewMatrix( Matrix.create() );
 
             camera0.accept( cull );
-            ok( mockup.checkNear( stack[ 1 ][ 0 ], dNear, 0.8 ), 'near should be ' + dNear + ' and is ' + stack[ 1 ][ 0 ] );
-            ok( mockup.checkNear( stack[ 1 ][ 1 ], dFar, 0.8 ), 'near should be ' + dFar + ' and is ' + stack[ 1 ][ 1 ] );
-            ok( mockup.checkNear( resultProjection, supposedProjection, 0.8 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+            ok( mockup.checkNear( stack[ 1 ][ 0 ], dNear, 1.0 ), 'near should be ' + dNear + ' and is ' + stack[ 1 ][ 0 ] );
+            ok( mockup.checkNear( stack[ 1 ][ 1 ], dFar, 1.0 ), 'near should be ' + dFar + ' and is ' + stack[ 1 ][ 1 ] );
+            ok( mockup.checkNear( resultProjection, supposedProjection, 1.0 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
         } )();
 

@@ -158,8 +158,10 @@ var createUniformX = function ( data, uniformName, defaultConstructor, glSignatu
     var uniform = new Uniform( name );
 
     // if argument is not an array or typed array, create one
-    if ( !Array.isArray( value ) && value.byteLength === undefined )
-        value = [ value ];
+    if ( !Array.isArray( value ) && value.byteLength === undefined ) {
+        value = defaultConstructor();
+        value[ 0 ] = data;
+    }
 
     uniform.setInternalArray( value );
     uniform._glCall = glSignature;
@@ -169,23 +171,23 @@ var createUniformX = function ( data, uniformName, defaultConstructor, glSignatu
 };
 
 var constructorFloat = function () {
-    return [ 0.0 ];
+    return new Float32Array( 1 );
 };
 
 var constructorInt = function () {
-    return [ 0 ];
+    return new Int32Array( 1 );
 };
 
 var constructorInt2 = function () {
-    return [ 0, 0 ];
+    return new Int32Array( 2 );
 };
 
 var constructorInt3 = function () {
-    return [ 0, 0, 0 ];
+    return new Int32Array( 3 );
 };
 
 var constructorInt4 = function () {
-    return [ 0, 0, 0, 0 ];
+    return new Int32Array( 4 );
 };
 
 var constructorMat2 = function () {
@@ -193,7 +195,9 @@ var constructorMat2 = function () {
 };
 
 var constructorMat3 = function () {
-    return [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ];
+    var out = new Float32Array( 9 );
+    out[ 0 ] = out[ 4 ] = out[ 8 ] = 1.0;
+    return out;
 };
 
 // works also for float array but data must be given
