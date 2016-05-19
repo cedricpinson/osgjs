@@ -130,11 +130,11 @@ var Quat = {
         return function ( t, a, b, r ) {
 
             var cos = this.dot( a, b );
-            var b3 = b;
+            var invTB = 1.0;
 
-            var invTB = false;
             // shortest path
             if ( cos < 0.0 ) {
+                invTB = -1.0;
                 cos = -cos;
             }
 
@@ -167,10 +167,10 @@ var Quat = {
 
             tb *= invTB;
 
-            r[ 0 ] = a[ 0 ] * ta + b3[ 0 ] * tb;
-            r[ 1 ] = a[ 1 ] * ta + b3[ 1 ] * tb;
-            r[ 2 ] = a[ 2 ] * ta + b3[ 2 ] * tb;
-            r[ 3 ] = a[ 3 ] * ta + b3[ 3 ] * tb;
+            r[ 0 ] = a[ 0 ] * ta + b[ 0 ] * tb;
+            r[ 1 ] = a[ 1 ] * ta + b[ 1 ] * tb;
+            r[ 2 ] = a[ 2 ] * ta + b[ 2 ] * tb;
+            r[ 3 ] = a[ 3 ] * ta + b[ 3 ] * tb;
             return r;
         };
 

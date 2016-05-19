@@ -69,9 +69,9 @@ module.exports = function () {
         mockup.near( qr, Quat.createAndSet( 0.707107, 4.32964e-17, -0.707107, 4.32964e-17 ) );
 
         // check consistency with quaternion and matrix multiplication order
-        var m1 = Quat.create(),
-            m0 = Quat.create(),
-            mr = Quat.create();
+        var m1 = Matrix.create();
+        var m0 = Matrix.create();
+        var mr = Matrix.create();
         Matrix.makeRotateFromQuat( q1, m1 );
         Matrix.makeRotateFromQuat( q0, m0 );
         Matrix.mult( m1, m0, mr );

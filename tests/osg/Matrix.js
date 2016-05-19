@@ -87,7 +87,7 @@ module.exports = function () {
         var vec = Vec3.createAndSet( 0.0, 0.0, 10 );
         var inv = Matrix.create();
         Matrix.inverse( m, inv );
-        var res = Matrix.transformVec3( inv, vec, Matrix.create() );
+        var res = Matrix.transformVec3( inv, vec, Vec3.create() );
         mockup.near( res, Vec3.createAndSet( 10, 0.0, 0.0 ) );
 
         var res2 = Matrix.transformVec3( m, res, Vec3.create() );
