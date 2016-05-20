@@ -97,7 +97,7 @@ EllipsoidModel.prototype = {
     computeLocalToWorldTransformFromLatLongHeight: function ( latitude, longitude, height, result ) {
         if ( result === undefined ) {
             Notify.warn( 'deprecated, use this signature computeLocalToWorldTransformFromLatLongHeight(latitude, longitude, height, result)' );
-            result = new Array( 16 );
+            result = Matrix.create();
         }
         var pos = this.convertLatLongHeightToXYZ( latitude, longitude, height, result );
         Matrix.makeTranslate( pos[ 0 ], pos[ 1 ], pos[ 2 ], result );
