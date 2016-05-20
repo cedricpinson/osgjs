@@ -1,5 +1,4 @@
 'use strict';
-var $ = require( 'jquery' );
 var getScene = require( 'tests/mockup/scene' );
 var getBoxScene = require( 'tests/mockup/box' );
 var Channel = require( 'osgAnimation/Channel' );
@@ -20,7 +19,7 @@ var checkNear = function ( a, b, threshold ) {
         threshold = 1e-5;
     }
 
-    if ( $.isArray( a ) ) {
+    if ( a.length !== undefined ) {
         var expected = function ( a, b ) {
             return QUnit.jsDump.parse( a ) + ' expected ' + QUnit.jsDump.parse( b );
         };
@@ -59,7 +58,7 @@ var near = function ( a, b, error, message ) {
     if ( typeof threshold !== 'number' )
         threshold = 1e-5;
 
-    if ( $.isArray( a ) ) {
+    if ( a.length !== undefined ) {
         for ( var i = 0; i < a.length; ++i ) {
             var number = typeof a[ i ] === 'number' && typeof b[ i ] === 'number' && !isNaN( a[ i ] ) && !isNaN( b[ i ] );
             if ( Math.abs( a[ i ] - b[ i ] ) > threshold || number === false ) {

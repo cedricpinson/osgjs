@@ -4,7 +4,6 @@ var mockup = require( 'tests/mockup/mockup' );
 var FirstPersonManipulator = require( 'osgGA/FirstPersonManipulator' );
 var Camera = require( 'osg/Camera' );
 var Vec3 = require( 'osg/Vec3' );
-var Quat = require( 'osg/Quat' );
 var Matrix = require( 'osg/Matrix' );
 
 
@@ -45,24 +44,22 @@ module.exports = function () {
         manipulator.getEyePosition( eye );
         manipulator.getTarget( target );
 
-        mockup.near( eye, [ 0, 25, 10 ], 1e-5, 'check default eye position' );
-        mockup.near( target, [ 0, 26, 10 ], 1e-5, 'check default target' );
-        mockup.near( manipulator.getDistance(), 1, 1e-5, 'check default distance' );
+        mockup.near( eye, Vec3.createAndSet( 0.0, 25.0, 10.0 ), 1e-5, 'check default eye position' );
+        mockup.near( target, Vec3.createAndSet( 0.0, 26.0, 10.0 ), 1e-5, 'check default target' );
+        mockup.near( manipulator.getDistance(), 1.0, 1e-5, 'check default distance' );
 
         manipulator.update( fakeFS );
-        mockup.near( manipulator.getInverseMatrix(), [ 1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, -10, 25, 1 ], 1e-5, 'check matrix result' );
+        mockup.near( manipulator.getInverseMatrix(), Matrix.createAndSet( 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -10.0, 25.0, 1.0 ), 1e-5, 'check matrix result' );
 
 
-        manipulator.setTarget( [ 10, 10, 10 ] );
+        manipulator.setTarget( Vec3.createAndSet( 10.0, 10.0, 10.0 ) );
         manipulator.update( fakeFS );
-        mockup.near( manipulator.getInverseMatrix(), [ -0.8320502943378436, 0, -0.5547001962252293, 0, -0.5547001962252293, 0, 0.8320502943378436, 0, 0, 1, 0, 0, 13.867504905630732, -10, -20.80125735844609, 1 ], 1e-5, 'check matrix result' );
+        mockup.near( manipulator.getInverseMatrix(), Matrix.createAndSet( -0.83205029, 0.0, -0.55470019, 0.0, -0.55470019, 0.0, 0.83205029, 0.0, 0.0, 1.0, 0.0, 0.0, 13.867504, -10, -20.801257, 1.0 ), 1e-5, 'check matrix result' );
 
 
         manipulator.computeRotation( 100.0, 0.4 );
         manipulator.update( fakeFS );
-        mockup.near( manipulator.getInverseMatrix(), [ 0.017205427761774566, 0.003999397237610259, -0.9998439768670262, 0, -0.9998519756721663, 0.0000688215275227005, -0.017205290118536, 0, 4.41812385287843e-18, 0.9999920000106668, 0.003999989333342668, 0, 24.996299391804158, -10.001640538294735, 0.3901323596299733, 1 ], 1e-5, 'check matrix result' );
-
+        mockup.near( manipulator.getInverseMatrix(), Matrix.createAndSet( 0.017205427, 0.00399939, -0.9998439, 0.0, -0.9998519, 0.000068821, -0.01720529, 0.0, 0.0, 1.0, 0.004, 0.0, 25.0, -10.001640, 0.3901323, 1.0 ), 1e-2, 'check matrix result' );
     } );
-
 
 };

@@ -212,7 +212,7 @@ module.exports = function () {
             var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
             ok( mockup.checkNear( stack[ 1 ][ 0 ], 5 ), 'near should be 5.0 and is ' + stack[ 1 ][ 0 ] );
             ok( mockup.checkNear( stack[ 1 ][ 1 ], 15 ), 'near should be 15.0 and is ' + stack[ 1 ][ 1 ] );
-            ok( mockup.checkNear( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+            ok( mockup.checkNear( resultProjection, supposedProjection, 1e-3 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
         } )();
 
         // check the computation of nearfar with camera in position that it reverses near far
@@ -263,7 +263,7 @@ module.exports = function () {
             camera0.accept( cull );
             ok( mockup.checkNear( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
             ok( mockup.checkNear( stack[ 1 ][ 1 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 1 ] );
-            ok( mockup.checkNear( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+            ok( mockup.checkNear( resultProjection, supposedProjection, 1e-3 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
         } )();
 
