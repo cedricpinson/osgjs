@@ -23,9 +23,9 @@ var OrbitManipulator = function ( boundStrategy ) {
 };
 
 OrbitManipulator.Interpolator = function ( size, delay ) {
-    this._current = new Array( size );
-    this._target = new Array( size );
-    this._delta = new Array( size );
+    this._current = new Float32Array( size );
+    this._target = new Float32Array( size );
+    this._delta = new Float32Array( size );
     this._delay = ( delay !== undefined ) ? delay : 0.15;
     this._reset = false;
     this._start = 0.0;
@@ -132,8 +132,8 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._zoom = new OrbitManipulator.Interpolator( 1 );
 
         this._maxDistance = Infinity;
-        this._minDistance = 1e-10; // min distance allowed between eye and target
-        this._minSpeed = 1e-10; // set a limit to pan/zoom speed
+        this._minDistance = 1e-4; // min distance allowed between eye and target
+        this._minSpeed = 1e-4; // set a limit to pan/zoom speed
         this._scaleMouseMotion = 1.0;
 
         this._inverseMatrix = Matrix.create();
@@ -237,7 +237,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
 
     setMinDistance: function ( d ) {
-        this._minDistance = Math.max( 1e-10, d );
+        this._minDistance = Math.max( 1e-4, d );
     },
     getMinDistance: function () {
         return this._minDistance;
