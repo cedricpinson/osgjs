@@ -34,8 +34,8 @@ var Geometry = function () {
             }
         } );
 
-        var push = function ( value ) {
-            this.push( value );
+        var push = function () {
+            this.push.apply( this, arguments );
             self.dirty();
 
         }.bind( this._primitives );
