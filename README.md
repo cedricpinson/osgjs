@@ -15,6 +15,12 @@ The mailing list is available here: http://groups.google.com/group/osgjs
 
 If you are interested in contributing, contact us on the osgjs gitter channel ( https://gitter.im/cedricpinson/osgjs ) or on the IRC channel #osgjs on Freenode. Also by e-mail at contact@osgjs.org. Follow @trigrou on twitter to get news and updates.
 
+Examples / Tutorials
+-----------------------
+- using osgjs with typescript http://marino.dk/mproject/ with sourcecode https://github.com/Crisium/mproject
+- examples http://osgjs.org/#examples
+- tutorials on codepen http://codepen.io/collection/CbvIg/
+
 
 How to build your own osgjs
 ----------------------------
