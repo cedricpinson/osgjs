@@ -238,18 +238,27 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
         var maxSize = WebglCaps.instance().getWebGLParameter( 'MAX_TEXTURE_SIZE' );
 
+        if ( w !== this._textureWidth || h !== this._textureHeight )
+            this.dirty();
+
         if ( w !== undefined ) {
             if ( w > maxSize ) {
                 Notify.error( 'width (' + w + ') too big for GPU. Max Texture Size is "' + maxSize + '"' );
+                this._textureWidth = maxSize;
+            } else {
+                this._textureWidth = w;
             }
-            this._textureWidth = w;
         }
+
         if ( h !== undefined ) {
             if ( h > maxSize ) {
                 Notify.error( 'height (' + h + ') too big for GPU. Max Texture Size is "' + maxSize + '"' );
+                this._textureHeight = maxSize;
+            } else {
+                this._textureHeight = h;
             }
-            this._textureHeight = h;
         }
+
         this._textureNull = false;
     },
 
