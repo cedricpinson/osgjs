@@ -83,6 +83,8 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
     computeBoundingBox: function ( boundingBox ) {
 
+        boundingBox.init();
+
         var vertexArray = this.getVertexAttributeList().Vertex;
         var weightsArray = this.getVertexAttributeList().Weights;
         // mainly copy paste of geometry computeBoundingBox code, except we only

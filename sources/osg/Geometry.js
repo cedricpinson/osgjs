@@ -396,6 +396,8 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
     computeBoundingBox: function ( boundingBox ) {
 
+        boundingBox.init();
+
         var vertexArray = this.getVertexAttributeList().Vertex;
         if ( vertexArray && vertexArray.getElements() && vertexArray.getItemSize() > 2 ) {
             var vertexes = vertexArray.getElements();
@@ -434,6 +436,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             max[ 1 ] = maxy;
             max[ 2 ] = maxz;
         }
+
         return boundingBox;
     },
 
