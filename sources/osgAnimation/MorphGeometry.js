@@ -7,6 +7,7 @@ var Geometry = require( 'osg/Geometry' );
 var StateSet = require( 'osg/StateSet' );
 var MorphAttribute = require( 'osgAnimation/MorphAttribute' );
 var StateAttribute = require( 'osg/StateAttribute' );
+var BoundingBox = require( 'osg/BoundingBox' );
 
 
 /**
@@ -73,18 +74,22 @@ MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         return this._targetWeights;
     },
 
-    computeBoundingBox: function ( boundingBox ) {
-        Geometry.prototype.computeBoundingBox.call( this, boundingBox );
+    computeBoundingBox: ( function () {
+        var tmpBox = new BoundingBox();
 
-        // expand bb with targets
-        // Note : if the morphs have many many targets it can be done more smartly in
-        // the UpdateMorph on each frame by just taking into account the "active morphs"
-        for ( var i = 0, l = this._targets.length; i < l; i++ ) {
-            this._targets[ i ].computeBoundingBox( boundingBox );
-        }
+        return function ( boundingBox ) {
+            Geometry.prototype.computeBoundingBox.call( this, boundingBox );
 
-        return boundingBox;
-    },
+            // expand bb with targets
+            // Note : if the morphs have many many targets it can be done more smartly in
+            // the UpdateMorph on each frame by just taking into account the "active morphs"
+            for ( var i = 0, l = this._targets.length; i < l; i++ ) {
+                boundingBox.expandByBoundingBox( this._targets[ i ].computeBoundingBox( tmpBox ) );
+            }
+
+            return boundingBox;
+        };
+    } )(),
 
     mergeChildrenVertexAttributeList: function () {
 

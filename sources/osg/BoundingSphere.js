@@ -34,41 +34,27 @@ BoundingSphere.prototype = {
     expandByBoundingBox: ( function () {
         var v = Vec3.create();
         var newbb = new BoundingBox();
+
         return function ( bb ) {
             if ( !bb.valid() )
                 return;
 
-            var c;
             if ( this.valid() ) {
-                newbb._min[ 0 ] = bb._min[ 0 ];
-                newbb._min[ 1 ] = bb._min[ 1 ];
-                newbb._min[ 2 ] = bb._min[ 2 ];
-                newbb._max[ 0 ] = bb._max[ 0 ];
-                newbb._max[ 1 ] = bb._max[ 1 ];
-                newbb._max[ 2 ] = bb._max[ 2 ];
+                Vec3.copy( bb._min, newbb._min );
+                Vec3.copy( bb._max, newbb._max );
 
                 for ( var i = 0; i < 8; i++ ) {
-                    Vec3.sub( bb.corner( c ), this._center, v ); // get the direction vector from corner
+                    Vec3.sub( bb.corner( i, v ), this._center, v ); // get the direction vector from corner
                     Vec3.normalize( v, v ); // normalise it.
-                    v[ 0 ] *= -this._radius; // move the vector in the opposite direction distance radius.
-                    v[ 1 ] *= -this._radius; // move the vector in the opposite direction distance radius.
-                    v[ 2 ] *= -this._radius; // move the vector in the opposite direction distance radius.
-                    v[ 0 ] += this._center[ 0 ]; // move to absolute position.
-                    v[ 1 ] += this._center[ 1 ]; // move to absolute position.
-                    v[ 2 ] += this._center[ 2 ]; // move to absolute position.
+                    Vec3.mult( v, -this._radius, v ); // move the vector in the opposite direction distance radius.
+                    Vec3.add( v, this._center, v ); // move to absolute position.
                     newbb.expandByVec3( v ); // add it into the new bounding box.
                 }
 
-                c = newbb.center( v );
-                this._center[ 0 ] = c[ 0 ];
-                this._center[ 1 ] = c[ 1 ];
-                this._center[ 2 ] = c[ 2 ];
+                newbb.center( this._center );
                 this._radius = newbb.radius();
             } else {
-                c = bb.center( v );
-                this._center[ 0 ] = c[ 0 ];
-                this._center[ 1 ] = c[ 1 ];
-                this._center[ 2 ] = c[ 2 ];
+                bb.center( this._center );
                 this._radius = bb.radius();
             }
         };
