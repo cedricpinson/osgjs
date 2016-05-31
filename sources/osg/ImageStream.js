@@ -25,10 +25,15 @@ ImageStream.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
         // event at the end of the stream
         video.addEventListener( 'ended', function () {
-            this._status = ImageStream.PAUSE;
+            if ( !this._imageObject.loop )
+                this.stop();
         }.bind( this ), true );
 
         this.dirty();
+    },
+
+    setLooping: function ( bool ) {
+        this._imageObject.loop = bool;
     },
 
     play: function () {

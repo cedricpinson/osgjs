@@ -73,6 +73,7 @@
             var image = new osg.ImageStream( videoElement );
 
             videoElement.preload = 'auto';
+            videoElement.loop = true;
             videoElement.crossOrigin = 'anonymous';
             videoElement.src = this._config.url;
 
