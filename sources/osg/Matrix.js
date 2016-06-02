@@ -658,60 +658,43 @@ var Matrix = {
         return result;
     },
 
-    transformVec3: ( function () {
-        var tmpVec = Vec3.create();
+    transformVec3: function ( matrix, vector, result ) {
+        if ( !result ) {
+            Notify.warn( 'no vec3 destination !' );
+            result = Vec3.create();
+        }
 
-        return function ( matrix, vector, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no vec3 destination !' );
-                result = Vec3.create();
-            }
+        var x = vector[ 0 ];
+        var y = vector[ 1 ];
+        var z = vector[ 2 ];
 
-            var d = 1.0 / ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] );
+        var d = 1.0 / ( matrix[ 3 ] * x + matrix[ 7 ] * y + matrix[ 11 ] * z + matrix[ 15 ] );
 
-            var tmp;
-            if ( result === vector ) {
-                tmp = tmpVec;
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 4 ] * vector[ 1 ] + matrix[ 8 ] * vector[ 2 ] + matrix[ 12 ] ) * d;
-            tmp[ 1 ] = ( matrix[ 1 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 9 ] * vector[ 2 ] + matrix[ 13 ] ) * d;
-            tmp[ 2 ] = ( matrix[ 2 ] * vector[ 0 ] + matrix[ 6 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 14 ] ) * d;
+        result[ 0 ] = ( matrix[ 0 ] * x + matrix[ 4 ] * y + matrix[ 8 ] * z + matrix[ 12 ] ) * d;
+        result[ 1 ] = ( matrix[ 1 ] * x + matrix[ 5 ] * y + matrix[ 9 ] * z + matrix[ 13 ] ) * d;
+        result[ 2 ] = ( matrix[ 2 ] * x + matrix[ 6 ] * y + matrix[ 10 ] * z + matrix[ 14 ] ) * d;
 
-            if ( result === vector ) {
-                Vec3.copy( tmp, result );
-            }
-            return result;
-        };
-    } )(),
+        return result;
+    },
 
-    transformVec4: ( function () {
-        var tmpVec = Vec4.create();
+    transformVec4: function ( matrix, vector, result ) {
+        if ( !result ) {
+            Notify.warn( 'no Vec4 destination !' );
+            result = Vec4.create();
+        }
 
-        return function ( matrix, vector, result ) {
+        var x = vector[ 0 ];
+        var y = vector[ 1 ];
+        var z = vector[ 2 ];
+        var w = vector[ 3 ];
 
-            if ( result === undefined ) {
-                Notify.warn( 'no Vec4 destination !' );
-                result = Vec4.create();
-            }
-            var tmp;
-            if ( result === vector ) {
-                tmp = tmpVec;
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 4 ] * vector[ 1 ] + matrix[ 8 ] * vector[ 2 ] + matrix[ 12 ] * vector[ 3 ] );
-            tmp[ 1 ] = ( matrix[ 1 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 9 ] * vector[ 2 ] + matrix[ 13 ] * vector[ 3 ] );
-            tmp[ 2 ] = ( matrix[ 2 ] * vector[ 0 ] + matrix[ 6 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 14 ] * vector[ 3 ] );
-            tmp[ 3 ] = ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] * vector[ 3 ] );
+        result[ 0 ] = matrix[ 0 ] * x + matrix[ 4 ] * y + matrix[ 8 ] * z + matrix[ 12 ] * w;
+        result[ 1 ] = matrix[ 1 ] * x + matrix[ 5 ] * y + matrix[ 9 ] * z + matrix[ 13 ] * w;
+        result[ 2 ] = matrix[ 2 ] * x + matrix[ 6 ] * y + matrix[ 10 ] * z + matrix[ 14 ] * w;
+        result[ 3 ] = matrix[ 3 ] * x + matrix[ 7 ] * y + matrix[ 11 ] * z + matrix[ 15 ] * w;
 
-            if ( result === vector ) {
-                Vec4.copy( tmp, result );
-            }
-            return result;
-        };
-    } )(),
+        return result;
+    },
 
     // http://dev.theomader.com/transform-bounding-boxes/
     // https://github.com/erich666/GraphicsGems/blob/master/gems/TransBox.c
@@ -775,32 +758,24 @@ var Matrix = {
         };
     } )(),
 
-    transformVec4PostMult: ( function () {
-        var tmpVec = Vec4.create();
+    transformVec4PostMult: function ( matrix, vector, result ) {
+        if ( !result ) {
+            Notify.warn( 'no Vec4 destination !' );
+            result = Vec4.create();
+        }
 
-        return function ( matrix, vector, result ) {
+        var x = vector[ 0 ];
+        var y = vector[ 1 ];
+        var z = vector[ 2 ];
+        var w = vector[ 3 ];
 
-            if ( result === undefined ) {
-                Notify.warn( 'no Vec4 destination !' );
-                result = Vec4.create();
-            }
-            var tmp;
-            if ( result === vector ) {
-                tmp = tmpVec;
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 1 ] * vector[ 1 ] + matrix[ 2 ] * vector[ 2 ] + matrix[ 3 ] * vector[ 3 ] );
-            tmp[ 1 ] = ( matrix[ 4 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 6 ] * vector[ 2 ] + matrix[ 7 ] * vector[ 3 ] );
-            tmp[ 2 ] = ( matrix[ 8 ] * vector[ 0 ] + matrix[ 9 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 11 ] * vector[ 3 ] );
-            tmp[ 3 ] = ( matrix[ 12 ] * vector[ 0 ] + matrix[ 13 ] * vector[ 1 ] + matrix[ 14 ] * vector[ 2 ] + matrix[ 15 ] * vector[ 3 ] );
+        result[ 0 ] = matrix[ 0 ] * x + matrix[ 1 ] * y + matrix[ 2 ] * z + matrix[ 3 ] * w;
+        result[ 1 ] = matrix[ 4 ] * x + matrix[ 5 ] * y + matrix[ 6 ] * z + matrix[ 7 ] * w;
+        result[ 2 ] = matrix[ 8 ] * x + matrix[ 9 ] * y + matrix[ 10 ] * z + matrix[ 11 ] * w;
+        result[ 3 ] = matrix[ 12 ] * x + matrix[ 13 ] * y + matrix[ 14 ] * z + matrix[ 15 ] * w;
 
-            if ( result === vector ) {
-                Vec4.copy( tmp, result );
-            }
-            return result;
-        };
-    } )(),
+        return result;
+    },
 
     copy: function ( matrix, result ) {
         result[ 0 ] = matrix[ 0 ];
@@ -1091,19 +1066,18 @@ var Matrix = {
                 a13 = mat[ 7 ];
             var a23 = mat[ 11 ];
 
-            mat[ 1 ] = mat[ 4 ];
-            mat[ 2 ] = mat[ 8 ];
-            mat[ 3 ] = mat[ 12 ];
-            mat[ 4 ] = a01;
-            mat[ 6 ] = mat[ 9 ];
-            mat[ 7 ] = mat[ 13 ];
-            mat[ 8 ] = a02;
-            mat[ 9 ] = a12;
-            mat[ 11 ] = mat[ 14 ];
-            mat[ 12 ] = a03;
-            mat[ 13 ] = a13;
-            mat[ 14 ] = a23;
-            return mat;
+            dest[ 1 ] = mat[ 4 ];
+            dest[ 2 ] = mat[ 8 ];
+            dest[ 3 ] = mat[ 12 ];
+            dest[ 4 ] = a01;
+            dest[ 6 ] = mat[ 9 ];
+            dest[ 7 ] = mat[ 13 ];
+            dest[ 8 ] = a02;
+            dest[ 9 ] = a12;
+            dest[ 11 ] = mat[ 14 ];
+            dest[ 12 ] = a03;
+            dest[ 13 ] = a13;
+            dest[ 14 ] = a23;
         } else {
             dest[ 0 ] = mat[ 0 ];
             dest[ 1 ] = mat[ 4 ];
@@ -1121,8 +1095,8 @@ var Matrix = {
             dest[ 13 ] = mat[ 7 ];
             dest[ 14 ] = mat[ 11 ];
             dest[ 15 ] = mat[ 15 ];
-            return dest;
         }
+        return dest;
     },
 
     getFrustumPlanes: ( function () {
