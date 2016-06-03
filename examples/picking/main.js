@@ -69,7 +69,7 @@
 
     var loadModel = function ( data, viewer, node, unifs ) {
         var promise = osgDB.parseSceneGraph( data );
-        // var promise = P.resolve( osg.createTexturedSphere( 1.0, 500, 500 ) );
+        // var promise = window.P.resolve( osg.createTexturedSphere( 1.0, 500, 500 ) );
 
         promise.then( function ( child ) {
             node.addChild( child );

@@ -1,3 +1,5 @@
+'use strict';
+
 // from require to global var
 var OSG = window.OSG;
 OSG.globalify();

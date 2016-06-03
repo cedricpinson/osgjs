@@ -1,3 +1,5 @@
+'use strict';
+
 // from require to global var
 var OSG = window.OSG;
 OSG.globalify();
@@ -83,9 +85,6 @@ var main = function () {
 
         viewer.run();
 
-        var mousedown = function ( ev ) {
-            ev.stopPropagation();
-        };
     } catch ( er ) {
         osg.log( 'exception in osgViewer ' + er );
         alert( 'exception in osgViewer ' + er );

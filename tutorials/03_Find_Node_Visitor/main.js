@@ -1,3 +1,5 @@
+'use strict';
+
 // from require to global var
 var OSG = window.OSG;
 OSG.globalify();
@@ -40,7 +42,7 @@ window.addEventListener( 'load',
             },
             // the crux of it
             apply: function ( node ) {
-                if ( node.getName() == this._name ) {
+                if ( node.getName() === this._name ) {
                     this.found = node;
                     return;
                 }

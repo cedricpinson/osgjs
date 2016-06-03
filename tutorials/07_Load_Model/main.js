@@ -1,80 +1,89 @@
-var main = function() {
+'use strict';
+
+var OSG = window.OSG;
+OSG.globalify();
+var osg = OSG.osg;
+var osgDB = OSG.osgDB;
+var osgViewer = OSG.osgViewer;
+var P = window.P;
+
+var main = function () {
     // from require to global var
-    OSG.globalify();
-    console.log('osg ready');
+    console.log( 'osg ready' );
 
     var rootModelNode = new osg.MatrixTransform();
-    rootModelNode.setMatrix(osg.Matrix.makeRotate(Math.PI / 2, 1, 0, 0, []));
+    rootModelNode.setMatrix( osg.Matrix.makeRotate( Math.PI / 2, 1, 0, 0, [] ) );
 
-    function getModelJsonp(modelName, cbFocusCamera) {
-        var url_model;
-        switch (modelName) {
-            case "mickey":
-                url_model = 'http://osgjs.org/examples/pointcloud/' + modelName + '.osgjs';
-                break;
-            case "pokerscene":
-                url_model = 'http://osgjs.org/examples/pokerscene/' + modelName + '.js';
-                break;
-            case "ogre":
-                url_model = 'http://osgjs.org/examples/shadow/' + modelName + '.osgjs';
-                break;
+    function getModelJsonp( modelName, cbFocusCamera ) {
+        var urlModel;
+        switch ( modelName ) {
+        case 'mickey':
+            urlModel = 'http://osgjs.org/examples/pointcloud/' + modelName + '.osgjs';
+            break;
+        case 'pokerscene':
+            urlModel = 'http://osgjs.org/examples/pokerscene/' + modelName + '.js';
+            break;
+        case 'ogre':
+            urlModel = 'http://osgjs.org/examples/shadow/' + modelName + '.osgjs';
+            break;
         }
 
-        var loadModel = function(url) {
-            console.log('loading ' + url);
+        var loadModel = function ( url ) {
+            console.log( 'loading ' + url );
 
-            var s = document.createElement("script");
-            s.onload = function() {
+            var s = document.createElement( 'script' );
+            s.onload = function () {
                 var NodeModel;
-                switch (modelName) {
-                    case "mickey":
-                        NodeModel = getModel();
-                        break;
-                    case "pokerscene":
-                        NodeModel = getPokerScene();
-                        break;
-                    case "ogre":
-                        NodeModel = getOgre();
-                        break;
+                switch ( modelName ) {
+                case 'mickey':
+                    NodeModel = window.getModel();
+                    break;
+                case 'pokerscene':
+                    NodeModel = window.getPokerScene();
+                    break;
+                case 'ogre':
+                    NodeModel = window.getOgre();
+                    break;
                 }
 
-                var promise = osgDB.parseSceneGraph(NodeModel);
-                P.resolve(promise).then(function(child) {
+                var promise = osgDB.parseSceneGraph( NodeModel );
+                P.resolve( promise ).then( function ( child ) {
                     rootModelNode.removeChildren();
-                    rootModelNode.addChild(child);
+                    rootModelNode.addChild( child );
                     cbFocusCamera();
-                    console.log('success ' + url);
-                });
+                    console.log( 'success ' + url );
+                } );
 
-                document.body.removeChild(s);
+                document.body.removeChild( s );
             };
 
-            s.onerror = function(aEvt) {
-                osg.log('error ' + url);
+            s.onerror = function () {
+                osg.log( 'error ' + url );
             };
 
-            s.type = "text/javascript";
-            s.src = url
-            document.body.appendChild(s);
-        }
-        console.log('osgjs loading: ' + modelName);
-        loadModel(url_model);
+            s.type = 'text/javascript';
+            s.src = url;
+            document.body.appendChild( s );
+        };
+
+        console.log( 'osgjs loading: ' + modelName );
+        loadModel( urlModel );
         return rootModelNode;
     }
 
-    function createScene(cbFocusCamera) {
+    function createScene( cbFocusCamera ) {
         var scene = new osg.Node();
 
-        getModelJsonp('ogre', cbFocusCamera);
+        getModelJsonp( 'ogre', cbFocusCamera );
 
-        scene.addChild(rootModelNode);
+        scene.addChild( rootModelNode );
 
         //gui stuffs
-        var models_ui = document.getElementById('models');
+        var modelsUI = document.getElementById( 'models' );
 
-        models_ui.onchange = function(ev) {
-            var modelName = this.options[this.selectedIndex].value;
-            getModelJsonp(modelName, cbFocusCamera);
+        modelsUI.onchange = function () {
+            var modelName = this.options[ this.selectedIndex ].value;
+            getModelJsonp( modelName, cbFocusCamera );
             cbFocusCamera();
         };
 
@@ -82,10 +91,10 @@ var main = function() {
     }
 
     // The 3D canvas.
-    var canvas = document.getElementById("3DView");
+    var canvas = document.getElementById( '3DView' );
     var viewer;
 
-    var cbFocusCamera = function() {
+    var cbFocusCamera = function () {
         viewer.getManipulator().computeHomePosition();
     };
     /*
@@ -96,12 +105,12 @@ var main = function() {
     viewer.setLight(lightnew);
     */
     // The viewer
-    viewer = new osgViewer.Viewer(canvas);
+    viewer = new osgViewer.Viewer( canvas );
     viewer.init();
-    viewer.getCamera().setClearColor([0.3, 0.3, 0.3, 0.3]);
-    viewer.setSceneData(createScene(cbFocusCamera));
+    viewer.getCamera().setClearColor( [ 0.3, 0.3, 0.3, 0.3 ] );
+    viewer.setSceneData( createScene( cbFocusCamera ) );
     viewer.setupManipulator();
     viewer.run();
-}
+};
 
-window.addEventListener("load", main, true);
+window.addEventListener( 'load', main, true );
