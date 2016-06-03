@@ -134,11 +134,6 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         return this._viewportStack[ this._viewportStack.length - 1 ];
     },
     getLookVectorLocal: function ( outLookVector ) {
-        if ( !outLookVector ) {
-            Notify.warn( 'no matrix destination !' );
-            outLookVector = Vec3.create();
-        }
-
         var lookVectorLocal = this.getCurrentModelViewMatrix();
         return Vec3.set( -lookVectorLocal[ 2 ], -lookVectorLocal[ 6 ], -lookVectorLocal[ 10 ], outLookVector );
     },

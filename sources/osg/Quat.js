@@ -1,7 +1,6 @@
 'use strict';
 var Vec3 = require( 'osg/Vec3' );
 var Vec4 = require( 'osg/Vec4' );
-var Notify = require( 'osg/Notify' );
 
 
 var Msqrt = Math.sqrt;
@@ -264,10 +263,7 @@ var Quat = {
         if ( r > 0.00001 ) {
             s = et * Math.sin( r ) / r;
         }
-        if ( res === undefined ) {
-            Notify.warn( 'no quat destination !' );
-            res = Quat.create();
-        }
+
         res[ 0 ] = s * a[ 0 ];
         res[ 1 ] = s * a[ 1 ];
         res[ 2 ] = s * a[ 2 ];
@@ -282,10 +278,7 @@ var Quat = {
         if ( r > 0.00001 ) {
             t = Math.atan2( r, a[ 3 ] ) / r;
         }
-        if ( res === undefined ) {
-            Notify.warn( 'no quat destination !' );
-            res = Quat.create();
-        }
+
         n += a[ 3 ] * a[ 3 ];
         res[ 0 ] = t * a[ 0 ];
         res[ 1 ] = t * a[ 1 ];

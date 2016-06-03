@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Matrix = require( 'osg/Matrix' );
-var Notify = require( 'osg/Notify' );
+
 
 var Viewport = function ( x, y, w, h ) {
     StateAttribute.call( this );
@@ -53,12 +53,6 @@ Viewport.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
         var translate = Matrix.create();
         var scale = Matrix.create();
         return function ( destination ) {
-
-            if ( !destination ) {
-                Notify.warn( 'no matrix destination !' );
-                destination = Matrix.create();
-            }
-
             // res = Matrix offset * Matrix scale * Matrix translate
             Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
             Matrix.makeScale( 0.5 * this._width, 0.5 * this._height, 0.5, scale );

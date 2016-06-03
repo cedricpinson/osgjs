@@ -3,6 +3,7 @@ var QUnit = require( 'qunit' );
 var mockup = require( 'tests/mockup/mockup' );
 var BoundingBox = require( 'osg/BoundingBox' );
 var ReaderParser = require( 'osgDB/ReaderParser' );
+var Vec3 = require( 'osg/Vec3' );
 
 
 module.exports = function () {
@@ -34,11 +35,11 @@ module.exports = function () {
 
         ( function () {
             var bb = new BoundingBox();
-            bb._min = [ 1, 2, 3 ];
-            bb._max = [ 4, 5, 6 ];
+            bb._min = Vec3.createAndSet( 1.0, 2.0, 3.0 );
+            bb._max = Vec3.createAndSet( 4.0, 5.0, 6.0 );
 
-            ok( mockup.checkNear( bb.corner( 0 ), [ 1, 2, 3 ] ), 'Box corner 0' );
-            ok( mockup.checkNear( bb.corner( 7 ), [ 4, 5, 6 ] ), 'Box corner 0' );
+            ok( mockup.checkNear( bb.corner( 0, Vec3.create() ), Vec3.createAndSet( 1.0, 2.0, 3.0 ) ), 'Box corner 0' );
+            ok( mockup.checkNear( bb.corner( 7, Vec3.create() ), Vec3.createAndSet( 4.0, 5.0, 6.0 ) ), 'Box corner 7' );
         } )();
     } );
 };

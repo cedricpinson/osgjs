@@ -5,7 +5,6 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var Plane = require( 'osg/Plane' );
 var Quat = require( 'osg/Quat' );
 var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
 
 
 var Mabs = Math.abs;
@@ -107,12 +106,6 @@ var Matrix = {
      * @param {Array} matrix to write result
      */
     makeTranslate: function ( x, y, z, matrix ) {
-        if ( matrix === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            matrix = Matrix.create();
-            Matrix.setRow( matrix, 3, x, y, z, 1.0 );
-            return matrix;
-        }
         Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
         Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
         Matrix.setRow( matrix, 2, 0.0, 0.0, 1.0, 0.0 );
@@ -225,10 +218,6 @@ var Matrix = {
         } else if ( r === b ) {
             return Matrix.postMult( a, b );
         } else {
-            if ( r === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                r = Matrix.create();
-            }
             r[ 0 ] = b[ 0 ] * a[ 0 ] + b[ 1 ] * a[ 4 ] + b[ 2 ] * a[ 8 ] + b[ 3 ] * a[ 12 ];
             r[ 1 ] = b[ 0 ] * a[ 1 ] + b[ 1 ] * a[ 5 ] + b[ 2 ] * a[ 9 ] + b[ 3 ] * a[ 13 ];
             r[ 2 ] = b[ 0 ] * a[ 2 ] + b[ 1 ] * a[ 6 ] + b[ 2 ] * a[ 10 ] + b[ 3 ] * a[ 14 ];
@@ -341,10 +330,6 @@ var Matrix = {
             return b;
             //return Matrix.postMult(r, a);
         }
-        if ( r === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            r = Matrix.create();
-        }
 
         var s00 = b[ 0 ];
         var s01 = b[ 1 ];
@@ -409,10 +394,6 @@ var Matrix = {
         var neg = Vec3.create();
 
         return function ( eye, eyeDir, up, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
             var f = eyeDir;
             Vec3.cross( f, up, s );
             Vec3.normalize( s, s );
@@ -450,12 +431,6 @@ var Matrix = {
         var f = Vec3.create();
 
         return function ( eye, center, up, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
-
-
             Vec3.sub( center, eye, f );
             Vec3.normalize( f, f );
             this.makeLookFromDirection( eye, f, up, result );
@@ -463,10 +438,6 @@ var Matrix = {
         };
     } )(),
     makeOrtho: function ( left, right, bottom, top, zNear, zFar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         // note transpose of Matrix_implementation wr.t OpenGL documentation, since the OSG use post multiplication rather than pre.
         // we will change this convention later
         var tx = -( right + left ) / ( right - left );
@@ -507,11 +478,6 @@ var Matrix = {
         var tq = Quat.create();
 
         return function ( mat, quatResult ) {
-            if ( quatResult === undefined ) {
-                Notify.warn( 'no quat destination !' );
-                quatResult = Quat.create();
-            }
-
             var s;
             var i, j;
 
@@ -599,10 +565,6 @@ var Matrix = {
 
     // result = Matrix M * Matrix Translate
     multTranslate: function ( mat, translate, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         if ( result !== mat ) {
             Matrix.copy( mat, result );
         }
@@ -638,20 +600,11 @@ var Matrix = {
         var qtemp = Quat.create();
 
         return function ( angle, x, y, z, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
             return Matrix.makeRotateFromQuat( Quat.makeRotate( angle, x, y, z, qtemp ), result );
         };
     } )(),
 
     transform3x3: function ( m, v, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
-
         result[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
         result[ 1 ] = m[ 4 ] * v[ 0 ] + m[ 5 ] * v[ 1 ] + m[ 6 ] * v[ 2 ];
         result[ 2 ] = m[ 8 ] * v[ 0 ] + m[ 9 ] * v[ 1 ] + m[ 10 ] * v[ 2 ];
@@ -659,11 +612,6 @@ var Matrix = {
     },
 
     transformVec3: function ( matrix, vector, result ) {
-        if ( !result ) {
-            Notify.warn( 'no vec3 destination !' );
-            result = Vec3.create();
-        }
-
         var x = vector[ 0 ];
         var y = vector[ 1 ];
         var z = vector[ 2 ];
@@ -678,11 +626,6 @@ var Matrix = {
     },
 
     transformVec4: function ( matrix, vector, result ) {
-        if ( !result ) {
-            Notify.warn( 'no Vec4 destination !' );
-            result = Vec4.create();
-        }
-
         var x = vector[ 0 ];
         var y = vector[ 1 ];
         var z = vector[ 2 ];
@@ -759,11 +702,6 @@ var Matrix = {
     } )(),
 
     transformVec4PostMult: function ( matrix, vector, result ) {
-        if ( !result ) {
-            Notify.warn( 'no Vec4 destination !' );
-            result = Vec4.create();
-        }
-
         var x = vector[ 0 ];
         var y = vector[ 1 ];
         var z = vector[ 2 ];
@@ -1162,10 +1100,6 @@ var Matrix = {
     } )(),
 
     makePerspective: function ( fovy, aspect, znear, zfar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         var ymax = znear * Math.tan( fovy * Math.PI / 360.0 );
         var ymin = -ymax;
         var xmin = ymin * aspect;
@@ -1258,10 +1192,6 @@ var Matrix = {
     },
 
     makeScale: function ( x, y, z, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         Matrix.setRow( result, 0, x, 0.0, 0.0, 0.0 );
         Matrix.setRow( result, 1, 0.0, y, 0.0, 0.0 );
         Matrix.setRow( result, 2, 0.0, 0.0, z, 0.0 );
@@ -1427,10 +1357,6 @@ var Matrix = {
     //http://www.geometry.caltech.edu/pubs/UD12.pdf
     // drop-in, just remove the one below, and rename this one
     makeFrustumInfinite: function ( left, right, bottom, top, znear, zfar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         var X = 2.0 * znear / ( right - left );
         var Y = 2.0 * znear / ( top - bottom );
         var A = ( right + left ) / ( right - left );
@@ -1444,10 +1370,6 @@ var Matrix = {
     },
 
     makeFrustum: function ( left, right, bottom, top, znear, zfar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         var X = 2.0 * znear / ( right - left );
         var Y = 2.0 * znear / ( top - bottom );
         var A = ( right + left ) / ( right - left );

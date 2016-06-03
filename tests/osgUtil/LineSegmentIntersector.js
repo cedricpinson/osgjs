@@ -120,7 +120,7 @@ module.exports = function () {
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
-        view.getCamera().setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ) ), Matrix.create() );
+        view.getCamera().setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() ) );
         view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 1000.0, Matrix.create() ) );
         // TODO it uses the old sync parseSceneGraphDeprecated
         var quad = ReaderParser.parseSceneGraph( mockup.getScene() );
@@ -158,7 +158,7 @@ module.exports = function () {
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
-        view.getCamera().setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10.0 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ) ), Matrix.create() );
+        view.getCamera().setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10.0 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() ) );
         view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 1000.0, Matrix.create() ) );
         // TODO it uses the old sync parseSceneGraphDeprecated
         var root = ReaderParser.parseSceneGraph( mockup.getScene() );
