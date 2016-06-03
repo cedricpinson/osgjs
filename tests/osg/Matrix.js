@@ -20,7 +20,7 @@ module.exports = function () {
     QUnit.test( 'Matrix.getRotate', function () {
         var m = Matrix.create();
         Matrix.makeRotateFromQuat( Quat.createAndSet( 0.653281, 0.270598, -0.653281, 0.270598 ), m );
-        var q = Matrix.getRotate( m );
+        var q = Matrix.getRotate( m, Quat.create() );
         mockup.near( q, Quat.createAndSet( 0.653281, 0.270598, -0.653281, 0.270598 ) );
 
     } );
@@ -37,10 +37,10 @@ module.exports = function () {
     } );
 
     QUnit.test( 'Matrix.makeLookAt', function () {
-        var m = Matrix.makeLookAt( Vec3.createAndSet( 0.0, -10, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 1.0 ) );
+        var m = Matrix.makeLookAt( Vec3.createAndSet( 0.0, -10, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 1.0 ), Matrix.create() );
         mockup.near( m, Matrix.createAndSet( 1.0, 0.0, -0, 0.0, 0.0, 0.0, -1, 0.0, 0.0, 1.0, -0, 0.0, 0.0, 0.0, -10, 1.0 ) );
 
-        var m2 = Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ) );
+        var m2 = Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() );
         mockup.near( m2, Matrix.createAndSet( -1, 0.0, -0, 0.0, 0.0, 1.0, -0, 0.0, 0.0, -0, -1, 0.0, 0.0, 0.0, -10, 1.0 ) );
     } );
 
@@ -72,7 +72,7 @@ module.exports = function () {
     } );
 
     QUnit.test( 'Matrix.getLookAt', function () {
-        var m = Matrix.makeLookAt( Vec3.createAndSet( 0.0, -10, 0.0 ), Vec3.createAndSet( 0.0, 5.0, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 1.0 ) );
+        var m = Matrix.makeLookAt( Vec3.createAndSet( 0.0, -10, 0.0 ), Vec3.createAndSet( 0.0, 5.0, 0.0 ), Vec3.createAndSet( 0.0, 0.0, 1.0 ), Matrix.create() );
         var eye = Vec3.create();
         var target = Vec3.create();
         var up = Vec3.create();
@@ -203,7 +203,7 @@ module.exports = function () {
 
     test( 'Matrix.makePerspective', function () {
         var m = Matrix.createAndSet( 1.299038105676658, 0.0, 0.0, 0.0, 0.0, 1.7320508075688774, 0.0, 0.0, 0.0, 0.0, -1.002002002002002, -1, 0.0, 0.0, -2.0020020020020022, 0.0 );
-        var res = Matrix.makePerspective( 60, 800 / 600, 1.0, 1000 );
+        var res = Matrix.makePerspective( 60, 800 / 600, 1.0, 1000, Matrix.create() );
         ok( mockup.checkNear( res, m ), 'makePerspective should be ' + m + ' and is ' + res );
     } );
 

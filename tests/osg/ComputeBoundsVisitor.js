@@ -5,6 +5,7 @@ var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
 var Matrix = require( 'osg/Matrix' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Shape = require( 'osg/Shape' );
+var Vec3 = require( 'osg/Vec3' );
 
 module.exports = function () {
 
@@ -37,12 +38,14 @@ module.exports = function () {
         var visitor = new ComputeBoundsVisitor();
         root.accept( visitor );
 
-        mockup.near( visitor.getBoundingBox().corner( 0 ), [ 7.5, -2.5, -2.5 ], 'Check Min of bounding box' );
-        mockup.near( visitor.getBoundingBox().corner( 7 ), [ 12.5, 2.5, 2.5 ], 'Check Max of bounding box' );
+        var tmp = Vec3.create();
+
+        mockup.near( visitor.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( 7.5, -2.5, -2.5 ), 'Check Min of bounding box' );
+        mockup.near( visitor.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( 12.5, 2.5, 2.5 ), 'Check Max of bounding box' );
 
         // getBoundingBox don't skip the 0 nodemask
-        mockup.near( root.getBoundingBox().corner( 0 ), [ -12.5, -2.5, -2.5 ], 'Check Min of bounding box with getBoundingBox' );
-        mockup.near( root.getBoundingBox().corner( 7 ), [ 12.5, 2.5, 2.5 ], 'Check Max of bounding box getBoundingBox' );
+        mockup.near( root.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -12.5, -2.5, -2.5 ), 'Check Min of bounding box with getBoundingBox' );
+        mockup.near( root.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( 12.5, 2.5, 2.5 ), 'Check Max of bounding box getBoundingBox' );
 
     } );
 
@@ -73,12 +76,14 @@ module.exports = function () {
         var visitor = new ComputeBoundsVisitor();
         root.accept( visitor );
 
-        mockup.near( visitor.getBoundingBox().corner( 0 ), [ -22.5, -2.5, -2.5 ], 'Check Min of bounding box' );
-        mockup.near( visitor.getBoundingBox().corner( 7 ), [ -17.5, 2.5, 2.5 ], 'Check Max of bounding box' );
+        var tmp = Vec3.create();
+
+        mockup.near( visitor.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -22.5, -2.5, -2.5 ), 'Check Min of bounding box' );
+        mockup.near( visitor.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( -17.5, 2.5, 2.5 ), 'Check Max of bounding box' );
 
         // all the nodemask are active so same result as the visitor method
-        mockup.near( root.getBoundingBox().corner( 0 ), [ -22.5, -2.5, -2.5 ], 'Check Min of bounding box with getBoundingBox' );
-        mockup.near( root.getBoundingBox().corner( 7 ), [ -17.5, 2.5, 2.5 ], 'Check Max of bounding box getBoundingBox' );
+        mockup.near( root.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -22.5, -2.5, -2.5 ), 'Check Min of bounding box with getBoundingBox' );
+        mockup.near( root.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( -17.5, 2.5, 2.5 ), 'Check Max of bounding box getBoundingBox' );
 
     } );
 

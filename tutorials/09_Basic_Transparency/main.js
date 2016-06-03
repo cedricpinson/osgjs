@@ -1,3 +1,5 @@
+'use strict';
+
 // from require to global var
 var OSG = window.OSG;
 OSG.globalify();
@@ -5,63 +7,8 @@ var osg = window.osg;
 var osgViewer = window.osgViewer;
 var osgGA = window.osgGA;
 
-var main = function () {
-    // The 3D canvas.
-    var canvas = document.getElementById( '3DView' );
-    var viewer;
-    try {
-        viewer = new osgViewer.Viewer( canvas, {
-            antialias: true,
-            alpha: true
-        } );
-        viewer.init();
-        var rotate = new osg.MatrixTransform();
-        rotate.addChild( createScene() );
-        viewer.setSceneData( rotate );
-
-
-        viewer.setupManipulator( new osgGA.OrbitManipulator() );
-        // set distance
-        viewer.getManipulator().setDistance( 20.0 );
-
-        viewer.run();
-
-        var mousedown = function ( ev ) {
-            ev.stopPropagation();
-        };
-    } catch ( er ) {
-        osg.log( 'exception in osgViewer ' + er );
-        alert( 'exception in osgViewer ' + er );
-    }
-};
-
 var SimpleUpdateCallback = function ( material ) {
     this.material = material;
-};
-
-SimpleUpdateCallback.prototype = {
-    // rotation angle
-    alpha: 0,
-
-    update: function ( node, nv ) {
-        var t = nv.getFrameStamp().getSimulationTime();
-        var dt = t - node._lastUpdate;
-        if ( dt < 0 ) {
-            return true;
-        }
-        node._lastUpdate = t;
-        document.getElementById( 'update' ).innerHTML = node._lastUpdate.toFixed( 2 );
-        document.getElementById( 'alpha' ).innerHTML = this.alpha.toFixed( 2 );
-
-        this.alpha += 0.01;
-        if ( this.alpha > 1.0 ) this.alpha = 0.0;
-        var channel;
-
-        channel = this.material.getDiffuse();
-        channel[ 3 ] = this.alpha;
-
-        return true;
-    }
 };
 
 function createScene() {
@@ -94,5 +41,57 @@ function createScene() {
 
     return root;
 }
+
+var main = function () {
+    // The 3D canvas.
+    var canvas = document.getElementById( '3DView' );
+    var viewer;
+    try {
+        viewer = new osgViewer.Viewer( canvas, {
+            antialias: true,
+            alpha: true
+        } );
+        viewer.init();
+        var rotate = new osg.MatrixTransform();
+        rotate.addChild( createScene() );
+        viewer.setSceneData( rotate );
+
+
+        viewer.setupManipulator( new osgGA.OrbitManipulator() );
+        // set distance
+        viewer.getManipulator().setDistance( 20.0 );
+
+        viewer.run();
+
+    } catch ( er ) {
+        osg.log( 'exception in osgViewer ' + er );
+        alert( 'exception in osgViewer ' + er );
+    }
+};
+
+SimpleUpdateCallback.prototype = {
+    // rotation angle
+    alpha: 0,
+
+    update: function ( node, nv ) {
+        var t = nv.getFrameStamp().getSimulationTime();
+        var dt = t - node._lastUpdate;
+        if ( dt < 0 ) {
+            return true;
+        }
+        node._lastUpdate = t;
+        document.getElementById( 'update' ).innerHTML = node._lastUpdate.toFixed( 2 );
+        document.getElementById( 'alpha' ).innerHTML = this.alpha.toFixed( 2 );
+
+        this.alpha += 0.01;
+        if ( this.alpha > 1.0 ) this.alpha = 0.0;
+        var channel;
+
+        channel = this.material.getDiffuse();
+        channel[ 3 ] = this.alpha;
+
+        return true;
+    }
+};
 
 window.addEventListener( 'load', main, true );

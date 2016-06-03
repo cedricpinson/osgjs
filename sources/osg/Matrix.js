@@ -5,7 +5,6 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var Plane = require( 'osg/Plane' );
 var Quat = require( 'osg/Quat' );
 var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
 
 
 var Mabs = Math.abs;
@@ -107,12 +106,6 @@ var Matrix = {
      * @param {Array} matrix to write result
      */
     makeTranslate: function ( x, y, z, matrix ) {
-        if ( matrix === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            matrix = Matrix.create();
-            Matrix.setRow( matrix, 3, x, y, z, 1.0 );
-            return matrix;
-        }
         Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
         Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
         Matrix.setRow( matrix, 2, 0.0, 0.0, 1.0, 0.0 );
@@ -225,10 +218,6 @@ var Matrix = {
         } else if ( r === b ) {
             return Matrix.postMult( a, b );
         } else {
-            if ( r === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                r = Matrix.create();
-            }
             r[ 0 ] = b[ 0 ] * a[ 0 ] + b[ 1 ] * a[ 4 ] + b[ 2 ] * a[ 8 ] + b[ 3 ] * a[ 12 ];
             r[ 1 ] = b[ 0 ] * a[ 1 ] + b[ 1 ] * a[ 5 ] + b[ 2 ] * a[ 9 ] + b[ 3 ] * a[ 13 ];
             r[ 2 ] = b[ 0 ] * a[ 2 ] + b[ 1 ] * a[ 6 ] + b[ 2 ] * a[ 10 ] + b[ 3 ] * a[ 14 ];
@@ -341,10 +330,6 @@ var Matrix = {
             return b;
             //return Matrix.postMult(r, a);
         }
-        if ( r === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            r = Matrix.create();
-        }
 
         var s00 = b[ 0 ];
         var s01 = b[ 1 ];
@@ -409,10 +394,6 @@ var Matrix = {
         var neg = Vec3.create();
 
         return function ( eye, eyeDir, up, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
             var f = eyeDir;
             Vec3.cross( f, up, s );
             Vec3.normalize( s, s );
@@ -450,12 +431,6 @@ var Matrix = {
         var f = Vec3.create();
 
         return function ( eye, center, up, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
-
-
             Vec3.sub( center, eye, f );
             Vec3.normalize( f, f );
             this.makeLookFromDirection( eye, f, up, result );
@@ -463,10 +438,6 @@ var Matrix = {
         };
     } )(),
     makeOrtho: function ( left, right, bottom, top, zNear, zFar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         // note transpose of Matrix_implementation wr.t OpenGL documentation, since the OSG use post multiplication rather than pre.
         // we will change this convention later
         var tx = -( right + left ) / ( right - left );
@@ -507,11 +478,6 @@ var Matrix = {
         var tq = Quat.create();
 
         return function ( mat, quatResult ) {
-            if ( quatResult === undefined ) {
-                Notify.warn( 'no quat destination !' );
-                quatResult = Quat.create();
-            }
-
             var s;
             var i, j;
 
@@ -599,10 +565,6 @@ var Matrix = {
 
     // result = Matrix M * Matrix Translate
     multTranslate: function ( mat, translate, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         if ( result !== mat ) {
             Matrix.copy( mat, result );
         }
@@ -638,80 +600,44 @@ var Matrix = {
         var qtemp = Quat.create();
 
         return function ( angle, x, y, z, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
             return Matrix.makeRotateFromQuat( Quat.makeRotate( angle, x, y, z, qtemp ), result );
         };
     } )(),
 
     transform3x3: function ( m, v, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
-
         result[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
         result[ 1 ] = m[ 4 ] * v[ 0 ] + m[ 5 ] * v[ 1 ] + m[ 6 ] * v[ 2 ];
         result[ 2 ] = m[ 8 ] * v[ 0 ] + m[ 9 ] * v[ 1 ] + m[ 10 ] * v[ 2 ];
         return result;
     },
 
-    transformVec3: ( function () {
-        var tmpVec = Vec3.create();
+    transformVec3: function ( matrix, vector, result ) {
+        var x = vector[ 0 ];
+        var y = vector[ 1 ];
+        var z = vector[ 2 ];
 
-        return function ( matrix, vector, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no vec3 destination !' );
-                result = Vec3.create();
-            }
+        var d = 1.0 / ( matrix[ 3 ] * x + matrix[ 7 ] * y + matrix[ 11 ] * z + matrix[ 15 ] );
 
-            var d = 1.0 / ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] );
+        result[ 0 ] = ( matrix[ 0 ] * x + matrix[ 4 ] * y + matrix[ 8 ] * z + matrix[ 12 ] ) * d;
+        result[ 1 ] = ( matrix[ 1 ] * x + matrix[ 5 ] * y + matrix[ 9 ] * z + matrix[ 13 ] ) * d;
+        result[ 2 ] = ( matrix[ 2 ] * x + matrix[ 6 ] * y + matrix[ 10 ] * z + matrix[ 14 ] ) * d;
 
-            var tmp;
-            if ( result === vector ) {
-                tmp = tmpVec;
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 4 ] * vector[ 1 ] + matrix[ 8 ] * vector[ 2 ] + matrix[ 12 ] ) * d;
-            tmp[ 1 ] = ( matrix[ 1 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 9 ] * vector[ 2 ] + matrix[ 13 ] ) * d;
-            tmp[ 2 ] = ( matrix[ 2 ] * vector[ 0 ] + matrix[ 6 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 14 ] ) * d;
+        return result;
+    },
 
-            if ( result === vector ) {
-                Vec3.copy( tmp, result );
-            }
-            return result;
-        };
-    } )(),
+    transformVec4: function ( matrix, vector, result ) {
+        var x = vector[ 0 ];
+        var y = vector[ 1 ];
+        var z = vector[ 2 ];
+        var w = vector[ 3 ];
 
-    transformVec4: ( function () {
-        var tmpVec = Vec4.create();
+        result[ 0 ] = matrix[ 0 ] * x + matrix[ 4 ] * y + matrix[ 8 ] * z + matrix[ 12 ] * w;
+        result[ 1 ] = matrix[ 1 ] * x + matrix[ 5 ] * y + matrix[ 9 ] * z + matrix[ 13 ] * w;
+        result[ 2 ] = matrix[ 2 ] * x + matrix[ 6 ] * y + matrix[ 10 ] * z + matrix[ 14 ] * w;
+        result[ 3 ] = matrix[ 3 ] * x + matrix[ 7 ] * y + matrix[ 11 ] * z + matrix[ 15 ] * w;
 
-        return function ( matrix, vector, result ) {
-
-            if ( result === undefined ) {
-                Notify.warn( 'no Vec4 destination !' );
-                result = Vec4.create();
-            }
-            var tmp;
-            if ( result === vector ) {
-                tmp = tmpVec;
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 4 ] * vector[ 1 ] + matrix[ 8 ] * vector[ 2 ] + matrix[ 12 ] * vector[ 3 ] );
-            tmp[ 1 ] = ( matrix[ 1 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 9 ] * vector[ 2 ] + matrix[ 13 ] * vector[ 3 ] );
-            tmp[ 2 ] = ( matrix[ 2 ] * vector[ 0 ] + matrix[ 6 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 14 ] * vector[ 3 ] );
-            tmp[ 3 ] = ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] * vector[ 3 ] );
-
-            if ( result === vector ) {
-                Vec4.copy( tmp, result );
-            }
-            return result;
-        };
-    } )(),
+        return result;
+    },
 
     // http://dev.theomader.com/transform-bounding-boxes/
     // https://github.com/erich666/GraphicsGems/blob/master/gems/TransBox.c
@@ -775,32 +701,19 @@ var Matrix = {
         };
     } )(),
 
-    transformVec4PostMult: ( function () {
-        var tmpVec = Vec4.create();
+    transformVec4PostMult: function ( matrix, vector, result ) {
+        var x = vector[ 0 ];
+        var y = vector[ 1 ];
+        var z = vector[ 2 ];
+        var w = vector[ 3 ];
 
-        return function ( matrix, vector, result ) {
+        result[ 0 ] = matrix[ 0 ] * x + matrix[ 1 ] * y + matrix[ 2 ] * z + matrix[ 3 ] * w;
+        result[ 1 ] = matrix[ 4 ] * x + matrix[ 5 ] * y + matrix[ 6 ] * z + matrix[ 7 ] * w;
+        result[ 2 ] = matrix[ 8 ] * x + matrix[ 9 ] * y + matrix[ 10 ] * z + matrix[ 11 ] * w;
+        result[ 3 ] = matrix[ 12 ] * x + matrix[ 13 ] * y + matrix[ 14 ] * z + matrix[ 15 ] * w;
 
-            if ( result === undefined ) {
-                Notify.warn( 'no Vec4 destination !' );
-                result = Vec4.create();
-            }
-            var tmp;
-            if ( result === vector ) {
-                tmp = tmpVec;
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 1 ] * vector[ 1 ] + matrix[ 2 ] * vector[ 2 ] + matrix[ 3 ] * vector[ 3 ] );
-            tmp[ 1 ] = ( matrix[ 4 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 6 ] * vector[ 2 ] + matrix[ 7 ] * vector[ 3 ] );
-            tmp[ 2 ] = ( matrix[ 8 ] * vector[ 0 ] + matrix[ 9 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 11 ] * vector[ 3 ] );
-            tmp[ 3 ] = ( matrix[ 12 ] * vector[ 0 ] + matrix[ 13 ] * vector[ 1 ] + matrix[ 14 ] * vector[ 2 ] + matrix[ 15 ] * vector[ 3 ] );
-
-            if ( result === vector ) {
-                Vec4.copy( tmp, result );
-            }
-            return result;
-        };
-    } )(),
+        return result;
+    },
 
     copy: function ( matrix, result ) {
         result[ 0 ] = matrix[ 0 ];
@@ -1091,19 +1004,18 @@ var Matrix = {
                 a13 = mat[ 7 ];
             var a23 = mat[ 11 ];
 
-            mat[ 1 ] = mat[ 4 ];
-            mat[ 2 ] = mat[ 8 ];
-            mat[ 3 ] = mat[ 12 ];
-            mat[ 4 ] = a01;
-            mat[ 6 ] = mat[ 9 ];
-            mat[ 7 ] = mat[ 13 ];
-            mat[ 8 ] = a02;
-            mat[ 9 ] = a12;
-            mat[ 11 ] = mat[ 14 ];
-            mat[ 12 ] = a03;
-            mat[ 13 ] = a13;
-            mat[ 14 ] = a23;
-            return mat;
+            dest[ 1 ] = mat[ 4 ];
+            dest[ 2 ] = mat[ 8 ];
+            dest[ 3 ] = mat[ 12 ];
+            dest[ 4 ] = a01;
+            dest[ 6 ] = mat[ 9 ];
+            dest[ 7 ] = mat[ 13 ];
+            dest[ 8 ] = a02;
+            dest[ 9 ] = a12;
+            dest[ 11 ] = mat[ 14 ];
+            dest[ 12 ] = a03;
+            dest[ 13 ] = a13;
+            dest[ 14 ] = a23;
         } else {
             dest[ 0 ] = mat[ 0 ];
             dest[ 1 ] = mat[ 4 ];
@@ -1121,8 +1033,8 @@ var Matrix = {
             dest[ 13 ] = mat[ 7 ];
             dest[ 14 ] = mat[ 11 ];
             dest[ 15 ] = mat[ 15 ];
-            return dest;
         }
+        return dest;
     },
 
     getFrustumPlanes: ( function () {
@@ -1188,10 +1100,6 @@ var Matrix = {
     } )(),
 
     makePerspective: function ( fovy, aspect, znear, zfar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         var ymax = znear * Math.tan( fovy * Math.PI / 360.0 );
         var ymin = -ymax;
         var xmin = ymin * aspect;
@@ -1284,10 +1192,6 @@ var Matrix = {
     },
 
     makeScale: function ( x, y, z, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         Matrix.setRow( result, 0, x, 0.0, 0.0, 0.0 );
         Matrix.setRow( result, 1, 0.0, y, 0.0, 0.0 );
         Matrix.setRow( result, 2, 0.0, 0.0, z, 0.0 );
@@ -1453,10 +1357,6 @@ var Matrix = {
     //http://www.geometry.caltech.edu/pubs/UD12.pdf
     // drop-in, just remove the one below, and rename this one
     makeFrustumInfinite: function ( left, right, bottom, top, znear, zfar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         var X = 2.0 * znear / ( right - left );
         var Y = 2.0 * znear / ( top - bottom );
         var A = ( right + left ) / ( right - left );
@@ -1470,10 +1370,6 @@ var Matrix = {
     },
 
     makeFrustum: function ( left, right, bottom, top, znear, zfar, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'no matrix destination !' );
-            result = Matrix.create();
-        }
         var X = 2.0 * znear / ( right - left );
         var Y = 2.0 * znear / ( top - bottom );
         var A = ( right + left ) / ( right - left );

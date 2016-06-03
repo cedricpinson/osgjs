@@ -77,13 +77,17 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
     getTransformation: ( function () {
         // We should move this to the intersector when we need to use different coordinate frames
         // Now we only support WINDOW coordinate frame
-        var mat = Matrix.create();
-        var matid = Matrix.create();
+
+        // /!\ 64 bit precision because the picking is jittery otherwise
+        // It's probably caused by one of the camera matrix that has too big/small values
+        // but currently it's the ony fix we have
+        var mat = new Float64Array( 16 );
+
         return function () {
-            Matrix.copy( this.getWindowMatrix() || matid, mat );
-            Matrix.preMult( mat, this.getProjectionMatrix() || matid );
-            Matrix.preMult( mat, this.getViewMatrix() || matid );
-            Matrix.preMult( mat, this.getModelMatrix() || matid );
+            Matrix.copy( this.getWindowMatrix() || Matrix.identity, mat );
+            Matrix.preMult( mat, this.getProjectionMatrix() || Matrix.identity );
+            Matrix.preMult( mat, this.getViewMatrix() || Matrix.identity );
+            Matrix.preMult( mat, this.getModelMatrix() || Matrix.identity );
 
             return mat;
         };

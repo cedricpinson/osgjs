@@ -1,9 +1,10 @@
+'use strict';
+
 // from require to global var
 var OSG = window.OSG;
 OSG.globalify();
 var osg = window.osg;
 var osgViewer = window.osgViewer;
-
 
 
 function getShader() {

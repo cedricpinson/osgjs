@@ -256,16 +256,18 @@ var gruntTasks = {};
 
 ( function () {
 
+    var jsFiles = [ 'sources/**/*.js', 'examples/**/*.js', 'tutorials/**/*.js', 'tests/**/*.js', '!examples/vendors/*.js', '!tests/vendors/**/*.js' ];
+
     gruntTasks.jsbeautifier = {
         default: {
-            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js', 'tests/**/*.js', '!tests/vendors/**/*.js' ],
+            src: jsFiles,
             options: {
                 config: './.jsbeautifyrc'
             }
         },
 
         check: {
-            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js', 'tests/**/*.js', '!tests/vendors/**/*.js' ],
+            src: jsFiles,
             // config: './.jsbeautifyrc',
             options: {
                 mode: 'VERIFY_ONLY',
@@ -462,6 +464,10 @@ var generateVersionFile = function () {
             }, {
                 expand: true,
                 src: [ 'tests/**' ],
+                dest: path.join( BUILD_PATH, 'web/' )
+            }, {
+                expand: true,
+                src: [ 'tutorials/**' ],
                 dest: path.join( BUILD_PATH, 'web/' )
             }, {
                 expand: true,

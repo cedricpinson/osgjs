@@ -8,6 +8,7 @@ var BoundingSphere = require( 'osg/BoundingSphere' );
 var Camera = require( 'osg/Camera' );
 var Viewport = require( 'osg/Viewport' );
 var Matrix = require( 'osg/Matrix' );
+var Vec3 = require( 'osg/Vec3' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Shape = require( 'osg/Shape' );
 var View = require( 'osgViewer/View' );
@@ -21,40 +22,40 @@ module.exports = function () {
     QUnit.test( 'LineSegmentIntersector simple test', function () {
         var lsi = new LineSegmentIntersector();
         var bs = new BoundingSphere();
-        bs.set( [ 4.0, 2.0, 0.0 ], 2.0 );
+        bs.set( Vec3.createAndSet( 4.0, 2.0, 0.0 ), 2.0 );
 
         // start right on the edge
-        lsi.set( [ 2.0, 2.0, 0.0 ], [ -1.0, 2.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 2.0, 2.0, 0.0 ), Vec3.createAndSet( -1.0, 2.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( lsi.intersects( bs ), 'hit success' );
 
         // end right on edge
-        lsi.set( [ 2.0, 0.0, 0.0 ], [ 4.0, 0.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 2.0, 0.0, 0.0 ), Vec3.createAndSet( 4.0, 0.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( lsi.intersects( bs ), 'hit success' );
 
         // line right on edge
-        lsi.set( [ 2.0, 0.0, 0.0 ], [ 4.0, 0.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 2.0, 0.0, 0.0 ), Vec3.createAndSet( 4.0, 0.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( lsi.intersects( bs ), 'hit success' );
 
-        lsi.set( [ 2.0, 0.0, 0.0 ], [ 3.0, 1.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 2.0, 0.0, 0.0 ), Vec3.createAndSet( 3.0, 1.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( lsi.intersects( bs ), 'hit success' );
 
-        lsi.set( [ 0.0, 2.0, 0.0 ], [ 1.9, 2.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 0.0, 2.0, 0.0 ), Vec3.createAndSet( 1.9, 2.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( !lsi.intersects( bs ), 'hit failed' );
 
-        lsi.set( [ 0.0, 2.0, 0.0 ], [ 2.1, 2.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 0.0, 2.0, 0.0 ), Vec3.createAndSet( 2.1, 2.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( lsi.intersects( bs ), 'hit success' );
 
-        lsi.set( [ 5.0, 1.0, 0.0 ], [ 6.0, 0.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 5.0, 1.0, 0.0 ), Vec3.createAndSet( 6.0, 0.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( lsi.intersects( bs ), 'hit success' );
 
-        lsi.set( [ 1.0, 1.0, 0.0 ], [ 2.0, 3.0, 0.0 ] );
+        lsi.set( Vec3.createAndSet( 1.0, 1.0, 0.0 ), Vec3.createAndSet( 2.0, 3.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
         ok( !lsi.intersects( bs ), 'hit failed' );
     } );
@@ -72,23 +73,23 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
-        var scene = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
+        camera.setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10.0 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() ) );
+        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800.0 / 600.0, 0.1, 1000.0, Matrix.create() ) );
+        var scene = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0 );
 
         var tr1 = new MatrixTransform();
-        Matrix.makeTranslate( 10, 10, 10, tr1.getMatrix() );
+        Matrix.makeTranslate( 5.0, 0.0, 0.0, tr1.getMatrix() );
         tr1.addChild( scene );
 
         var mrot = new MatrixTransform();
-        Matrix.makeTranslate( -10, -10, -10, mrot.getMatrix() );
+        Matrix.makeTranslate( -5.0, 0.0, 0.0, mrot.getMatrix() );
         mrot.addChild( tr1 );
         mrot.addChild( scene );
 
         camera.addChild( mrot );
 
         var lsi = new LineSegmentIntersector();
-        lsi.set( [ 400, 300, 0.0 ], [ 400, 300, 1.0 ] );
+        lsi.set( Vec3.createAndSet( 420, 300, 0.0 ), Vec3.createAndSet( 420, 300, 1.0 ) );
         var iv = new IntersectionVisitor();
         iv.setIntersector( lsi );
         camera.accept( iv );
@@ -97,16 +98,16 @@ module.exports = function () {
 
     } );
 
-    QUnit.test( 'LineSegmentIntersector without kdtree', function () {
+    QUnit.test( 'LineSegmentIntersector without kdtree and camera', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
-        var scene = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
+        camera.setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() ) );
+        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 1000.0, Matrix.create() ) );
+        var scene = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0 );
         camera.addChild( scene );
         var lsi = new LineSegmentIntersector();
-        lsi.set( [ 400, 300, 0.0 ], [ 400, 300, 1.0 ] );
+        lsi.set( Vec3.createAndSet( 400, 300, 0.0 ), Vec3.createAndSet( 420, 300, 1.0 ) );
         var iv = new IntersectionVisitor();
         iv.setIntersector( lsi );
         camera.accept( iv );
@@ -119,8 +120,8 @@ module.exports = function () {
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
-        view.getCamera().setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ), [] );
-        view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        view.getCamera().setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() ) );
+        view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 1000.0, Matrix.create() ) );
         // TODO it uses the old sync parseSceneGraphDeprecated
         var quad = ReaderParser.parseSceneGraph( mockup.getScene() );
         view.setSceneData( quad );
@@ -129,23 +130,23 @@ module.exports = function () {
         ok( result.length === 1, 'Hits should be 1 and result is ' + result.length );
     } );
 
-    QUnit.test( 'LineSegmentIntersector with kdtree', function () {
+    QUnit.test( 'LineSegmentIntersector with kdtree and camera', function () {
         // This test will never work with kdtree
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
-        var scene = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
+        camera.setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() ) );
+        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 1000.0, Matrix.create() ) );
+        var scene = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0 );
         camera.addChild( scene );
         var treeBuilder = new KdTreeBuilder( {
-            _numVerticesProcessed: 0,
+            _numVerticesProcessed: 0.0,
             _targetNumTrianglesPerLeaf: 1,
             _maxNumLevels: 20
         } );
         treeBuilder.apply( scene );
 
         var lsi = new LineSegmentIntersector();
-        lsi.set( [ 400, 300, 0.0 ], [ 400, 300, 1.0 ] );
+        lsi.set( Vec3.createAndSet( 400, 300, 0.0 ), Vec3.createAndSet( 420, 300, 1.0 ) );
         var iv = new IntersectionVisitor();
         iv.setIntersector( lsi );
         camera.accept( iv );
@@ -157,14 +158,14 @@ module.exports = function () {
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
-        view.getCamera().setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ), [] );
-        view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        view.getCamera().setViewMatrix( Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10.0 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Matrix.create() ) );
+        view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 1000.0, Matrix.create() ) );
         // TODO it uses the old sync parseSceneGraphDeprecated
         var root = ReaderParser.parseSceneGraph( mockup.getScene() );
         view.setSceneData( root );
 
         var treeBuilder = new KdTreeBuilder( {
-            _numVerticesProcessed: 0,
+            _numVerticesProcessed: 0.0,
             _targetNumTrianglesPerLeaf: 50,
             _maxNumLevels: 20
         } );

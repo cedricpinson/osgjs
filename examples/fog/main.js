@@ -27,13 +27,12 @@
             'precision highp float;',
             '#endif',
             'varying vec4 position;',
-            'uniform vec4 MaterialAmbient;',
             'uniform float density;',
             'void main(void) {',
             '  float d = density; //0.001;',
             '  float f = gl_FragCoord.z/gl_FragCoord.w;',
             '  f = clamp(exp2(-d*d * f*f * 1.44), 0.0, 1.0);',
-            '  gl_FragColor = f*MaterialAmbient;',
+            '  gl_FragColor = f * vec4(0.6, 0.2, 0.2, 1.0);',
             '}',
             ''
         ].join( '\n' );
@@ -54,14 +53,8 @@
         var group = new osg.Node();
 
         var size = 500;
-        var ground = osg.createTexturedQuadGeometry( -size * 0.5, -size * 0.5, -50,
-            size, 0, 0,
-            0, size, 0 );
+        var ground = osg.createTexturedQuadGeometry( -size * 0.5, -size * 0.5, -50.0, size, 0.0, 0.0, 0.0, size, 0.0 );
 
-        var materialGround = new osg.Material();
-        materialGround.setAmbient( [ 1, 0, 0, 1 ] );
-        materialGround.setDiffuse( [ 0, 0, 0, 1 ] );
-        ground.getOrCreateStateSet().setAttributeAndModes( materialGround );
         ground.getOrCreateStateSet().setAttributeAndModes( getShader() );
 
         var density = osg.Uniform.createFloat1( 0.002, 'density' );

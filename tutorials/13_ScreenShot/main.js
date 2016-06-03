@@ -1,3 +1,5 @@
+'use strict';
+
 // from require to global var
 var OSG = window.OSG;
 
@@ -182,16 +184,16 @@ var main = function () {
         document.getElementById( 'screenshot' ).addEventListener( 'click',
             function () {
 
-                dataToDownload = c.toDataURL( "image/jpeg", 1.0 ); //.replace( "image/jpeg", "image/octet-stream" );
+                dataToDownload = c.toDataURL( 'image/jpeg', 1.0 ); //.replace( 'image/jpeg', 'image/octet-stream' );
                 window.location.href = dataToDownload;
 
             }, false );
 
         window.setInterval( function () {
 
-            takeShot = !takeShot;
+                takeShot = !takeShot;
 
-        },
+            },
             1000 );
 
         viewer.run();
@@ -200,7 +202,7 @@ var main = function () {
 
     } catch ( er ) {
 
-        osg.log ( 'exception in osgViewer ' + er );
+        osg.log( 'exception in osgViewer ' + er );
 
     }
 

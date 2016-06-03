@@ -1,3 +1,5 @@
+'use strict';
+
 // http://dev.opera.com/articles/w3c-device-orientation-usage/#practicalconsiderations
 var orientationInfo = {};
 
@@ -49,24 +51,24 @@ function getBaseRotationMatrix( alpha, beta, gamma ) {
         m21, m22, m23,
         m31, m32, m33
     ];
-};
+}
 
 //screen orientation to 3x3 matrix
 function getScreenTransformationMatrix( screenOrientation ) {
-        var orientationAngle = screenOrientation ? screenOrientation * degtorad : 0;
+    var orientationAngle = screenOrientation ? screenOrientation * degtorad : 0;
 
-        var cA = Math.cos( orientationAngle );
-        var sA = Math.sin( orientationAngle );
+    var cA = Math.cos( orientationAngle );
+    var sA = Math.sin( orientationAngle );
 
-        // Construct our screen transformation matrix
-        var rS = [
-            cA, -sA, 0,
-            sA, cA, 0,
-            0, 0, 1
-        ];
-        return rS;
-    }
-    // rotate 90 on X
+    // Construct our screen transformation matrix
+    var rS = [
+        cA, -sA, 0,
+        sA, cA, 0,
+        0, 0, 1
+    ];
+    return rS;
+}
+// rotate 90 on X
 function getWorldTransformationMatrix( angleDeg, axis ) {
     var x = angleDeg * degtorad;
 
@@ -198,7 +200,7 @@ window.addEventListener( 'load',
                     //  osg.Matrix.copy( this._inv, viewer.getCamera().getViewMatrix() );
                 }
             },
-            lightUpdate: function ( currentTime, node, nv ) {
+            lightUpdate: function ( currentTime, node /*, nv*/ ) {
 
                 // for all light on our mainNode (the root of our scen)
                 for ( i = 0; i < numLights; i++ ) {
@@ -207,7 +209,6 @@ window.addEventListener( 'load',
                     var fac = 5;
                     var x = fac * Math.cos( currentTime + i / numLights );
                     var y = fac * Math.sin( currentTime + i / numLights );
-                    var h = fac;
 
 
 
@@ -233,7 +234,6 @@ window.addEventListener( 'load',
 
                     // that's where we actually update the light
                     l.setDirection( lightDir );
-                    l.dirty();
 
                 }
             },
