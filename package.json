@@ -10,7 +10,8 @@
   "version": "0.2.5",
   "contributors": [
     "Tuan.kuranes <tuan.kuranes@gmail.com>",
-    "Matt Fontaine <tehqin@gmail.com>"
+    "Matt Fontaine <tehqin@gmail.com>",
+    "Stephane Ginier <stephane.ginier@gmail.com>"
   ],
   "dependencies": {
     "eslint": "^1.3.1",
@@ -29,6 +30,7 @@
     "grunt-webpack": "^1.0.8",
     "hammerjs": "^2.0.4",
     "jquery": "^2.1.3",
+    "json-loader": "^0.5.4",
     "leapjs": "^0.6.4",
     "path": "^0.11.14",
     "raw-loader": "^0.5.1",
