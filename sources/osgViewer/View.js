@@ -128,7 +128,7 @@ View.prototype = {
         if ( typeof overrideDevicePixelRatio === 'number' ) {
             devicePixelRatio = overrideDevicePixelRatio;
         } else if ( maxDevicePixelRatio !== -1 ) {
-            devicePixelRatio = maxDevicePixelRatio;
+            devicePixelRatio = Math.min( devicePixelRatio, maxDevicePixelRatio );
         }
         this._devicePixelRatio = devicePixelRatio;
 
