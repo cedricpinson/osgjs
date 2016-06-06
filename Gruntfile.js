@@ -277,22 +277,6 @@ var gruntTasks = {};
     };
 } )();
 
-var generateVersionFile = function () {
-    var pkg = JSON.parse( fs.readFileSync( 'package.json' ) );
-    var content = [
-        'define( [], function () {',
-        '    return {',
-        '        name: \'' + pkg.name + '\',',
-        '        version: \'' + pkg.version + '\',',
-        '        author: \'' + pkg.author + '\'',
-        '    };',
-        '} );',
-        ''
-
-    ];
-    fs.writeFileSync( path.join( SOURCE_PATH, 'version.js' ), content.join( '\n' ) );
-};
-
 // ## Clean
 //
 ( function () {
@@ -497,10 +481,6 @@ module.exports = function ( grunt ) {
     grunt.initConfig( extend( {
         pkg: grunt.file.readJSON( 'package.json' )
     }, gruntTasks ) );
-
-
-    generateVersionFile();
-
 
     // grunt.event.on('qunit.testStart', function (name) {
     //     grunt.log.ok("Running test: " + name);
