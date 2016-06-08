@@ -113,7 +113,10 @@ KdTreeRayIntersector.prototype = {
     // If so... it clip the ray so that the start and end point of the ray are
     // snapped to the bounding box of the nodes
     intersectAndClip: ( function () {
-        var tmp = Vec3.create();
+
+        // needed because of precision picking
+        var tmp = new Float64Array( 3 );
+
         return function ( s, e, bb ) {
             var min = bb._min;
             var xmin = min[ 0 ];
