@@ -114,6 +114,7 @@ var Viewer = function ( canvas, userOptions, error ) {
     this.setUpView( gl.canvas, options );
 
     this._hmd = null;
+    this._requestAnimationFrame = window.requestAnimationFrame.bind( window );
 
     this._contextLost = false;
 };
@@ -390,6 +391,10 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         }
 
         this.endFrame();
+
+        // submit frame to vr headset
+        if ( this._hmd && this._hmd.isPresenting )
+            this._hmd.submitFrame( this._eventProxy.WebVR._lastPose );
     },
 
     setDone: function ( bool ) {
@@ -404,18 +409,8 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         var self = this;
         var render = function () {
             if ( !self.done() ) {
-
-                var isPresentingVR = self._hmd && self._hmd.isPresenting;
-
-                if ( isPresentingVR )
-                    self._requestID = self._hmd.requestAnimationFrame( render );
-                else
-                    self._requestID = window.requestAnimationFrame( render, self.getGraphicContext().canvas );
-
+                self._requestID = self._requestAnimationFrame( render, self.getGraphicContext().canvas );
                 self.frame();
-
-                if ( isPresentingVR )
-                    self._hmd.submitFrame( self._eventProxy.WebVR._lastPose );
             }
         };
         render();
@@ -423,6 +418,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
     setVRDisplay: function ( hmd ) {
         this._hmd = hmd;
+        this._requestAnimationFrame = hmd.requestAnimationFrame.bind( hmd );
     },
 
     getVRDisplay: function () {
