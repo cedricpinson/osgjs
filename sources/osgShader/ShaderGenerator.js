@@ -222,8 +222,8 @@ ShaderGenerator.prototype = {
 
             /* develblock:start */
             // Logs hash, attributes and compiler
-            Notify.log( 'New Compilation ', false, true );
-            Notify.log( {
+            Notify.debug( 'New Compilation ', false, true );
+            Notify.debug( {
                 Attributes: attributes,
                 Texture: textureAttributes,
                 Hash: hash,
