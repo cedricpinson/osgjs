@@ -1,14 +1,12 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var Shader = require( 'osg/Shader' );
 var Notify = require( 'osg/Notify' );
 
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'Shader', function () {
+    test( 'Shader', function () {
 
         // catch logs
         var results = '';
@@ -37,7 +35,7 @@ module.exports = function () {
         var errors = '';
 
         Shader.prototype.processErrors( errors, shader );
-        ok( results === '', 'test empty compilation error' );
+        assert.isOk( results === '', 'test empty compilation error' );
 
         results = '';
         resultsWarn = '';
@@ -49,8 +47,8 @@ module.exports = function () {
         Shader.prototype.processErrors( errors, shader );
 
 
-        ok( 624 === resultsWarn.length, 'test compilation warnings' );
-        ok( 91 === resultsError.length, 'test compilation error' );
+        assert.isOk( 624 === resultsWarn.length, 'test compilation warnings' );
+        assert.isOk( 91 === resultsError.length, 'test compilation error' );
 
 
 

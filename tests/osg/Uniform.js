@@ -1,13 +1,11 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var Uniform = require( 'osg/Uniform' );
 
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'Uniform', function () {
+    test( 'Uniform', function () {
 
         ( function () {
             var testInt = Uniform.createInt1( 12, 'int_uniform' );
@@ -16,13 +14,13 @@ module.exports = function () {
             var testFloatArray = Uniform.createFloat1( new Float32Array( [ 42.314 ] ), 'float_array_uniform' );
             var testIntArray = Uniform.createInt1( new Int32Array( [ 1234 ] ), 'int_array_uniform' );
 
-            ok( Uniform.isUniform( testInt ) === true, 'is uniform' );
-            ok( Uniform.isUniform( testFloat ) === true, 'is uniform' );
-            ok( Uniform.isUniform( testVec3 ) === true, 'is uniform' );
-            ok( Uniform.isUniform( testFloatArray ) === true, 'is uniform' );
-            ok( Uniform.isUniform( testIntArray ) === true, 'is uniform' );
-            ok( Uniform.isUniform( 'text' ) === false, 'is not uniform' );
-            ok( Uniform.isUniform( 65 ) === false, 'is not uniform' );
+            assert.isOk( Uniform.isUniform( testInt ) === true, 'is uniform' );
+            assert.isOk( Uniform.isUniform( testFloat ) === true, 'is uniform' );
+            assert.isOk( Uniform.isUniform( testVec3 ) === true, 'is uniform' );
+            assert.isOk( Uniform.isUniform( testFloatArray ) === true, 'is uniform' );
+            assert.isOk( Uniform.isUniform( testIntArray ) === true, 'is uniform' );
+            assert.isOk( Uniform.isUniform( 'text' ) === false, 'is not uniform' );
+            assert.isOk( Uniform.isUniform( 65 ) === false, 'is not uniform' );
         } )();
 
     } );

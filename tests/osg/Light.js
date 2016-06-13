@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var Light = require( 'osg/Light' );
 var Viewer = require( 'osgViewer/Viewer' );
@@ -14,9 +14,7 @@ var Vec4 = require( 'osg/Vec4' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'Light', function () {
+    test( 'Light', function () {
 
         ( function () {
 
@@ -24,28 +22,28 @@ module.exports = function () {
             l0.setLightNumber( 0 );
 
             l0.setLightAsPoint();
-            deepEqual( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
-            equal( l0.getSpotCutoff(), 180 );
-            equal( l0.getLightType(), Light.POINT );
+            assert.equalVector( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
+            assert.equal( l0.getSpotCutoff(), 180 );
+            assert.equal( l0.getLightType(), Light.POINT );
 
             l0.setLightAsDirection();
-            deepEqual( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 ) );
-            equal( l0.getLightType(), Light.DIRECTION );
+            assert.equalVector( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 ) );
+            assert.equal( l0.getLightType(), Light.DIRECTION );
 
             l0.setLightAsSpot();
-            deepEqual( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
-            deepEqual( l0.getDirection(), Vec3.createAndSet( 0.0, 0.0, -1.0 ) );
-            equal( l0.getSpotCutoff(), 90 );
-            equal( l0.getLightType(), Light.SPOT );
+            assert.equalVector( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
+            assert.equalVector( l0.getDirection(), Vec3.createAndSet( 0.0, 0.0, -1.0 ) );
+            assert.equal( l0.getSpotCutoff(), 90 );
+            assert.equal( l0.getLightType(), Light.SPOT );
 
-            deepEqual( l0.getAmbient(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
-            deepEqual( l0.getDiffuse(), Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 ) );
-            deepEqual( l0.getSpecular(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
+            assert.equalVector( l0.getAmbient(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
+            assert.equalVector( l0.getDiffuse(), Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 ) );
+            assert.equalVector( l0.getSpecular(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
 
 
-            equal( l0.getConstantAttenuation(), 1 );
-            equal( l0.getLinearAttenuation(), 0 );
-            equal( l0.getQuadraticAttenuation(), 0 );
+            assert.equal( l0.getConstantAttenuation(), 1 );
+            assert.equal( l0.getLinearAttenuation(), 0 );
+            assert.equal( l0.getQuadraticAttenuation(), 0 );
 
 
         } )();
@@ -140,6 +138,6 @@ module.exports = function () {
             mockup.removeCanvas( canvas );
         } )();
 
-        ok( true, 'check no exception' );
+        assert.isOk( true, 'check no exception' );
     } );
 };

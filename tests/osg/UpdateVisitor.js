@@ -1,14 +1,12 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var UpdateVisitor = require( 'osg/UpdateVisitor' );
 var Node = require( 'osg/Node' );
 
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'UpdateVisitor', function () {
+    test( 'UpdateVisitor', function () {
 
         var uv = new UpdateVisitor();
 
@@ -64,15 +62,15 @@ module.exports = function () {
 
         uv.apply( root );
 
-        ok( stateSetUpdateCallbackCalled > 0, 'Called stateSet update callback' );
+        assert.isOk( stateSetUpdateCallbackCalled > 0, 'Called stateSet update callback' );
 
-        ok( callRoot === 1, 'Called root update callback' );
-        ok( callb === 1, 'Called b update callback' );
-        ok( callc === 0, 'Did not Call c update callback as expected' );
+        assert.isOk( callRoot === 1, 'Called root update callback' );
+        assert.isOk( callb === 1, 'Called b update callback' );
+        assert.isOk( callc === 0, 'Did not Call c update callback as expected' );
 
         root.setNodeMask( ~0 );
-        ok( callRoot === 1, 'Called root update callback' );
-        ok( callb === 1, 'Called b update callback' );
-        ok( callc === 0, 'Did not Call c update callback as expected' );
+        assert.isOk( callRoot === 1, 'Called root update callback' );
+        assert.isOk( callb === 1, 'Called b update callback' );
+        assert.isOk( callc === 0, 'Did not Call c update callback as expected' );
     } );
 };

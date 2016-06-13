@@ -6,12 +6,13 @@ var Notify = require( 'osg/Notify' );
 
 var $;
 
-// Make the jquery dependency optional
-try {
-    $ = require( 'jquery' );
-} catch ( e ) {
-    Notify.warn( 'You will not be able to use osgUtil.DisplayGraph until you add jQuery in your page' );
-}
+var init$ = function () {
+    try {
+        $ = require( 'jquery' );
+    } catch ( e ) {
+        Notify.warn( 'You will not be able to use osgUtil.DisplayGraph until you add jQuery in your page' );
+    }
+};
 
 // Simple tooltips implementation
 var SimpleTooltips = function ( options ) {
@@ -53,6 +54,8 @@ var SimpleTooltips = function ( options ) {
 };
 SimpleTooltips.prototype = {
     showTooltip: function ( e ) {
+        if ( !$ ) return;
+
         var target = e.currentTarget;
         this.el.innerHTML = target.getAttribute( 'title' );
         this.el.style.display = 'block';
@@ -65,6 +68,9 @@ SimpleTooltips.prototype = {
 };
 
 var DisplayGraph = function () {
+
+    init$();
+    if ( !$ ) return;
 
     // indexed with instanceID, references nodes, stateSet, sourceGeometry...
     // referenced with strings !
@@ -102,6 +108,8 @@ DisplayGraph.prototype = {
     },
 
     reset: function () {
+        if ( !$ ) return;
+
         this._selectables.clear();
         this._$svg.empty();
         this._focusedElement = 'scene';
@@ -119,6 +127,7 @@ DisplayGraph.prototype = {
     },
 
     createGraph: function ( root ) {
+        if ( !$ ) return;
         this.reset();
 
         this._displayNode = !!root;
@@ -137,6 +146,7 @@ DisplayGraph.prototype = {
 
     // Create and display a dagre d3 graph
     displayGraph: function () {
+        if ( !$ ) return;
         if ( window.d3 && window.dagreD3 ) {
             this._createGraphApply();
             return;

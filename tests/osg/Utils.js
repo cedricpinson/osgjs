@@ -1,29 +1,27 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var Utils = require( 'osg/Utils' );
 
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
     var checkBaseClass = function ( BaseObject ) {
         var a = new BaseObject();
-        ok( a.className() === 'Asticot', 'check className' );
-        ok( a.libraryName() === 'toto', 'check libraryName' );
-        ok( a.getTypeID() === BaseObject.getTypeID(), 'check typeID' );
+        assert.isOk( a.className() === 'Asticot', 'check className' );
+        assert.isOk( a.libraryName() === 'toto', 'check libraryName' );
+        assert.isOk( a.getTypeID() === BaseObject.getTypeID(), 'check typeID' );
     };
 
     var checkExtendedClass = function ( BaseObject, ExtendedObject ) {
         var a = new BaseObject();
         var b = new ExtendedObject();
-        ok( b.className() === 'LeRigolo', 'check className' );
-        ok( b.libraryName() === 'toto', 'check libraryName' );
-        ok( b.getTypeID() === ExtendedObject.getTypeID() && b.getTypeID() !== a.getTypeID(), 'check typeID' );
-        ok( b instanceof BaseObject, 'check b is instance of BaseObject' );
+        assert.isOk( b.className() === 'LeRigolo', 'check className' );
+        assert.isOk( b.libraryName() === 'toto', 'check libraryName' );
+        assert.isOk( b.getTypeID() === ExtendedObject.getTypeID() && b.getTypeID() !== a.getTypeID(), 'check typeID' );
+        assert.isOk( b instanceof BaseObject, 'check b is instance of BaseObject' );
     };
 
-    QUnit.test( 'createPrototypeClass', function () {
+    test( 'createPrototypeClass', function () {
 
         var BaseObject = function () {
             this._var0 = 1;

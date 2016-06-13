@@ -1,10 +1,12 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Texture = require( 'osg/Texture' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
-
+var Texture;
 
 var WebGLCaps = function () {
+
+    // circular deps with texture
+    if ( !Texture ) Texture = require( 'osg/Texture' );
 
     this._checkRTT = {};
     this._webGLExtensions = {};
@@ -119,7 +121,8 @@ WebGLCaps.prototype = {
         this._gl = gl;
 
         // Takes care of circular dependencies on Texture
-        Texture = require( 'osg/Texture' );
+        // Texture should be resolved at this point
+        // Texture = require( 'osg/Texture' );
 
         // get extensions
         this.initWebGLExtensions( gl );
@@ -147,6 +150,7 @@ WebGLCaps.prototype = {
         this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
 
         if ( this._isGL2 ) {
+
 
             // osgjs code is webgl1, so we fake webgl2 capabilities
             // and calls for retrocompatibility with webgl1
@@ -383,6 +387,5 @@ WebGLCaps.prototype = {
 
     }
 };
-
 
 module.exports = WebGLCaps;

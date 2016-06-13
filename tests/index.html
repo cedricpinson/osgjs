@@ -1,30 +1,31 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>QUnit Test Suite</title>
-    <link rel='stylesheet' href='vendors/qunit/qunit.css' type='text/css' media='screen'>
-
-    <script type='text/javascript' src='vendors/es5-shim.js'></script>
-    <script type='text/javascript' src='vendors/es6-shim.js'></script>
-    <script type='text/javascript' src='vendors/qunit/qunit.js'></script>
-
-    <script type='text/javascript'>
-    // disable qunit autostart
-    QUnit.config.autostart = false;
-    </script>
-
-    <script type='text/javascript' src='vendors/jquery-1.4.2.js'></script>
+  <head>
+    <title>Mocha</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="mocha.css" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script type='text/javascript' src='../examples/vendors/es5-shim.js'></script>
+    <script type='text/javascript' src='../examples/vendors/es6-shim.js'></script>
     <script type='text/javascript' src='../examples/vendors/bluebird.js'></script>
     <script type='text/javascript' src='../examples/vendors/hammer.js'></script>
     <script type='text/javascript' src='../examples/vendors/leap.js'></script>
-</head>
-<body>
-    <canvas id='3DView' style='border: none;' width='1' height='1'></canvas>
-    <h1 id='qunit-header'>QUnit Test Suite</h1>
-    <h2 id='qunit-banner'></h2>
-    <div id='qunit-testrunner-toolbar'></div>
-    <h2 id='qunit-userAgent'></h2>
-    <ol id='qunit-tests'></ol>
-    <script src='../builds/dist/tests.js'></script>
-</body>
+
+    <script src="mocha.js"></script>
+    <script> mocha.setup('qunit'); </script>
+-   <script src="../builds/dist/tests.js"></script>
+
+    <!-- run mocha -->
+    <script type="text/javascript" charset="utf-8">
+        // If tests run in a real browser
+        // Can alternatively do a check on window.PHANTOMJS
+        if (navigator.userAgent.indexOf('PhantomJS') < 0) {
+            mocha.run();
+        }
+    </script>
+
+  </body>
 </html>

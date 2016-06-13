@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var BoundingBox = require( 'osg/BoundingBox' );
 var Light = require( 'osg/Light' );
 var ShadowMap = require( 'osgShadow/ShadowMap' );
@@ -11,7 +11,6 @@ var Matrix = require( 'osg/Matrix' );
 
 
 module.exports = function () {
-    QUnit.module( 'osgShadow' );
 
     var matrixCompare = function ( matrix1, matrix2 ) {
         for ( var i = 0; i < 16; i++ ) {
@@ -22,7 +21,7 @@ module.exports = function () {
         return true;
     };
 
-    QUnit.test( 'ShadowedMap', function () {
+    test( 'ShadowedMap', function () {
 
         var shadowSettings = new ShadowSettings();
         shadowSettings.light = new Light();
@@ -55,10 +54,10 @@ module.exports = function () {
 
         console.log( shadowMap._viewMatrix, shadowMap._projectionMatrix, shadowMap._depthRange );
 
-        ok( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for spot light  inside scene Bbox' );
-        ok( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for spot light inside scene Bbox' );
-        ok( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for spot light  inside scene Bbox' );
-        ok( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for spot light inside scene Bbox' );
+        assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for spot light  inside scene Bbox' );
+        assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for spot light inside scene Bbox' );
+        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for spot light  inside scene Bbox' );
+        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for spot light inside scene Bbox' );
 
         //SPOT OUTSIDE BOUNDINGBOX
 
@@ -79,10 +78,10 @@ module.exports = function () {
         resultNearFar = Vec2.createAndSet( 18.036435420849756, 43.51222648856895 );
 
 
-        ok( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for spot light outside scene Bbox' );
-        ok( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for spot light outside scene Bbox' );
-        ok( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for spot light outside scene Bbox' );
-        ok( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for spot light outside scene Bbox' );
+        assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for spot light outside scene Bbox' );
+        assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for spot light outside scene Bbox' );
+        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for spot light outside scene Bbox' );
+        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for spot light outside scene Bbox' );
 
         ///////////////////////////////////////////////////////////
         /// TEST Directional
@@ -108,10 +107,10 @@ module.exports = function () {
         resultNearFar = Vec2.createAndSet( 12.737895533859595, 38.21378660157878 );
 
 
-        ok( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for directional light looking down' );
-        ok( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for directional light case 1' );
-        ok( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for directional light case looking down' );
-        ok( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for directional light looking down' );
+        assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for directional light looking down' );
+        assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for directional light case 1' );
+        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for directional light case looking down' );
+        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for directional light looking down' );
 
         // DIRECTIONAL LOOKING UP
 
@@ -131,15 +130,11 @@ module.exports = function () {
         resultProj = Matrix.createAndSet( 0.07850590369043471, 0.0, 0.0, 0.0, 0.0, 0.07850590369043471, 0.0, 0.0, 0.0, 0.0, -0.07850559553279861, 0.0, -0, -0, -1.9999960747202234, 1.0 );
         resultNearFar = Vec2.createAndSet( 12.737895533859596, 38.21378660157879 );
 
-        ok( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for directional light  looking up' );
-        ok( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for directional light looking up' );
-        ok( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for directional light  looking up' );
-        ok( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for directional light looking up' );
-
-
+        assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for directional light  looking up' );
+        assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for directional light looking up' );
+        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for directional light  looking up' );
+        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for directional light looking up' );
 
     } );
 
-
-    return;
 };

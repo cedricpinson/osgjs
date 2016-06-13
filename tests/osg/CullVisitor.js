@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var BoundingBox = require( 'osg/BoundingBox' );
 var Camera = require( 'osg/Camera' );
@@ -24,9 +24,7 @@ var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'CullVisitor', function () {
+    test( 'CullVisitor', function () {
 
         var canvas = mockup.createCanvas();
         var viewer = new Viewer( canvas );
@@ -67,17 +65,17 @@ module.exports = function () {
 
         uv.apply( root );
 
-        ok( callb === 1, 'Called b cull callback' );
-        ok( callc === 0, 'Did not Call c cull callback as expected' );
+        assert.isOk( callb === 1, 'Called b cull callback' );
+        assert.isOk( callc === 0, 'Did not Call c cull callback as expected' );
 
         root.setNodeMask( ~0 );
-        ok( callb === 1, 'Called b cull callback' );
-        ok( callc === 0, 'Did not Call c cull callback as expected' );
+        assert.isOk( callb === 1, 'Called b cull callback' );
+        assert.isOk( callc === 0, 'Did not Call c cull callback as expected' );
         mockup.removeCanvas( canvas );
     } );
 
 
-    QUnit.test( 'CullVisitor 2', function () {
+    test( 'CullVisitor 2', function () {
 
         // check render stage and render bin
         ( function () {
@@ -115,7 +113,7 @@ module.exports = function () {
             cull.pushModelViewMatrix( Matrix.create() );
             camera0.accept( cull );
 
-            ok( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
+            assert.isOk( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
             mockup.removeCanvas( canvas );
         } )();
 
@@ -160,7 +158,7 @@ module.exports = function () {
 
             camera0.accept( cull );
 
-            ok( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); // + cull.rootRenderStage === cull.currentRenderBin);
+            assert.isOk( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); // + cull.rootRenderStage === cull.currentRenderBin);
 
             rs.draw( state );
         } )();
@@ -210,9 +208,9 @@ module.exports = function () {
 
             camera0.accept( cull );
             var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
-            ok( mockup.checkNear( stack[ 1 ][ 0 ], 5 ), 'near should be 5.0 and is ' + stack[ 1 ][ 0 ] );
-            ok( mockup.checkNear( stack[ 1 ][ 1 ], 15 ), 'near should be 15.0 and is ' + stack[ 1 ][ 1 ] );
-            ok( mockup.checkNear( resultProjection, supposedProjection, 1e-3 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+            assert.isOk( mockup.checkNear( stack[ 1 ][ 0 ], 5 ), 'near should be 5.0 and is ' + stack[ 1 ][ 0 ] );
+            assert.isOk( mockup.checkNear( stack[ 1 ][ 1 ], 15 ), 'near should be 15.0 and is ' + stack[ 1 ][ 1 ] );
+            assert.isOk( mockup.checkNear( resultProjection, supposedProjection, 1e-3 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
         } )();
 
         // check the computation of nearfar with camera in position that it reverses near far
@@ -261,9 +259,9 @@ module.exports = function () {
             cull.pushModelViewMatrix( Matrix.create() );
 
             camera0.accept( cull );
-            ok( mockup.checkNear( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
-            ok( mockup.checkNear( stack[ 1 ][ 1 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 1 ] );
-            ok( mockup.checkNear( resultProjection, supposedProjection, 1e-3 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+            assert.isOk( mockup.checkNear( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
+            assert.isOk( mockup.checkNear( stack[ 1 ][ 1 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 1 ] );
+            assert.isOk( mockup.checkNear( resultProjection, supposedProjection, 1e-3 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
         } )();
 
@@ -346,9 +344,9 @@ module.exports = function () {
             cull.pushModelViewMatrix( Matrix.create() );
 
             camera0.accept( cull );
-            ok( mockup.checkNear( stack[ 1 ][ 0 ], dNear, 1.0 ), 'near should be ' + dNear + ' and is ' + stack[ 1 ][ 0 ] );
-            ok( mockup.checkNear( stack[ 1 ][ 1 ], dFar, 1.0 ), 'near should be ' + dFar + ' and is ' + stack[ 1 ][ 1 ] );
-            ok( mockup.checkNear( resultProjection, supposedProjection, 1.0 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+            assert.isOk( mockup.checkNear( stack[ 1 ][ 0 ], dNear, 1.0 ), 'near should be ' + dNear + ' and is ' + stack[ 1 ][ 0 ] );
+            assert.isOk( mockup.checkNear( stack[ 1 ][ 1 ], dFar, 1.0 ), 'near should be ' + dFar + ' and is ' + stack[ 1 ][ 1 ] );
+            assert.isOk( mockup.checkNear( resultProjection, supposedProjection, 1.0 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
         } )();
 
@@ -397,10 +395,10 @@ module.exports = function () {
             node3.accept( cull );
             rs.sort();
 
-            ok( rs._bins[ '0' ]._leafs[ 2 ]._depth === -15, 'Check depth of leaf 0' );
-            ok( rs._bins[ '0' ]._leafs[ 1 ]._depth === -10, 'Check depth of leaf 1' );
-            ok( rs._bins[ '0' ]._leafs[ 0 ]._depth === 5, 'Check depth of leaf 2' );
-            ok( rs._bins[ '0' ]._sortMode === RenderBin.SORT_BACK_TO_FRONT, 'Check RenderBin sort mode' );
+            assert.isOk( rs._bins[ '0' ]._leafs[ 2 ]._depth === -15, 'Check depth of leaf 0' );
+            assert.isOk( rs._bins[ '0' ]._leafs[ 1 ]._depth === -10, 'Check depth of leaf 1' );
+            assert.isOk( rs._bins[ '0' ]._leafs[ 0 ]._depth === 5, 'Check depth of leaf 2' );
+            assert.isOk( rs._bins[ '0' ]._sortMode === RenderBin.SORT_BACK_TO_FRONT, 'Check RenderBin sort mode' );
 
         } )();
 
@@ -443,10 +441,10 @@ module.exports = function () {
             root.accept( cull );
             rs.sort();
 
-            ok( rs._bins[ '10' ]._leafs[ 0 ]._depth === 10, 'Check transparent bin' );
-            ok( rs._bins[ '10' ].getStateGraphList().length === 0, 'Check transparent bin StateGraphList' );
-            ok( rs._leafs.length === 0, 'Check leafs for normal rendering bin' );
-            ok( rs.getStateGraphList().length === 1, 'Check StateGraphList for normal rendering bin' );
+            assert.isOk( rs._bins[ '10' ]._leafs[ 0 ]._depth === 10, 'Check transparent bin' );
+            assert.isOk( rs._bins[ '10' ].getStateGraphList().length === 0, 'Check transparent bin StateGraphList' );
+            assert.isOk( rs._leafs.length === 0, 'Check leafs for normal rendering bin' );
+            assert.isOk( rs.getStateGraphList().length === 1, 'Check StateGraphList for normal rendering bin' );
             mockup.removeCanvas( canvas );
         } )();
 
@@ -515,7 +513,7 @@ module.exports = function () {
             var cull = viewer.getCamera().getRenderer()._cullVisitor;
             var m = cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
             // Test for HeadLight, matrix should be identity
-            mockup.near( m, [ 1, 0, -0, 0,
+            assert.equalVector( m, [ 1, 0, -0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1
@@ -524,7 +522,7 @@ module.exports = function () {
             viewer.setLightingMode( View.LightingMode.SKY_LIGHT );
             viewer.frame();
             m = cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
-            mockup.near( m, [ -1, 0, -0, 0,
+            assert.equalVector( m, [ -1, 0, -0, 0,
                 0, 1, -0, 0,
                 0, -0, -1, 0,
                 0, 0, -10, 1
@@ -564,7 +562,7 @@ module.exports = function () {
                     cull.nodePath.push( mt );
                     //  push the nodepath, simulating a scene traversal.
                     var culled = cull.isCulled( quad, cull.nodePath );
-                    ok( culled === false, 'scene should not be culled' );
+                    assert.isOk( culled === false, 'scene should not be culled' );
                     return false;
                 }
             };
@@ -590,7 +588,7 @@ module.exports = function () {
                     cull.nodePath.push( mt );
                     // Translate outside of the frustum, scene should be culled now
                     var culled = cull.isCulled( quad, cull.nodePath );
-                    ok( culled === true, 'scene should be culled' );
+                    assert.isOk( culled === true, 'scene should be culled' );
 
                     return false;
                 }
@@ -617,7 +615,7 @@ module.exports = function () {
                     cull.nodePath.push( mt );
                     // Translate outside of the frustum and scale, node should not be culled now
                     var culled = cull.isCulled( quad, cull.nodePath );
-                    ok( culled === false, 'scene should not be culled' );
+                    assert.isOk( culled === false, 'scene should not be culled' );
                     return false;
                 }
             };
@@ -635,14 +633,14 @@ module.exports = function () {
     } );
 
 
-    QUnit.test( 'CullVisitor World/View matrix', function () {
+    test( 'CullVisitor World/View matrix', function () {
 
         var checkLeaf = function ( leaf ) {
             var tmp = Matrix.create();
             Matrix.mult( leaf._view, leaf._modelWorld, tmp );
 
-            mockup.near( tmp, leaf._modelView );
-            //ok( mockup.checkNear( tmp, leaf.modelview ), 'View * World === ModelView' );
+            assert.equalVector( tmp, leaf._modelView );
+            //assert.isOk( mockup.checkNear( tmp, leaf.modelview ), 'View * World === ModelView' );
         };
 
         var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
@@ -704,7 +702,7 @@ module.exports = function () {
 
         root.accept( cull );
 
-        ok( cull._reserveLeafStack.length > 1, 'check we have leaf to validate this test' );
+        assert.isOk( cull._reserveLeafStack.length > 1, 'check we have leaf to validate this test' );
         for ( var i = 0; i < cull._reserveLeafStack.length - 1; i++ ) {
             checkLeaf( cull._reserveLeafStack[ i ] );
         }

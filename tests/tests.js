@@ -1,15 +1,10 @@
-'use strict';
-
-require( 'tests/vendors/es5-shim' );
-require( 'tests/vendors/es6-shim' );
-
 // add missing class for phantom js execution context
 if ( window.HTMLVideoElement === undefined ) {
-    window.HTMLVideoElement = function () {}; // dummy class
+    window.HTMLVideoElement = function () {};
 }
 
-var QUnit = require( 'qunit' );
 var OSG = require( 'OSG' );
+
 var osg = require( 'tests/osg/osgTests' );
 var osgAnimation = require( 'tests/osgAnimation/osgAnimationTests' );
 var osgDB = require( 'tests/osgDB/osgDBTests' );
@@ -24,16 +19,32 @@ var osgWrappers = require( 'tests/osgWrappers/osgWrappersTests' );
 // hack because of osgPool
 OSG.osg.init();
 
-osg();
-osgDB();
-osgAnimation();
-osgGA();
-osgUtil();
-osgViewer();
-osgShader();
-osgShadow();
-osgText();
+suite( 'osgWrappers' );
 osgWrappers();
-// start test when require finished its job
-QUnit.load();
-QUnit.start();
+
+suite( 'osgText' );
+osgText();
+
+suite( 'osgShadow' );
+osgShadow();
+
+suite( 'osgShader' );
+osgShader();
+
+suite( 'osgViewer' );
+osgViewer();
+
+suite( 'osgUtil' );
+osgUtil();
+
+suite( 'osgGA' );
+osgGA();
+
+suite( 'osgDB' );
+osgDB();
+
+suite( 'osg' );
+osg();
+
+suite( 'osgAnimation' );
+osgAnimation();

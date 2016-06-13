@@ -34,7 +34,6 @@ var Vec2 = require( 'tests/osg/Vec2' );
 var PrimitiveFunctor = require( 'tests/osg/PrimitiveFunctor' );
 var WebGLCaps = require( 'tests/osg/WebGLCaps' );
 
-
 module.exports = function () {
     Image();
     BlendColor();

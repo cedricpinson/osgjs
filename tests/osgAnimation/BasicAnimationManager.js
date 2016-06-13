@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
@@ -11,9 +11,7 @@ var Matrix = require( 'osg/Matrix' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgAnimation' );
-
-    QUnit.test( 'BasicAnimationManager', function () {
+    test( 'BasicAnimationManager', function () {
 
         var animation = mockup.createAnimation( 'AnimationTest' );
         var cbMap = mockup.createAnimationUpdateCallback( [ animation ] );
@@ -26,11 +24,11 @@ module.exports = function () {
         basicAnimationManager._registerAnimations();
 
 
-        ok( basicAnimationManager.getAnimations()[ 'AnimationTest' ] !== undefined, 'Check animation test' );
+        assert.isOk( basicAnimationManager.getAnimations().AnimationTest !== undefined, 'Check animation test' );
 
 
-        equal( basicAnimationManager._targets[ 0 ].id, 0, 'check target ID [0] created' );
-        equal( basicAnimationManager._targets[ 1 ].id, 1, 'check target ID [1] created' );
+        assert.equal( basicAnimationManager._targets[ 0 ].id, 0, 'check target ID [0] created' );
+        assert.equal( basicAnimationManager._targets[ 1 ].id, 1, 'check target ID [1] created' );
 
         //
         var time = 0.0;
@@ -47,41 +45,41 @@ module.exports = function () {
         var animations = basicAnimationManager.getAnimations();
         var animationName = Object.keys( animations )[ 0 ];
         basicAnimationManager.playAnimation( animationName, false );
-        ok( basicAnimationManager._startAnimations[ animationName ] !== undefined, 'check start animation queue' );
+        assert.isOk( basicAnimationManager._startAnimations[ animationName ] !== undefined, 'check start animation queue' );
 
         basicAnimationManager._dirty = false;
         basicAnimationManager.update( null, nv );
-        ok( basicAnimationManager._activeAnimations[ animationName ] !== undefined, 'check animation ' + animationName + ' is playing' );
+        assert.isOk( basicAnimationManager._activeAnimations[ animationName ] !== undefined, 'check animation ' + animationName + ' is playing' );
 
         // .x comes from the mockup anmation name
-        equal( basicAnimationManager._targets[ 0 ].value, 1, 'check target a value at t = ' + time );
-        equal( basicAnimationManager._targets[ 1 ].value, 1, 'check target b value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 0 ].value, 1, 'check target a value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 1 ].value, 1, 'check target b value at t = ' + time );
 
         time = 0.5;
         basicAnimationManager.update( null, nv );
-        equal( basicAnimationManager._targets[ 0 ].value, 0.5, 'check target a value at t = ' + time );
-        equal( basicAnimationManager._targets[ 1 ].value, 1, 'check target b value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 0 ].value, 0.5, 'check target a value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 1 ].value, 1, 'check target b value at t = ' + time );
 
 
         time = 3.5;
         basicAnimationManager.update( null, nv );
-        equal( basicAnimationManager._targets[ 0 ].value, 3, 'check target a value at t = ' + time );
-        equal( basicAnimationManager._targets[ 1 ].value, 1.5, 'check target b value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 0 ].value, 3, 'check target a value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 1 ].value, 1.5, 'check target b value at t = ' + time );
 
         time = 6.0;
         basicAnimationManager.update( null, nv );
-        equal( basicAnimationManager._targets[ 0 ].value, 3, 'check target a value at t = ' + time );
-        equal( basicAnimationManager._targets[ 1 ].value, 3, 'check target b value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 0 ].value, 3, 'check target a value at t = ' + time );
+        assert.equal( basicAnimationManager._targets[ 1 ].value, 3, 'check target b value at t = ' + time );
 
-        ok( basicAnimationManager._targets[ 0 ].channels.length === 0, 'check target has not channels' );
-        ok( basicAnimationManager._targets[ 1 ].channels.length === 0, 'check target has not channels' );
-        ok( basicAnimationManager._activeAnimations[ animationName ] === undefined, 'check animation ' + animationName + ' is not active' );
+        assert.isOk( basicAnimationManager._targets[ 0 ].channels.length === 0, 'check target has not channels' );
+        assert.isOk( basicAnimationManager._targets[ 1 ].channels.length === 0, 'check target has not channels' );
+        assert.isOk( basicAnimationManager._activeAnimations[ animationName ] === undefined, 'check animation ' + animationName + ' is not active' );
 
 
     } );
 
 
-    QUnit.test( 'BasicAnimationManager Linking', function () {
+    test( 'BasicAnimationManager Linking', function () {
 
         var animation = mockup.createAnimation( 'AnimationTest', 'testUpdateMatrixTransform' );
         var basicAnimationManager = new BasicAnimationManager();
@@ -105,11 +103,11 @@ module.exports = function () {
 
         // get keys
         var keys = Object.keys( basicAnimationManager._animationsUpdateCallback );
-        equal( keys.length, 1, 'check number of animation callback found' );
+        assert.equal( keys.length, 1, 'check number of animation callback found' );
         var animationCB = basicAnimationManager._animationsUpdateCallback[ keys[ 0 ] ];
-        equal( animationCB.getName(), 'testUpdateMatrixTransform', 'check name of the first animation found' );
+        assert.equal( animationCB.getName(), 'testUpdateMatrixTransform', 'check name of the first animation found' );
 
-        equal( basicAnimationManager._animationsUpdateCallbackArray.length, 1, 'check channel assigned to animation callback' );
+        assert.equal( basicAnimationManager._animationsUpdateCallbackArray.length, 1, 'check channel assigned to animation callback' );
 
 
         //
@@ -133,13 +131,13 @@ module.exports = function () {
 
         time = 0.5;
         basicAnimationManager.update( null, nv );
-        equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
+        assert.equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
 
-        deepEqual( animationCallback._matrix, Matrix.createAndSet( 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ), 'check matrix computed' );
+        assert.equalVector( animationCallback._matrix, Matrix.createAndSet( 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ), 'check matrix computed' );
 
     } );
 
-    QUnit.test( 'BasicAnimationManager Controls', function () {
+    test( 'BasicAnimationManager Controls', function () {
 
         var animation = mockup.createAnimation();
         var duration = 4;
@@ -185,74 +183,74 @@ module.exports = function () {
 
         //Simple Pause
         basicAnimationManager.update( null, nv );
-        ok( managerTime === 0, 'Manager time at 0' );
+        assert.isOk( managerTime === 0, 'Manager time at 0' );
 
         //
         time = 1;
         basicAnimationManager.update( null, nv );
 
         togglePause();
-        ok( ( managerTime % duration ) === time, 'Pause at ' + time );
+        assert.isOk( ( managerTime % duration ) === time, 'Pause at ' + time );
 
         //
         time = 2;
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
+        assert.isOk( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
 
         //
         time = 6;
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
+        assert.isOk( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
 
         //
         togglePause();
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === pauseTime, 'Time after pause at ' + time );
+        assert.isOk( ( managerTime % duration ) === pauseTime, 'Time after pause at ' + time );
 
         time = 7;
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === pauseTime + 1, 'Time after pause at ' + time );
+        assert.isOk( ( managerTime % duration ) === pauseTime + 1, 'Time after pause at ' + time );
 
 
         //Pause + setTime()
         time = 10;
         togglePause();
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
+        assert.isOk( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
 
         basicAnimationManager.setSimulationTime( 3 );
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 );
+        assert.isOk( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 );
 
         time = 11;
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 + ' t + 1' );
+        assert.isOk( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 + ' t + 1' );
 
         togglePause();
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === 3, 'Value after pause for simulation time at 3' );
+        assert.isOk( ( managerTime % duration ) === 3, 'Value after pause for simulation time at 3' );
 
         time = 14;
         basicAnimationManager.update( null, nv );
         togglePause();
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
+        assert.isOk( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
 
         basicAnimationManager.setSimulationTime( 0.5 );
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === 0.5, 'Simulation time at ' + 0.5 );
+        assert.isOk( ( managerTime % duration ) === 0.5, 'Simulation time at ' + 0.5 );
 
         basicAnimationManager.setSimulationTime( 1.5 );
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 );
+        assert.isOk( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 );
 
         time = 15;
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 + ' t + 1' );
+        assert.isOk( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 + ' t + 1' );
 
         togglePause();
         basicAnimationManager.update( null, nv );
-        ok( ( managerTime % duration ) === 1.5, 'Value after pause for simulation time at 1.5' );
+        assert.isOk( ( managerTime % duration ) === 1.5, 'Value after pause for simulation time at 1.5' );
 
         //Time factor on play
         var t;
@@ -264,7 +262,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time = 18;
         timeFactor = 0.5;
@@ -272,7 +270,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time = 18.5;
         timeFactor = 4.4;
@@ -280,7 +278,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time = 22.5;
         timeFactor = 0.8;
@@ -288,7 +286,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time = 26;
         timeFactor = 1;
@@ -296,11 +294,11 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         //Time Factor on pause
         togglePause();
-        ok( true, 'Toggle Pause at ' + time );
+        assert.isOk( true, 'Toggle Pause at ' + time );
 
         time += 1;
         timeFactor = 0.3;
@@ -308,7 +306,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time += 0.5;
         timeFactor = 0.5;
@@ -316,7 +314,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time += 2;
         timeFactor = 4.4;
@@ -324,7 +322,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time += 1;
         timeFactor = 0.8;
@@ -332,7 +330,7 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
         time += 0.3;
         timeFactor = 1;
@@ -340,13 +338,11 @@ module.exports = function () {
         t = managerTime;
         basicAnimationManager.setTimeFactor( timeFactor );
         basicAnimationManager.update( null, nv );
-        ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+        assert.approximately( managerTime % duration, t % duration, 1e-5, 'Value after set time factor at ' + timeFactor );
 
-        start();
     } );
 
-    QUnit.test( 'BasicAnimationManager Negative time in animation key', function () {
-
+    test( 'BasicAnimationManager Negative time in animation key', function () {
 
         var animation = mockup.createAnimationWithNegativeKey( 'NegativeKeys' );
 
@@ -380,34 +376,33 @@ module.exports = function () {
 
         basicAnimationManager.update( null, nv ); //time == 0
 
-        ok( a.value === 1, 'Check channel a at t = ' + time );
-        ok( b.value === 1, 'Check channel b at t = ' + time );
+        assert.isOk( a.value === 1, 'Check channel a at t = ' + time );
+        assert.isOk( b.value === 1, 'Check channel b at t = ' + time );
 
         time = 0.5;
         basicAnimationManager.update( null, nv ); //time == 0.5
 
-        ok( a.value === 0.5, 'Check channel a at t = ' + time );
-        ok( b.value === 1, 'Check channel b at t = ' + time );
+        assert.isOk( a.value === 0.5, 'Check channel a at t = ' + time );
+        assert.isOk( b.value === 1, 'Check channel b at t = ' + time );
 
         time = -1;
         basicAnimationManager.update( null, nv ); //time == -1
 
-        ok( a.value === 1, 'Check channel a at t = ' + time );
-        ok( b.value === 1, 'Check channel b at t = ' + time );
+        assert.isOk( a.value === 1, 'Check channel a at t = ' + time );
+        assert.isOk( b.value === 1, 'Check channel b at t = ' + time );
 
         time = 2;
         basicAnimationManager.update( null, nv ); //time == 2
 
-        ok( a.value === 3, 'Check channel a at t = ' + time );
-        ok( b.value === 1, 'Check channel b at t = ' + time );
+        assert.isOk( a.value === 3, 'Check channel a at t = ' + time );
+        assert.isOk( b.value === 1, 'Check channel b at t = ' + time );
 
         time = 50;
         basicAnimationManager.update( null, nv ); //time == 50
 
-        ok( a.value === 3, 'Check channel a at t = ' + time );
-        ok( b.value === 1, 'Check channel b at t = ' + time );
+        assert.isOk( a.value === 3, 'Check channel a at t = ' + time );
+        assert.isOk( b.value === 1, 'Check channel b at t = ' + time );
 
-        start();
     } );
 
 };

@@ -1,6 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
-var mockup = require( 'tests/mockup/mockup' );
+var assert = require( 'chai' ).assert;
 
 var MACROUTILS = require( 'osg/Utils' );
 var Input = require( 'osgDB/Input' );
@@ -8,8 +7,6 @@ var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 
 module.exports = function () {
-
-    QUnit.module( 'osgWrapper' );
 
     var FindAnimationManagerVisitor = function () {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
@@ -59,7 +56,7 @@ module.exports = function () {
         };
     };
 
-    QUnit.asyncTest( 'osgAnimation character', function () {
+    test( 'osgAnimation character', function ( done ) {
 
         var input = new Input();
         input.readNodeURL( '../examples/media/models/animation/character.osgjs' ).then( function ( scene ) {
@@ -68,45 +65,45 @@ module.exports = function () {
             scene.accept( findAnimationManager );
             var manager = findAnimationManager.getAnimationManager();
 
-            ok( manager !== undefined, 'BasicAnimationManager found' );
+            assert.isOk( manager !== undefined, 'BasicAnimationManager found' );
 
             var animations = manager.getAnimations();
-            ok( Object.keys( animations ).length === 6, 'found 6 animations' );
+            assert.isOk( Object.keys( animations ).length === 6, 'found 6 animations' );
 
             var anim = animations[ 'Default Take' ];
             var nbChannels = anim.channels.length;
-            ok( nbChannels === 144, 'check number of channels in Default Take' );
+            assert.isOk( nbChannels === 144, 'check number of channels in Default Take' );
 
-            // the order of the channels is not important for this test so we simply take a random one 
+            // the order of the channels is not important for this test so we simply take a random one
             var info = getChannelsInfo( anim );
-            ok( info.nbChannelSyncEnd === 48, 'nb sync end channels' );
-            ok( info.nbTimesEmptySlot === nbChannels, 'nb times empty slot' );
-            ok( info.nbKeysEmptySlot === nbChannels, 'nb times empty slot' );
+            assert.isOk( info.nbChannelSyncEnd === 48, 'nb sync end channels' );
+            assert.isOk( info.nbTimesEmptySlot === nbChannels, 'nb times empty slot' );
+            assert.isOk( info.nbKeysEmptySlot === nbChannels, 'nb times empty slot' );
 
-            mockup.near( anim.duration, 1.93333, 'check duration of animation' );
+            assert.approximately( anim.duration, 1.93333, 1e-5, 'check duration of animation' );
 
             // test lerp-end start
             manager.setAnimationLerpEndStart( anim, 1.5 );
-            mockup.near( anim.duration, 1.93333 + 1.5, 'check duration of animation after lerpStartEnd' );
+            assert.approximately( anim.duration, 1.93333 + 1.5, 1e-5, 'check duration of animation after lerpStartEnd' );
 
             manager.setAnimationLerpEndStart( anim, 1.5 );
-            mockup.near( anim.duration, 1.93333 + 1.5, 'check duration of animation after 2 calls to lerpStartEnd' );
+            assert.approximately( anim.duration, 1.93333 + 1.5, 1e-5, 'check duration of animation after 2 calls to lerpStartEnd' );
 
             // test lerp end-start channel (additional slot should been used now)
             info = getChannelsInfo( anim );
-            ok( info.nbChannelSyncEnd === 48, 'nb sync end channels' );
-            ok( info.nbTimesEmptySlot === nbChannels - info.nbChannelSyncEnd, 'nb times empty slot' );
-            ok( info.nbKeysEmptySlot === nbChannels - info.nbChannelSyncEnd, 'nb times empty slot' );
+            assert.isOk( info.nbChannelSyncEnd === 48, 'nb sync end channels' );
+            assert.isOk( info.nbTimesEmptySlot === nbChannels - info.nbChannelSyncEnd, 'nb times empty slot' );
+            assert.isOk( info.nbKeysEmptySlot === nbChannels - info.nbChannelSyncEnd, 'nb times empty slot' );
 
             // remove lerp end-start
             manager.setAnimationLerpEndStart( anim, 0 );
-            mockup.near( anim.duration, 1.93333, 'check duration of animation after 2 calls to lerpStartEnd' );
+            assert.approximately( anim.duration, 1.93333, 1e-5, 'check duration of animation after 2 calls to lerpStartEnd' );
             info = getChannelsInfo( anim );
-            ok( info.nbChannelSyncEnd === 48, 'nb sync end channels' );
-            ok( info.nbTimesEmptySlot === nbChannels, 'nb times empty slot' );
-            ok( info.nbKeysEmptySlot === nbChannels, 'nb times empty slot' );
+            assert.isOk( info.nbChannelSyncEnd === 48, 'nb sync end channels' );
+            assert.isOk( info.nbTimesEmptySlot === nbChannels, 'nb times empty slot' );
+            assert.isOk( info.nbKeysEmptySlot === nbChannels, 'nb times empty slot' );
 
-            start();
+            done();
         } );
 
     } );

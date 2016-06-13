@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var ReaderParser = require( 'osgDB/ReaderParser' );
 var Texture = require( 'osg/Texture' );
@@ -9,9 +9,7 @@ var PrimitiveSet = require( 'osg/PrimitiveSet' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgDB' );
-
-    QUnit.test( 'StateSet - MultiTextures', function () {
+    test( 'StateSet - MultiTextures', function () {
         var tree = {
 
             'stateset': {
@@ -40,7 +38,7 @@ module.exports = function () {
         // TODO it uses the old sync parseSceneGraphDeprecated
         var result = ReaderParser.parseSceneGraph( tree );
 
-        ok( result.getStateSet() !== undefined, 'check old stateset' );
+        assert.isOk( result.getStateSet() !== undefined, 'check old stateset' );
         var material = result.getStateSet().getAttribute( 'Material' );
         var materialCheck = ( material !== undefined &&
             mockup.checkNear( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
@@ -50,17 +48,17 @@ module.exports = function () {
             mockup.checkNear( material.getShininess(), 2.5 ) &&
             material.getName() === 'FloorBorder1' );
 
-        ok( materialCheck, 'check old material' );
+        assert.isOk( materialCheck, 'check old material' );
         var texture = result.getStateSet().getTextureAttribute( 1, 'Texture' );
         var textureCheck = ( texture !== undefined &&
             texture.getWrapS() === Texture.REPEAT &&
             texture.getWrapT() === Texture.MIRRORED_REPEAT &&
             texture.getMinFilter() === Texture.NEAREST &&
             texture.getMagFilter() === Texture.NEAREST );
-        ok( textureCheck, 'check old texture' );
+        assert.isOk( textureCheck, 'check old texture' );
     } );
 
-    QUnit.asyncTest( 'StateSet - BlendFunc, Material', function () {
+    test( 'StateSet - BlendFunc, Material', function ( done ) {
         var tree = {
             'osg.Node': {
                 'StateSet': {
@@ -100,8 +98,8 @@ module.exports = function () {
 
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
 
-            ok( result.getStateSet() !== undefined, 'check last StateSet' );
-            ok( result.getStateSet().getAttribute( 'BlendFunc' ) !== undefined, 'check BlendFunc' );
+            assert.isOk( result.getStateSet() !== undefined, 'check last StateSet' );
+            assert.isOk( result.getStateSet().getAttribute( 'BlendFunc' ) !== undefined, 'check BlendFunc' );
             var material = result.getStateSet().getAttribute( 'Material' );
             var materialCheck = ( material !== undefined &&
                 mockup.checkNear( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
@@ -111,19 +109,19 @@ module.exports = function () {
                 mockup.checkNear( material.getShininess(), 2.5 ) &&
                 material.getName() === 'FloorBorder1' );
 
-            ok( materialCheck, 'check Material' );
+            assert.isOk( materialCheck, 'check Material' );
             var texture = result.getStateSet().getTextureAttribute( 0, 'Texture' );
-            ok( texture !== undefined, 'Check texture' );
-            ok( texture.getWrapS() === Texture.REPEAT, 'Check wraps texture' );
-            ok( texture.getWrapT() === Texture.CLAMP_TO_EDGE, 'Check wrapt texture' );
-            ok( texture.getMinFilter() === Texture.LINEAR_MIPMAP_LINEAR, 'Check min filter texture' );
-            ok( texture.getMagFilter() === Texture.LINEAR, 'Check mag filter texture' );
-            start();
+            assert.isOk( texture !== undefined, 'Check texture' );
+            assert.isOk( texture.getWrapS() === Texture.REPEAT, 'Check wraps texture' );
+            assert.isOk( texture.getWrapT() === Texture.CLAMP_TO_EDGE, 'Check wrapt texture' );
+            assert.isOk( texture.getMinFilter() === Texture.LINEAR_MIPMAP_LINEAR, 'Check min filter texture' );
+            assert.isOk( texture.getMagFilter() === Texture.LINEAR, 'Check mag filter texture' );
+            done();
         } );
     } );
 
 
-    QUnit.asyncTest( 'Geometry Cube UserData', function () {
+    test( 'Geometry Cube UserData', function ( done ) {
         var tree = {
             'osg.Geometry': {
                 'Name': 'Cube',
@@ -199,20 +197,20 @@ module.exports = function () {
         };
 
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.getStateSet() !== undefined, 'check geometry StateSet' );
-            ok( result.getStateSet().getUserData() !== undefined, 'check StateSet userdata' );
-            ok( result.getPrimitiveSetList().length === 1, 'check primitives' );
-            ok( result.getPrimitiveSetList()[ 0 ].getMode() === PrimitiveSet.TRIANGLES, 'check triangles primitive' );
-            ok( result.getPrimitiveSetList()[ 0 ].getFirst() === 0, 'check triangles first index' );
-            ok( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === 36, 'check triangles indices' );
-            ok( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === result.getPrimitiveSetList()[ 0 ].getCount(), 'check triangles count' );
-            ok( window.Object.keys( result.getVertexAttributeList() ).length === 2, 'check vertex attributes' );
-            start();
+            assert.isOk( result.getStateSet() !== undefined, 'check geometry StateSet' );
+            assert.isOk( result.getStateSet().getUserData() !== undefined, 'check StateSet userdata' );
+            assert.isOk( result.getPrimitiveSetList().length === 1, 'check primitives' );
+            assert.isOk( result.getPrimitiveSetList()[ 0 ].getMode() === PrimitiveSet.TRIANGLES, 'check triangles primitive' );
+            assert.isOk( result.getPrimitiveSetList()[ 0 ].getFirst() === 0, 'check triangles first index' );
+            assert.isOk( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === 36, 'check triangles indices' );
+            assert.isOk( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === result.getPrimitiveSetList()[ 0 ].getCount(), 'check triangles count' );
+            assert.isOk( window.Object.keys( result.getVertexAttributeList() ).length === 2, 'check vertex attributes' );
+            done();
         } );
     } );
 
 
-    QUnit.asyncTest( 'MatrixTransform', function () {
+    test( 'MatrixTransform', function ( done ) {
         var tree = {
             'osg.MatrixTransform': {
                 'Name': 'Lamp',
@@ -226,14 +224,14 @@ module.exports = function () {
         };
 
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.getName() === 'Lamp', 'check matrix transform' );
-            ok( result.getMatrix()[ 0 ] === -0.2909, 'check matrix transform content' );
-            start();
+            assert.isOk( result.getName() === 'Lamp', 'check matrix transform' );
+            assert.isOk( result.getMatrix()[ 0 ] === -0.2909, 'check matrix transform content' );
+            done();
         } );
     } );
 
 
-    QUnit.asyncTest( 'BasicAnimationManager', function () {
+    test( 'BasicAnimationManager', function ( done ) {
         var tree = {
             'osg.Node': {
                 'UniqueID': 0,
@@ -493,19 +491,19 @@ module.exports = function () {
         var input = ReaderParser.registry().clone();
 
         input.setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.getUpdateCallbackList().length === 1, 'check update callback' );
-            ok( result.getUpdateCallback().getAnimations()[ 'Take 001' ] !== undefined, 'check animation list' );
+            assert.isOk( result.getUpdateCallbackList().length === 1, 'check update callback' );
+            assert.isOk( result.getUpdateCallback().getAnimations()[ 'Take 001' ] !== undefined, 'check animation list' );
             var animation = result.getUpdateCallback().getAnimations()[ 'Take 001' ];
-            ok( animation.channels.length === 5, 'check channels' );
-            ok( animation.channels[ 1 ].channel.name === 'rotateY', 'check channel 1' );
-            ok( animation.channels[ 1 ].channel.target === 'BetaHighResMeshes', 'check taget channel 1' );
-            start();
+            assert.isOk( animation.channels.length === 5, 'check channels' );
+            assert.isOk( animation.channels[ 1 ].channel.name === 'rotateY', 'check channel 1' );
+            assert.isOk( animation.channels[ 1 ].channel.target === 'BetaHighResMeshes', 'check taget channel 1' );
+            done();
         } );
 
     } );
 
 
-    QUnit.asyncTest( 'FloatLerpChannel', function () {
+    test( 'FloatLerpChannel', function ( done ) {
         var tree = {
             'osgAnimation.FloatLerpChannel': {
                 'Name': 'euler_x',
@@ -538,15 +536,15 @@ module.exports = function () {
         var input = ReaderParser.registry().clone();
 
         input.setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.keys.length === 28, 'Check keys FloatLerpChannel' );
-            ok( result.times.length === 28, 'Check times FloatLerpChannel' );
-            ok( result.target === 'Cube', 'Check TargetName FloatLerpChannel' );
-            start();
+            assert.isOk( result.keys.length === 28, 'Check keys FloatLerpChannel' );
+            assert.isOk( result.times.length === 28, 'Check times FloatLerpChannel' );
+            assert.isOk( result.target === 'Cube', 'Check TargetName FloatLerpChannel' );
+            done();
         } );
     } );
 
 
-    QUnit.asyncTest( 'QuatSlerpChannel', function () {
+    test( 'QuatSlerpChannel', function ( done ) {
         var tree = {
             'osgAnimation.QuatSlerpChannel': {
                 'Name': 'rotate_x',
@@ -605,15 +603,15 @@ module.exports = function () {
         var input = ReaderParser.registry().clone();
 
         input.setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
-            ok( result.times.length === 7, 'Check times QuatSlerpChannel' );
-            ok( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
-            start();
+            assert.isOk( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
+            assert.isOk( result.times.length === 7, 'Check times QuatSlerpChannel' );
+            assert.isOk( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
+            done();
         } );
     } );
 
 
-    QUnit.asyncTest( 'QuatLerpChannel', function () {
+    test( 'QuatLerpChannel', function ( done ) {
         var tree = {
             'osgAnimation.QuatLerpChannel': {
                 'Name': 'rotate_x',
@@ -673,16 +671,16 @@ module.exports = function () {
         var input = ReaderParser.registry().clone();
 
         input.setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
-            ok( result.times.length === 7, 'Check times QuatSlerpChannel' );
-            ok( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
-            start();
+            assert.isOk( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
+            assert.isOk( result.times.length === 7, 'Check times QuatSlerpChannel' );
+            assert.isOk( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
+            done();
         } );
 
     } );
 
 
-    QUnit.asyncTest( 'FloatCubicBezierChannel', function () {
+    test( 'FloatCubicBezierChannel', function ( done ) {
 
         var tree = {
             'osgAnimation.FloatCubicBezierChannel': {
@@ -736,17 +734,17 @@ module.exports = function () {
         var input = ReaderParser.registry().clone();
 
         input.setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.keys.length === 3, 'Check keys FloatCubicBezierChannel' );
-            ok( result.times.length === 1, 'Check times FloatCubicBezierChannel' );
-            ok( mockup.checkNear( result.keys[ 0 ], 3.5708 ), 'Ckeck Position' );
-            ok( mockup.checkNear( result.keys[ 1 ], 1.5708 ), 'Check ControlIn' );
-            ok( mockup.checkNear( result.keys[ 2 ], 2.5708 ), 'Check ControlOut' );
-            ok( result.target === 'Box001', 'Check TargetName FloatCubicBezierChannel' );
-            start();
+            assert.isOk( result.keys.length === 3, 'Check keys FloatCubicBezierChannel' );
+            assert.isOk( result.times.length === 1, 'Check times FloatCubicBezierChannel' );
+            assert.isOk( mockup.checkNear( result.keys[ 0 ], 3.5708 ), 'Ckeck Position' );
+            assert.isOk( mockup.checkNear( result.keys[ 1 ], 1.5708 ), 'Check ControlIn' );
+            assert.isOk( mockup.checkNear( result.keys[ 2 ], 2.5708 ), 'Check ControlOut' );
+            assert.isOk( result.target === 'Box001', 'Check TargetName FloatCubicBezierChannel' );
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'Vec3CubicBezierChannel', function () {
+    test( 'Vec3CubicBezierChannel', function ( done ) {
 
         var tree = {
             'osgAnimation.Vec3CubicBezierChannel': {
@@ -854,15 +852,15 @@ module.exports = function () {
         var input = ReaderParser.registry().clone();
 
         input.setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.keys.length === 27, 'Check keys Vec3CubicBezierChannel' );
-            ok( result.times.length === 3, 'Check times Vec3CubicBezierChannel' );
-            ok( mockup.checkNear( result.keys[ 15 ], 0.92923402 ), 'Check value' );
+            assert.isOk( result.keys.length === 27, 'Check keys Vec3CubicBezierChannel' );
+            assert.isOk( result.times.length === 3, 'Check times Vec3CubicBezierChannel' );
+            assert.isOk( mockup.checkNear( result.keys[ 15 ], 0.92923402 ), 'Check value' );
 
-            start();
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'StackedTransform', function () {
+    test( 'StackedTransform', function ( done ) {
 
         var tree = {
             'osg.MatrixTransform': {
@@ -906,15 +904,15 @@ module.exports = function () {
         };
 
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.getUpdateCallbackList().length === 1, 'check osgAnimation.UpdateMatrixTransform callback' );
-            ok( result.getUpdateCallback().getStackedTransforms().length === 5, 'check osgAnimation.UpdateMatrixTransform stacked transform' );
-            start();
+            assert.isOk( result.getUpdateCallbackList().length === 1, 'check osgAnimation.UpdateMatrixTransform callback' );
+            assert.isOk( result.getUpdateCallback().getStackedTransforms().length === 5, 'check osgAnimation.UpdateMatrixTransform stacked transform' );
+            done();
         } );
 
     } );
 
 
-    QUnit.asyncTest( 'DrawArray', function () {
+    test( 'DrawArray', function ( done ) {
         var tree = {
             'osg.Geometry': {
                 'PrimitiveSetList': [ {
@@ -932,14 +930,14 @@ module.exports = function () {
             return result;
         } ).then( function ( geom ) {
             var result = geom.getPrimitiveSetList()[ 0 ];
-            ok( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArray triangles' );
-            ok( result.getCount() === 3540, 'check triangles count' );
-            ok( result.getFirst() === 10, 'check triangles first' );
-            start();
+            assert.isOk( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArray triangles' );
+            assert.isOk( result.getCount() === 3540, 'check triangles count' );
+            assert.isOk( result.getFirst() === 10, 'check triangles first' );
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'DrawArrays', function () {
+    test( 'DrawArrays', function ( done ) {
         var tree2 = {
             'osg.Geometry': {
                 'PrimitiveSetList': [ {
@@ -956,16 +954,16 @@ module.exports = function () {
         ( new Input() ).setJSON( tree2 ).readObject().then( function ( result ) {
             return result.getPrimitiveSetList()[ 0 ];
         } ).then( function ( result ) {
-            ok( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArray triangles' );
-            ok( result.getCount() === 0, 'check triangles count' );
-            ok( result.getFirst() === 0, 'check triangles first' );
-            start();
+            assert.isOk( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArray triangles' );
+            assert.isOk( result.getCount() === 0, 'check triangles count' );
+            assert.isOk( result.getFirst() === 0, 'check triangles first' );
+            done();
         } );
     } );
 
 
 
-    QUnit.asyncTest( 'DrawArrayLengths', function () {
+    test( 'DrawArrayLengths', function ( done ) {
         var tree = {
             'osg.Geometry': {
                 'PrimitiveSetList': [ {
@@ -982,16 +980,16 @@ module.exports = function () {
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
             return result.getPrimitiveSetList()[ 0 ];
         } ).then( function ( result ) {
-            ok( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArrayLengths triangles' );
-            ok( result.getArrayLengths()[ 0 ] === 3, 'check array lenght' );
-            ok( result.getFirst() === 10, 'check triangles first' );
-            start();
+            assert.isOk( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArrayLengths triangles' );
+            assert.isOk( result.getArrayLengths()[ 0 ] === 3, 'check array lenght' );
+            assert.isOk( result.getFirst() === 10, 'check triangles first' );
+            done();
         } );
 
     } );
 
 
-    QUnit.asyncTest( 'LightSource', function () {
+    test( 'LightSource', function ( done ) {
         var tree = {
             'osg.LightSource': {
                 'Name': 'Lamp.005',
@@ -1014,12 +1012,12 @@ module.exports = function () {
         };
 
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.getLight() !== undefined, 'check if LightSource has a light' );
-            start();
+            assert.isOk( result.getLight() !== undefined, 'check if LightSource has a light' );
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'Text', function () {
+    test( 'Text', function ( done ) {
         var tree = {
             'osgText.Text': {
                 'UniqueID': 1,
@@ -1033,18 +1031,18 @@ module.exports = function () {
             }
         };
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-            ok( result.getText() === 'test', 'check text' );
-            ok( result.getAutoRotateToScreen() === 1, 'check autoRotateToScreen' );
-            ok( result.getCharacterSize() === 20, 'check characterSize' );
-            ok( result.getPosition()[ 0 ] === 50, 'check Position' );
-            ok( result.getColor()[ 0 ] === 1, 'check Color' );
-            ok( result.getLayout() === 'ltr', 'check Layout' );
-            ok( result.getAlignment() === 5, 'check Alignment' );
-            start();
+            assert.isOk( result.getText() === 'test', 'check text' );
+            assert.isOk( result.getAutoRotateToScreen() === 1, 'check autoRotateToScreen' );
+            assert.isOk( result.getCharacterSize() === 20, 'check characterSize' );
+            assert.isOk( result.getPosition()[ 0 ] === 50, 'check Position' );
+            assert.isOk( result.getColor()[ 0 ] === 1, 'check Color' );
+            assert.isOk( result.getLayout() === 'ltr', 'check Layout' );
+            assert.isOk( result.getAlignment() === 5, 'check Alignment' );
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'PagedLOD', function () {
+    test( 'PagedLOD', function ( done ) {
         var tree = {
             'osg.PagedLOD': {
                 'UniqueID': 1,
@@ -1063,17 +1061,17 @@ module.exports = function () {
             }
         };
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-            ok( result._rangeMode === 1, 'check RangeMode' );
-            ok( result._perRangeDataList.length === 2, 'check children number' );
-            ok( result._perRangeDataList[ 0 ].filename === 'cow.osgjs', 'check child 0 filename' );
-            ok( result._perRangeDataList[ 1 ].filename === 'cessna.osgjs', 'check child 1 filename' );
-            ok( result._range.length === 2, 'check RangeList' );
-            ok( result._radius === 10, 'check user defined radius' );
-            start();
+            assert.isOk( result._rangeMode === 1, 'check RangeMode' );
+            assert.isOk( result._perRangeDataList.length === 2, 'check children number' );
+            assert.isOk( result._perRangeDataList[ 0 ].filename === 'cow.osgjs', 'check child 0 filename' );
+            assert.isOk( result._perRangeDataList[ 1 ].filename === 'cessna.osgjs', 'check child 1 filename' );
+            assert.isOk( result._range.length === 2, 'check RangeList' );
+            assert.isOk( result._radius === 10, 'check user defined radius' );
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'Node Children Ordering', function () {
+    test( 'Node Children Ordering', function ( done ) {
         var tree = {
             'osg.Node': {
                 'UniqueID': 2,
@@ -1106,9 +1104,9 @@ module.exports = function () {
 
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
             console.log( result.getChildren()[ 0 ].getName() );
-            ok( result.getChildren()[ 0 ].getName() === 'cow', 'the first node should be cow' );
-            ok( result.getChildren()[ 1 ].getName() === 'cessna', 'the second node should be cessna' );
-            start();
+            assert.isOk( result.getChildren()[ 0 ].getName() === 'cow', 'the first node should be cow' );
+            assert.isOk( result.getChildren()[ 1 ].getName() === 'cessna', 'the second node should be cessna' );
+            done();
         } );
     } );
 };

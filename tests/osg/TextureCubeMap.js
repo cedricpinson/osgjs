@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var TextureCubeMap = require( 'osg/TextureCubeMap' );
 var Texture = require( 'osg/Texture' );
@@ -10,9 +10,7 @@ var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'TextureCubeMap', function () {
+    test( 'TextureCubeMap', function () {
 
         var greyscale = ReaderParser.readImage( 'mockup/greyscale.png', {
             promise: false
@@ -31,13 +29,13 @@ module.exports = function () {
 
         texture.apply( state );
 
-        ok( texture.getImage( Texture.TEXTURE_CUBE_MAP_POSITIVE_X ) !== undefined, 'Check positive x' );
-        ok( texture.getImage( Texture.TEXTURE_CUBE_MAP_NEGATIVE_X ) !== undefined, 'Check negative x' );
+        assert.isOk( texture.getImage( Texture.TEXTURE_CUBE_MAP_POSITIVE_X ) !== undefined, 'Check positive x' );
+        assert.isOk( texture.getImage( Texture.TEXTURE_CUBE_MAP_NEGATIVE_X ) !== undefined, 'Check negative x' );
 
-        ok( texture.getImage( Texture.TEXTURE_CUBE_MAP_POSITIVE_Y ) !== undefined, 'Check positive y' );
-        ok( texture.getImage( Texture.TEXTURE_CUBE_MAP_NEGATIVE_Y ) !== undefined, 'Check negative y' );
+        assert.isOk( texture.getImage( Texture.TEXTURE_CUBE_MAP_POSITIVE_Y ) !== undefined, 'Check positive y' );
+        assert.isOk( texture.getImage( Texture.TEXTURE_CUBE_MAP_NEGATIVE_Y ) !== undefined, 'Check negative y' );
 
-        ok( texture.getImage( Texture.TEXTURE_CUBE_MAP_POSITIVE_Z ) !== undefined, 'Check positive z' );
-        ok( texture.getImage( Texture.TEXTURE_CUBE_MAP_NEGATIVE_Z ) !== undefined, 'Check negative z' );
+        assert.isOk( texture.getImage( Texture.TEXTURE_CUBE_MAP_POSITIVE_Z ) !== undefined, 'Check positive z' );
+        assert.isOk( texture.getImage( Texture.TEXTURE_CUBE_MAP_NEGATIVE_Z ) !== undefined, 'Check negative z' );
     } );
 };

@@ -1,37 +1,31 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>QUnit Benchmark Suite</title>
-    <link rel='stylesheet' href='../tests/vendors/qunit/qunit.css' type='text/css' media='screen'>
-
-    <style>
-        /** Tests: un-collapse successful test */
-        .pass > ol {
-            display: block !important;
-        }
-    </style>
-
-    <script type='text/javascript' src='../tests/vendors/es5-shim.js'></script>
-    <script type='text/javascript' src='../tests/vendors/es6-shim.js'></script>
-    <script type='text/javascript' src='../tests/vendors/qunit/qunit.js'></script>
-
-    <script type='text/javascript'>
-    // disable qunit autostart
-    QUnit.config.autostart = false;
-    </script>
-
-    <script type='text/javascript' src='../tests/vendors/jquery-1.4.2.js'></script>
+  <head>
+    <title>Mocha</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script type='text/javascript' src='../examples/vendors/es5-shim.js'></script>
+    <script type='text/javascript' src='../examples/vendors/es6-shim.js'></script>
     <script type='text/javascript' src='../examples/vendors/bluebird.js'></script>
     <script type='text/javascript' src='../examples/vendors/hammer.js'></script>
     <script type='text/javascript' src='../examples/vendors/leap.js'></script>
-</head>
-<body>
-    <canvas id='3DView' style='border: none;' width='1' height='1'></canvas>
-    <h1 id='qunit-header'>QUnit Benchmark Suite</h1>
-    <h2 id='qunit-banner'></h2>
-    <div id='qunit-testrunner-toolbar'></div>
-    <h2 id='qunit-userAgent'></h2>
-    <ol id='qunit-tests'></ol>
+
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script> mocha.setup('qunit'); </script>
     <script src='../builds/dist/benchmarks.js'></script>
-</body>
+
+    <!-- run mocha -->
+    <script type="text/javascript" charset="utf-8">
+        // If tests run in a real browser
+        // Can alternatively do a check on window.PHANTOMJS
+        if (navigator.userAgent.indexOf('PhantomJS') < 0) {
+            mocha.run();
+        }
+    </script>
+
+  </body>
 </html>

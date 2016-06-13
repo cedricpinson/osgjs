@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var StateSet = require( 'osg/StateSet' );
 var Uniform = require( 'osg/Uniform' );
 var Shader = require( 'osg/Shader' );
@@ -9,19 +9,17 @@ var Texture = require( 'osg/Texture' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'StateSet', function () {
+    test( 'StateSet', function () {
 
         ( function () {
             var stateset = new StateSet();
             var uniform;
             uniform = stateset.getUniform( 'test' );
-            ok( uniform === undefined, 'Check getting an non existant uniform' );
+            assert.isOk( uniform === undefined, 'Check getting an non existant uniform' );
 
             stateset.addUniform( Uniform.createFloat1( 1.0, 'test' ) );
             uniform = stateset.getUniform( 'test' );
-            ok( uniform !== undefined, 'Check getting an existant uniform' );
+            assert.isOk( uniform !== undefined, 'Check getting an existant uniform' );
 
         } )();
 
@@ -30,10 +28,10 @@ module.exports = function () {
             var t = new Texture();
             ss.setTextureAttributeAndModes( 1, t );
 
-            ok( ss.getTextureAttribute( 1, 'Texture' ) === t, 'Check texture attribute accessors' );
+            assert.isOk( ss.getTextureAttribute( 1, 'Texture' ) === t, 'Check texture attribute accessors' );
 
             ss.removeTextureAttribute( 1, 'Texture' );
-            ok( ss.getTextureAttribute( 1, 'Texture' ) === undefined, 'Check texture attribute has been removed' );
+            assert.isOk( ss.getTextureAttribute( 1, 'Texture' ) === undefined, 'Check texture attribute has been removed' );
         } )();
 
         ( function () {
@@ -73,10 +71,10 @@ module.exports = function () {
             var s = getShader();
             ss.setAttributeAndModes( s );
 
-            ok( ss.getAttribute( 'Program' ) === s, 'Check stateset program' );
+            assert.isOk( ss.getAttribute( 'Program' ) === s, 'Check stateset program' );
 
             ss.removeAttribute( 'Program' );
-            ok( ss.getAttribute( 'Program' ) === undefined, 'Check program has been removed' );
+            assert.isOk( ss.getAttribute( 'Program' ) === undefined, 'Check program has been removed' );
 
 
         } )();

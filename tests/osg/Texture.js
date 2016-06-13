@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var Texture = require( 'osg/Texture' );
 var State = require( 'osg/State' );
@@ -8,13 +8,11 @@ var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.asyncTest( 'Texture', function () {
-        //stop();
+    test( 'Texture', function ( done ) {
+        this.timeout( 20000 );
 
         var textureFromURL = Texture.createFromURL( '"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="' );
-        ok( textureFromURL !== undefined, 'Check textureFromURL' );
+        assert.isOk( textureFromURL !== undefined, 'Check textureFromURL' );
 
         var ready;
         var loadingComplete = function () {
@@ -63,20 +61,20 @@ module.exports = function () {
             // check is ready api
             var texture = new Texture();
             texture.setImage( greyscale._image );
-            ok( texture.getImage().isReady() === true, 'Image is ready' );
+            assert.isOk( texture.getImage().isReady() === true, 'Image is ready' );
 
             texture = new Texture();
             texture.setImage( cnv );
-            ok( texture.getImage().isReady() === true, 'Image is ready because of canvas' );
+            assert.isOk( texture.getImage().isReady() === true, 'Image is ready because of canvas' );
 
 
-            ok( greyscale.isDirty() === true, 'dirty is true' );
+            assert.isOk( greyscale.isDirty() === true, 'dirty is true' );
             greyscale.apply( state );
-            ok( greyscale._image === undefined, 'image should be undefined because of unrefAfterApply' );
-            ok( greyscale._textureObject !== undefined, 'texture object' );
-            ok( greyscale.isDirty() === false, 'dirty is false' );
+            assert.isOk( greyscale._image === undefined, 'image should be undefined because of unrefAfterApply' );
+            assert.isOk( greyscale._textureObject !== undefined, 'texture object' );
+            assert.isOk( greyscale.isDirty() === false, 'dirty is false' );
 
-            start();
+            done();
         };
     } );
 };

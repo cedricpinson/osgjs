@@ -1,24 +1,22 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var Viewer = require( 'osgViewer/Viewer' );
 var Shape = require( 'osg/Shape' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgViewer' );
-
-    QUnit.test( 'Viewer', function () {
+    test( 'Viewer', function () {
         ( function () {
             var canvas = mockup.createCanvas();
             var viewer = new Viewer( canvas );
-            ok( viewer.getCamera() !== undefined, 'Check camera creation' );
-            ok( viewer.getCamera().getViewport() !== undefined, 'Check camera viewport' );
-            ok( viewer.getCamera().getRenderer() !== undefined, 'Check camera Renderer' );
+            assert.isOk( viewer.getCamera() !== undefined, 'Check camera creation' );
+            assert.isOk( viewer.getCamera().getViewport() !== undefined, 'Check camera viewport' );
+            assert.isOk( viewer.getCamera().getRenderer() !== undefined, 'Check camera Renderer' );
 
             viewer.init();
-            ok( viewer._updateVisitor !== undefined, 'Check update visitor' );
-            ok( viewer.getState().getGraphicContext() !== undefined, 'Check state graphic context' );
+            assert.isOk( viewer._updateVisitor !== undefined, 'Check update visitor' );
+            assert.isOk( viewer.getState().getGraphicContext() !== undefined, 'Check state graphic context' );
             mockup.removeCanvas( canvas );
         } )();
 
@@ -38,12 +36,12 @@ module.exports = function () {
 
             var cullvisitor = viewer.getCamera().getRenderer().getCullVisitor();
             // with auto compute near far
-            mockup.near( cullvisitor._computedFar, 31.30036755335, 'check far' );
-            mockup.near( cullvisitor._computedNear, 18.6996324495, 'check near' );
+            assert.approximately( cullvisitor._computedFar, 31.30036755335, 1e-5, 'check far' );
+            assert.approximately( cullvisitor._computedNear, 18.6996324495, 1e-5, 'check near' );
 
             cullvisitor.reset();
-            equal( cullvisitor._computedNear, Number.POSITIVE_INFINITY, 'Check near after reset' );
-            equal( cullvisitor._computedFar, Number.NEGATIVE_INFINITY, 'Check far after reset' );
+            assert.equal( cullvisitor._computedNear, Number.POSITIVE_INFINITY, 'Check near after reset' );
+            assert.equal( cullvisitor._computedFar, Number.NEGATIVE_INFINITY, 'Check far after reset' );
 
             mockup.removeCanvas( canvas );
 
@@ -62,11 +60,11 @@ module.exports = function () {
             };
             var list = viewer.initEventProxy( args );
 
-            QUnit.notEqual( list.LeapMotion, undefined, 'detected leapmotion' );
-            QUnit.notEqual( list.StandardMouseKeyboard, undefined, 'detected mouse' );
+            assert.notEqual( list.LeapMotion, undefined, 'detected leapmotion' );
+            assert.notEqual( list.StandardMouseKeyboard, undefined, 'detected mouse' );
 
             viewer.updateEventProxy( list, undefined );
-            //ok(true, 'detected mouse');
+            //assert.isOk(true, 'detected mouse');
 
             mockup.removeCanvas( canvas );
 
@@ -80,11 +78,11 @@ module.exports = function () {
             var viewer = new Viewer( canvas );
 
             viewer.setContextLostCallback( function () {
-                ok( true, 'detected contextLost Lost' );
+                assert.isOk( true, 'detected contextLost Lost' );
             } );
 
             window.cancelAnimationFrame = function () {
-                ok( true, 'context lost does cancel render loop' );
+                assert.isOk( true, 'context lost does cancel render loop' );
             };
 
             viewer.init();
@@ -110,12 +108,9 @@ module.exports = function () {
             viewer.contextLost();
 
             viewer.frame();
-            ok( renderCount === 1, 'no render after context Lost' );
+            assert.isOk( renderCount === 1, 'no render after context Lost' );
 
         } )();
-
-
-
 
     } );
 

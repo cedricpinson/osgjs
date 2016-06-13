@@ -1,4 +1,7 @@
 'use strict';
+
+var chai = require( 'chai' );
+
 var getScene = require( 'tests/mockup/scene' );
 var getBoxScene = require( 'tests/mockup/box' );
 var Channel = require( 'osgAnimation/Channel' );
@@ -11,69 +14,44 @@ var StackedTranslate = require( 'osgAnimation/StackedTranslate' );
 var StackedMatrix = require( 'osgAnimation/StackedMatrix' );
 
 
-var QUnit = window.QUnit;
+var isNumber = function ( a ) {
+    return typeof a === 'number';
+};
+
+chai.assert.equalVector = function ( actual, expected, message, thresh ) {
+
+    var threshold = thresh;
+    var msg = message;
+
+    if ( isNumber( message ) ) threshold = message;
+    if ( typeof thresh === 'string' ) msg = thresh;
+
+    if ( threshold === undefined ) threshold = 1e-5;
+
+    var obj = new chai.Assertion( actual );
+    var a = actual;
+    var e = expected;
+    var bool = true;
+
+    var diff = [];
+    for ( var i = 0; i < a.length; ++i ) {
+        var number = isNumber( a[ i ] ) && isNumber( e[ i ] );
+        var val = Math.abs( a[ i ] - e[ i ] );
+        diff[ i ] = val;
+        if ( val > threshold || number === false ) {
+            bool = false;
+        }
+    }
+
+    obj.assert( bool,
+        msg + '\nexpected [ ' + actual + '] approximate to [ ' + expected + ' ]\ndiff > threshold ' + threshold + '\n' + diff.join( '\n' ) );
+    return bool;
+};
 
 var checkNear = function ( a, b, threshold ) {
-
-    if ( threshold === undefined ) {
-        threshold = 1e-5;
-    }
-
-    if ( a.length !== undefined ) {
-        var expected = function ( a, b ) {
-            return QUnit.jsDump.parse( a ) + ' expected ' + QUnit.jsDump.parse( b );
-        };
-        for ( var i = 0; i < a.length; ++i ) {
-            var number = typeof a[ i ] === 'number' && typeof b[ i ] === 'number';
-            if ( Math.abs( a[ i ] - b[ i ] ) > threshold || number === false ) {
-                QUnit.log( expected.bind( this, a, b ) );
-                return false;
-            }
-        }
-    } else {
-        if ( a === undefined || b === undefined ) {
-            QUnit.log( function () {
-                return 'undefined value : ' + a + ', ' + b;
-            } );
-            return false;
-        }
-        if ( Math.abs( a - b ) > threshold ) {
-            QUnit.log( function () {
-                return a + ' != ' + b;
-            } );
-            return false;
-        }
-    }
-    return true;
+    return chai.assert.equalVector( a, b, '', threshold );
 };
 
-var near = function ( a, b, error, message ) {
-
-    var threshold = error;
-    var text = message;
-
-    if ( typeof threshold === 'string' )
-        text = threshold;
-
-    if ( typeof threshold !== 'number' )
-        threshold = 1e-5;
-
-    if ( a.length !== undefined ) {
-        for ( var i = 0; i < a.length; ++i ) {
-            var number = typeof a[ i ] === 'number' && typeof b[ i ] === 'number' && !isNaN( a[ i ] ) && !isNaN( b[ i ] );
-            if ( Math.abs( a[ i ] - b[ i ] ) > threshold || number === false ) {
-                ok( false, QUnit.jsDump.parse( a ) + ' expected ' + QUnit.jsDump.parse( b ) );
-                return;
-            }
-        }
-    } else {
-        if ( Math.abs( a - b ) > threshold ) {
-            ok( false, a + ' != ' + b );
-            return;
-        }
-    }
-    ok( true, text ); //'okay: ' + QUnit.jsDump.parse(a));
-};
 
 var createFakeRenderer = function () {
     return {
@@ -370,7 +348,6 @@ module.exports = {
     createAnimation: createAnimation,
     createAnimationWithNegativeKey: createAnimationWithNegativeKey,
     createAnimationUpdateCallback: createAnimationUpdateCallback,
-    near: near,
     getBoxScene: getBoxScene,
     getScene: getScene
 };

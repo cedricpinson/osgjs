@@ -1,22 +1,19 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var View = require( 'osgViewer/View' );
 var mockup = require( 'tests/mockup/mockup' );
 
-
 module.exports = function () {
 
-    QUnit.module( 'osgViewer' );
-
-    QUnit.test( 'View', function () {
+    test( 'View', function () {
         var gc = mockup.createFakeRenderer();
         var view = new View();
         view.setGraphicContext( gc );
-        ok( view.getGraphicContext() === gc, 'Check graphic context' );
+        assert.isOk( view.getGraphicContext() === gc, 'Check graphic context' );
 
-        ok( view.getFrameStamp() !== undefined, 'Check FrameStamp' );
+        assert.isOk( view.getFrameStamp() !== undefined, 'Check FrameStamp' );
 
-        ok( view.getScene() !== undefined, 'Check scene' );
-        ok( view.getSceneData() === undefined, 'Check scene data' );
+        assert.isOk( view.getScene() !== undefined, 'Check scene' );
+        assert.isOk( view.getSceneData() === undefined, 'Check scene data' );
     } );
 };
