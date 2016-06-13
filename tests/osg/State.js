@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var State = require( 'osg/State' );
 var StateSet = require( 'osg/StateSet' );
 var Material = require( 'osg/Material' );
@@ -11,9 +11,7 @@ var mockup = require( 'tests/mockup/mockup' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'State', function () {
+    test( 'State', function () {
 
         ( function () {
             var state = new State( new ShaderGeneratorProxy() );
@@ -29,22 +27,22 @@ module.exports = function () {
             state.pushStateSet( stateSet1 );
             state.pushStateSet( stateSet2 );
             var materialStack = state.attributeMap.Material;
-            ok( materialStack[ materialStack.length - 1 ] === materialStack[ materialStack.length - 2 ], 'check Override in state' );
+            assert.isOk( materialStack[ materialStack.length - 1 ] === materialStack[ materialStack.length - 2 ], 'check Override in state' );
         } )();
     } );
 
-    QUnit.test( 'State setGlobalDefaultTextureAttribute', function () {
+    test( 'State setGlobalDefaultTextureAttribute', function () {
 
         var state = new State( new ShaderGeneratorProxy() );
 
         var texture = new Texture();
         state.setGlobalDefaultTextureAttribute( 0, texture );
 
-        equal( state.getGlobalDefaultTextureAttribute( 0, 'Texture' ), texture, 'check texture object' );
+        assert.equal( state.getGlobalDefaultTextureAttribute( 0, 'Texture' ), texture, 'check texture object' );
 
     } );
 
-    QUnit.test( 'State applyStateSet', function () {
+    test( 'State applyStateSet', function () {
 
         ( function () {
             var state = new State( new ShaderGeneratorProxy() );
@@ -93,12 +91,12 @@ module.exports = function () {
             state.applyStateSet( stateSet1 );
             state.applyStateSet( stateSet2 );
 
-            equal( state.getStateSetStackSize(), 1, 'check stateSet stack length' );
-            QUnit.notEqual( state.getLastProgramApplied(), undefined, 'check last program applied' );
-            equal( state.attributeMap.Program.values().length, 0, 'check program stack length' );
+            assert.equal( state.getStateSetStackSize(), 1, 'check stateSet stack length' );
+            assert.notEqual( state.getLastProgramApplied(), undefined, 'check last program applied' );
+            assert.equal( state.attributeMap.Program.values().length, 0, 'check program stack length' );
 
             // check that texture 0 is applied only once
-            equal( textureBindCall.get( 1 ), 1, 'check that texture 0 is applied only once' );
+            assert.equal( textureBindCall.get( 1 ), 1, 'check that texture 0 is applied only once' );
 
         } )();
     } );

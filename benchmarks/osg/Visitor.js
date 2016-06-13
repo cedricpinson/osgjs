@@ -1,7 +1,7 @@
 'use strict';
-var QUnit = require( 'qunit' );
 var mockup = require( 'tests/mockup/mockup' );
 var Matrix = require( 'osg/Matrix' );
+var Vec3 = require( 'osg/Vec3' );
 var Node = require( 'osg/Node' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var Timer = require( 'osg/Timer' );
@@ -9,16 +9,11 @@ var reportStats = require( 'benchmarks/reportStats' );
 var mockupBench = require( 'benchmarks/mockupBench' );
 var KdTreeBuilder = require( 'osg/KdTreeBuilder' );
 var Camera = require( 'osg/Camera' );
-// var Vec3 = require( 'osg/Vec3' );
 var Viewport = require( 'osg/Viewport' );
 var View = require( 'osgViewer/View' );
-// var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
-// var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var ReaderParser = require( 'osgDB/ReaderParser' );
 
 module.exports = function () {
-
-    QUnit.module( 'osg Main Loop' );
 
     test( 'NodeVisitor Heavy Static Scene', function () {
 
@@ -47,11 +42,16 @@ module.exports = function () {
     } );
 
     test( 'IntersectVisitor Heavy Static Scene', function () {
+        this.timeout( 20000 );
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
-        view.getCamera().setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ), [] );
-        view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        view.getCamera().setViewMatrix( Matrix.makeLookAt(
+            Vec3.createAndSet( 0, 0, -10 ),
+            Vec3.createAndSet( 0, 0, 0 ),
+            Vec3.createAndSet( 0, 1, 0 ),
+            Matrix.create() ) );
+        view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, Matrix.create() ) );
 
         // TODO it uses the old sync parseSceneGraphDeprecated
         var root = ReaderParser.parseSceneGraph( mockup.getScene() );
@@ -69,8 +69,11 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( Matrix.makeLookAt(
+            Vec3.createAndSet( 0, 0, -10 ),
+            Vec3.createAndSet( 0, 0, 0 ),
+            Vec3.createAndSet( 0, 1, 0 ), Matrix.create() ) );
+        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, Matrix.create() ) );
 
         var result;
         var accum = 0;

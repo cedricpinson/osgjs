@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var P = require( 'bluebird' );
 var DatabasePager = require( 'osgDB/DatabasePager' );
 var PagedLOD = require( 'osg/PagedLOD' );
@@ -10,7 +10,6 @@ var Notify = require( 'osg/Notify' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgDB' );
     var dbpager = new DatabasePager();
     // Modify the processRequest Method to add a defer variable to test it easily.
     dbpager.processRequest = function ( dbrequest ) {
@@ -23,7 +22,7 @@ module.exports = function () {
             //Notify.log( 'DatabasePager::processRequest() Request expired.' );
             that._downloadingRequestsNumber--;
             this._loading = false;
-            return;
+            return undefined;
         }
 
         // Load from function
@@ -47,7 +46,7 @@ module.exports = function () {
         return defer.promise;
     };
 
-    QUnit.asyncTest( 'DatabasePager.requestNodeFile', function () {
+    test( 'DatabasePager.requestNodeFile', function ( done ) {
         dbpager.reset();
         var fn = function createNode( /*parent*/) {
             var n = new Node();
@@ -57,16 +56,16 @@ module.exports = function () {
         plod.setFunction( 0, fn );
         plod.setRange( 0, 0, 200 );
         var request = dbpager.requestNodeFile( fn, '', plod, 1 );
-        ok( dbpager._pendingRequests.length === 1, 'Node requested' );
+        assert.isOk( dbpager._pendingRequests.length === 1, 'Node requested' );
         dbpager.processRequest( request ).then( function () {
-            start();
-            ok( dbpager._pendingNodes.length === 1, 'Request processed' );
+            done();
+            assert.isOk( dbpager._pendingNodes.length === 1, 'Request processed' );
         } ).catch( function ( error ) {
             Notify.error( error );
         } );
     } );
 
-    QUnit.asyncTest( 'DatabasePager.addLoadedDataToSceneGraph', function () {
+    test( 'DatabasePager.addLoadedDataToSceneGraph', function ( done ) {
         dbpager.reset();
         var fn = function createNode( /*parent*/) {
             var n = new PagedLOD();
@@ -77,17 +76,17 @@ module.exports = function () {
         plod.setRange( 0, 0, 200 );
         var request = dbpager.requestNodeFile( fn, '', plod, 1 );
 
-        ok( dbpager._pendingRequests.length === 1, 'Node requested' );
+        assert.isOk( dbpager._pendingRequests.length === 1, 'Node requested' );
         dbpager.processRequest( request ).then( function () {
-            start();
+            done();
             dbpager.addLoadedDataToSceneGraph( new FrameStamp(), 0.005 );
-            ok( dbpager._activePagedLODList.size === 2, 'we should have two plods active' );
+            assert.isOk( dbpager._activePagedLODList.size === 2, 'we should have two plods active' );
         } ).catch( function ( error ) {
             Notify.error( error );
         } );
     } );
 
-    QUnit.asyncTest( 'DatabasePager.removeExpiredChildren', function () {
+    test( 'DatabasePager.removeExpiredChildren', function ( done ) {
         dbpager.reset();
         dbpager.setTargetMaximumNumberOfPageLOD( 1 );
         var fn = function createNode( /*parent*/) {
@@ -99,15 +98,15 @@ module.exports = function () {
         plod.setRange( 0, 0, 200 );
         var request = dbpager.requestNodeFile( fn, '', plod, 1 );
         var frameStamp = new FrameStamp();
-        ok( dbpager._pendingRequests.length === 1, 'Node requested' );
+        assert.isOk( dbpager._pendingRequests.length === 1, 'Node requested' );
         dbpager.processRequest( request ).then( function () {
-            start();
+            done();
             dbpager.addLoadedDataToSceneGraph( frameStamp );
             frameStamp.setSimulationTime( 10 );
             frameStamp.setFrameNumber( 10 );
             dbpager.removeExpiredSubgraphs( frameStamp );
-            ok( dbpager._activePagedLODList.size === 1, 'we should have the root plod active' );
-            ok( dbpager._childrenToRemoveList.size === 1, 'we should have the child plod marked to be deleted' );
+            assert.isOk( dbpager._activePagedLODList.size === 1, 'we should have the root plod active' );
+            assert.isOk( dbpager._childrenToRemoveList.size === 1, 'we should have the child plod marked to be deleted' );
         } ).catch( function ( error ) {
             Notify.error( error );
         } );

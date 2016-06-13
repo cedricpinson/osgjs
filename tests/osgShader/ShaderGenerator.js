@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var State = require( 'osg/State' );
 var StateSet = require( 'osg/StateSet' );
@@ -12,9 +12,7 @@ var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgShader' );
-
-    QUnit.test( 'ShaderGenerator', function () {
+    test( 'ShaderGenerator', function () {
 
 
         ( function () {
@@ -40,7 +38,7 @@ module.exports = function () {
             state.pushStateSet( stateSet0 );
             state.pushStateSet( stateSet1 );
             state.apply();
-            ok( true, 'check not exception on material generator use' );
+            assert.isOk( true, 'check not exception on material generator use' );
 
         } )();
 
@@ -94,7 +92,7 @@ module.exports = function () {
 
             state.pushStateSet( stateSet );
             state.apply();
-            ok( true, 'check not exception on stateset generator use' );
+            assert.isOk( true, 'check not exception on stateset generator use' );
 
         } )();
 

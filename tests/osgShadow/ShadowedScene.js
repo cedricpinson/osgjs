@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var Camera = require( 'osg/Camera' );
 var Matrix = require( 'osg/Matrix' );
 var Node = require( 'osg/Node' );
@@ -7,20 +7,17 @@ var Shape = require( 'osg/Shape' );
 var Viewport = require( 'osg/Viewport' );
 var ShadowedScene = require( 'osgShadow/ShadowedScene' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
-var mockup = require( 'tests/mockup/mockup' );
-
 
 module.exports = function () {
-    QUnit.module( 'osgShadow' );
 
-    QUnit.test( 'ShadowedScene', function () {
+    test( 'ShadowedScene', function () {
 
         var pShadow = new ShadowedScene();
-        ok( pShadow.children.length === 0, 'number of children must be 0' );
-        ok( pShadow.parents.length === 0, 'number of parents must be 0' );
+        assert.isOk( pShadow.children.length === 0, 'number of children must be 0' );
+        assert.isOk( pShadow.parents.length === 0, 'number of parents must be 0' );
         var n = new Node();
         pShadow.addChild( n, 0, 200 );
-        ok( pShadow.children.length === 1, 'number of children must be 1' );
+        assert.isOk( pShadow.children.length === 1, 'number of children must be 1' );
     } );
 
     var DummyIntersector = function () {
@@ -41,7 +38,7 @@ module.exports = function () {
         }
     };
 
-    QUnit.test( 'IntersectionVisitor with 1 camera', function () {
+    test( 'IntersectionVisitor with 1 camera', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -59,6 +56,6 @@ module.exports = function () {
         iv.setIntersector( di );
         camera.accept( iv );
 
-        ok( mockup.checkNear( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
+        assert.equalVector( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001, 'check end transform point' );
     } );
 };

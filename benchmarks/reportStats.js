@@ -1,4 +1,5 @@
 'use strict';
+var assert = require( 'chai' ).assert;
 
 module.exports = function ( timed, perfTarget, msg ) {
 
@@ -7,6 +8,6 @@ module.exports = function ( timed, perfTarget, msg ) {
         logMsg = 'perf' + ( perfTarget ? ' of ' + perfTarget : '' ) + ' is: ' + ( timed ).toFixed() + ' ms';
     }
 
-    ok( true, logMsg );
+    assert.isOk( true, logMsg );
 
 };

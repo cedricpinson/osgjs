@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var MACROUTILS = require( 'osg/Utils' );
 var mockup = require( 'tests/mockup/mockup' );
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
@@ -13,9 +13,7 @@ var Vec3 = require( 'osg/Vec3' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'PrimitiveFunctor Points', function () {
+    test( 'PrimitiveFunctor Points', function () {
         // Test DrawArrays
         var node = createGeometry( PrimitiveSet.POINTS, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
@@ -32,25 +30,25 @@ module.exports = function () {
         };
         var pf = new PrimitiveFunctor( node, cb, vertices );
         pf.apply();
-        mockup.near( vertices, vectors, 0.00001 );
+        assert.equalVector( vertices, vectors, 0.00001 );
         // Test DrawElements
         node = createGeometry( PrimitiveSet.POINTS, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
         vectors = [];
         pf.apply();
-        ok( vectors[ 0 ] === -2.0, 'Vectors[ 0 ] should be -2 and result is ' + vectors[ 0 ] );
-        ok( vectors[ 1 ] === 2.0, 'Vectors[ 1 ] should be 2 and result is ' + vectors[ 1 ] );
-        ok( vectors[ 2 ] === 0.0, 'Vectors[ 2 ] should be 0 and result is ' + vectors[ 2 ] );
-        ok( vectors[ 3 ] === 0.0, 'Vectors[ 3 ] should be 0 and result is ' + vectors[ 3 ] );
-        ok( vectors[ 4 ] === 0.0, 'Vectors[ 4 ] should be 0 and result is ' + vectors[ 4 ] );
-        ok( vectors[ 5 ] === 0.0, 'Vectors[ 5 ] should be 0 and result is ' + vectors[ 5 ] );
-        ok( vectors[ 6 ] === 2.0, 'Vectors[ 6 ] should be 2 and result is ' + vectors[ 6 ] );
-        ok( vectors[ 7 ] === 2.0, 'Vectors[ 7 ] should be 2 and result is ' + vectors[ 7 ] );
-        ok( vectors[ 8 ] === 0.0, 'Vectors[ 8 ] should be 0 and result is ' + vectors[ 8 ] );
+        assert.isOk( vectors[ 0 ] === -2.0, 'Vectors[ 0 ] should be -2 and result is ' + vectors[ 0 ] );
+        assert.isOk( vectors[ 1 ] === 2.0, 'Vectors[ 1 ] should be 2 and result is ' + vectors[ 1 ] );
+        assert.isOk( vectors[ 2 ] === 0.0, 'Vectors[ 2 ] should be 0 and result is ' + vectors[ 2 ] );
+        assert.isOk( vectors[ 3 ] === 0.0, 'Vectors[ 3 ] should be 0 and result is ' + vectors[ 3 ] );
+        assert.isOk( vectors[ 4 ] === 0.0, 'Vectors[ 4 ] should be 0 and result is ' + vectors[ 4 ] );
+        assert.isOk( vectors[ 5 ] === 0.0, 'Vectors[ 5 ] should be 0 and result is ' + vectors[ 5 ] );
+        assert.isOk( vectors[ 6 ] === 2.0, 'Vectors[ 6 ] should be 2 and result is ' + vectors[ 6 ] );
+        assert.isOk( vectors[ 7 ] === 2.0, 'Vectors[ 7 ] should be 2 and result is ' + vectors[ 7 ] );
+        assert.isOk( vectors[ 8 ] === 0.0, 'Vectors[ 8 ] should be 0 and result is ' + vectors[ 8 ] );
     } );
 
 
-    QUnit.test( 'PrimitiveFunctor Lines', function () {
+    test( 'PrimitiveFunctor Lines', function () {
         // Test DrawArrays
         var node = createGeometry( PrimitiveSet.LINES, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
@@ -66,19 +64,19 @@ module.exports = function () {
         };
         var pf = new PrimitiveFunctor( node, cb, vertices );
         pf.apply();
-        mockup.near( vectors[ 0 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 2, 2, 0 ] );
         // Test DrawElements
         node = createGeometry( PrimitiveSet.LINES, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];
         pf.apply();
-        mockup.near( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 0, 0, 0 ] );
     } );
 
-    QUnit.test( 'PrimitiveFunctor LineStrip', function () {
+    test( 'PrimitiveFunctor LineStrip', function () {
         // Test DrawArrays
         var node = createGeometry( PrimitiveSet.LINE_STRIP, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
@@ -94,23 +92,23 @@ module.exports = function () {
         };
         var pf = new PrimitiveFunctor( node, cb, vertices );
         pf.apply();
-        mockup.near( vectors[ 0 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 2, 2, 0 ] );
-        mockup.near( vectors[ 2 ], [ 2, 2, 0 ] );
-        mockup.near( vectors[ 3 ], [ -2, 2, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 2 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 3 ], [ -2, 2, 0 ] );
         // Test DrawElements
         node = createGeometry( PrimitiveSet.LINE_STRIP, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];
         pf.apply();
-        mockup.near( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 2 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 3 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 2 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 3 ], [ 2, 2, 0 ] );
     } );
 
-    QUnit.test( 'PrimitiveFunctor LineLoop', function () {
+    test( 'PrimitiveFunctor LineLoop', function () {
         // Test DrawArrays
         var node = createGeometry( PrimitiveSet.LINE_LOOP, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
@@ -126,27 +124,27 @@ module.exports = function () {
         };
         var pf = new PrimitiveFunctor( node, cb, vertices );
         pf.apply();
-        mockup.near( vectors[ 0 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 2, 2, 0 ] );
-        mockup.near( vectors[ 2 ], [ 2, 2, 0 ] );
-        mockup.near( vectors[ 3 ], [ -2, 2, 0 ] );
-        mockup.near( vectors[ 4 ], [ -2, 2, 0 ] );
-        mockup.near( vectors[ 5 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 2 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 3 ], [ -2, 2, 0 ] );
+        assert.equalVector( vectors[ 4 ], [ -2, 2, 0 ] );
+        assert.equalVector( vectors[ 5 ], [ 0, 0, 0 ] );
         // Test DrawElements
         node = createGeometry( PrimitiveSet.LINE_LOOP, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];
         pf.apply();
-        mockup.near( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 2 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 3 ], [ 2, 2, 0 ] );
-        mockup.near( vectors[ 4 ], [ 2, 2, 0 ] );
-        mockup.near( vectors[ 5 ], [ -2.0, 2.0, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 2 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 3 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 4 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 5 ], [ -2.0, 2.0, 0 ] );
     } );
 
-    QUnit.test( 'PrimitiveFunctor Triangle', function () {
+    test( 'PrimitiveFunctor Triangle', function () {
         // Test DrawArrays
         var node = createGeometry( PrimitiveSet.TRIANGLES, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
@@ -163,18 +161,18 @@ module.exports = function () {
         };
         var pf = new PrimitiveFunctor( node, cb, vertices );
         pf.apply();
-        mockup.near( vectors[ 0 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 2, 2, 0 ] );
-        mockup.near( vectors[ 2 ], [ -2, 2, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 2, 2, 0 ] );
+        assert.equalVector( vectors[ 2 ], [ -2, 2, 0 ] );
         // Test DrawElements
         node = createGeometry( PrimitiveSet.TRIANGLES, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];
         pf.apply();
-        mockup.near( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
-        mockup.near( vectors[ 1 ], [ 0, 0, 0 ] );
-        mockup.near( vectors[ 2 ], [ 2.0, 2.0, 0 ] );
+        assert.equalVector( vectors[ 0 ], [ -2.0, 2.0, 0 ] );
+        assert.equalVector( vectors[ 1 ], [ 0, 0, 0 ] );
+        assert.equalVector( vectors[ 2 ], [ 2.0, 2.0, 0 ] );
     } );
 
 

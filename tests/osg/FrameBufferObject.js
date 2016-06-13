@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Texture = require( 'osg/Texture' );
@@ -7,10 +7,8 @@ var WebglCaps = require( 'osg/WebGLCaps' );
 
 
 module.exports = function () {
-    QUnit.module( 'osg' );
 
-
-    QUnit.test( 'FrameBufferObject', function () {
+    test( 'FrameBufferObject', function () {
 
         var maxRenderBufferSize = WebglCaps.instance().getWebGLParameter( 'MAX_RENDERBUFFER_SIZE' );
         if ( maxRenderBufferSize === undefined ) {
@@ -57,9 +55,9 @@ module.exports = function () {
             b.dirty();
             b.apply( state );
 
-            ok( b.getFrameBufferObject() !== undefined, 'Check we created gl framebuffer' );
+            assert.isOk( b.getFrameBufferObject() !== undefined, 'Check we created gl framebuffer' );
             b.releaseGLObjects();
-            ok( b.getFrameBufferObject() === undefined, 'Check we released gl famebuffer' );
+            assert.isOk( b.getFrameBufferObject() === undefined, 'Check we released gl famebuffer' );
 
             // check wrong frame buffer sizes
             b.setAttachment( {
@@ -89,7 +87,7 @@ module.exports = function () {
 
             b.dirty();
             b.apply( state );
-            ok( b.getFrameBufferObject() === undefined, 'Check we did not created gl framebuffer' );
+            assert.isOk( b.getFrameBufferObject() === undefined, 'Check we did not created gl framebuffer' );
 
 
         } )();
@@ -125,8 +123,8 @@ module.exports = function () {
 
             fbo.apply( state );
 
-            ok( fbo.isDirty() === false, 'Check that applied set dirty false even with no attachement' );
-            ok( fbo.getFrameBufferObject() !== undefined, 'Check fbo' );
+            assert.isOk( fbo.isDirty() === false, 'Check that applied set dirty false even with no attachement' );
+            assert.isOk( fbo.getFrameBufferObject() !== undefined, 'Check fbo' );
 
         } )();
     } );

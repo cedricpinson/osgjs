@@ -1,12 +1,10 @@
 'use strict';
-var QUnit = require( 'qunit' );
+
 var Shape = require( 'osg/Shape' );
 var Timer = require( 'osg/Timer' );
 var reportStats = require( 'benchmarks/reportStats' );
 
 module.exports = function () {
-
-    QUnit.module( 'osg Main Loop' );
 
     test( 'ComputeBound', function () {
 

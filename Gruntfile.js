@@ -288,6 +288,33 @@ var gruntTasks = {};
 
 } )();
 
+( function () {
+    gruntTasks.mocha = {
+        test: {
+            options: {
+                urls: [ 'http://127.0.0.1:9001/tests/index.html' ],
+                mocha: {
+                    ui: 'qunit'
+                },
+                reporter: 'Spec',
+                timeout: 10000,
+                log: true
+            }
+        },
+        bench: {
+            options: {
+                urls: [ 'http://127.0.0.1:9001/benchmarks/index.html' ],
+                mocha: {
+                    ui: 'qunit'
+                },
+                reporter: 'list'
+            }
+        }
+
+    };
+
+} )();
+
 
 // ## Docco
 //
@@ -329,30 +356,9 @@ var gruntTasks = {};
     };
 } )();
 
-// ## Qunit and connect
+// ## connect
 //
 ( function () {
-
-    // qunit using connect
-    gruntTasks.qunit = {
-        all: {
-            options: {
-                timeout: 30000,
-                urls: [
-                    'http://127.0.0.1:9001/tests/index.html'
-                ]
-            }
-        },
-        bench: {
-            options: {
-                timeout: 30000,
-                urls: [
-                    'http://127.0.0.1:9001/benchmarks/index.html'
-                ]
-            }
-        }
-    };
-
 
     // will start a server on port 9001 with root directory at the same level of
     // the grunt file
@@ -482,23 +488,10 @@ module.exports = function ( grunt ) {
         pkg: grunt.file.readJSON( 'package.json' )
     }, gruntTasks ) );
 
-    // grunt.event.on('qunit.testStart', function (name) {
-    //     grunt.log.ok("Running test: " + name);
-    // });
-
-    // grunt.event.on('qunit.log', function (result, actual, expected, message, source) {
-    //     if ( !result ) {
-    //         if ( expected !== undefined ) {
-    //             grunt.log.error('failed ' + message + ' ' + source );
-    //         } else {
-    //             grunt.log.error('actual: ' + actual + ' expected: ' + expected + ' ,failed ' + message );
-    //         }
-    //     }
-    // });
+    grunt.loadNpmTasks( 'grunt-mocha' );
 
     grunt.loadNpmTasks( 'grunt-release' );
     grunt.loadNpmTasks( 'grunt-contrib-connect' );
-    grunt.loadNpmTasks( 'grunt-contrib-qunit' );
 
     grunt.loadNpmTasks( 'grunt-docco' );
     grunt.loadNpmTasks( 'grunt-plato' );
@@ -518,8 +511,8 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'lint', [ 'eslint' ] );
     grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 
-    grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
-    grunt.registerTask( 'benchmarks', [ 'connect:server', 'qunit:bench' ] );
+    grunt.registerTask( 'test', [ 'connect:server', 'mocha:test' ] );
+    grunt.registerTask( 'benchmarks', [ 'connect:server', 'mocha:bench' ] );
 
     grunt.registerTask( 'docs', [ 'webpack:docs', 'docco' ] );
 

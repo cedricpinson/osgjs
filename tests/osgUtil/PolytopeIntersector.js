@@ -1,7 +1,6 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var MACROUTILS = require( 'osg/Utils' );
-var mockup = require( 'tests/mockup/mockup' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
 var Camera = require( 'osg/Camera' );
@@ -16,9 +15,7 @@ var PrimitiveSet = require( 'osg/PrimitiveSet' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgUtil' );
-
-    QUnit.test( 'PolytopeIntersector intersectPoints', function () {
+    test( 'PolytopeIntersector intersectPoints', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -34,10 +31,10 @@ module.exports = function () {
         var iv = new IntersectionVisitor();
         iv.setIntersector( pi );
         camera.accept( iv );
-        ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
-        ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-        ok( pi._intersections[ 0 ]._numPoints === 1, 'numPoints should be 1 and result is ' + pi._intersections[ 0 ]._numPoints );
-        mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ 0.0, 0.0, 0.0 ] );
+        assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+        assert.isOk( pi._intersections[ 0 ]._numPoints === 1, 'numPoints should be 1 and result is ' + pi._intersections[ 0 ]._numPoints );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 0 ], [ 0.0, 0.0, 0.0 ] );
         pi.reset();
         // Test also setPolytope method, we do a bigger polytope so all the points should be inside
         pi.setPolytope( [
@@ -48,11 +45,11 @@ module.exports = function () {
             [ 0.0, 0.0, 1.0, 0.0 ]
         ] );
         camera.accept( iv );
-        ok( pi._intersections.length === 3, 'Hits should be 3 and result is ' + pi._intersections.length );
-        ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-        mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ -0.2, 0.2, 0 ] );
-        mockup.near( pi._intersections[ 1 ]._points[ 0 ], [ 0.0, 0.0, 0 ] );
-        mockup.near( pi._intersections[ 2 ]._points[ 0 ], [ 0.2, 0.2, 0 ] );
+        assert.isOk( pi._intersections.length === 3, 'Hits should be 3 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 0 ], [ -0.2, 0.2, 0 ] );
+        assert.equalVector( pi._intersections[ 1 ]._points[ 0 ], [ 0.0, 0.0, 0 ] );
+        assert.equalVector( pi._intersections[ 2 ]._points[ 0 ], [ 0.2, 0.2, 0 ] );
         pi.reset();
         // Test also setPolytope method, we do a bigger polytope so all the points should be inside
         pi.setPolytope( [
@@ -64,23 +61,23 @@ module.exports = function () {
         ] );
         pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE );
         camera.accept( iv );
-        ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
         // Test dimension mask
         pi.reset();
         pi.setDimensionMask( PolytopeIntersector.DimOne );
         pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE );
         camera.accept( iv );
-        ok( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
 
         pi.reset();
         pi.setDimensionMask( PolytopeIntersector.DimZero );
         pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE );
         camera.accept( iv );
-        ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
 
     } );
 
-    QUnit.test( 'PolytopeIntersector intersectLines', function () {
+    test( 'PolytopeIntersector intersectLines', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -95,25 +92,25 @@ module.exports = function () {
         var iv = new IntersectionVisitor();
         iv.setIntersector( pi );
         camera.accept( iv );
-        ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
-        ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-        ok( pi._intersections[ 0 ]._numPoints === 3, 'numPoints should be 3 and result is ' + pi._intersections[ 0 ]._numPoints );
-        mockup.near( pi._intersections[ 0 ]._center, [ -0.06415, 0.06415, 0 ] );
-        mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ -0.096225, 0.096225, 0 ] );
-        mockup.near( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
-        mockup.near( pi._intersections[ 0 ]._points[ 2 ], [ 0.0, 0.0, 0.0 ] );
+        assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+        assert.isOk( pi._intersections[ 0 ]._numPoints === 3, 'numPoints should be 3 and result is ' + pi._intersections[ 0 ]._numPoints );
+        assert.equalVector( pi._intersections[ 0 ]._center, [ -0.06415, 0.06415, 0 ] );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 0 ], [ -0.096225, 0.096225, 0 ] );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 2 ], [ 0.0, 0.0, 0.0 ] );
         // Test dimension masks
         pi.reset();
         pi.setDimensionMask( PolytopeIntersector.DimZero );
         camera.accept( iv );
-        ok( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
         pi.reset();
         pi.setDimensionMask( PolytopeIntersector.DimOne );
         camera.accept( iv );
-        ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
     } );
 
-    QUnit.test( 'PolytopeIntersector intersectLineStrip', function () {
+    test( 'PolytopeIntersector intersectLineStrip', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -128,12 +125,12 @@ module.exports = function () {
         var iv = new IntersectionVisitor();
         iv.setIntersector( pi );
         camera.accept( iv );
-        ok( pi._intersections.length === 2, 'Hits should be 2 and result is ' + pi._intersections.length );
-        ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-        mockup.near( pi._intersections[ 0 ]._center, [ -0.06415, 0.06415, 0 ] );
+        assert.isOk( pi._intersections.length === 2, 'Hits should be 2 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+        assert.equalVector( pi._intersections[ 0 ]._center, [ -0.06415, 0.06415, 0 ] );
     } );
 
-    QUnit.test( 'PolytopeIntersector intersectTriangle', function () {
+    test( 'PolytopeIntersector intersectTriangle', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -148,24 +145,24 @@ module.exports = function () {
         var iv = new IntersectionVisitor();
         iv.setIntersector( pi );
         camera.accept( iv );
-        ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
-        ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-        ok( pi._intersections[ 0 ]._numPoints === 4, 'numPoints should be 4 and result is ' + pi._intersections[ 0 ]._numPoints );
-        mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ 0.096225, 0.096225, 0 ] );
-        mockup.near( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
-        mockup.near( pi._intersections[ 0 ]._points[ 2 ], [ -0.096225, 0.096225, 0 ] );
-        mockup.near( pi._intersections[ 0 ]._points[ 3 ], [ 0.096225, 0.096225, 0 ] );
+        assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+        assert.isOk( pi._intersections[ 0 ]._numPoints === 4, 'numPoints should be 4 and result is ' + pi._intersections[ 0 ]._numPoints );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 0 ], [ 0.096225, 0.096225, 0 ] );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 2 ], [ -0.096225, 0.096225, 0 ] );
+        assert.equalVector( pi._intersections[ 0 ]._points[ 3 ], [ 0.096225, 0.096225, 0 ] );
         // Test dimension mask
         pi.reset();
         pi.setDimensionMask( PolytopeIntersector.DimZero );
         camera.accept( iv );
-        ok( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
         // Test polytope going trough the triangle without containing any point of it
         pi.reset();
         pi.setDimensionMask( PolytopeIntersector.AllDims );
         pi.setPolytopeFromWindowCoordinates( 415, 305, 416, 306 );
         camera.accept( iv );
-        ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+        assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
     } );
 
     var createPoints = function () {

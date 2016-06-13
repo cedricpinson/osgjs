@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
@@ -17,9 +17,7 @@ var ReaderParser = require( 'osgDB/ReaderParser' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgUtil' );
-
-    QUnit.test( 'LineSegmentIntersector simple test', function () {
+    test( 'LineSegmentIntersector simple test', function () {
         var lsi = new LineSegmentIntersector();
         var bs = new BoundingSphere();
         bs.set( Vec3.createAndSet( 4.0, 2.0, 0.0 ), 2.0 );
@@ -27,40 +25,40 @@ module.exports = function () {
         // start right on the edge
         lsi.set( Vec3.createAndSet( 2.0, 2.0, 0.0 ), Vec3.createAndSet( -1.0, 2.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( lsi.intersects( bs ), 'hit success' );
+        assert.isOk( lsi.intersects( bs ), 'hit success' );
 
         // end right on edge
         lsi.set( Vec3.createAndSet( 2.0, 0.0, 0.0 ), Vec3.createAndSet( 4.0, 0.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( lsi.intersects( bs ), 'hit success' );
+        assert.isOk( lsi.intersects( bs ), 'hit success' );
 
         // line right on edge
         lsi.set( Vec3.createAndSet( 2.0, 0.0, 0.0 ), Vec3.createAndSet( 4.0, 0.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( lsi.intersects( bs ), 'hit success' );
+        assert.isOk( lsi.intersects( bs ), 'hit success' );
 
         lsi.set( Vec3.createAndSet( 2.0, 0.0, 0.0 ), Vec3.createAndSet( 3.0, 1.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( lsi.intersects( bs ), 'hit success' );
+        assert.isOk( lsi.intersects( bs ), 'hit success' );
 
         lsi.set( Vec3.createAndSet( 0.0, 2.0, 0.0 ), Vec3.createAndSet( 1.9, 2.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( !lsi.intersects( bs ), 'hit failed' );
+        assert.isOk( !lsi.intersects( bs ), 'hit failed' );
 
         lsi.set( Vec3.createAndSet( 0.0, 2.0, 0.0 ), Vec3.createAndSet( 2.1, 2.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( lsi.intersects( bs ), 'hit success' );
+        assert.isOk( lsi.intersects( bs ), 'hit success' );
 
         lsi.set( Vec3.createAndSet( 5.0, 1.0, 0.0 ), Vec3.createAndSet( 6.0, 0.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( lsi.intersects( bs ), 'hit success' );
+        assert.isOk( lsi.intersects( bs ), 'hit success' );
 
         lsi.set( Vec3.createAndSet( 1.0, 1.0, 0.0 ), Vec3.createAndSet( 2.0, 3.0, 0.0 ) );
         lsi.setCurrentTransformation( Matrix.create() );
-        ok( !lsi.intersects( bs ), 'hit failed' );
+        assert.isOk( !lsi.intersects( bs ), 'hit failed' );
     } );
 
-    QUnit.test( 'LineSegmentIntersector without 2 branches', function () {
+    test( 'LineSegmentIntersector without 2 branches', function () {
 
         // right branch should be picked
         // left branch shouldn't be picked
@@ -93,12 +91,12 @@ module.exports = function () {
         var iv = new IntersectionVisitor();
         iv.setIntersector( lsi );
         camera.accept( iv );
-        ok( lsi._intersections.length === 1, 'Hits should be 1 and result is ' + lsi._intersections.length );
-        ok( lsi._intersections[ 0 ].nodepath.length === 4, 'NodePath should be 4 and result is ' + lsi._intersections[ 0 ].nodepath.length );
+        assert.isOk( lsi._intersections.length === 1, 'Hits should be 1 and result is ' + lsi._intersections.length );
+        assert.isOk( lsi._intersections[ 0 ].nodepath.length === 4, 'NodePath should be 4 and result is ' + lsi._intersections[ 0 ].nodepath.length );
 
     } );
 
-    QUnit.test( 'LineSegmentIntersector without kdtree and camera', function () {
+    test( 'LineSegmentIntersector without kdtree and camera', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -111,12 +109,12 @@ module.exports = function () {
         var iv = new IntersectionVisitor();
         iv.setIntersector( lsi );
         camera.accept( iv );
-        ok( lsi._intersections.length === 1, 'Hits should be 1 and result is ' + lsi._intersections.length );
-        ok( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
+        assert.isOk( lsi._intersections.length === 1, 'Hits should be 1 and result is ' + lsi._intersections.length );
+        assert.isOk( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
 
     } );
 
-    QUnit.test( 'LineSegmentIntersector without kdtree', function () {
+    test( 'LineSegmentIntersector without kdtree', function () {
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
@@ -127,10 +125,10 @@ module.exports = function () {
         view.setSceneData( quad );
 
         var result = view.computeIntersections( 400, 300 );
-        ok( result.length === 1, 'Hits should be 1 and result is ' + result.length );
+        assert.isOk( result.length === 1, 'Hits should be 1 and result is ' + result.length );
     } );
 
-    QUnit.test( 'LineSegmentIntersector with kdtree and camera', function () {
+    test( 'LineSegmentIntersector with kdtree and camera', function () {
         // This test will never work with kdtree
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -150,11 +148,11 @@ module.exports = function () {
         var iv = new IntersectionVisitor();
         iv.setIntersector( lsi );
         camera.accept( iv );
-        ok( lsi._intersections.length === 1, 'Intersections should be 1 and result is ' + lsi._intersections.length );
-        ok( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
+        assert.isOk( lsi._intersections.length === 1, 'Intersections should be 1 and result is ' + lsi._intersections.length );
+        assert.isOk( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
     } );
 
-    QUnit.test( 'LineSegmentIntersector with kdtree', function () {
+    test( 'LineSegmentIntersector with kdtree', function () {
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
@@ -172,7 +170,7 @@ module.exports = function () {
         treeBuilder.apply( root );
 
         var result = view.computeIntersections( 400, 300 );
-        ok( result.length === 1, 'Hits should be 1 and result is ' + result.length );
+        assert.isOk( result.length === 1, 'Hits should be 1 and result is ' + result.length );
     } );
 
 };

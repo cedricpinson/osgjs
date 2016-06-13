@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var Node = require( 'osg/Node' );
 var MACROUTILS = require( 'osg/Utils' );
@@ -7,9 +7,7 @@ var MACROUTILS = require( 'osg/Utils' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'NodeVisitor', function () {
+    test( 'NodeVisitor', function () {
 
         var FindItemAnchor = function ( search ) {
             NodeVisitor.call( this );
@@ -40,12 +38,12 @@ module.exports = function () {
 
         var v = new FindItemAnchor( 'c' );
         v.apply( root );
-        ok( v.result[ 0 ] === c, 'Should find item named "c" ' + v.result[ 0 ].name );
+        assert.isOk( v.result[ 0 ] === c, 'Should find item named "c" ' + v.result[ 0 ].name );
 
         c.setNodeMask( 0x0 );
         v = new FindItemAnchor( 'c' );
         root.accept( v );
-        ok( v.result.length === 0, 'Should not find item named "c" because of node mask' );
+        assert.isOk( v.result.length === 0, 'Should not find item named "c" because of node mask' );
 
 
         ( function () {
@@ -74,7 +72,7 @@ module.exports = function () {
             var visit = new GetRootItem();
             child2.accept( visit );
 
-            ok( visit.node.getName() === 'root', 'Should get the root node' );
+            assert.isOk( visit.node.getName() === 'root', 'Should get the root node' );
 
         } )();
     } );

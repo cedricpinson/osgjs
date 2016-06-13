@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
@@ -13,9 +13,7 @@ var TransformEnums = require( 'osg/TransformEnums' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'ComputeMatrixFromNodePath', function () {
+    !test( 'ComputeMatrixFromNodePath', function () {
 
         ( function () {
             // test visit parents
@@ -51,7 +49,7 @@ module.exports = function () {
             var path = [ root, child0, child1, child2 ];
             var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
             var trans = Matrix.getTrans( matrix, [ 0, 0, 0 ] );
-            mockup.near( trans, [ 0, -10, 10 ], 'Check translation of matrix' );
+            assert.equalVector( trans, [ 0, -10, 10 ], 'Check translation of matrix' );
         } )();
 
 
@@ -70,7 +68,7 @@ module.exports = function () {
             var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
             var result = Vec3.create();
             Matrix.getTrans( matrix, result );
-            mockup.near( result, [ 0, -10, 10 ], 'Check we dont use the camera on top' );
+            assert.equalVector( result, [ 0, -10, 10 ], 'Check we dont use the camera on top' );
         } )();
 
     } );

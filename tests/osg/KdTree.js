@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var Vec3 = require( 'osg/Vec3' );
 var Shape = require( 'osg/Shape' );
@@ -13,9 +13,7 @@ var KdTree = require( 'osg/KdTree' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'KdTree', function () {
+    test( 'KdTree', function () {
 
         //   0-3
         //   |\|
@@ -234,26 +232,26 @@ module.exports = function () {
 
         // test ray intersection
 
-        ok( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+        assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
         var result = [ 0.4, 0.2, 0 ];
         var dir = Vec3.sub( end, start, [] );
         var found = Vec3.add( start, Vec3.mult( dir, hits[ 0 ].ratio, [] ), [] );
-        mockup.near( found, result, 1e-4 );
+        assert.equalVector( found, result, 1e-4 );
 
         hits.length = 0;
         kdTree.intersectRay( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ], hits, [] );
-        ok( hits.length === 0, ' Hits should be 0 ' + hits.length );
+        assert.isOk( hits.length === 0, ' Hits should be 0 ' + hits.length );
 
         // test sphere intersection
         // sphere center in on vertex 1 (see ascii art on top of the file)
 
         hits.length = 0;
         kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 - 0.01, hits, [] );
-        ok( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+        assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
 
         hits.length = 0;
         kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 + 0.02, hits, [] );
         var nbTriangles = nbPrimitives * 2; // the geometries are quad only
-        ok( hits.length === nbTriangles, ' Hits should be ' + nbTriangles + ' and result is ' + hits.length );
+        assert.isOk( hits.length === nbTriangles, ' Hits should be ' + nbTriangles + ' and result is ' + hits.length );
     } );
 };

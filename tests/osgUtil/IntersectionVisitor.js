@@ -1,6 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
-var mockup = require( 'tests/mockup/mockup' );
+var assert = require( 'chai' ).assert;
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var Camera = require( 'osg/Camera' );
 var Viewport = require( 'osg/Viewport' );
@@ -10,8 +9,6 @@ var TransformEnums = require( 'osg/TransformEnums' );
 
 
 module.exports = function () {
-
-    QUnit.module( 'osgUtil' );
 
     var DummyIntersector = function () {
         this.point = [ 0.5, 0.5, 0.5 ];
@@ -31,7 +28,7 @@ module.exports = function () {
         }
     };
 
-    QUnit.test( 'IntersectionVisitor with 1 camera', function () {
+    test( 'IntersectionVisitor with 1 camera', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -44,10 +41,10 @@ module.exports = function () {
         iv.setIntersector( di );
         camera.accept( iv );
 
-        ok( mockup[ 'checkNear' ]( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
+        assert.equalVector( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001, 'check end transform point' );
     } );
 
-    QUnit.test( 'IntersectionVisitor with second relative camera', function () {
+    test( 'IntersectionVisitor with second relative camera', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -67,10 +64,10 @@ module.exports = function () {
         iv.setIntersector( di );
         camera.accept( iv );
 
-        ok( mockup[ 'checkNear' ]( di.stackTransforms[ 1 ], [ -0.0197, -0.0111, -0.1666 ], 0.001 ), 'check end transform point' );
+        assert.equalVector( di.stackTransforms[ 1 ], [ -0.0197, -0.0111, -0.1666 ], 0.001, 'check end transform point' );
     } );
 
-    QUnit.test( 'IntersectionVisitor with second absolute camera', function () {
+    test( 'IntersectionVisitor with second absolute camera', function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
@@ -91,7 +88,7 @@ module.exports = function () {
         iv.setIntersector( di );
         camera.accept( iv );
 
-        ok( mockup[ 'checkNear' ]( di.stackTransforms[ 1 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
+        assert.equalVector( di.stackTransforms[ 1 ], [ 0.1536, -0.1152, -9.8002 ], 0.001, 'check end transform point' );
     } );
 
 };

@@ -1,6 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
-var mockup = require( 'tests/mockup/mockup' );
+var assert = require( 'chai' ).assert;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 var Vec3 = require( 'osg/Vec3' );
 var Shape = require( 'osg/Shape' );
@@ -13,9 +12,7 @@ var Geometry = require( 'osg/Geometry' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgUtil' );
-
-    QUnit.test( 'TriangleIntersector', function () {
+    test( 'TriangleIntersector', function () {
 
         var checkPrimitive = function ( geom, msg ) {
             var ti = new TriangleIntersector();
@@ -25,16 +22,16 @@ module.exports = function () {
             ti.set( start, end );
 
             ti.apply( geom );
-            ok( ti._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + ti._intersections.length );
+            assert.isOk( ti._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + ti._intersections.length );
             var result = [ 0.4, 0.2, 0 ];
             var found = Vec3.add( start,
                 Vec3.mult( dir, ti._intersections[ 0 ].ratio, [] ), [] );
-            mockup.near( found, result, 1e-4 );
+            assert.equalVector( found, result, 1e-4 );
 
             var ti2 = new TriangleIntersector();
             ti2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );
             ti2.apply( geom );
-            ok( ti2._intersections.length === 0, msg + ' Intersections should be 0 ' + ti2._intersections.length );
+            assert.isOk( ti2._intersections.length === 0, msg + ' Intersections should be 0 ' + ti2._intersections.length );
         };
 
         ( function () {

@@ -1,5 +1,4 @@
 'use strict';
-var QUnit = require( 'qunit' );
 var mockup = require( 'tests/mockup/mockup' );
 var Matrix = require( 'osg/Matrix' );
 var Node = require( 'osg/Node' );
@@ -9,8 +8,6 @@ var reportStats = require( 'benchmarks/reportStats' );
 var mockupBench = require( 'benchmarks/mockupBench' );
 
 module.exports = function () {
-
-    QUnit.module( 'osg Main Loop' );
 
     test( 'CullVisitor Heavy Static Scene', function () {
 

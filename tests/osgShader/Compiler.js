@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var Light = require( 'osg/Light' );
 var Material = require( 'osg/Material' );
 var Compiler = require( 'osgShader/Compiler' );
@@ -10,9 +10,7 @@ var ShadowTexture = require( 'osgShadow/ShadowTexture' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgShader' );
-
-    QUnit.test( 'Compiler', function () {
+    test( 'Compiler', function () {
 
         ( function () {
 
@@ -29,13 +27,13 @@ module.exports = function () {
             var root = compiler.createFragmentShaderGraph();
 
             var extensions = compiler.evaluateAndGatherField( root, 'getExtensions' );
-            ok( extensions.length === 0, 'Compiler Evaluate And Gather Field: defines rightly so' );
+            assert.isOk( extensions.length === 0, 'Compiler Evaluate And Gather Field: defines rightly so' );
             var defines = compiler.evaluateAndGatherField( root, 'getDefines' );
-            ok( defines.length === 1, 'Compiler Evaluate And Gather Field: defines rightly so' );
+            assert.isOk( defines.length === 1, 'Compiler Evaluate And Gather Field: defines rightly so' );
 
 
             var globalDecl = compiler.evaluateGlobalVariableDeclaration( root );
-            ok( globalDecl.length > 1, 'Compiler Evaluate Global Variables output smth' );
+            assert.isOk( globalDecl.length > 1, 'Compiler Evaluate Global Variables output smth' );
 
             globalDecl = globalDecl.split( '\n' );
             var hasDoublons = false;
@@ -43,11 +41,11 @@ module.exports = function () {
                 if ( !hasDoublons && item === globalDecl[ pos - 1 ] ) hasDoublons = true;
                 return !pos || item !== globalDecl[ pos - 1 ];
             } );
-            ok( !hasDoublons, 'Compiler Evaluate Global Variables Declaration output no doublons' );
+            assert.isOk( !hasDoublons, 'Compiler Evaluate Global Variables Declaration output no doublons' );
 
 
             globalDecl = compiler.evaluateGlobalFunctionDeclaration( root );
-            ok( globalDecl.length > 1, 'Compiler Evaluate Global Functions Declaration output smth' );
+            assert.isOk( globalDecl.length > 1, 'Compiler Evaluate Global Functions Declaration output smth' );
 
             /*
              // sadly doesn't work as is for functions decl.
@@ -59,7 +57,7 @@ module.exports = function () {
             } );
 
             var globalDecl = compiler.evaluateGlobalFunctionDeclaration( root );
-            ok( !hasDoublons, 'Compiler Evaluate Global Functions Declaration output no doublons' );
+            assert.isOk( !hasDoublons, 'Compiler Evaluate Global Functions Declaration output no doublons' );
              */
 
             var nodes = nodeFactory._nodes;
@@ -80,13 +78,13 @@ module.exports = function () {
                 }
             } );
 
-            ok( abstractNodeList.length === 2, 'Abstract Shader Node count OK. (error here means if you added an abstract node that you need to change the number here, or if you added a new node, you forgot to add a unique type for its class MANDATORY)' );
+            assert.isOk( abstractNodeList.length === 2, 'Abstract Shader Node count OK. (error here means if you added an abstract node that you need to change the number here, or if you added a new node, you forgot to add a unique type for its class MANDATORY)' );
 
             //
             var realNodeListUniq = realNodeList.sort().filter( function ( item, pos ) {
                 return !pos || item !== realNodeList[ pos - 1 ];
             } );
-            ok( realNodeListUniq.length === realNodeList.length, 'Shader Node Type string duplicate check (type must be unique, MANDATORY for compilation)' );
+            assert.isOk( realNodeListUniq.length === realNodeList.length, 'Shader Node Type string duplicate check (type must be unique, MANDATORY for compilation)' );
 
         } )();
 

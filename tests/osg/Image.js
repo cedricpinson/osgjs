@@ -1,20 +1,18 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var Image = require( 'osg/Image' );
 
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.asyncTest( 'Image.isGreyScale grey image', 1, function () {
+    test( 'Image.isGreyScale grey image', function ( done ) {
 
 
         var test = function ( img ) {
             var n = new Image( img );
 
-            equal( n.isGreyscale( 2 ), true, 'check image is grey' );
-            start();
+            assert.equal( n.isGreyscale( 2 ), true, 'check image is grey' );
+            done();
         };
 
         var img = new window.Image();
@@ -25,14 +23,14 @@ module.exports = function () {
 
     } );
 
-    QUnit.asyncTest( 'Image.isGreyScale color image', 1, function () {
+    test( 'Image.isGreyScale color image', function ( done ) {
 
 
         var test = function ( img ) {
             var n = new Image( img );
 
-            equal( n.isGreyscale( 2 ), false, 'check image is not grey' );
-            start();
+            assert.equal( n.isGreyscale( 2 ), false, 'check image is not grey' );
+            done();
         };
 
         var img = new window.Image();
@@ -43,7 +41,7 @@ module.exports = function () {
 
     } );
 
-    QUnit.test( 'Image.isReady', function () {
+    test( 'Image.isReady', function () {
 
         var fakeImage = {
             complete: true,
@@ -53,7 +51,7 @@ module.exports = function () {
             }
         };
         var n = new Image( fakeImage );
-        ok( n.isReady(), 'check wrapped HTML Image ' );
+        assert.isOk( n.isReady(), 'check wrapped HTML Image ' );
     } );
 
 };

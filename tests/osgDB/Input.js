@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var P = require( 'bluebird' );
 var Input = require( 'osgDB/Input' );
 var Notify = require( 'osg/Notify' );
@@ -8,23 +8,21 @@ var Image = require( 'osg/Image' );
 
 module.exports = function () {
 
-    QUnit.module( 'osgDB' );
-
     var ImageTest = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 
-    QUnit.asyncTest( 'Input.readImageURL', function () {
+    test( 'Input.readImageURL', function ( done ) {
 
         var input = new Input();
         input.setPrefixURL( 'testXtest' );
         input.readImageURL( ImageTest ).then( function ( image ) {
-            ok( image.getURL() === ImageTest, 'check image src' );
-            start();
+            assert.isOk( image.getURL() === ImageTest, 'check image src' );
+            done();
         } ).catch( function ( error ) {
             Notify.error( error );
         } );
     } );
 
-    QUnit.asyncTest( 'Input.readImageURL with readImageURL replacement', function () {
+    test( 'Input.readImageURL with readImageURL replacement', function ( done ) {
         var called = false;
         var input = new Input();
         var readImageURLReplacement = function ( url /*, options*/ ) {
@@ -34,32 +32,32 @@ module.exports = function () {
         input.readImageURL( ImageTest, {
             readImageURL: readImageURLReplacement
         } ).then( function ( /*image*/) {
-            equal( called, true, 'check image src' );
-            start();
+            assert.equal( called, true, 'check image src' );
+            done();
         } ).catch( function ( error ) {
             Notify.error( error );
         } );
     } );
 
 
-    QUnit.asyncTest( 'Input.readImageURL inline dataimage with crossOrigin', function () {
+    test( 'Input.readImageURL inline dataimage with crossOrigin', function ( done ) {
         var input = new Input();
         var url = 'error-404';
 
         var image = input.readImageURL( url, {
             imageCrossOrigin: 'Anonymous'
         } );
-        ok( image instanceof Image, 'no promise : returned an Image' );
-        // ok(image.src.substr(-9) !== url, 'no promise : used fallback image');  // FIXME: make readImageURL return a proxy osgImage
+        assert.isOk( image instanceof Image, 'no promise : returned an Image' );
+        // assert.isOk(image.src.substr(-9) !== url, 'no promise : used fallback image');  // FIXME: make readImageURL return a proxy osgImage
 
         input.readImageURL( 'error-404', {
             imageCrossOrigin: 'Anonymous',
             imageLoadingUsePromise: true
         } ).then( function ( image ) {
-            ok( image instanceof Image, 'with promise : returned image' );
-            ok( image.getImage().src.substr( -9 ) !== url, 'with promise : used fallback image' );
+            assert.isOk( image instanceof Image, 'with promise : returned image' );
+            assert.isOk( image.getImage().src.substr( -9 ) !== url, 'with promise : used fallback image' );
 
-            start();
+            done();
         } ).catch( function ( error ) {
             Notify.error( error );
         } );
@@ -75,7 +73,7 @@ module.exports = function () {
             input.fetchImage( img, ImageTest, {
                 'imageCrossOrigin': 'anonymous'
             } );
-            ok( img.getImage().crossOrigin !== 'anonymous', 'skip crossOrigin for inline image' );
+            assert.isOk( img.getImage().crossOrigin !== 'anonymous', 'skip crossOrigin for inline image' );
         } )();
 
         ( function () {
@@ -83,12 +81,12 @@ module.exports = function () {
             input.fetchImage( img, 'http://osgjs.org/image.png', {
                 'imageCrossOrigin': 'anonymous'
             } );
-            ok( img.getImage().crossOrigin === 'anonymous', 'check crossOrigin' );
+            assert.isOk( img.getImage().crossOrigin === 'anonymous', 'check crossOrigin' );
         } )();
     } );
 
 
-    QUnit.asyncTest( 'Input.readArrayBuffer-old', function () {
+    test( 'Input.readArrayBuffer-old', function ( done ) {
 
         var ba = {
             'Elements': [ 0.01727, -0.00262, 3.0 ],
@@ -102,13 +100,13 @@ module.exports = function () {
                 'UniqueID': 10
             } ).readBufferArray();
         } ).then( function ( o2 ) {
-            ok( o2.getElements()[ 2 ] === 3.0, 'readBufferArray check same unique id' );
-            start();
+            assert.isOk( o2.getElements()[ 2 ] === 3.0, 'readBufferArray check same unique id' );
+            done();
         } );
 
     } );
 
-    QUnit.asyncTest( 'Input.readBinaryArrayURL with replacement option', function () {
+    test( 'Input.readBinaryArrayURL with replacement option', function ( done ) {
         var calledBinaryArray = false;
         var readBinaryArrayURL = function ( /*url, options*/) {
             calledBinaryArray = true;
@@ -118,13 +116,13 @@ module.exports = function () {
         input.readBinaryArrayURL( 'toto', {
             readBinaryArrayURL: readBinaryArrayURL
         } ).then( function ( /*value*/) {
-            ok( calledBinaryArray, true, 'readBinaryArray replacement has been called' );
-            start();
+            assert.isOk( calledBinaryArray, true, 'readBinaryArray replacement has been called' );
+            done();
         } );
 
     } );
 
-    QUnit.asyncTest( 'Input.readNodeURL with replacement option', function () {
+    test( 'Input.readNodeURL with replacement option', function ( done ) {
         var calledNodeURL = false;
         var readNodeURL = function ( /*url, options*/) {
             calledNodeURL = true;
@@ -134,8 +132,8 @@ module.exports = function () {
         input.readNodeURL( 'toto', {
             readNodeURL: readNodeURL
         } ).then( function ( /*value*/) {
-            ok( calledNodeURL, true, 'readNodeURL replacement has been called' );
-            start();
+            assert.isOk( calledNodeURL, true, 'readNodeURL replacement has been called' );
+            done();
         } );
 
     } );
@@ -144,8 +142,8 @@ module.exports = function () {
         ( function () {
             var input = new Input();
             var obj = input.getObjectWrapper( 'osg.Node' );
-            ok( obj.getName() !== '', 'getObjectWrapper check osg.Node.getName' );
-            ok( obj.addChild !== undefined, 'getObjectWrapper check osg.addChild' );
+            assert.isOk( obj.getName() !== '', 'getObjectWrapper check osg.Node.getName' );
+            assert.isOk( obj.addChild !== undefined, 'getObjectWrapper check osg.addChild' );
         } )();
 
         ( function () {
@@ -155,11 +153,11 @@ module.exports = function () {
             var input = new Input();
             input.registerObject( 'osg.Node', ProxyNode );
             var obj = input.getObjectWrapper( 'osg.Node' );
-            ok( obj._proxy === true, 'getObjectWrapper with overridden' );
+            assert.isOk( obj._proxy === true, 'getObjectWrapper with overridden' );
         } )();
     } );
 
-    QUnit.asyncTest( 'Input.readObject - Material', function () {
+    test( 'Input.readObject - Material', function ( done ) {
         var obj = {
             'osg.Material': {
                 'UniqueID': 10,
@@ -180,22 +178,22 @@ module.exports = function () {
                 }
             } ).readObject();
         } ).then( function ( o2 ) {
-            ok( o2.getName() === 'FloorBorder1', 'readObject check same unique id' );
-            start();
+            assert.isOk( o2.getName() === 'FloorBorder1', 'readObject check same unique id' );
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'Input.computeURL use prefix', function () {
+    test( 'Input.computeURL use prefix', function ( done ) {
         var input = new Input();
-        ok( input.computeURL( 'toto' ) === 'toto', 'check default computeURL' );
+        assert.isOk( input.computeURL( 'toto' ) === 'toto', 'check default computeURL' );
         input.setPrefixURL( undefined );
-        ok( input.computeURL( 'toto' ) === 'toto', 'check from undefined computeURL' );
+        assert.isOk( input.computeURL( 'toto' ) === 'toto', 'check from undefined computeURL' );
         input.setPrefixURL( '/blah/' );
-        ok( input.computeURL( 'toto' ) === '/blah/toto', 'check computeURL' );
-        start();
+        assert.isOk( input.computeURL( 'toto' ) === '/blah/toto', 'check computeURL' );
+        done();
     } );
 
-    QUnit.asyncTest( 'Input.readPrimitiveSet', function () {
+    test( 'Input.readPrimitiveSet', function ( done ) {
 
         var input = new Input( {
             'DrawArrays': {
@@ -212,13 +210,13 @@ module.exports = function () {
                 }
             } ).readPrimitiveSet();
         } ).then( function ( o2 ) {
-            ok( o2.getCount() === 3540, 'readPrimitiveSet check same unique id' );
-            start();
+            assert.isOk( o2.getCount() === 3540, 'readPrimitiveSet check same unique id' );
+            done();
         } );
     } );
 
 
-    QUnit.asyncTest( 'Input.readBufferArray - inline', function () {
+    test( 'Input.readBufferArray - inline', function ( done ) {
         var ba = {
             'Array': {
                 'Uint16Array': {
@@ -236,12 +234,12 @@ module.exports = function () {
                 'UniqueID': 10
             } ).readBufferArray();
         } ).then( function ( o2 ) {
-            ok( o2.getElements()[ 2 ] === 3.0, 'readBufferArray with new array typed inlined' );
-            start();
+            assert.isOk( o2.getElements()[ 2 ] === 3.0, 'readBufferArray with new array typed inlined' );
+            done();
         } );
     } );
 
-    QUnit.asyncTest( 'Input.readBufferArray - external', function () {
+    test( 'Input.readBufferArray - external', function ( done ) {
         var ba = {
             'Array': {
                 'Uint16Array': {
@@ -253,31 +251,36 @@ module.exports = function () {
             'Type': 'ARRAY_BUFFER',
             'UniqueID': 10
         };
-        ( function () {
+
+        var a = ( function () {
             var input = new Input( ba );
-            input.readBufferArray().then( function ( buffer ) {
-                ok( buffer.getElements()[ 2 ] === 10, 'readBufferArray with new array typed external file' );
-                start();
+            return input.readBufferArray().then( function ( buffer ) {
+                assert.isOk( buffer.getElements()[ 2 ] === 10, 'readBufferArray with new array typed external file' );
+                return P.resolve();
             } );
         } )();
 
-        ( function () {
+        var b = ( function () {
             var calledProgress = false;
             var progress = function () {
                 calledProgress = true;
             };
             var input = new Input( ba );
             input.setProgressXHRCallback( progress );
-            input.readBufferArray().then( function ( /*buffer*/) {
+            return input.readBufferArray().then( function ( /*buffer*/) {
 
-                ok( calledProgress === true, 'readBufferArray check progress callback' );
-                start();
+                assert.isOk( calledProgress === true, 'readBufferArray check progress callback' );
+                return P.resolve();
             } );
         } )();
+
+        P.all( [ a, b ] ).then( function () {
+            done();
+        } );
     } );
 
 
-    QUnit.asyncTest( 'Input.readBufferArray - external offset', function () {
+    test( 'Input.readBufferArray - external offset', function ( done ) {
         var ba = {
             'TexCoord0': {
                 'UniqueID': 202,
@@ -327,15 +330,15 @@ module.exports = function () {
             P.all( arraysPromise ).then( function () {
                 var tc = buffers.TexCoord0.getElements();
                 var tcl = tc.length;
-                equal( tc[ 2 ], 2, 'readBufferArray with new array typed external file with offset' );
-                equal( tc[ 1 ], 1, 'readBufferArray with new array typed external file with offset' );
-                equal( tcl, 6, 'readBufferArray with new array typed external file with offset' );
+                assert.equal( tc[ 2 ], 2, 'readBufferArray with new array typed external file with offset' );
+                assert.equal( tc[ 1 ], 1, 'readBufferArray with new array typed external file with offset' );
+                assert.equal( tcl, 6, 'readBufferArray with new array typed external file with offset' );
                 var tg = buffers.Tangent.getElements();
                 var tgl = tg.length;
-                equal( tg[ 2 ], 8, 'readBufferArray with new array typed external file with offset' );
-                equal( tg[ 1 ], 7, 'readBufferArray with new array typed external file with offset' );
-                equal( tgl, 9, 'readBufferArray with new array typed external file with offset' );
-                start();
+                assert.equal( tg[ 2 ], 8, 'readBufferArray with new array typed external file with offset' );
+                assert.equal( tg[ 1 ], 7, 'readBufferArray with new array typed external file with offset' );
+                assert.equal( tgl, 9, 'readBufferArray with new array typed external file with offset' );
+                done();
             } );
         } )();
     } );

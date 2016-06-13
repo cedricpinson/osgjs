@@ -1,5 +1,5 @@
 'use strict';
-var QUnit = require( 'qunit' );
+var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
 var Matrix = require( 'osg/Matrix' );
@@ -9,9 +9,7 @@ var Vec3 = require( 'osg/Vec3' );
 
 module.exports = function () {
 
-    QUnit.module( 'osg' );
-
-    QUnit.test( 'ComputeBoundsVisitor translate', function () {
+    !test( 'ComputeBoundsVisitor translate', function () {
 
         var root = new MatrixTransform();
 
@@ -33,24 +31,24 @@ module.exports = function () {
 
         var bs = root.getBound();
 
-        mockup.near( bs.radius(), 14.330127018922195, 'Check radius of the scene' );
+        assert.equalVector( bs.radius(), 14.330127018922195, 'Check radius of the scene' );
 
         var visitor = new ComputeBoundsVisitor();
         root.accept( visitor );
 
         var tmp = Vec3.create();
 
-        mockup.near( visitor.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( 7.5, -2.5, -2.5 ), 'Check Min of bounding box' );
-        mockup.near( visitor.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( 12.5, 2.5, 2.5 ), 'Check Max of bounding box' );
+        assert.equalVector( visitor.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( 7.5, -2.5, -2.5 ), 'Check Min of bounding box' );
+        assert.equalVector( visitor.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( 12.5, 2.5, 2.5 ), 'Check Max of bounding box' );
 
         // getBoundingBox don't skip the 0 nodemask
-        mockup.near( root.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -12.5, -2.5, -2.5 ), 'Check Min of bounding box with getBoundingBox' );
-        mockup.near( root.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( 12.5, 2.5, 2.5 ), 'Check Max of bounding box getBoundingBox' );
+        assert.equalVector( root.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -12.5, -2.5, -2.5 ), 'Check Min of bounding box with getBoundingBox' );
+        assert.equalVector( root.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( 12.5, 2.5, 2.5 ), 'Check Max of bounding box getBoundingBox' );
 
     } );
 
 
-    QUnit.test( 'ComputeBoundsVisitor translate and rotate', function () {
+    test( 'ComputeBoundsVisitor translate and rotate', function () {
 
         var root = new MatrixTransform();
         var tra = Matrix.create();
@@ -71,19 +69,19 @@ module.exports = function () {
 
         var bs = root.getBound();
 
-        mockup.near( bs.radius(), 4.330127018922194, 'Check radius of the scene' );
+        assert.equalVector( bs.radius(), 4.330127018922194, 'Check radius of the scene' );
 
         var visitor = new ComputeBoundsVisitor();
         root.accept( visitor );
 
         var tmp = Vec3.create();
 
-        mockup.near( visitor.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -22.5, -2.5, -2.5 ), 'Check Min of bounding box' );
-        mockup.near( visitor.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( -17.5, 2.5, 2.5 ), 'Check Max of bounding box' );
+        assert.equalVector( visitor.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -22.5, -2.5, -2.5 ), 'Check Min of bounding box' );
+        assert.equalVector( visitor.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( -17.5, 2.5, 2.5 ), 'Check Max of bounding box' );
 
         // all the nodemask are active so same result as the visitor method
-        mockup.near( root.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -22.5, -2.5, -2.5 ), 'Check Min of bounding box with getBoundingBox' );
-        mockup.near( root.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( -17.5, 2.5, 2.5 ), 'Check Max of bounding box getBoundingBox' );
+        assert.equalVector( root.getBoundingBox().corner( 0, tmp ), Vec3.createAndSet( -22.5, -2.5, -2.5 ), 'Check Min of bounding box with getBoundingBox' );
+        assert.equalVector( root.getBoundingBox().corner( 7, tmp ), Vec3.createAndSet( -17.5, 2.5, 2.5 ), 'Check Max of bounding box getBoundingBox' );
 
     } );
 
