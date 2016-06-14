@@ -418,18 +418,6 @@ var gruntTasks = {};
                     src: 'examples/vendors/bluebird-2.10.2.js',
                     dest: 'examples/vendors/bluebird.js'
                 },
-                //es5-shim:
-                {
-                    cwd: './',
-                    src: 'tests/vendors/es5-shim.js',
-                    dest: 'examples/vendors/es5-shim.js'
-                },
-                //es6-shim:
-                {
-                    cwd: './',
-                    src: 'tests/vendors/es6-shim.js',
-                    dest: 'examples/vendors/es6-shim.js'
-                }
             ]
         }
     };
