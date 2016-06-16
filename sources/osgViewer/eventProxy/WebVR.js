@@ -89,6 +89,8 @@ WebVR.prototype = {
         // WebVR up vector is Y
         // OSGJS up vector is Z
 
+        var sitToStand = this._hmd.stageParameters && this._hmd.stageParameters.sittingToStandingTransform;
+
         var quat = this._lastPose.orientation;
         if ( quat ) {
             this._quat[ 0 ] = quat[ 0 ];
@@ -102,6 +104,11 @@ WebVR.prototype = {
             this._pos[ 0 ] = pos[ 0 ] * this._worldScale;
             this._pos[ 1 ] = -pos[ 2 ] * this._worldScale;
             this._pos[ 2 ] = pos[ 1 ] * this._worldScale;
+            if ( sitToStand ) {
+                this._pos[ 0 ] += sitToStand[ 12 ] * this._worldScale;
+                this._pos[ 1 ] += -sitToStand[ 14 ] * this._worldScale;
+                this._pos[ 2 ] += sitToStand[ 13 ] * this._worldScale;
+            }
         }
 
         manipulatorAdapter.update( this._quat, this._pos );
