@@ -157,9 +157,9 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             if ( this.scale[ 0 ] === 0.0 && this.scale[ 1 ] === 0.0 && this.scale[ 2 ] === 0.0 ) {
                 return false;
             }
-            scaleInverse[ 0 ] = 1 / this._scale[ 0 ];
-            scaleInverse[ 1 ] = 1 / this._scale[ 1 ];
-            scaleInverse[ 2 ] = 1 / this._scale[ 2 ];
+            scaleInverse[ 0 ] = 1.0 / this._scale[ 0 ];
+            scaleInverse[ 1 ] = 1.0 / this._scale[ 1 ];
+            scaleInverse[ 2 ] = 1.0 / this._scale[ 2 ];
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                 Matrix.postMultTranslate( matrix, Vec3.neg( this._position, neg ) );
                 Matrix.postMultRotate( matrix, Quat.inverse( this._rotation, rotInverse ) );

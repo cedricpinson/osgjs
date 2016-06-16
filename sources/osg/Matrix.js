@@ -640,23 +640,27 @@ var Matrix = {
         };
     } )(),
 
-    preMultRotate: function ( matrix, quat ) {
-        if ( Quat.zeroRotation( quat ) )
+    preMultRotate: ( function () {
+        var r = matrixCreate();
+        return function ( matrix, quat ) {
+            if ( quat[ 0 ] === 0.0 && quat[ 1 ] === 0.0 && quat[ 2 ] === 0.0 && quat[ 3 ] === 1.0 )
+                return matrix;
+            Matrix.makeRotateFromQuat( r, quat );
+            Matrix.preMult( matrix, r );
             return matrix;
-        var r = Matrix.create();
-        Matrix.makeRotateFromQuat( r, quat );
-        Matrix.preMult( matrix, r );
-        return matrix;
-    },
+        };
+    } )(),
 
-    postMultRotate: function ( matrix, quat ) {
-        if ( Quat.zeroRotation( quat ) )
+    postMultRotate: ( function () {
+        var r = matrixCreate();
+        return function ( matrix, quat ) {
+            if ( quat[ 0 ] === 0.0 && quat[ 1 ] === 0.0 && quat[ 2 ] === 0.0 && quat[ 3 ] === 1.0 )
+                return matrix;
+            Matrix.makeRotateFromQuat( r, quat );
+            Matrix.postMult( matrix, r );
             return matrix;
-        var r = Matrix.create();
-        Matrix.makeRotateFromQuat( r, quat );
-        Matrix.postMult( matrix, r );
-        return matrix;
-    },
+        };
+    } )(),
 
     transform3x3: function ( m, v, result ) {
         result[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
