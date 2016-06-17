@@ -162,7 +162,9 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             scaleInverse[ 2 ] = 1.0 / this._scale[ 2 ];
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                 Matrix.postMultTranslate( matrix, Vec3.neg( this._position, neg ) );
-                Matrix.postMultRotate( matrix, Quat.inverse( this._rotation, rotInverse ) );
+                if ( !Quat.zeroRotation( this._rotation ) ) {
+                    Matrix.postMultRotate( matrix, Quat.inverse( this._rotation, rotInverse ) );
+                }
                 Matrix.postMultScale( matrix, scaleInverse );
                 Matrix.postMultTranslate( matrix, this._pivotPoint );
             } else { // absolute

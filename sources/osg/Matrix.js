@@ -643,8 +643,6 @@ var Matrix = {
     preMultRotate: ( function () {
         var r = matrixCreate();
         return function ( matrix, quat ) {
-            if ( quat[ 0 ] === 0.0 && quat[ 1 ] === 0.0 && quat[ 2 ] === 0.0 && quat[ 3 ] === 1.0 )
-                return matrix;
             Matrix.makeRotateFromQuat( r, quat );
             Matrix.preMult( matrix, r );
             return matrix;
@@ -654,8 +652,6 @@ var Matrix = {
     postMultRotate: ( function () {
         var r = matrixCreate();
         return function ( matrix, quat ) {
-            if ( quat[ 0 ] === 0.0 && quat[ 1 ] === 0.0 && quat[ 2 ] === 0.0 && quat[ 3 ] === 1.0 )
-                return matrix;
             Matrix.makeRotateFromQuat( r, quat );
             Matrix.postMult( matrix, r );
             return matrix;
