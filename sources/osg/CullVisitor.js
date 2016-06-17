@@ -7,6 +7,7 @@ var CullSettings = require( 'osg/CullSettings' );
 var CullStack = require( 'osg/CullStack' );
 var Matrix = require( 'osg/Matrix' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
+var AutoTransform = require( 'osg/AutoTransform' );
 var Projection = require( 'osg/Projection' );
 var LightSource = require( 'osg/LightSource' );
 var osgPool = require( 'osgUtil/osgPool' );
@@ -512,16 +513,9 @@ CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
     this.pushCurrentMask();
 
     var matrix = this._reservedMatrixStack.get();
-
-    if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
-
-        var lastMatrixStack = this.getCurrentModelViewMatrix();
-        Matrix.mult( lastMatrixStack, node.getMatrix(), matrix );
-
-    } else {
-        // absolute
-        Matrix.copy( node.getMatrix(), matrix );
-    }
+    var lastMatrixStack = this.getCurrentModelViewMatrix();
+    Matrix.copy( lastMatrixStack, matrix );
+    node.computeLocalToWorldMatrix( matrix );
     this.pushModelViewMatrix( matrix );
 
 
@@ -582,6 +576,9 @@ CullVisitor.prototype[ Node.typeID ] = function ( node ) {
     // pop the culling mode.
     this.popCurrentMask();
 };
+
+// same code like MatrixTransform
+CullVisitor.prototype[ AutoTransform.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
 
 // same code like Node
 CullVisitor.prototype[ Lod.typeID ] = CullVisitor.prototype[ Node.typeID ];

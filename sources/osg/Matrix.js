@@ -99,6 +99,13 @@ var Matrix = {
         return matrix;
     },
 
+    equal: function ( a, b ) {
+        return a[ 0 ] === b[ 0 ] && a[ 1 ] === b[ 1 ] && a[ 2 ] === b[ 2 ] && a[ 3 ] === b[ 3 ] &&
+            a[ 4 ] === b[ 4 ] && a[ 5 ] === b[ 5 ] && a[ 6 ] === b[ 6 ] && a[ 7 ] === b[ 7 ] &&
+            a[ 8 ] === b[ 8 ] && a[ 9 ] === b[ 9 ] && a[ 10 ] === b[ 10 ] && a[ 11 ] === b[ 11 ] &&
+            a[ 12 ] === b[ 12 ] && a[ 13 ] === b[ 13 ] && a[ 14 ] === b[ 14 ] && a[ 15 ] === b[ 15 ];
+    },
+
     /**
      * @param {Number} x position
      * @param {Number} y position
@@ -212,6 +219,7 @@ var Matrix = {
 
         return b;
     },
+
     multa: function ( a, b, r ) {
         if ( r === a ) {
             return Matrix.preMult( a, b );
@@ -563,6 +571,34 @@ var Matrix = {
         return mat;
     },
 
+    postMultTranslate: function ( mat, translate ) {
+        var val;
+        if ( translate[ 0 ] !== 0.0 ) {
+            val = translate[ 0 ];
+            mat[ 0 ] += val * mat[ 3 ];
+            mat[ 4 ] += val * mat[ 7 ];
+            mat[ 8 ] += val * mat[ 11 ];
+            mat[ 12 ] += val * mat[ 15 ];
+        }
+
+        if ( translate[ 1 ] !== 0.0 ) {
+            val = translate[ 1 ];
+            mat[ 1 ] += val * mat[ 3 ];
+            mat[ 5 ] += val * mat[ 7 ];
+            mat[ 9 ] += val * mat[ 11 ];
+            mat[ 13 ] += val * mat[ 15 ];
+        }
+
+        if ( translate[ 2 ] !== 0.0 ) {
+            val = translate[ 2 ];
+            mat[ 2 ] += val * mat[ 3 ];
+            mat[ 6 ] += val * mat[ 7 ];
+            mat[ 10 ] += val * mat[ 11 ];
+            mat[ 14 ] += val * mat[ 15 ];
+        }
+        return mat;
+    },
+
     // result = Matrix M * Matrix Translate
     multTranslate: function ( mat, translate, result ) {
         if ( result !== mat ) {
@@ -601,6 +637,24 @@ var Matrix = {
 
         return function ( angle, x, y, z, result ) {
             return Matrix.makeRotateFromQuat( Quat.makeRotate( angle, x, y, z, qtemp ), result );
+        };
+    } )(),
+
+    preMultRotate: ( function () {
+        var r = matrixCreate();
+        return function ( matrix, quat ) {
+            Matrix.makeRotateFromQuat( r, quat );
+            Matrix.preMult( matrix, r );
+            return matrix;
+        };
+    } )(),
+
+    postMultRotate: ( function () {
+        var r = matrixCreate();
+        return function ( matrix, quat ) {
+            Matrix.makeRotateFromQuat( r, quat );
+            Matrix.postMult( matrix, r );
+            return matrix;
         };
     } )(),
 
@@ -1189,6 +1243,31 @@ var Matrix = {
 
         return m;
 
+    },
+
+    postMultScale: function ( m, scale ) {
+
+        var x = scale[ 0 ];
+        var y = scale[ 1 ];
+        var z = scale[ 2 ];
+
+        m[ 0 ] *= x;
+        m[ 1 ] *= y;
+        m[ 2 ] *= z;
+
+        m[ 4 ] *= x;
+        m[ 5 ] *= y;
+        m[ 6 ] *= z;
+
+        m[ 8 ] *= x;
+        m[ 9 ] *= y;
+        m[ 10 ] *= z;
+
+        m[ 12 ] *= x;
+        m[ 13 ] *= y;
+        m[ 14 ] *= z;
+
+        return m;
     },
 
     makeScale: function ( x, y, z, result ) {

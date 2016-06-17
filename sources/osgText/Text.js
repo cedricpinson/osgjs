@@ -3,11 +3,10 @@ var MACROUTILS = require( 'osg/Utils' );
 var Vec3 = require( 'osg/Vec3' );
 var Vec4 = require( 'osg/Vec4' );
 var Matrix = require( 'osg/Matrix' );
+var AutoTransform = require( 'osg/AutoTransform' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
-var StateAttribute = require( 'osg/StateAttribute' );
-var BillboardAttribute = require( 'osg/BillboardAttribute' );
 var BlendFunc = require( 'osg/BlendFunc' );
 
 
@@ -16,21 +15,21 @@ var BlendFunc = require( 'osg/BlendFunc' );
  *  Notes: The OSGjs Text has been implemented like OSG osgText::Text as much as possible. However there are some
  *  things that should be noted:
  *  - This Text is far more simple than OSG ones, it only supports basic functionality.
- *  - In contrast to OSG, Text inherits from MatrixTransform in osgjs.
+ *  - In contrast to OSG, Text inherits from AutoTransform in osgjs.
  *  - Supported fonts are not the same in HTML than in OSG/C++.
  *  - Vertical layout is not supported right now.
  *  - BaseLine alignments are not supported, instead they are converted to supported ones if parsing a osgjs file.
  *  - Set the color in the range [ 0 - 1 ], as if you were working with OSG.
  *  - Texts are generated as a canvas 2D texture sticked in a quad. The size of the texture is the next power of two of the current size of the
  *    text so the bigger is your characterSize, the more memory it will consume.
- *  - The only supported CharacterSizeMode is OBJECT_COORDS, others should be addresed in the future.
  */
 var Text = function ( text ) {
-    MatrixTransform.call( this );
+    AutoTransform.call( this );
     // create a canvas element
     this._canvas = document.createElement( 'canvas' );
     this._context = this._canvas.getContext( '2d' );
-
+    this._matrixTransform = new MatrixTransform();
+    this.addChild( this._matrixTransform );
     this._text = '';
     if ( text !== undefined ) this._text = text;
     this._font = 'monospace';
@@ -46,6 +45,7 @@ var Text = function ( text ) {
     this._textY = undefined;
     // Size of the textured quad in meters.
     this._charactherSize = 1;
+    this._charactherSizeMode = Text.OBJECT_COORDS;
     // Font resolution
     this._fontSize = 32;
     this._geometry = undefined;
@@ -59,6 +59,11 @@ var Text = function ( text ) {
     this.drawText();
     this._dirty = false;
 };
+
+// CharacterSizeMode
+Text.OBJECT_COORDS = 0;
+Text.SCREEN_COORDS = 1;
+Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT = 2;
 
 // Layout enum
 Text.LEFT_TO_RIGHT = 'ltr';
@@ -78,11 +83,11 @@ Text.RIGHT_CENTER = 7;
 Text.RIGHT_BOTTOM = 8;
 
 /** @lends Text.prototype */
-Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
+Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTransform.prototype, {
 
     drawText: function () {
         if ( this._geometry !== undefined ) {
-            this.removeChild( this._geometry );
+            this._matrixTransform.removeChild( this._geometry );
             // The text could be dynamic, so we need to remove GL objects
             this._geometry.releaseGLObjects();
         }
@@ -115,7 +120,7 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
         stateset.setTextureAttributeAndModes( 0, texture );
         stateset.setRenderingHint( 'TRANSPARENT_BIN' );
         stateset.setAttributeAndModes( new BlendFunc( BlendFunc.ONE, BlendFunc.ONE_MINUS_SRC_ALPHA ) );
-        this.addChild( this._geometry );
+        this._matrixTransform.addChild( this._geometry );
         this.dirtyBound();
     },
 
@@ -149,11 +154,35 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
 
     setCharacterSize: function ( size ) {
         this._charactherSize = size;
+        if ( this._charactherSizeMode !== Text.OBJECT_COORDS ) {
+            Matrix.makeScale( this._charactherSize, this._charactherSize, this._charactherSize, this._matrixTransform.getMatrix() );
+            if ( this._charactherSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
+                this.setMaximumScale( this._charactherSize );
+        }
         this._dirty = true;
     },
 
     getCharacterSize: function () {
         return this._charactherSize;
+    },
+
+    setCharacterSizeMode: function ( mode ) {
+        this._charactherSizeMode = mode;
+        if ( this._charactherSizeMode !== Text.OBJECT_COORDS ) {
+            Matrix.makeScale( this._charactherSize, this._charactherSize, this._charactherSize, this._matrixTransform.getMatrix() );
+            this.setAutoScaleToScreen( true );
+            this.setMaximumScale( Number.MAX_VALUE );
+            if ( this._charactherSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
+                this.setMaximumScale( this._charactherSize );
+        } else {
+            this._matrixTransform.setMatrix( Matrix.create() );
+            this.setAutoScaleToScreen( false );
+        }
+        this._dirty = true;
+    },
+
+    getCharacterSizeMode: function () {
+        return this._charactherSizeMode;
     },
 
     setFontResolution: function ( resolution ) {
@@ -182,20 +211,7 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
     },
 
     setAutoRotateToScreen: function ( value ) {
-        this._autoRotateToScreen = value;
-        if ( !this._billboardAttribute ) {
-            this._billboardAttribute = new BillboardAttribute();
-        }
-        var stateset = this.getOrCreateStateSet();
-        if ( value ) {
-            // Temporary hack because StateAttribute.ON does not work right now
-            this._billboardAttribute.setEnabled( true );
-            stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.ON );
-        } else {
-            // Temporary hack because StateAttribute.OFF does not work right now
-            this._billboardAttribute.setEnabled( false );
-            stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.OFF );
-        }
+        AutoTransform.prototype.setAutoRotateToScreen.call( this, value );
         this._dirty = true;
     },
 
@@ -225,12 +241,14 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
     getAlignment: function () {
         return this._alignment;
     },
+
+
     traverse: function ( visitor ) {
         if ( this._dirty ) {
             this.drawText();
             this._dirty = false;
         }
-        MatrixTransform.prototype.traverse.call( this, visitor );
+        AutoTransform.prototype.traverse.call( this, visitor );
     },
 
     _setAlignmentValues: function ( alignment ) {
