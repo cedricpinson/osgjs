@@ -19,10 +19,8 @@ var SOURCE_PATH = 'sources/';
 var BUILD_PATH = 'builds/';
 var TEST_PATH = 'tests/';
 var DIST_PATH = path.join( BUILD_PATH, 'dist/' );
-var DOCS_PATH = path.join( BUILD_PATH, 'docs/' );
 
 // Utility functions
-//
 var find = function ( cwd, pattern ) {
 
     if ( typeof pattern === 'undefined' ) {
@@ -77,11 +75,6 @@ var gruntTasks = {};
     gruntTasks.clean = {
         options: {}
     };
-
-    // docs
-    gruntTasks.plato = {};
-
-    gruntTasks.docco = {};
 
     //tests
     gruntTasks.qunit = {};
@@ -147,13 +140,6 @@ var gruntTasks = {};
                     sourceMap: false
                 } )
             ]
-        },
-        docs: {
-            entry: './sources/OSG.js',
-            output: {
-                path: DOCS_PATH,
-                filename: 'OSG.js'
-            }
         }
     };
 
@@ -163,7 +149,6 @@ var gruntTasks = {};
         build: targets.build,
         buildrelease: targets.buildrelease,
         builddebug: targets.builddebug,
-        docs: targets.docs,
         watch: {
             entry: targets.build.entry,
             devtool: targets.build.devtool,
@@ -316,29 +301,23 @@ var gruntTasks = {};
 } )();
 
 
-// ## Docco
+// ## Documentation
 //
 ( function () {
-
-    gruntTasks.docco = {
-        singleDoc: {
-            src: path.join( DOCS_PATH, 'OSG.js' ),
+    gruntTasks.documentation = {
+        'default': {
+            files: [ {
+                expand: true,
+                cwd: 'sources',
+                src: [ '**/*.js' ]
+            } ],
             options: {
-                output: 'docs/annotated-source'
-            }
-        },
-        docs: {
-            src: srcFiles.map( function ( pathname ) {
-                return path.join( SOURCE_PATH, pathname );
-            } ),
-            options: {
-                layout: 'classic',
-                output: 'docs/annotated-source'
+                destination: 'docs'
             }
         }
     };
 
-} )();
+} ) ();
 
 // ## Plato
 ( function () {
@@ -355,6 +334,7 @@ var gruntTasks = {};
         }
     };
 } )();
+
 
 // ## connect
 //
@@ -476,13 +456,14 @@ module.exports = function ( grunt ) {
         pkg: grunt.file.readJSON( 'package.json' )
     }, gruntTasks ) );
 
+    grunt.loadNpmTasks( 'grunt-documentation' );
     grunt.loadNpmTasks( 'grunt-mocha' );
+
+    grunt.loadNpmTasks( 'grunt-plato' );
 
     grunt.loadNpmTasks( 'grunt-release' );
     grunt.loadNpmTasks( 'grunt-contrib-connect' );
 
-    grunt.loadNpmTasks( 'grunt-docco' );
-    grunt.loadNpmTasks( 'grunt-plato' );
     grunt.loadNpmTasks( 'grunt-eslint' );
     grunt.loadNpmTasks( 'grunt-contrib-jshint' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
@@ -502,7 +483,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'test', [ 'connect:server', 'mocha:test' ] );
     grunt.registerTask( 'benchmarks', [ 'connect:server', 'mocha:bench' ] );
 
-    grunt.registerTask( 'docs', [ 'webpack:docs', 'docco' ] );
+    grunt.registerTask( 'docs', [ 'plato', 'documentation:default' ] );
 
     grunt.registerTask( 'build', [ 'copyto', 'webpack:build' ] );
     grunt.registerTask( 'build-release', [ 'copyto', 'webpack:buildrelease' ] );
