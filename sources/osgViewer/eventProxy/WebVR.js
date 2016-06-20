@@ -2,6 +2,7 @@
 var Notify = require( 'osg/Notify' );
 var Quat = require( 'osg/Quat' );
 var Vec3 = require( 'osg/Vec3' );
+var Matrix = require( 'osg/Matrix' );
 
 
 var WebVR = function ( viewer ) {
@@ -70,49 +71,58 @@ WebVR.prototype = {
         return true;
     },
 
-    update: function () {
+    update: ( function () {
+        var tempQuat = Quat.create();
+        var tempPos = Vec3.create();
 
-        if ( !this.isValid() )
-            return;
+        return function () {
 
-        var manipulatorAdapter = this.getManipulatorController();
+            if ( !this.isValid() )
+                return;
 
-        // update the manipulator with the rotation of the device
-        if ( !manipulatorAdapter.update )
-            return;
+            var manipulatorAdapter = this.getManipulatorController();
 
-        if ( !this._hmd.capabilities.hasOrientation && !this._hmd.capabilities.hasPosition )
-            return;
+            // update the manipulator with the rotation of the device
+            if ( !manipulatorAdapter.update )
+                return;
 
-        this._lastPose = this._hmd.getPose(); // if no prediction, call this._hmd.getImmediatePose()
+            if ( !this._hmd.capabilities.hasOrientation && !this._hmd.capabilities.hasPosition )
+                return;
 
-        // WebVR up vector is Y
-        // OSGJS up vector is Z
+            this._lastPose = this._hmd.getPose(); // if no prediction, call this._hmd.getImmediatePose()
 
-        var sitToStand = this._hmd.stageParameters && this._hmd.stageParameters.sittingToStandingTransform;
+            // WebVR up vector is Y
+            // OSGJS up vector is Z
 
-        var quat = this._lastPose.orientation;
-        if ( quat ) {
-            this._quat[ 0 ] = quat[ 0 ];
-            this._quat[ 1 ] = -quat[ 2 ];
-            this._quat[ 2 ] = quat[ 1 ];
-            this._quat[ 3 ] = quat[ 3 ];
-        }
+            var sitToStand = this._hmd.stageParameters && this._hmd.stageParameters.sittingToStandingTransform;
 
-        var pos = this._lastPose.position;
-        if ( pos ) {
-            this._pos[ 0 ] = pos[ 0 ] * this._worldScale;
-            this._pos[ 1 ] = -pos[ 2 ] * this._worldScale;
-            this._pos[ 2 ] = pos[ 1 ] * this._worldScale;
-            if ( sitToStand ) {
-                this._pos[ 0 ] += sitToStand[ 12 ] * this._worldScale;
-                this._pos[ 1 ] += -sitToStand[ 14 ] * this._worldScale;
-                this._pos[ 2 ] += sitToStand[ 13 ] * this._worldScale;
+            var quat = this._lastPose.orientation;
+            if ( quat ) {
+                if ( sitToStand ) {
+                    quat = Matrix.getRotate( sitToStand, tempQuat );
+                    Quat.mult( quat, this._lastPose.orientation, quat );
+                }
+
+                this._quat[ 0 ] = quat[ 0 ];
+                this._quat[ 1 ] = -quat[ 2 ];
+                this._quat[ 2 ] = quat[ 1 ];
+                this._quat[ 3 ] = quat[ 3 ];
             }
-        }
 
-        manipulatorAdapter.update( this._quat, this._pos );
-    },
+            var pos = this._lastPose.position;
+            if ( pos ) {
+                if ( sitToStand ) {
+                    pos = Matrix.transformVec3( sitToStand, pos, tempPos );
+                }
+                this._pos[ 0 ] = pos[ 0 ] * this._worldScale;
+                this._pos[ 1 ] = -pos[ 2 ] * this._worldScale;
+                this._pos[ 2 ] = pos[ 1 ] * this._worldScale;
+            }
+
+            manipulatorAdapter.update( this._quat, this._pos );
+        };
+    } )(),
+
 
     getHmd: function () {
         return this._hmd;
