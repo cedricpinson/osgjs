@@ -381,8 +381,8 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
                 m10 += palette[ idBone + 10 ] * w;
                 m14 += palette[ idBone + 11 ] * w;
 
+                m15 += w;
                 doSkin = true;
-
             }
 
             w = vWeights[ idr + 3 ];
