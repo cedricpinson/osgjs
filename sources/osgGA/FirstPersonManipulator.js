@@ -217,8 +217,11 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             this.strafe( vec[ 1 ] * timeFactor - pan[ 0 ] * directFactor );
             this.strafeVertical( -pan[ 1 ] * directFactor );
 
-            if ( this._vrEnable )
+            if ( this._vrEnable ) {
                 Vec3.add( this._eye, this._vrTrans, this._eye );
+                // in case setPoseVR skips some frame (possible if tracking is lost temporarily)
+                Vec3.init( this._vrTrans );
+            }
         };
     } )(),
 
