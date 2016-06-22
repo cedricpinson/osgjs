@@ -161,15 +161,22 @@ var NodeGizmo = function ( viewer ) {
 
 // picking masks
 NodeGizmo.NO_PICK = 1 << 0;
-NodeGizmo.PICK_ARC = 1 << 1;
-NodeGizmo.PICK_ARROW = 1 << 2;
-NodeGizmo.PICK_PLANE = 1 << 3;
+NodeGizmo.PICK_ARC_X = 1 << 1;
+NodeGizmo.PICK_ARC_Y = 1 << 2;
+NodeGizmo.PICK_ARC_Z = 1 << 3;
 
-NodeGizmo.PICK_X = 1 << 4;
-NodeGizmo.PICK_Y = 1 << 5;
-NodeGizmo.PICK_Z = 1 << 6;
+NodeGizmo.PICK_ARROW_X = 1 << 4;
+NodeGizmo.PICK_ARROW_Y = 1 << 5;
+NodeGizmo.PICK_ARROW_Z = 1 << 6;
 
-NodeGizmo.PICK_XYZ = NodeGizmo.PICK_X | NodeGizmo.PICK_Y | NodeGizmo.PICK_Z;
+NodeGizmo.PICK_PLANE_X = 1 << 7;
+NodeGizmo.PICK_PLANE_Y = 1 << 8;
+NodeGizmo.PICK_PLANE_Z = 1 << 9;
+
+NodeGizmo.PICK_ARC = NodeGizmo.PICK_ARC_X | NodeGizmo.PICK_ARC_Y | NodeGizmo.PICK_ARC_Z;
+NodeGizmo.PICK_ARROW = NodeGizmo.PICK_ARROW_X | NodeGizmo.PICK_ARROW_Y | NodeGizmo.PICK_ARROW_Z;
+NodeGizmo.PICK_PLANE = NodeGizmo.PICK_PLANE_X | NodeGizmo.PICK_PLANE_Y | NodeGizmo.PICK_PLANE_Z;
+
 NodeGizmo.PICK_GIZMO = NodeGizmo.PICK_ARC | NodeGizmo.PICK_ARROW | NodeGizmo.PICK_PLANE;
 
 NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
@@ -271,11 +278,30 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             this.setNodeMask( 0x0 );
             return;
         }
+
         var mask = this._attachedNode.editMask;
+
         this.setNodeMask( mask & NodeGizmo.PICK_GIZMO ? NodeGizmo.NO_PICK : 0x0 );
+
         this._translateNode.setNodeMask( mask & NodeGizmo.PICK_ARROW ? NodeGizmo.PICK_ARROW : 0x0 );
         this._rotateNode.setNodeMask( mask & NodeGizmo.PICK_ARC ? NodeGizmo.PICK_ARC : 0x0 );
         this._planeNode.setNodeMask( mask & NodeGizmo.PICK_PLANE ? NodeGizmo.PICK_PLANE : 0x0 );
+
+        var transChildren = this._translateNode.getChildren();
+        transChildren[ 0 ].setNodeMask( mask & NodeGizmo.PICK_ARROW_X ? NodeGizmo.PICK_ARROW_X : 0x0 );
+        transChildren[ 1 ].setNodeMask( mask & NodeGizmo.PICK_ARROW_Y ? NodeGizmo.PICK_ARROW_Y : 0x0 );
+        transChildren[ 2 ].setNodeMask( mask & NodeGizmo.PICK_ARROW_Z ? NodeGizmo.PICK_ARROW_Z : 0x0 );
+
+        // children 0 is full arc
+        var rotChildren = this._rotateNode.getChildren();
+        rotChildren[ 1 ].setNodeMask( mask & NodeGizmo.PICK_ARC_X ? NodeGizmo.PICK_ARC_X : 0x0 );
+        rotChildren[ 2 ].setNodeMask( mask & NodeGizmo.PICK_ARC_Y ? NodeGizmo.PICK_ARC_Y : 0x0 );
+        rotChildren[ 3 ].setNodeMask( mask & NodeGizmo.PICK_ARC_Z ? NodeGizmo.PICK_ARC_Z : 0x0 );
+
+        var planeChildren = this._planeNode.getChildren();
+        planeChildren[ 0 ].setNodeMask( mask & NodeGizmo.PICK_PLANE_X ? NodeGizmo.PICK_PLANE_X : 0x0 );
+        planeChildren[ 1 ].setNodeMask( mask & NodeGizmo.PICK_PLANE_Y ? NodeGizmo.PICK_PLANE_Y : 0x0 );
+        planeChildren[ 2 ].setNodeMask( mask & NodeGizmo.PICK_PLANE_Z ? NodeGizmo.PICK_PLANE_Z : 0x0 );
     },
 
     onNodeHovered: ( function () {
@@ -327,10 +353,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         // set masks
         drawArcXYZ.setNodeMask( NodeGizmo.NO_PICK );
         drawArc.setNodeMask( NodeGizmo.NO_PICK );
-        pickArc.setNodeMask( NodeGizmo.PICK_ARC );
-        mtX.setNodeMask( NodeGizmo.PICK_X );
-        mtY.setNodeMask( NodeGizmo.PICK_Y );
-        mtZ.setNodeMask( NodeGizmo.PICK_Z );
+        mtX.setNodeMask( NodeGizmo.PICK_ARC_X );
+        mtY.setNodeMask( NodeGizmo.PICK_ARC_Y );
+        mtZ.setNodeMask( NodeGizmo.PICK_ARC_Z );
 
         mtXYZ.addChild( drawArcXYZ );
         mtX.addChild( drawArc );
@@ -401,10 +426,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // set masks
         drawArrow.setNodeMask( NodeGizmo.NO_PICK );
-        pickArrow.setNodeMask( NodeGizmo.PICK_ARROW );
-        mtX.setNodeMask( NodeGizmo.PICK_X );
-        mtY.setNodeMask( NodeGizmo.PICK_Y );
-        mtZ.setNodeMask( NodeGizmo.PICK_Z );
+        mtX.setNodeMask( NodeGizmo.PICK_ARROW_X );
+        mtY.setNodeMask( NodeGizmo.PICK_ARROW_Y );
+        mtZ.setNodeMask( NodeGizmo.PICK_ARROW_Z );
 
         mtX.addChild( drawArrow );
         mtY.addChild( drawArrow );
@@ -443,10 +467,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         Matrix.makeRotate( Math.PI * 0.5, 1.0, 0.0, 0.0, mtY.getMatrix() );
 
         // set masks
-        mtPlane.setNodeMask( NodeGizmo.PICK_PLANE );
-        mtX.setNodeMask( NodeGizmo.PICK_X );
-        mtY.setNodeMask( NodeGizmo.PICK_Y );
-        mtZ.setNodeMask( NodeGizmo.PICK_Z );
+        mtX.setNodeMask( NodeGizmo.PICK_PLANE_X );
+        mtY.setNodeMask( NodeGizmo.PICK_PLANE_Y );
+        mtZ.setNodeMask( NodeGizmo.PICK_PLANE_Z );
 
         mtX.addChild( mtPlane );
         mtY.addChild( mtPlane );
@@ -706,6 +729,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         // pick rotate gizmo
         var hit = this.pickGizmo( e, this._hoverNode.getNodeMask() | NodeGizmo.PICK_ARC );
         if ( !hit ) return;
+
         // compute tangent direction
         var sign = this._hoverNode._nbAxis === 0 ? -1.0 : 1.0;
         var tang = Vec3.create();
@@ -818,12 +842,14 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             return;
         var hit;
         if ( this._isEditing === false ) {
-            hit = this.pickGizmo( e, NodeGizmo.PICK_XYZ | NodeGizmo.PICK_GIZMO );
+            hit = this.pickGizmo( e, NodeGizmo.PICK_GIZMO );
             this.onNodeHovered( hit );
             return;
         }
+
         if ( !this._hoverNode )
             return;
+
         var par = this._hoverNode.getParents()[ 0 ];
         if ( par === this._rotateNode )
             this.updateRotateEdit( e );
@@ -903,8 +929,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             this._lsi.setTestPlane( false );
             this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
             this._iv.reset();
-            this._iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_ARROW );
-
+            this._iv.setTraversalMask( this._hoverNode.getNodeMask() );
 
             Matrix.copy( this._editWorldTrans, this.getMatrix() );
 
@@ -930,14 +955,12 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         var coordx = vec[ 0 ] * ( viewer._canvasWidth / canvas.clientWidth );
         var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( viewer._canvasHeight / canvas.clientHeight );
 
-
         // project 2D point on the 3d plane
         this._lsi.reset();
         this._lsi.setTestPlane( true );
         this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
         this._iv.reset();
-        this._iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_PLANE );
-
+        this._iv.setTraversalMask( this._hoverNode.getNodeMask() );
 
         Matrix.copy( this._editWorldTrans, this.getMatrix() );
 
