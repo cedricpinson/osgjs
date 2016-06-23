@@ -177,7 +177,8 @@ var Matrix = {
         return a;
     },
 
-    // do a * b and result in b
+    // do a * b and store the result in b
+    // Be aware of the change w.r.t OSG as b holds the result!
     postMult: function ( a, b ) {
         var btmp0, btmp1, btmp2, btmp3;
         // post mult
@@ -643,7 +644,7 @@ var Matrix = {
     preMultRotate: ( function () {
         var r = matrixCreate();
         return function ( matrix, quat ) {
-            Matrix.makeRotateFromQuat( r, quat );
+            Matrix.makeRotateFromQuat( quat, r );
             Matrix.preMult( matrix, r );
             return matrix;
         };
@@ -652,8 +653,8 @@ var Matrix = {
     postMultRotate: ( function () {
         var r = matrixCreate();
         return function ( matrix, quat ) {
-            Matrix.makeRotateFromQuat( r, quat );
-            Matrix.postMult( matrix, r );
+            Matrix.makeRotateFromQuat( quat, r );
+            Matrix.postMult( r, matrix );
             return matrix;
         };
     } )(),
