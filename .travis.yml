@@ -1,14 +1,29 @@
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "kEKxAxixWjqtwAgPfKQzABJ6wpnk+52l1gRMCp6H5OFbuQws+MrKAS4YO2CgGdfjufioQFIlExfoCbK4GD6CXp11HAO9p8YGgcJxT1cQ5TRXHbZhz96EayrXoKdUq4s+UCaZUbBQsSuMdpPFZojrk8TKj/mzv6B+dbFz4RJrG8o="
 language: node_js
 sudo: false
 node_js:
    - "5.10.1"
+
+addons:
+  coverity_scan:
+    project:
+      name: "cedricpinson/osgjs"
+      description: "Build submitted via Travis CI"
+    notification_email: trigrou@trigrou.com
+    build_command: "--no-command --fs-capture-search ./sources/"
+    branch_pattern: coverity_scan
+
 
 before_script:
   - npm install -g npm@latest
   - npm install -g grunt
   - npm install -g grunt-cli
 
-script: grunt check --verbose && grunt build  --verbose && grunt test --verbose
+script: if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then grunt check --verbose && grunt build  --verbose && grunt test --verbose ; fi
 
 
 notifications:
