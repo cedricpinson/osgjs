@@ -3,10 +3,11 @@ var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Vec4 = require( 'osg/Vec4' );
 
-
 /**
  *  Manage BlendColor attribute
- *  @class BlendColor
+ *  @class
+ *  @memberOf osg
+ *  @extends StateAttribute
  */
 var BlendColor = function ( color ) {
     StateAttribute.call( this );
@@ -17,12 +18,19 @@ var BlendColor = function ( color ) {
     }
 };
 
-/** @lends BlendColor.prototype */
+/**
+ * @lends BlendColor.prototype
+ */
 BlendColor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
     attributeType: 'BlendColor',
     cloneType: function () {
         return new BlendColor();
     },
+
+    /**
+     *
+     * @param {} color
+     */
     setConstantColor: function ( color ) {
         Vec4.copy( color, this._constantColor );
     },
