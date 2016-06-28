@@ -1246,13 +1246,13 @@ Compiler.prototype = {
         return outputVertex;
     },
     morphTransformVec3: function ( inputVertex, outputVertex, targetName ) {
-
-        var approx = false; // on mobile ?
-        var morph = this._morphAttribute;
+        // Comented as this code is not reachable
+        // var approx = false; // on mobile ?
+        // var morph = this._morphAttribute;
         // compute morph tangent (getOrCreateNormalAttribute will create the 'normalMorph' variable)
-        if ( approx && targetName === 'Tangent' && this.getOrCreateNormalAttribute() && morph && morph.hasTarget( 'Normal' ) ) {
-            return this.morphTangentApproximation( inputVertex, outputVertex );
-        }
+        // if ( approx && targetName === 'Tangent' && this.getOrCreateNormalAttribute() && morph && morph.hasTarget( 'Normal' ) ) {
+        //     return this.morphTangentApproximation( inputVertex, outputVertex );
+        // }
 
         var inputs = {
             vertex: inputVertex,

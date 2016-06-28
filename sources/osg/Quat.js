@@ -311,7 +311,8 @@ var Quat = {
 
         // first step
         var invq = this.inv( qcur );
-        var qa, qb;
+        var qa = this.create();
+        var qb = this.create();
 
         this.mult( q2, invq, qa );
         this.ln( qa, qa );

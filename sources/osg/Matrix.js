@@ -504,8 +504,6 @@ var Matrix = {
             for ( i = 1; i < 4; i++ ) {
                 if ( ( tq[ i ] > tq[ j ] ) ) {
                     j = i;
-                } else {
-                    j = j;
                 }
             }
 
