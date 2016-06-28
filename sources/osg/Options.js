@@ -33,13 +33,13 @@ Options.prototype = {
 
     getBoolean: function ( key ) {
         var val = this.getString( key );
-        if ( val ) return Boolean( JSON.parse( val ) );
+        if ( val ) return ( val !== 'false' && val !== '0' );
         return undefined;
     },
 
     getNumber: function ( key ) {
         var val = this[ key ];
-        if ( val ) return Number( JSON.parse( val ) );
+        if ( val ) return Number( val );
         return undefined;
     },
 

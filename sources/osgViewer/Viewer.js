@@ -19,10 +19,10 @@ var OptionsURL = ( function () {
     ( function ( options ) {
         var vars = [],
             hash;
-        var indexOptions = window.location.href.indexOf( '?' );
-        if ( indexOptions < 0 ) return;
+        if ( !window.location.search ) return;
 
-        var hashes = window.location.href.slice( indexOptions + 1 ).split( '&' );
+        // slice(1) to remove leading '?'
+        var hashes = window.location.search.slice( 1 ).split( '&' );
         for ( var i = 0; i < hashes.length; i++ ) {
             hash = hashes[ i ].split( '=' );
             var element = hash[ 0 ];

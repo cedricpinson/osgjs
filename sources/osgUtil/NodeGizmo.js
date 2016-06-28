@@ -161,6 +161,7 @@ var NodeGizmo = function ( viewer ) {
 
 // picking masks
 NodeGizmo.NO_PICK = 1 << 0;
+
 NodeGizmo.PICK_ARC_X = 1 << 1;
 NodeGizmo.PICK_ARC_Y = 1 << 2;
 NodeGizmo.PICK_ARC_Z = 1 << 3;
@@ -172,6 +173,8 @@ NodeGizmo.PICK_ARROW_Z = 1 << 6;
 NodeGizmo.PICK_PLANE_X = 1 << 7;
 NodeGizmo.PICK_PLANE_Y = 1 << 8;
 NodeGizmo.PICK_PLANE_Z = 1 << 9;
+
+NodeGizmo.NO_FULL_CIRCLE = 1 << 10; // don't display the full non pickable circle (visual cue)
 
 NodeGizmo.PICK_ARC = NodeGizmo.PICK_ARC_X | NodeGizmo.PICK_ARC_Y | NodeGizmo.PICK_ARC_Z;
 NodeGizmo.PICK_ARROW = NodeGizmo.PICK_ARROW_X | NodeGizmo.PICK_ARROW_Y | NodeGizmo.PICK_ARROW_Z;
@@ -294,6 +297,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // children 0 is full arc
         var rotChildren = this._rotateNode.getChildren();
+        rotChildren[ 0 ].setNodeMask( mask & NodeGizmo.NO_FULL_CIRCLE ? 0x0 : NodeGizmo.NO_PICK );
         rotChildren[ 1 ].setNodeMask( mask & NodeGizmo.PICK_ARC_X ? NodeGizmo.PICK_ARC_X : 0x0 );
         rotChildren[ 2 ].setNodeMask( mask & NodeGizmo.PICK_ARC_Y ? NodeGizmo.PICK_ARC_Y : 0x0 );
         rotChildren[ 3 ].setNodeMask( mask & NodeGizmo.PICK_ARC_Z ? NodeGizmo.PICK_ARC_Z : 0x0 );
