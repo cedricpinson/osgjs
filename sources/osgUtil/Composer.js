@@ -181,9 +181,10 @@ Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
                 var inputTexture = stateSet.getTextureAttribute( 0, 'Texture' );
                 if ( inputTexture === undefined ) {
                     Notify.warn( 'Composer can\'t find any information to setup texture output size' );
+                } else {
+                    w = inputTexture.getWidth();
+                    h = inputTexture.getHeight();
                 }
-                w = inputTexture.getWidth();
-                h = inputTexture.getHeight();
             }
 
             // is it the last filter and we want to render to screen ?
@@ -1218,9 +1219,15 @@ Composer.Filter.SSAO = function ( options ) {
 
         if ( options.radius !== undefined )
             radius = options.radius;
+        var textureNormal = options.normal;
+        var texturePosition = options.position;
+        var w = textureNormal.getWidth();
+        var h = textureNormal.getHeight();
+        this._size = Vec2.createAndSet( w, h );
+
+        stateSet.setTextureAttributeAndModes( 0, textureNormal );
+        stateSet.setTextureAttributeAndModes( 1, texturePosition );
     }
-    var textureNormal = options.normal;
-    var texturePosition = options.position;
 
     this._radius = radius;
     this._nbSamples = nbSamples;
@@ -1233,13 +1240,6 @@ Composer.Filter.SSAO = function ( options ) {
     stateSet.addUniform( Uniform.createInt1( 1, 'Texture1' ) );
     stateSet.addUniform( Uniform.createInt1( 2, 'Texture2' ) );
     stateSet.addUniform( Uniform.createFloat1( 0.1, 'AngleLimit' ) );
-
-    var w = textureNormal.getWidth();
-    var h = textureNormal.getHeight();
-    this._size = Vec2.createAndSet( w, h );
-
-    stateSet.setTextureAttributeAndModes( 0, textureNormal );
-    stateSet.setTextureAttributeAndModes( 1, texturePosition );
 
     this.initNoise();
     this._fragmentName = 'SSAO';
