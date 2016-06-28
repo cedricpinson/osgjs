@@ -19,33 +19,35 @@ var Vec2 = require( 'osg/Vec2' );
 var Vec3 = require( 'osg/Vec3' );
 
 
-/*
- Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
+/**
+ * Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
+ *
+ * how to use it:
 
- how to use it:
-
- // example how to blur a texture and render it to screen
- var myTexture; // imagine it's your texture you want to process
- var composer = new Composer();
- composer.addPass(new Composer.Filter.InputTexture(myTexture));
- composer.addPass(new Composer.Filter.HBlur(5));
- composer.addPass(new Composer.Filter.VBlur(5));
- composer.renderToScreen(1200, 900);
- composer.build(); // if you dont build manually it will be done in the scenegraph while upading
- rootnode.addChild(composer);
-
- // now you can imagine to some process and use the result as input texture for a geometry
- var myTexture; // imagine it's your texture you want to process
- var myResultTexture = new Texture(); // imagine it's your texture you want to process
- myResultTexture.setTextureSize(1200,900);
- var composer = new Composer();
- composer.addPass(new Composer.Filter.InputTexture(myTexture));
- composer.addPass(new Composer.Filter.HBlur(5));
- composer.addPass(new Composer.Filter.VBlur(5), resultTexture);
-
- myGeometry.getStateSet().setTextureAttributeAndModes(0, resultTexture);
- rootnode.addChild(composer);
-
+ * @example 
+ * //how to blur a texture and render it to screen
+ * var myTexture; // imagine it's your texture you want to process
+ * var composer = new Composer();
+ * composer.addPass(new Composer.Filter.InputTexture(myTexture));
+ * composer.addPass(new Composer.Filter.HBlur(5));
+ * composer.addPass(new Composer.Filter.VBlur(5));
+ * composer.renderToScreen(1200, 900);
+ * composer.build(); // if you dont build manually it will be done in the scenegraph while upading
+ * rootnode.addChild(composer);
+ *
+ * // now you can imagine to some process and use the result as input texture for a geometry
+ * var myTexture; // imagine it's your texture you want to process
+ * var myResultTexture = new Texture(); // imagine it's your texture you want to process
+ * myResultTexture.setTextureSize(1200,900);
+ * var composer = new Composer();
+ * composer.addPass(new Composer.Filter.InputTexture(myTexture));
+ * composer.addPass(new Composer.Filter.HBlur(5));
+ * composer.addPass(new Composer.Filter.VBlur(5), resultTexture);
+ *
+ * myGeometry.getStateSet().setTextureAttributeAndModes(0, resultTexture);
+ * rootnode.addChild(composer);
+ * @class
+ * @memberof osgUtil
  */
 
 var Composer = function () {

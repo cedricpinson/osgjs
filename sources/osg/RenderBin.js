@@ -12,6 +12,8 @@ var osgMath = require( 'osg/Math' );
  * A renderBin can contain further renderBins producing a tree hierarchy of renderBins.
  *
  * https://github.com/openscenegraph/osg/blob/master/include/osgUtil/RenderBin#L27-L32
+ * @class RenderBin
+ * @memberof osg
  */
 var RenderBin = function ( sortMode ) {
     Object.call( this );

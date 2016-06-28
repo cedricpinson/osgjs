@@ -4,7 +4,11 @@ var Vec3 = require( 'osg/Vec3' );
 var KdTreeRayIntersector = require( 'osg/KdTreeRayIntersector' );
 var TriangleSphereIntersector = require( 'osgUtil/TriangleSphereIntersector' );
 
-
+/**
+ * @class
+ * @memberof osg
+ * @extends KdTreeRayIntersector
+ */
 var KdTreeSphereIntersector = function () {
 
     this._intersector = new TriangleSphereIntersector();

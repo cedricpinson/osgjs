@@ -102,6 +102,10 @@ LineCustomIntersector.prototype = MACROUTILS.objectInherit( LineSegmentIntersect
 //                 |                       |                         |
 //              PickArc                PickArrow                  PickPlane
 //
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var NodeGizmo = function ( viewer ) {
     MatrixTransform.call( this );
 

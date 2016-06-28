@@ -6,6 +6,7 @@ var MACROUTILS = require( 'osg/Utils' );
 /**
  *  ShadowTechnique provides an implementation interface of shadow techniques.
  *  @class ShadowTechnique
+ *  @memberof osgShadow
  */
 var ShadowTechnique = function () {
     Object.call( this );

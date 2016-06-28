@@ -4,6 +4,7 @@ var MACROUTILS = require( 'osg/Utils' );
 /**
  *  Object class
  *  @class Object
+ *  @memberof osg
  */
 var Object = function () {
     this._name = undefined;

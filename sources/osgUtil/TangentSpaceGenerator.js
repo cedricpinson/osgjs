@@ -9,6 +9,10 @@ var Vec3 = require( 'osg/Vec3' );
 
 var osg = MACROUTILS;
 
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var TangentSpaceGenerator = function () {
     NodeVisitor.call( this );
     this._T = undefined;

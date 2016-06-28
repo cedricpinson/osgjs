@@ -2,7 +2,11 @@
 var osgMath = require( 'osg/Math' );
 
 
-/** @class Vec2 Operations */
+/** 
+ * Vec2 Operations
+ * @class
+ * @memberof osg
+ */
 var Vec2 = {
     create: function () {
         return new Float32Array( 2 );
@@ -60,8 +64,10 @@ var Vec2 = {
     },
 
     /**
-      normalize an Array of 2 elements and write it in r
-   */
+     *  normalize an Array of 2 elements and write it in r
+     *  @method
+     *  @memberof osg.Vec2
+     */
     normalize: function ( a, r ) {
         var norm = this.length2( a );
         if ( norm > 0.0 ) {
@@ -76,15 +82,19 @@ var Vec2 = {
     },
 
     /**
-      Compute the dot product
-  */
+     * Compute the dot product
+     *  @method
+     *  @memberof osg.Vec2
+     */
     dot: function ( a, b ) {
         return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ];
     },
 
     /**
-     Compute a - b and put the result in r
-   */
+     * Compute a - b and put the result in r
+     *  @method
+     *  @memberof osg.Vec2
+     */
     sub: function ( a, b, r ) {
         r[ 0 ] = a[ 0 ] - b[ 0 ];
         r[ 1 ] = a[ 1 ] - b[ 1 ];

@@ -9,7 +9,8 @@ var Notify = require( 'osg/Notify' );
 /**
  * ShadowReceiveAttribute encapsulate Shadow Main State object
  * @class ShadowReceiveAttribute
- * @inherits StateAttribute
+ * @memberof osgShadow
+ * @extends StateAttribute
  */
 var ShadowReceiveAttribute = function ( lightNum, disable ) {
     StateAttribute.call( this );

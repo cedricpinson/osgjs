@@ -7,7 +7,8 @@ var TransformEnums = require( 'osg/TransformEnums' );
 /**
  * Transform - base class for Transform type node ( Camera, MatrixTransform )
  * @class Transform
- * @inherits Node
+ * @memberof osg
+ * @extends Node
  */
 var Transform = function () {
     Node.call( this );

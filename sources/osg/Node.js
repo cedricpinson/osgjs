@@ -14,6 +14,8 @@ var TransformEnums = require( 'osg/TransformEnums' );
 /**
  *  Node that can contains child node
  *  @class Node
+ *  @memberof osg
+ *  @extends Object
  */
 var Node = function () {
     Object.call( this );
@@ -45,9 +47,11 @@ var nodeGetMat = Node._reservedMatrixStack.get.bind( Node._reservedMatrixStack )
 /** @lends Node.prototype */
 Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
     /**
-      Return StateSet and create it if it does not exist yet
-      @type StateSet
-   */
+     * Return StateSet and create it if it does not exist yet
+     * @method
+     * @memberof osg.StateSet
+     * @return {[type]} [description]
+     */
     getOrCreateStateSet: function () {
         if ( this.stateset === undefined ) {
             this.stateset = new StateSet();
@@ -85,36 +89,40 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
     },
 
     /**
-     <p>
-      Set update node callback, called during update traversal.
-      The Object must have the following method
-      update(node, nodeVisitor) {}
-      note, callback is responsible for scenegraph traversal so
-      they must call traverse(node,nv) to ensure that the
-      scene graph subtree (and associated callbacks) are traversed.
-      </p>
-      <p>
-      Here a dummy UpdateCallback example
-      </p>
-      @example
-      var DummyUpdateCallback = function() {};
-      DummyUpdateCallback.prototype = {
-          update: function(node, nodeVisitor) {
-              return true;
-          }
-      };
-
-      @param Oject callback
-   */
+     * Set update node callback, called during update traversal.
+     * The Object must have the following method
+     * update(node, nodeVisitor) {}
+     * note, callback is responsible for scenegraph traversal so
+     * they must call traverse(node,nv) to ensure that the
+     * scene graph subtree (and associated callbacks) are traversed.
+     * Here a dummy UpdateCallback example
+     * @method
+     * @memberof osg.Node
+     * @example
+     * var DummyUpdateCallback = function() {};
+     * DummyUpdateCallback.prototype = {
+     *     update: function(node, nodeVisitor) {
+     *         return true;
+     *     }
+     * };
+     * 
+     * @param Oject callback
+     * @method
+     * @memberof osg.Node
+     */
     setUpdateCallback: function ( cb ) {
         if ( !this._updateCallbacks.length )
             this.addUpdateCallback( cb );
         else
             this._updateCallbacks[ 0 ] = cb;
     },
-    /** Get update node callback, called during update traversal.
-      @type Oject
-   */
+
+    /**
+     * Get update node callback, called during update traversal.
+     * @memberof osg.Node
+     * @method
+     * @return {[type]}
+     */
     getUpdateCallback: function () {
         return this._updateCallbacks[ 0 ];
     },
@@ -133,26 +141,24 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 
 
     /**
-     <p>
-      Set cull node callback, called during cull traversal.
-      The Object must have the following method
-      cull(node, nodeVisitor) {}
-      note, callback is responsible for scenegraph traversal so
-      they must return true to traverse.
-      </p>
-      <p>
-      Here a dummy CullCallback example
-      </p>
-      @example
-      var DummyCullCallback = function() {};
-      DummyCullCallback.prototype = {
-          cull: function(node, nodeVisitor) {
-              return true;
-          }
-      };
-
-      @param Oject callback
-   */
+     * Set cull node callback, called during cull traversal.
+     * The Object must have the following method
+     * cull(node, nodeVisitor) {}
+     * note, callback is responsible for scenegraph traversal so
+     * they must return true to traverse.>
+     * @example
+     * //Here a dummy CullCallback example
+     * var DummyCullCallback = function() {};
+     * DummyCullCallback.prototype = {
+     *     cull: function(node, nodeVisitor) {
+     *         return true;
+     *     }
+     * };
+     *
+     * @param Oject callback
+     * @method
+     * @memberof osg.Node
+     */
     setCullCallback: function ( cb ) {
         this._cullCallback = cb;
     },

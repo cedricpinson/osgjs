@@ -1,6 +1,10 @@
 'use strict';
 
-/** @class Vec4 Operations */
+/** 
+ * Vec4 Operations
+ * @class
+ * @memberof osg
+ */
 var Vec4 = {
 
     create: function () {

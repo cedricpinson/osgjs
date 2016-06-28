@@ -9,6 +9,8 @@ var WebglCaps = require( 'osg/WebGLCaps' );
 /**
  * FrameBufferObject manage fbo / rtt
  * @class FrameBufferObject
+ * @memberof osg
+ * @extends GLObject StateAttribute
  */
 var FrameBufferObject = function () {
 

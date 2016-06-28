@@ -1,5 +1,9 @@
 'use strict';
+/**
+ * @class
+ * @memberof osg
 
+ */
 var Notify = {};
 
 Notify.DEBUG = 0;
@@ -11,7 +15,10 @@ Notify.ERROR = 4;
 Notify.console = window.console;
 
 // #FIXME getStackTrace was initially in webgl-utils (as a global function) but only used in this file
-/** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
+/**
+ * Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
+ * @method
+ * @memberof osg.Notify
  */
 function getStackTrace( err ) {
     if ( Notify.console && Notify.console.trace ) {
@@ -54,6 +61,8 @@ function getStackTrace( err ) {
  * @param { fold  }  sometimes you want to hide looooong text
  * @param { noTrace  } where that log came from ?
  * @param { level  } what severity is that log (gives text color too )
+ * @method
+ * @memberof osg.Notify
  */
 function logSub( str, level, fold, noTrace ) {
 

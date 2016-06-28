@@ -5,7 +5,13 @@ var Vec4 = require( 'osg/Vec4' );
 var Uniform = require( 'osg/Uniform' );
 var Map = require( 'osg/Map' );
 
-// Define a material attribute
+
+/**
+ * Define a material attribute
+ * @class
+ * @memberof osg
+ * @extends StateAttribute
+ */
 var Material = function () {
     StateAttribute.call( this );
     this._ambient = Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 );

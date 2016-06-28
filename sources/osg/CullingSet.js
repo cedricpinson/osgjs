@@ -1,6 +1,11 @@
 'use strict';
 var Polytope = require( 'osg/Polytope' );
 
+
+/**
+ * @class
+ * @memberof osg
+ */
 var CullingSet = function () {
 
     this._mask = CullingSet.DEFAULT_CULLING;

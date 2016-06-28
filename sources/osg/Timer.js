@@ -21,7 +21,10 @@ var now = ( function () {
     };
 } )();
 
-
+/**
+ * @class
+ * @memberof osg
+ */
 var Timer = function () {};
 
 Timer.instance = function () {

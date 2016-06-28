@@ -14,7 +14,9 @@ var Node = require( 'osg/Node' );
  * scales or rotates to keep its children aligned with screen coordinates.
  * W.r.t. AutorotateModes only rotate to screen is supported right now.
  * More AutorotateModes modes should be addressed in the future.
- * @class AutoTransform
+ * @class
+ * @memberof osg
+ * @extends Transform
  */
 
 var AutoTransform = function () {
@@ -39,7 +41,6 @@ var AutoTransform = function () {
     this._previousPosition = Vec3.create();
 };
 
-/** @lends Autotransform.prototype */
 AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Transform.prototype, {
 
     getMatrix: function () {

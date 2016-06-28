@@ -4,7 +4,7 @@ var View = require( 'osgViewer/View' );
 var Viewer = require( 'osgViewer/Viewer' );
 var EventProxy = require( 'osgViewer/eventProxy/EventProxy' );
 
-
+/** @namespace osgViewer */
 var osgViewer = {};
 
 osgViewer.Renderer = Renderer;

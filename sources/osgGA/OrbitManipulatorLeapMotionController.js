@@ -3,7 +3,10 @@ var Notify = require( 'osg/Notify' );
 var Vec2 = require( 'osg/Vec2' );
 var Vec3 = require( 'osg/Vec3' );
 
-
+/**
+ * @class
+ * @memberof osgGA
+ */
 var OrbitManipulatorLeapMotionController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();

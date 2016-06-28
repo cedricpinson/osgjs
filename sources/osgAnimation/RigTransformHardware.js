@@ -4,10 +4,10 @@ var StateAttribute = require( 'osg/StateAttribute' );
 var SkinningAttribute = require( 'osgAnimation/SkinningAttribute' );
 var CollectBoneVisitor = require( 'osgAnimation/CollectBoneVisitor' );
 
-
 /**
  * Hardware implementation for rigGeometry
- *
+ *  @class
+ *  @memberof osgAnimation
  */
 var RigTransformHardware = function () {
     this._isInitialized = false;

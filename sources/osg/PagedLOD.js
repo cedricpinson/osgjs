@@ -8,7 +8,9 @@ var Vec3 = require( 'osg/Vec3' );
 
 /**
  *  PagedLOD that can contains paged child nodes
- *  @class PagedLod
+ *  @class
+ *  @memberof osg
+ *  @extends Lod
  */
 var PagedLOD = function () {
     Lod.call( this );
@@ -25,6 +27,7 @@ var PagedLOD = function () {
 /**
  *  PerRangeData utility structure to store per range values
  *  @class PerRangeData
+ *  @memberof osg.PagedLOD
  */
 var PerRangeData = function () {
     this.filename = '';

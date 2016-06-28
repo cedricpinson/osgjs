@@ -20,12 +20,13 @@ var isPowerOf2 = function ( x ) {
 
 /**
  * Texture encapsulate webgl texture object
- * @class Texture
- * Not that dirty here is mainly for texture binding
+ * Note that dirty here is mainly for texture binding
  * any dirty will cause re-bind
  * hint: don't dirty a texture attached to a camera/framebuffer
  * it will end blank
- * @inherits StateAttribute
+ * @class Texture
+ * @memberof osg
+ * @extends GLObject StateAttribute
  */
 var Texture = function () {
 

@@ -4,7 +4,12 @@ var Matrix = require( 'osg/Matrix' );
 var Notify = require( 'osg/Notify' );
 
 
-// Base class for Camera / User manipulator
+
+/**
+ * Base class for Camera / User manipulator
+ * @class
+ * @memberof osgGA
+ */
 var Manipulator = function ( boundStrategy ) {
     this._boundStrategy = boundStrategy;
     if ( this._boundStrategy === undefined )

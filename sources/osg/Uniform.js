@@ -9,6 +9,7 @@ var Vec4 = require( 'osg/Vec4' );
 /**
  * Uniform manage variable used in glsl shader.
  * @class Uniform
+ * @memberof osg
  */
 var Uniform = function ( name ) {
     this._transpose = false;

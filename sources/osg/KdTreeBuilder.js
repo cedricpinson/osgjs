@@ -3,7 +3,12 @@ var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var KdTree = require( 'osg/KdTree' );
 
-
+/**
+ * @class
+ * @memberof osg
+ * @param {options}
+ * @extends NodeVisitor
+ */
 var KdTreeBuilder = function ( options ) {
     NodeVisitor.call( this );
     this._buildOptions = options !== undefined ? options : {

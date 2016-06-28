@@ -4,7 +4,10 @@ var NodeVisitor = require( 'osg/NodeVisitor' );
 var Notify = require( 'osg/Notify' );
 var Bone = require( 'osgAnimation/Bone' );
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var CollectBoneVisitor = function () {
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
     this._boneMap = {};

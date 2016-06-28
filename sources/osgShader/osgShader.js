@@ -7,7 +7,7 @@ var nodeFactory = require( 'osgShader/nodeFactory' );
 var node = require( 'osgShader/node' );
 var utils = require( 'osgShader/utils' );
 
-
+/** @namespace osgShader */
 var lib = {};
 
 lib.Compiler = Compiler;

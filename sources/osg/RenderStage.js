@@ -16,6 +16,9 @@ var Vec4 = require( 'osg/Vec4' );
  * of which must be called before the rendering of this stage.  These
  * 'pre' rendering stages are used for advanced rendering techniques
  * like multistage pixel shading or impostors.
+ * @class
+ * @memberof osg
+ * @extends RenderBin
  */
 var RenderStage = function () {
 

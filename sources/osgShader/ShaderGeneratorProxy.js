@@ -4,6 +4,10 @@ var ShadowCastShaderGenerator = require( 'osgShadow/ShadowCastShaderGenerator' )
 var DisplayNormalVisitor = require( 'osgUtil/DisplayNormalVisitor' );
 var DisplayGeometryVisitor = require( 'osgUtil/DisplayGeometryVisitor' );
 
+/**
+ * @class 
+ * @memberof osgShader
+ */
 var ShaderGeneratorProxy = function () {
 
     // object of shader generators

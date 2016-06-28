@@ -2,7 +2,11 @@
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
 var Notify = require( 'osg/Notify' );
 
-// This class can be used to visit all the triangles of a geometry
+/**
+ * This class can be used to visit all the triangles of a geometry
+ * @class 
+ * @memberof osg
+ */
 var TriangleIndexFunctor = function () {
 
     if ( arguments && arguments.length ) {

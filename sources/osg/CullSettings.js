@@ -1,6 +1,9 @@
 'use strict';
 
-
+/**
+ * @class 
+ * @memberof osg
+ */
 var CullSettings = function () {
 
     // Not doing a this.reset()

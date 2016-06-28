@@ -88,7 +88,10 @@ var OptionsURL = ( function () {
     return options;
 } )();
 
-
+/**
+ * @class
+ * @memberof osgViewer
+ */
 var Viewer = function ( canvas, userOptions, error ) {
     View.call( this );
 

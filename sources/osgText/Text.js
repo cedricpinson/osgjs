@@ -12,6 +12,7 @@ var BlendFunc = require( 'osg/BlendFunc' );
 
 /**
  *  @class Text: Text 2D using a Canvas2D as a texture for a textured quad.
+ *  @memberof osgText
  *  Notes: The OSGjs Text has been implemented like OSG osgText::Text as much as possible. However there are some
  *  things that should be noted:
  *  - This Text is far more simple than OSG ones, it only supports basic functionality.

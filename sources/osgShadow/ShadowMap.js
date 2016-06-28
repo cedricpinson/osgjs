@@ -24,9 +24,13 @@ var ShadowTechnique = require( 'osgShadow/ShadowTechnique' );
 var ShadowTexture = require( 'osgShadow/ShadowTexture' );
 
 
-// Custom camera cull callback
-// we customize it just to avoid to add extra 'virtual' function
-// on the shadowTecnique class
+/**
+ * Custom camera cull callback
+ * we customize it just to avoid to add extra 'virtual' function
+ * on the shadowTecnique class
+ * @class 
+ * @memberof @osgShadow
+ */
 var CameraCullCallback = function ( shadowTechnique ) {
     this._shadowTechnique = shadowTechnique;
 };

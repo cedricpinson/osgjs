@@ -2,7 +2,12 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 
-
+/**
+ * Manage Billboarding attribute
+ * @class
+ * @memberof osg
+ * @extends StateAttribute
+ */
 var BillboardAttribute = function () {
     StateAttribute.call( this );
     this._attributeEnable = false;

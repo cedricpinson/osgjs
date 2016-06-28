@@ -3,6 +3,11 @@ var P = require( 'bluebird' );
 var MACROUTILS = require( 'osg/Utils' );
 var Image = require( 'osg/Image' );
 
+/**
+ * @class 
+ * @memberof osg
+ * @extends Image
+ */
 
 var ImageStream = function ( video ) {
     Image.call( this, video );

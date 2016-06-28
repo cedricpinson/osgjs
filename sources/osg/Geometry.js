@@ -9,6 +9,7 @@ var BufferArrayProxy = require( 'osg/BufferArrayProxy' );
 /**
  * Geometry manage array and primitives to draw a geometry.
  * @class Geometry
+ * @memberof osg
  */
 
 var Geometry = function () {
@@ -86,6 +87,8 @@ var Geometry = function () {
  * list. If you dont have Proxy and you still want to use the VAO code path, replace
  * OSG.osg.Geometry.enableVAO = true at the begining of your application, but be sure to
  * not change vertexes attributes without calling dirty after.
+ * @method
+ * @memberof osg.Geometry
  */
 Geometry.enableVAO = Boolean( window.Proxy );
 if ( Geometry.enableVAO ) Notify.log( 'enable VAO' );
@@ -166,10 +169,14 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
      * Return the primitiveset list
      * If you modify something inside this array
      * you must call dirty() on the Geometry
+     * @method 
+     * @memberof osg.Geometry
+     * @return {[type]} [description]
      */
     getPrimitiveSetList: function () {
         return this.primitives;
     },
+
 
     /**
      * Set the buffer array on the attribute name key
@@ -178,6 +185,10 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
      *
      * if you change a buffer a dirty will be automatically
      * called to rebuild the VAO if needed.
+     * @param {[type]}
+     * @param {[type]}
+     * @method
+     * @memberof osg.Geometry
      */
     setVertexAttribArray: function ( key, array ) {
         if ( this._attributes[ key ] !== array ) {
@@ -241,6 +252,8 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
     /**
      *  Generate a function specific to the Geometry/Program
      *  two version one using VAO and a regular one
+     *  @method
+     *  @memberof osg.Geometry
      */
     generateDrawCommand: ( function () {
 

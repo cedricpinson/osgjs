@@ -10,6 +10,7 @@ var UpdateBone = require( 'osgAnimation/UpdateBone' );
 /**
  *  Bone
  *  @class Bone
+ *  @memberof osgAnimation
  */
 var Bone = function ( name ) {
     if ( name !== undefined )

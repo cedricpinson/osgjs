@@ -7,8 +7,8 @@ var Object = require( 'osg/Object' );
 
 
 /**
- *  ValidateSkeletonVisitor
- *  @class ValidateSkeletonVisitor
+ *  @class
+ *  @memberof osgAnimation
  */
 var ValidateSkeletonVisitor = function () {
     NodeVisitor.call( this );

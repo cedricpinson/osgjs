@@ -12,6 +12,13 @@ osgPool.memoryPools = {};
  *  TODO: Debug Mode: check if not putting object twice, etc.
  *  USAGE: osg.memoryPools.stateGraph = new OsgObjectMemoryPool(osg.StateGraph).grow(50);
  */
+
+/**
+ * @class
+ * @memberof osgUtil
+ * @example
+ *  osg.memoryPools.stateGraph = new OsgObjectMemoryPool(osg.StateGraph).grow(50);
+ */
 osgPool.OsgObjectMemoryPool = function ( ObjectClassName ) {
     return {
         _memPool: [],

@@ -5,7 +5,10 @@ var Matrix = require( 'osg/Matrix' );
 var Quat = require( 'osg/Quat' );
 var Target = require( 'osgAnimation/Target' );
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var StackedQuaternion = function ( name, quat ) {
     Object.call( this );
     this._target = Target.createQuatTarget( quat || Quat.identity );

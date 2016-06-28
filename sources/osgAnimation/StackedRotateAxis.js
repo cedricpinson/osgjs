@@ -6,7 +6,10 @@ var Vec3 = require( 'osg/Vec3' );
 var Quat = require( 'osg/Quat' );
 var Target = require( 'osgAnimation/Target' );
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var StackedRotateAxis = function ( name, axis, angle ) {
     Object.call( this );
     this._axis = Vec3.set( 0, 0, 1, Vec3.create() );

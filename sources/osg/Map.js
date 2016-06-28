@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * @class 
+ * @memberof osg
+ */
 var Map = function ( obj ) {
 
     window.Object.defineProperty( this, '_dirty', {

@@ -7,7 +7,8 @@ var Target = require( 'osgAnimation/Target' );
 
 
 /**
- *  StackedTranslate
+ *  @class
+ *  @memberof osgAnimation
  */
 var StackedTranslate = function ( name, translate ) {
     Object.call( this );

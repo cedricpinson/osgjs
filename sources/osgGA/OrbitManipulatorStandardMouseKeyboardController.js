@@ -2,7 +2,10 @@
 var osgMath = require( 'osg/Math' );
 var OrbitManipulatorEnums = require( 'osgGA/OrbitManipulatorEnums' );
 
-
+/**
+ * @class
+ * @memberof osgGA
+ */
 var OrbitManipulatorStandardMouseKeyboardController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();

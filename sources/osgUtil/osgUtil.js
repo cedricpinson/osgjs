@@ -16,7 +16,7 @@ var TriangleIntersect = require( 'osgUtil/TriangleIntersector' );
 var WebVRCustom = require( 'osgUtil/WebVRCustom' );
 var WebVR = require( 'osgUtil/WebVR' );
 
-
+/** @namespace osgUtil */
 var osgUtil = {};
 
 osgUtil.Composer = Composer;

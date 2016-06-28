@@ -11,7 +11,7 @@ var ShadowTechnique = require( 'osgShadow/ShadowTechnique' );
 var ShadowTexture = require( 'osgShadow/ShadowTexture' );
 var ShadowedScene = require( 'osgShadow/ShadowedScene' );
 
-
+/** @namespace osgShadow */
 var osgShadow = {};
 
 osgShadow.ShadowCastAttribute = ShadowCastAttribute;

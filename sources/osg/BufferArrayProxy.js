@@ -1,7 +1,10 @@
 'use strict';
 var BufferArray = require( 'osg/BufferArray' );
-
-
+/**
+ * Proxy to manage BufferArrays
+ * @class 
+ * @memberof osg
+ */
 var BufferArrayProxy = function ( bufferArray ) {
 
     this._initialBufferArray = undefined;

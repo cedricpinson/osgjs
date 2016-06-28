@@ -2,7 +2,10 @@
 var Notify = require( 'osg/Notify' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
 var Texture;
-
+/** 
+ * @class
+ * @memberof osg
+ */
 var WebGLCaps = function () {
 
     // circular deps with texture

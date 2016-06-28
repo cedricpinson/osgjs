@@ -2,7 +2,11 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
 
-
+/**
+ * @class
+ * @memberof osg
+ * @extends Object
+ */
 var StateAttribute = function () {
     Object.call( this );
 };

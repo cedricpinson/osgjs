@@ -4,12 +4,16 @@ var shaderLib = require( 'osgShader/shaderLib' );
 var shadowShaderLib = require( 'osgShadow/shaderLib' );
 
 
-//     Shader as vert/frag/glsl files Using requirejs text plugin
-//     Preprocess features like:    //
-//     - Handle (recursive) include, avoiding code repeat and help code factorization
-//     - Handle per shader and global define/precision
 
 
+/**
+ * Shader as vert/frag/glsl files Using requirejs text plugin
+ * Preprocess features like:
+ * - Handle (recursive) include, avoiding code repeat and help code factorization
+ * - Handle per shader and global define/precision
+ * @class 
+ * @memberof osgShader
+ */
 var ShaderProcessor = function ( createInstance ) {
 
     if ( !createInstance ) {

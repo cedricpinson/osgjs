@@ -1,4 +1,8 @@
 'use strict';
+/** 
+ * @class Options
+ * @memberof osgDB
+ */
 var defaultOptions = {
 
     // prefix to built url to load resource

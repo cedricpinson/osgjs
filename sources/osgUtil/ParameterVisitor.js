@@ -218,7 +218,10 @@ ArraySlider.prototype = {
     }
 };
 
-
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var ParameterVisitor = function () {
     NodeVisitor.call( this );
 

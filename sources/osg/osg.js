@@ -77,7 +77,7 @@ var Timer = require( 'osg/Timer' );
 var TimerGPU = require( 'osg/TimerGPU' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 
-
+/** @namespace osg */
 var osg = {};
 osg.AutoTransform = AutoTransform;
 osg.BillboardAttribute = BillboardAttribute;

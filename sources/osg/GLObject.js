@@ -1,7 +1,11 @@
 'use strict';
 
-// Base class for GLResources: Textures, Buffers, Programs, Shaders, FrameBuffers and RenderBuffers
-// It holds a reference to the graphic context that is needed for resource deletion
+/**
+ * Base class for GLResources: Textures, Buffers, Programs, Shaders, FrameBuffers and RenderBuffers
+ * It holds a reference to the graphic context that is needed for resource deletion
+ * @class 
+ * @memberof osg
+ */
 
 var GLObject = function () {
     this._gl = undefined;

@@ -6,6 +6,7 @@ var PrimitiveSet = require( 'osg/PrimitiveSet' );
 /**
  * DrawArrays manage rendering primitives
  * @class DrawArrays
+ * @memberof osg
  */
 var DrawArrays = function ( mode, first, count ) {
     this.mode = mode;

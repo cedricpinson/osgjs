@@ -6,6 +6,10 @@ var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
 var Target = require( 'osgAnimation/Target' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var UpdateMorph = function () {
     AnimationUpdateCallback.call( this );
 

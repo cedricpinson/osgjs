@@ -4,9 +4,10 @@ var Matrix = require( 'osg/Matrix' );
 
 /**
  *  Prevents Memory fragmentation, GC heavy usage
- *    using pre-allocated memory segment
- *    allowing reuse of memory
+ *  using pre-allocated memory segment
+ *  allowing reuse of memory
  *  @class MatrixMemoryPool
+ *  @memberof osg
  */
 var MatrixMemoryPool = function () {
 

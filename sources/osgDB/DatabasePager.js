@@ -9,6 +9,7 @@ var Timer = require( 'osg/Timer' );
  * Database paging class which manages the loading of files
  * and synchronizing of loaded models with the main scene graph.
  *  @class DatabasePager
+ *  @memberof osgDB
  */
 var DatabasePager = function () {
     this._pendingRequests = [];

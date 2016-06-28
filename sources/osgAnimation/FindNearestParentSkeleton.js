@@ -5,9 +5,9 @@ var Skeleton = require( 'osgAnimation/Skeleton' );
 
 
 /**
- * FindNearestParentSkeleton
+ *  @class
+ *  @memberof osgAnimation
  */
-
 var FindNearestParentSkeleton = function () {
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
     this._root = undefined;

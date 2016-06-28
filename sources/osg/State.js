@@ -9,7 +9,12 @@ var Stack = require( 'osg/Stack' );
 var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
-
+/**
+ * @class
+ * @memberof osg
+ * @extends Object
+ * @param {[type]} [shaderGeneratorProxy] [description]
+ */
 var State = function ( shaderGeneratorProxy ) {
     Object.call( this );
 
@@ -874,9 +879,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     /**
-     *  set a vertex array object.
-     *  return true if binded the vao and false
-     *  if was already binded
+     *  Set a vertex array object.
+     *  @return true if binded the vao and false if was already binded
+     *  @method
+     *  @memberof osg.State
      */
     setVertexArrayObject: function ( vao ) {
 

@@ -16,6 +16,10 @@ var MACROUTILS = require( 'osg/Utils' );
  * (otherwise it might break things)
  * visits whole underlying scene recursively
  */
+/**
+ * @class 
+ * @memberof @osgShadow
+ */
 var ShadowCasterVisitor = function ( mask ) {
     NodeVisitor.call( this );
     // mask setting to avoid casting shadows

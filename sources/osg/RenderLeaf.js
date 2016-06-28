@@ -46,7 +46,10 @@ CacheUniformApply.prototype = {
     }
 };
 
-
+/**
+ * @class
+ * @memberof osg
+ */
 var RenderLeaf = function () {
 
     this._parent = undefined;

@@ -10,6 +10,8 @@ var BoundingSphere = require( 'osg/BoundingSphere' );
 /**
  *  Lod that can contains child node
  *  @class Lod
+ *  @memberof osg
+ *  @extends Node
  */
 var Lod = function () {
     Node.call( this );
@@ -34,8 +36,13 @@ Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.pr
         return this._radius;
     },
 
-    /** Set the object-space reference radius of the volume enclosed by the LOD.
-     * Used to determine the bounding sphere of the LOD in the absence of any children.*/
+    /**
+     * Set the object-space reference radius of the volume enclosed by the LOD.
+     * Used to determine the bounding sphere of the LOD in the absence of any children.
+     * @param {[type]}
+     * @method
+     * @memberof osg.Lod
+     */
     setRadius: function ( radius ) {
         this._radius = radius;
     },

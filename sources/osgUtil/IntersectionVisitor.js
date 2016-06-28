@@ -5,7 +5,10 @@ var Matrix = require( 'osg/Matrix' );
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var TransformEnums = require( 'osg/TransformEnums' );
 
-
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var IntersectionVisitor = function () {
     NodeVisitor.call( this );
     // We could need to use a stack of intersectors in case we want

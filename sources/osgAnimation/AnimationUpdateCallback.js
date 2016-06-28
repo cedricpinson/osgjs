@@ -7,7 +7,8 @@ var MatrixTransform = require( 'osg/MatrixTransform' );
 
 /**
  *  AnimationUpdateCallback
- *  @class AnimationUpdateCallback
+ *  @class
+ *  @memberof osgAnimation
  */
 var AnimationUpdateCallback = function () {
     Object.call( this );

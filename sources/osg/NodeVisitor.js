@@ -1,5 +1,10 @@
 'use strict';
 
+
+/**
+ * @class
+ * @memberof osg
+ */
 var NodeVisitor = function ( traversalMode ) {
     /*jshint bitwise: false */
     this.traversalMask = ~0x0;

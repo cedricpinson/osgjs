@@ -23,6 +23,8 @@ var CADManipulatorHammerController = require( 'osgGA/CADManipulatorHammerControl
  *  - Left click/pan rotates around the pivot point.
  *  - Center/Right click or two-finger drag moves the view.
  *  - Spacebar resets the view.
+ *  @memberof osgGA
+ *  @extends Manipulator
  */
 
 var CADManipulator = function () {

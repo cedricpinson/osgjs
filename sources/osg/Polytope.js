@@ -4,10 +4,12 @@ var Plane = require( 'osg/Plane' );
 var MACROUTILS = require( 'osg/Utils' );
 var Vec4 = require( 'osg/Vec4' );
 /*jshint bitwise: false */
+
 /**
  * Polytope class for representing convex clipping volumes made up of a set of planes.
  * When adding planes, their normals should point inwards (into the volume)
  * @class Polytope
+ * @memberof osg
  */
 var Polytope = function () {
 
@@ -49,7 +51,13 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
     },
 
-    /** Create a Polytope which is a cube, centered at 0,0,0, with sides of 2 units.*/
+    /**
+     * Create a Polytope which is a cube, centered at 0,0,0, with sides of 2 units.
+     * @param {[type]}
+     * @param {[type]}
+     * @method
+     * @memberof osg.Polytope
+     */
     setToUnitFrustum: function ( withNear, withFar ) {
         if ( withNear === undefined ) withNear = true;
 
@@ -66,7 +74,11 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
 
-    /** Create a Polytope which is a equivalent to BoundingBox.*/
+    /**
+     * Create a Polytope which is a equivalent to BoundingBox.
+     * @method
+     * @memberof osg.Polytope
+     */
     setToBoundingBox: function ( bb ) {
         this._planeList.length = 0;
         this._planeList.push( Vec4.set( 1.0, 0.0, 0.0, -bb.getMin()[ 0 ], Plane.create() ) ); // left plane.
@@ -177,7 +189,11 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
 
-    /** Check whether a vertex is contained within clipping set.*/
+    /**
+     * Check whether a vertex is contained within clipping set.
+     * @method
+     * @memberof osg.Polytope
+     */
     containsVertex: function ( v ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] ) return true;
 
@@ -191,7 +207,13 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         return true;
     },
 
-    /** Check whether any part of vertex list is contained within clipping set.*/
+    /**
+     *  Check whether any part of vertex list is contained within clipping set.
+     * @param  {[type]}
+     * @return {[type]}
+     * @method
+     * @memberof osg.Polytope
+     */
     containsVertices: function ( vertices ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] ) return true;
 
@@ -213,11 +235,15 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         return false;
     },
 
-    /** Check whether any part of a bounding sphere is contained within clipping set.
-        Using a mask to determine which planes should be used for the check, and
-        modifying the mask to turn off planes which wouldn't contribute to clipping
-        of any internal objects.  This feature is used in osgUtil::CullVisitor
-        to prevent redundant plane checking.*/
+    /**
+     * Check whether any part of a bounding sphere is contained within clipping set.
+     * Using a mask to determine which planes should be used for the check, and
+     * modifying the mask to turn off planes which wouldn't contribute to clipping
+     * of any internal objects.  This feature is used in osgUtil::CullVisitor
+     * to prevent redundant plane checking.
+     * @method
+     * @memberof osg.Polytope
+     */
     containsBoundingSphere: function ( bs ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] || !bs.valid() ) return true;
 
@@ -245,10 +271,13 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
     /** Check whether any part of a bounding box is contained within clipping set.
-        Using a mask to determine which planes should be used for the check, and
-        modifying the mask to turn off planes which wouldn't contribute to clipping
-        of any internal objects.  This feature is used in osgUtil::CullVisitor
-        to prevent redundant plane checking.*/
+     * Using a mask to determine which planes should be used for the check, and
+     * modifying the mask to turn off planes which wouldn't contribute to clipping
+     * of any internal objects.  This feature is used in osgUtil::CullVisitor
+     * to prevent redundant plane checking.
+     * @method
+     * @memberof osg.Polytope
+     */
     containsBoundingBox: function ( bb ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] ) return true;
 
@@ -271,7 +300,13 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         return true;
     },
 
-    /** Check whether all of vertex list is contained with clipping set.*/
+    /**
+     * Check whether all of vertex list is contained with clipping set.
+     * @param  {[type]}
+     * @return {[type]}
+     * @method
+     * @memberof osg.Polytope
+     */
     containsAllOfVertices: function ( vertices ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] ) return false;
 
@@ -289,7 +324,13 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         return true;
     },
 
-    /** Check whether the entire bounding sphere is contained within clipping set.*/
+    /**
+     * Check whether the entire bounding sphere is contained within clipping set.
+     * @param  {[type]}
+     * @return {[type]}
+     * @method
+     * @memberof osg.Polytope
+     */
     containsAllOfBoundingSphere: function ( bs ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] ) return false;
 
@@ -307,7 +348,13 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         return true;
     },
 
-    /** Check whether the entire bounding box is contained within clipping set.*/
+    /**
+     *  Check whether the entire bounding box is contained within clipping set.
+     * @param  {[type]}
+     * @return {[type]}
+     * @method
+     * @memberof osg.Polytope
+     */
     containsAllOfBoundingBox: function ( bbox ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] ) return false;
 
@@ -325,8 +372,12 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         return true;
     },
 
-    /** Transform the clipping set by provide a pre inverted matrix.
-     * see transform for details. */
+    /**
+     * Transform the clipping set by provide a pre inverted matrix.
+     * see transform for details.
+     * @method
+     * @memberof osg.Polytope
+     */
     transformProvidingInverse: function ( matrix ) {
         if ( !this._maskStack[ this._maskStack.length - 1 ] ) return;
 

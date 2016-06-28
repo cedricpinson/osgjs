@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * @class
+ * @memberof osg
+ */
 var FrameStamp = function () {
     this._frame = 0;
     this._startSimulation = 0.0;

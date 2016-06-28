@@ -3,6 +3,7 @@
 /**
  * DrawArrayLengths manage rendering primitives
  * @class DrawArrayLengths
+ * @memberof osg
  */
 var DrawArrayLengths = function ( mode, first, array ) {
     this._mode = mode;
@@ -10,7 +11,6 @@ var DrawArrayLengths = function ( mode, first, array ) {
     this._arrayLengths = array.slice( 0 );
 };
 
-/** @lends DrawArrayLengths.prototype */
 DrawArrayLengths.prototype = {
     draw: function ( state ) {
         var gl = state.getGraphicContext();

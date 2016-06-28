@@ -1,4 +1,8 @@
 'use strict';
+/**
+ * @class Shape
+ * @memberof osg
+ */
 var Notify = require( 'osg/Notify' );
 var Vec3 = require( 'osg/Vec3' );
 var BufferArray = require( 'osg/BufferArray' );
@@ -10,10 +14,10 @@ var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
 var MACROUTILS = require( 'osg/Utils' );
 
-
 /**
  * Create a Textured Box on the given center with given size
- * @name createTexturedBox
+ * @method createTexturedBoxGeometry
+ * @memberof osg.Shape
  */
 var createTexturedBoxGeometry = function ( cx, cy, cz,
     sx, sy, sz ) {
@@ -526,9 +530,20 @@ var createAxisGeometry = function ( size ) {
     return g;
 };
 
+
 /**
  * Create a Textured Sphere on the given center with given radius
+ * @param  {[type]}
+ * @param  {[type]}
+ * @param  {[type]}
+ * @param  {[type]}
+ * @param  {[type]}
+ * @param  {[type]}
+ * @param  {[type]}
+ * @return {[type]}
  * @name createTexturedSphere
+ * @method
+ * @memberof osg.Shape
  * @author Darrell Esau
  */
 var createTexturedSphere = function ( radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength ) {

@@ -11,7 +11,10 @@ var DrawArrayLengths = require( 'osg/DrawArrayLengths' );
 var DrawElements = require( 'osg/DrawElements' );
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
 
-
+/** 
+ * @class
+ * @memberof osgDB
+ */
 var Input = function ( json, identifier ) {
     this._json = json;
     var map = identifier;

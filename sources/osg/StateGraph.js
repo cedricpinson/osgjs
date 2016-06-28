@@ -1,7 +1,10 @@
 'use strict';
 var osgPool = require( 'osgUtil/osgPool' );
 
-
+/**
+ * @class
+ * @memberof osg
+ */
 var StateGraph = function () {
     this.depth = 0;
     this.children = {};

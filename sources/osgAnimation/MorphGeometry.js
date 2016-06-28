@@ -13,7 +13,8 @@ var BoundingBox = require( 'osg/BoundingBox' );
 /**
  * MorphGeometry manage up to 4 morphTargets
  * @class MorphGeometry
- * @inherits Geometry
+ * @memberof osgAnimation
+ * @extends Geometry
  */
 
 var MorphGeometry = function () {

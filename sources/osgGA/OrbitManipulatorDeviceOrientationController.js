@@ -4,7 +4,10 @@ var Vec3 = require( 'osg/Vec3' );
 
 var FirstPersonDeviceOrientation = require( 'osgGA/FirstPersonManipulatorDeviceOrientationController' );
 
-
+/**
+ * @class
+ * @memberof osgGA
+ */
 var OrbitManipulatorDeviceOrientationController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();

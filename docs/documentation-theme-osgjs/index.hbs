@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>{{options.name}} {{options.version}} | Documentation</title>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <link href='assets/bass.css' type='text/css' rel='stylesheet' />
+  <link href='assets/style.css' type='text/css' rel='stylesheet' />
+  <link href='assets/darkula.css' type='text/css' rel='stylesheet' />
+  <link href='assets/font-awesome.min.css' type='text/css' rel='stylesheet' />
+  <link href='https://fonts.googleapis.com/css?family=Exo+2:400,800,900,700,600,500|Roboto:100,300,400,500,700,900' rel='stylesheet' type='text/css'>
+  <!-- <link href='assets/github.css' type='text/css' rel='stylesheet' /> -->
+</head>
+<body class='documentation'>
+  <div id="nav" class="fixed z2 top-0 left-0 right-0 p2 bg-white osgjs bg-nav">
+    <div class="container">
+      <div class="clearfix md-mxn2">
+         <a href="http://osgjs.org"><img style="max-height:32px" src="assets/img/logo.png">OSGJ.JS</a>
+      </div>
+    </div>
+  </div>
+  <!-- <div class=''> -->
+  <div class='container bg-white'>
+    <div class='clearfix md-mxn2'>
+      <div class='fixed md-show fix-3 overflow-auto max-height-100 scrollbar'>
+        <div class='py1 px2 pt4'>
+          <h3 class='mb0 no-anchor'>{{options.name}}</h3>
+          <div class='mb1'><code>v{{options.version}}</code></div>
+          <input
+            placeholder='Filter'
+            id='filter-input'
+            class='col12 block field'
+            type='text' />
+          <div id='toc'>
+            {{#each docs}}
+              
+              {{#if_eq kind "namespace"}}
+                <a
+                  href='#{{permalink}}' class="namespace">
+                  <h3>{{name_}}</h3>
+                </a>
+                {{#each members.static}}
+                  {{#if_link tags}}
+                    <a
+                      href='{{link_tags}}'
+                      class='block bold'>
+                      {{name_}}
+                    </a>
+                  {{else}}
+                    <a
+                      href='#{{permalink}}'
+                      class='block bold {{permalink}}'>
+                      {{name_}}
+                    </a>
+                  {{/if_link}}
+                {{/each}}
+                <div style="margin-bottom:20px"></div>
+
+              {{ else }}
+                <a
+                  href='#{{permalink}}'
+                  class='block bold {{permalink}}'>
+                  {{name}}
+                </a>
+                {{#each members.static}}
+                  <a
+                    href='#{{permalink}}'
+                    class='regular block'>
+                    .{{name}}
+                  </a>
+                {{/each}}
+                <!-- {{#each members.instance}}
+                  <a
+                    href='#{{permalink}}'
+                    class='regular block'>
+                    #{{name}}
+                  </a>
+                {{/each}}
+                {{#each events}}
+                  <a
+                    href='#{{permalink}}'
+                    class='regular block'>
+                    <code>ⓔ {{name}}</code>
+                  </a>
+                {{/each}} -->
+              {{/if_eq}}
+            {{/each}}
+          </div>
+        </div>
+      </div>
+      <div class='fix-margin-3'>
+        <div class='px2 pt4'>
+{{#each docs ~}}<div class='py1'>{{> section}}</div>{{/each}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src='assets/anchor.js'></script>
+  <script src='assets/site.js'></script>
+</body>
+</html>

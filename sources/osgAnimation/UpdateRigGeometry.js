@@ -7,6 +7,10 @@ var FindNearestParentSkeleton = require( 'osgAnimation/FindNearestParentSkeleton
 
 // converted from C++ probably it could be merged into RigGeometry
 // it could probably inlined into RigGeometry code
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var UpdateRigGeometry = function () {
     ObjectBase.call( this );
 };

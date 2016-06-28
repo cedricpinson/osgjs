@@ -12,6 +12,14 @@ var Notify = require( 'osg/Notify' );
 var TransformEnums = require( 'osg/TransformEnums' );
 var Vec3 = require( 'osg/Vec3' );
 
+
+
+
+/**
+ * @class 
+ * @memberof osg
+ * @extends CullSettings
+ */
 var CullStack = function () {
 
     this._modelViewMatrixStack = [];

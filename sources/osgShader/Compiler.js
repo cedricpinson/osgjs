@@ -5,6 +5,13 @@ var MACROUTILS = require( 'osg/Utils' );
 var Uniform = require( 'osg/Uniform' );
 var factory = require( 'osgShader/nodeFactory' );
 
+/**
+ * @class 
+ * @memberof osgShader
+ * @param {[type]}
+ * @param {[type]}
+ * @param {[type]}
+ */
 var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
     this._attributes = attributes;
     this._textureAttributes = textureAttributes;

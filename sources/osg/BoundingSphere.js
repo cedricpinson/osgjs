@@ -3,7 +3,15 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var Notify = require( 'osg/Notify' );
 var Vec3 = require( 'osg/Vec3' );
 
-
+/**
+ * General purpose bounding sphere class for enclosing nodes/objects/vertices.
+ * Bounds internal osg::Nodes in the scene, assists in view frustum culling,
+ * etc. Similar in function to BoundingBox, it's quicker for evaluating
+ * culling but generally will not cull as aggressively because it encloses a
+ * greater volume.
+ *  @class
+ *  @memberof osg
+ */
 var BoundingSphere = function () {
     this._center = Vec3.create();
     this._radius = -1.0;

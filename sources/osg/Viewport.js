@@ -3,7 +3,10 @@ var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Matrix = require( 'osg/Matrix' );
 
-
+/** 
+ * @class
+ * @memberof osg
+ */
 var Viewport = function ( x, y, w, h ) {
     StateAttribute.call( this );
 
