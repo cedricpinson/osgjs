@@ -11,10 +11,12 @@ var IntersectionVisitor = function () {
     // We could need to use a stack of intersectors in case we want
     // to use several intersectors. Right now we use only one.
     this._intersector = undefined;
-    this._projectionStack = [];
-    this._modelStack = [];
-    this._viewStack = [];
-    this._windowStack = [];
+    this._projectionStack = [ Matrix.identity ];
+    this._modelStack = [ Matrix.identity ];
+    this._viewStack = [ Matrix.identity ];
+    this._windowStack = [ Matrix.identity ];
+
+    this.reset();
 };
 
 IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
