@@ -133,11 +133,8 @@ var WebGLUtils = function () {
         }
         var context = create3DContext( canvas, opt_attribs );
         if ( !context ) {
-            if ( !window.WebGLRenderingContext ) {
-                opt_onError( "" );
-            } else {
-                opt_onError( "" );
-            }
+            //if ( !window.WebGLRenderingContext )
+            opt_onError( "" );
         }
 
         return context;

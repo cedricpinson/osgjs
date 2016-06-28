@@ -1219,9 +1219,9 @@ Composer.Filter.SSAO = function ( options ) {
         if ( options.radius !== undefined )
             radius = options.radius;
     }
-
     var textureNormal = options.normal;
     var texturePosition = options.position;
+
     this._radius = radius;
     this._nbSamples = nbSamples;
     this._noiseTextureSize = 16;

@@ -52,7 +52,7 @@ WebGLCaps.instance = function ( glParam ) {
 
             // make sure we don't break webglinspector
             // with our webglcaps canvas
-            var webglInspector = typeof window !== undefined && window.gli;
+            var webglInspector = typeof window !== 'undefined' && window.gli;
 
             if ( webglInspector ) {
 
