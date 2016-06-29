@@ -121,6 +121,7 @@ var NodeGizmo = function ( viewer ) {
     this._planeNode = new MatrixTransform();
 
     this._rotateInLocal = true; // local vs world space
+    this._translateInLocal = true; // local vs world space
     this._showAngle = new MatrixTransform();
 
     //for realtime picking
@@ -183,6 +184,14 @@ NodeGizmo.PICK_PLANE = NodeGizmo.PICK_PLANE_X | NodeGizmo.PICK_PLANE_Y | NodeGiz
 NodeGizmo.PICK_GIZMO = NodeGizmo.PICK_ARC | NodeGizmo.PICK_ARROW | NodeGizmo.PICK_PLANE;
 
 NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
+
+    setRotateInLocal: function ( bool ) {
+        this._rotateInLocal = bool;
+    },
+
+    setTranslateInLocal: function ( bool ) {
+        this._translateInLocal = bool;
+    },
 
     setTraversalMask: function ( tmask ) {
         this._tmask = tmask;
@@ -581,7 +590,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             Vec3.normalize( eye, eye );
 
             // rotate node
-            if ( this._rotateInLocal ) {
+            if ( this._rotateInLocal || this._translateInLocal ) {
                 // world scale
                 Matrix.getScale( worldMat, tmpVec );
                 Matrix.makeScale( tmpVec[ 0 ], tmpVec[ 1 ], tmpVec[ 2 ], invScale );
@@ -589,9 +598,17 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
                 Matrix.mult( worldMat, invScale, temp );
                 temp[ 12 ] = temp[ 13 ] = temp[ 14 ] = 0.0;
-                Matrix.copy( temp, this._rotateNode.getMatrix() );
-                Matrix.inverse( temp, temp );
-                Matrix.transformVec3( temp, eye, eye );
+
+                if ( this._translateInLocal ) {
+                    Matrix.copy( temp, this._translateNode.getMatrix() );
+                    Matrix.copy( temp, this._planeNode.getMatrix() );
+                }
+
+                if ( this._rotateInLocal ) {
+                    Matrix.copy( temp, this._rotateNode.getMatrix() );
+                    Matrix.inverse( temp, temp );
+                    Matrix.transformVec3( temp, eye, eye );
+                }
             } else {
                 Matrix.makeIdentity( this._rotateNode.getMatrix() );
             }
@@ -772,6 +789,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         // 3d direction
         Vec3.init( dir );
         dir[ this._hoverNode._nbAxis ] = 1.0;
+        if ( this._translateInLocal ) {
+            Matrix.transformVec3( this._editWorldScaleRot, dir, dir );
+            Vec3.normalize( dir, dir );
+        }
         Vec3.add( origin, dir, dir );
 
         // project on canvas
@@ -941,42 +962,64 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             this._viewer._camera.accept( this._iv );
             this.setOnlyScenePicking();
 
-            Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), tra );
+            if ( !this._translateInLocal ) {
+                Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), tra );
+            } else {
+                Matrix.getScale( this._editInvWorldScaleRot, tra );
+                var inter = this._lsi.getTranslateDistance();
+                tra[ 0 ] *= inter[ 0 ];
+                tra[ 1 ] *= inter[ 1 ];
+                tra[ 2 ] *= inter[ 2 ];
+            }
+
             Matrix.multTranslate( this._editLocal, tra, this._attachedNode.getMatrix() );
 
             this._attachedNode.dirtyBound();
         };
     } )(),
 
-    updatePlaneEdit: function ( e ) {
-        var vec = Vec3.create();
-        getCanvasCoord( vec, e );
-        Vec2.sub( vec, this._editOffset, vec );
+    updatePlaneEdit: ( function () {
+        var vec = Vec2.create();
+        var tra = Vec3.create();
 
-        // canvas to webgl coord
-        var viewer = this._viewer;
-        var canvas = this._canvas;
-        var coordx = vec[ 0 ] * ( viewer._canvasWidth / canvas.clientWidth );
-        var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( viewer._canvasHeight / canvas.clientHeight );
+        return function ( e ) {
+            getCanvasCoord( vec, e );
+            Vec2.sub( vec, this._editOffset, vec );
 
-        // project 2D point on the 3d plane
-        this._lsi.reset();
-        this._lsi.setTestPlane( true );
-        this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
-        this._iv.reset();
-        this._iv.setTraversalMask( this._hoverNode.getNodeMask() );
+            // canvas to webgl coord
+            var viewer = this._viewer;
+            var canvas = this._canvas;
+            var coordx = vec[ 0 ] * ( viewer._canvasWidth / canvas.clientWidth );
+            var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( viewer._canvasHeight / canvas.clientHeight );
 
-        Matrix.copy( this._editWorldTrans, this.getMatrix() );
+            // project 2D point on the 3d plane
+            this._lsi.reset();
+            this._lsi.setTestPlane( true );
+            this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
+            this._iv.reset();
+            this._iv.setTraversalMask( this._hoverNode.getNodeMask() );
 
-        this.setOnlyGizmoPicking();
-        this._viewer._camera.accept( this._iv );
-        this.setOnlyScenePicking();
+            Matrix.copy( this._editWorldTrans, this.getMatrix() );
 
-        Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), vec );
-        Matrix.multTranslate( this._editLocal, vec, this._attachedNode.getMatrix() );
+            this.setOnlyGizmoPicking();
+            this._viewer._camera.accept( this._iv );
+            this.setOnlyScenePicking();
 
-        this._attachedNode.dirtyBound();
-    }
+            if ( !this._translateInLocal ) {
+                Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), tra );
+            } else {
+                Matrix.getScale( this._editInvWorldScaleRot, tra );
+                var inter = this._lsi.getTranslateDistance();
+                tra[ 0 ] *= inter[ 0 ];
+                tra[ 1 ] *= inter[ 1 ];
+                tra[ 2 ] *= inter[ 2 ];
+            }
+
+            Matrix.multTranslate( this._editLocal, tra, this._attachedNode.getMatrix() );
+
+            this._attachedNode.dirtyBound();
+        };
+    } )(),
 
 } );
 
