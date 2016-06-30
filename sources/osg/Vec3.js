@@ -1,16 +1,23 @@
 'use strict';
 var osgMath = require( 'osg/Math' );
+var config = require( 'config' );
+
+var ArrayType = config.ArrayType;
 
 
 /** @class Vec3 Operations */
 var Vec3 = {
 
     create: function () {
-        return new Float32Array( 3 );
+        var out = new ArrayType( 3 );
+        out[ 0 ] = 0.0;
+        out[ 1 ] = 0.0;
+        out[ 2 ] = 0.0;
+        return out;
     },
 
     createAndSet: function ( x, y, z ) {
-        var out = Vec3.create();
+        var out = new ArrayType( 3 );
         out[ 0 ] = x;
         out[ 1 ] = y;
         out[ 2 ] = z;
