@@ -1,6 +1,9 @@
 'use strict';
 var Vec3 = require( 'osg/Vec3' );
 var Vec4 = require( 'osg/Vec4' );
+var config = require( 'config' );
+
+var ArrayType = config.ArrayType;
 
 
 var Msqrt = Math.sqrt;
@@ -10,7 +13,10 @@ var Msin = Math.sin;
 var Quat = {
 
     create: function () {
-        var out = new Float32Array( 4 );
+        var out = new ArrayType( 4 );
+        out[ 0 ] = 0.0;
+        out[ 1 ] = 0.0;
+        out[ 2 ] = 0.0;
         out[ 3 ] = 1.0;
         return out;
     },
