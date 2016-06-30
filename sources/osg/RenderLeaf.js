@@ -22,7 +22,7 @@ CacheUniformApply.prototype = {
         if ( this.modelWorldUniform !== undefined ) {
             functionStr.push( 'if ( matrixModelViewChanged ) {' );
             functionStr.push( '    var modelWorldMatrix = state.modelWorldMatrix;' );
-            functionStr.push( '    modelWorldMatrix.setInternalArray( modelworld );' );
+            functionStr.push( '    modelWorldMatrix.setMatrix4( modelworld );' );
             functionStr.push( '    modelWorldMatrix.apply( gl, this.modelWorldUniform);' );
             functionStr.push( '};' );
         }
@@ -30,7 +30,7 @@ CacheUniformApply.prototype = {
         if ( this.viewUniform !== undefined ) {
             functionStr.push( 'if ( matrixModelViewChanged ) {' );
             functionStr.push( '    var viewMatrix = state.viewMatrix;' );
-            functionStr.push( '    viewMatrix.setInternalArray( view );' );
+            functionStr.push( '    viewMatrix.setMatrix4( view );' );
             functionStr.push( '    viewMatrix.apply( gl, this.viewUniform);' );
             functionStr.push( '};' );
         }

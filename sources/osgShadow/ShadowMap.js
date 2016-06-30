@@ -88,7 +88,6 @@ var ShadowMap = function ( settings ) {
     this._textureMagFilter = undefined;
     this._textureMinFilter = undefined;
     this._textureSize = 256;
-    this._renderSize = [ this._textureSize, this._textureSize ];
 
     this._receivingStateset = undefined;
 
@@ -100,7 +99,10 @@ var ShadowMap = function ( settings ) {
     this._texelSizeUniform = Uniform.createFloat1( 1.0 / this._textureSize, 'texelSize' );
     this._casterStateSet.addUniform( this._texelSizeUniform );
 
-    this._casterStateSet.addUniform( Uniform.createFloat2( this._renderSize, 'RenderSize' ) );
+    var unifRenderSize = Uniform.createFloat2( 'RenderSize' );
+    this._casterStateSet.addUniform( unifRenderSize );
+    this._renderSize = unifRenderSize.getInternalArray();
+    this._renderSize[ 0 ] = this._renderSize[ 1 ] = this._textureSize;
 
     // make sure no unintended blend happens
     // if casting semi-transparent (alphablend material with full opaque pixels) shadow
@@ -116,15 +118,13 @@ var ShadowMap = function ( settings ) {
 
     var near = 0.001;
     var far = 1000;
-    this._depthRange = Vec4.create();
+    var unifRange = Uniform.createFloat4( 'Shadow_DepthRange' );
+    this._casterStateSet.addUniform( unifRange );
+    this._depthRange = unifRange.getInternalArray();
     this._depthRange[ 0 ] = near;
     this._depthRange[ 1 ] = far;
     this._depthRange[ 2 ] = far - near;
     this._depthRange[ 3 ] = 1.0 / ( far - near );
-    this._casterStateSet.addUniform( Uniform.createFloat4( this._depthRange, 'Shadow_DepthRange' ) );
-
-
-
 
     this._worldLightPos = Vec4.create();
     this._worldLightPos[ 3 ] = 0;
