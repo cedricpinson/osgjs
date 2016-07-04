@@ -324,22 +324,22 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
         var uniformMap = this.getOrCreateUniforms();
 
-        uniformMap.position.setInternalArray( this._position );
+        uniformMap.position.setFloat4( this._position );
 
         if ( this.isSpotLight() ) {
             var spotsize = Math.cos( this._spotCutoff * Math.PI / 180.0 );
             uniformMap.spotCutOff.setFloat( spotsize );
             uniformMap.spotBlend.setFloat( ( 1.0 - spotsize ) * this._spotBlend );
-            uniformMap.direction.setInternalArray( this._direction );
+            uniformMap.direction.setFloat3( this._direction );
         }
 
         if ( this.isHemiLight() )
-            uniformMap.ground.setInternalArray( this._ground );
+            uniformMap.ground.setFloat4( this._ground );
 
-        uniformMap.attenuation.setInternalArray( this._attenuation );
-        uniformMap.diffuse.setInternalArray( this._diffuse );
-        uniformMap.specular.setInternalArray( this._specular );
-        uniformMap.ambient.setInternalArray( this._ambient );
+        uniformMap.attenuation.setFloat4( this._attenuation );
+        uniformMap.diffuse.setFloat4( this._diffuse );
+        uniformMap.specular.setFloat4( this._specular );
+        uniformMap.ambient.setFloat4( this._ambient );
     }
 
 } ), 'osg', 'Light' );

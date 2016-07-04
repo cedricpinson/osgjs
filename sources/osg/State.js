@@ -220,7 +220,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var gc = this.getGraphicContext();
             if ( mul ) {
 
-                mu.setInternalArray( matrix );
+                mu.setMatrix4( matrix );
                 mu.apply( gc, mul );
             }
 
@@ -259,7 +259,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                     Matrix.inverse( normal, normal );
                     Matrix.transpose( normal, normal );
 
-                    mu.setInternalArray( normal );
+                    mu.setMatrix4( normal );
                     mu.apply( gc, mul );
                 }
             }
@@ -300,7 +300,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var mul = program.getUniformsCache().ModelViewMatrix;
             if ( mul ) {
 
-                mu.setInternalArray( matrix );
+                mu.setMatrix4( matrix );
                 mu.apply( this.getGraphicContext(), mul );
             }
 
@@ -348,7 +348,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                         Matrix.transpose( normal, normal );
                     }
 
-                    mu.setInternalArray( normal );
+                    mu.setMatrix4( normal );
                     mu.apply( this.getGraphicContext(), mul );
                 }
             }
@@ -369,7 +369,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var mul = program.getUniformsCache()[ mu.getName() ];
         if ( mul ) {
 
-            mu.setInternalArray( matrix );
+            mu.setMatrix4( matrix );
             mu.apply( this.getGraphicContext(), mul );
 
         }

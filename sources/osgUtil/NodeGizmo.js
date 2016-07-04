@@ -127,7 +127,7 @@ var NodeGizmo = function ( viewer ) {
     //for realtime picking
     this._downCanvasCoord = Vec2.create();
     this._hoverNode = null; // the hovered x/y/z MT node
-    this._keepHoverColor = null;
+    this._keepHoverColor = Vec4.create();
 
     // for editing
     this._isEditing = false;
@@ -323,7 +323,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         return function ( hit ) {
 
             if ( this._hoverNode )
-                this._hoverNode.getStateSet().getUniform( 'uColor' ).setInternalArray( this._keepHoverColor );
+                this._hoverNode.getStateSet().getUniform( 'uColor' ).setFloat4( this._keepHoverColor );
             if ( !hit ) {
                 this._hoverNode = null;
                 return;
@@ -341,8 +341,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
             var unif = node.getStateSet().getUniform( 'uColor' );
             this._hoverNode = node;
-            this._keepHoverColor = unif.getInternalArray();
-            unif.setInternalArray( hoverColor );
+            Vec4.copy( unif.getInternalArray(), this._keepHoverColor );
+            unif.setFloat4( hoverColor );
         };
     } )(),
 

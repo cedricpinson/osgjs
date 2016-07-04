@@ -94,10 +94,10 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
     apply: function () {
         var uniforms = this.getOrCreateUniforms();
 
-        uniforms.ambient.setInternalArray( this._ambient );
-        uniforms.diffuse.setInternalArray( this._diffuse );
-        uniforms.specular.setInternalArray( this._specular );
-        uniforms.emission.setInternalArray( this._emission );
+        uniforms.ambient.setFloat4( this._ambient );
+        uniforms.diffuse.setFloat4( this._diffuse );
+        uniforms.specular.setFloat4( this._specular );
+        uniforms.emission.setFloat4( this._emission );
         uniforms.shininess.setFloat( this._shininess );
 
     }
