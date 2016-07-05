@@ -2,7 +2,7 @@
     "devDependencies": {
         "chai": "^3.5.0",
         "grunt-contrib-connect": "~0.9",
-        "grunt-documentation": "git+https://github.com/ianwremmel/grunt-documentation.git#fix-major-version-incompatibility",
+        "grunt-documentation": "*",
         "grunt-jsbeautifier": "^0.2.10",
         "grunt-mocha": "^1.0.2",
         "grunt-release": "^0.10.0",
