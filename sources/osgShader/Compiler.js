@@ -719,7 +719,9 @@ Compiler.prototype = {
 
             if ( texture.getType() === 'Texture' ) {
 
-                this.declareTexture( this.getTexCoordUnit( t ), texture );
+                var texCoordUnit = this.getTexCoordUnit( t );
+                if ( texCoordUnit !== undefined )
+                    this.declareTexture( texCoordUnit, texture );
             }
 
         }
