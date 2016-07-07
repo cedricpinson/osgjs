@@ -2,6 +2,9 @@
 var Notify = require( 'osg/Notify' );
 var shaderLib = require( 'osgShader/shaderLib' );
 var shadowShaderLib = require( 'osgShadow/shaderLib' );
+var WebGLCaps = require( 'osg/WebGLCaps' );
+var Optimizer = require( 'osgShader/Optimizer' );
+var PreProcessor = require( 'osgShader/PreProcessor' );
 
 
 //     Shader as vert/frag/glsl files Using requirejs text plugin
@@ -18,6 +21,10 @@ var ShaderProcessor = function ( createInstance ) {
         }
         ShaderProcessor.instance = this;
     }
+
+    this._precisionFloat = WebGLCaps.instance().getWebGLParameter( 'MAX_SHADER_PRECISION_FLOAT' );
+    this._precisionInt = WebGLCaps.instance().getWebGLParameter( 'MAX_SHADER_PRECISION_INT' );
+    this._webgl2 = WebGLCaps.instance().isWebGL2();
 
     this.addShaders( shaderLib );
     this.addShaders( shadowShaderLib );
@@ -178,8 +185,11 @@ ShaderProcessor.prototype = {
 
         var postShader = this.preprocess( preShader, sourceID, includeList, defines );
 
+
         var prePrend = '';
-        prePrend += '#version 100\n'; // webgl1  (webgl2 #version 130 ?)
+        //if (this._webgl2) prePrend += '#version 300\n'; else // webgl1  (webgl2 #version 300 ?)
+        prePrend += '#version 100\n'; // webgl1
+
 
         // then
         // it's extensions first
@@ -210,6 +220,28 @@ ShaderProcessor.prototype = {
             prePrend += defines.join( '\n' ) + '\n';
         }
         postShader = prePrend + postShader;
+
+
+        if ( defines === undefined ) {
+            defines = [];
+        }
+
+        if ( this._precisionFloat ) defines.push( '#define GL_FRAGMENT_PRECISION_HIGH' );
+        defines = defines.map( function ( defineString ) {
+            // find '#define', remove duplicate whitespace, split on space and return the define Text
+            return this._defineR.test( defineString ) && defineString.replace( /\s+/g, ' ' ).split( ' ' )[ 1 ];
+        }.bind( this ) );
+
+
+        console.time( 'shaderPreprocess' );
+        var preprocessedShader = PreProcessor( postShader, defines, extensions );
+        postShader = preprocessedShader;
+        console.timeEnd( 'shaderPreprocess' );
+
+        console.time( 'shaderOptimize' );
+        var optShader = Optimizer( postShader, defines, extensions );
+        postShader = optShader;
+        console.timeEnd( 'shaderOptimize' );
 
         return postShader;
     }
