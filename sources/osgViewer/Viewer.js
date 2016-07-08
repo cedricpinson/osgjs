@@ -1,6 +1,6 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Options = require( 'osg/Options' );
 var P = require( 'bluebird' );
 var Timer = require( 'osg/Timer' );
@@ -452,7 +452,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         // Update Manipulator/Event
         if ( this.getManipulator() ) {
             this.getManipulator().update( this._updateVisitor );
-            Matrix.copy( this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix() );
+            mat4.copy( this.getCamera().getViewMatrix(), this.getManipulator().getInverseMatrix() );
         }
 
         if ( this.checkNeedToDoFrame() || canvasSizeChanged ) {
@@ -570,7 +570,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         vp.setViewport( Math.round( vp.x() * widthChangeRatio ), Math.round( vp.y() * heightChangeRatio ), Math.round( vp.width() * widthChangeRatio ), Math.round( vp.height() * heightChangeRatio ) );
 
         if ( aspectRatioChange !== 1.0 ) {
-            Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );
+            mat4.mul( camera.getProjectionMatrix(), camera.getProjectionMatrix(), mat4.fromScaling( mat4.create(), [ 1.0 / aspectRatioChange, 1.0, 1.0 ] ) );
         }
 
         return true;

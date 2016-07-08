@@ -111,7 +111,7 @@
         //controller.times = config.time;
 
         // var root = new osg.MatrixTransform();
-        osg.Matrix.makeRotate( Math.PI * 0.5, 1, 0, 0, root.getMatrix() );
+        osg.mat4.fromRotation( root.getMatrix(), Math.PI * 0.5, [ 1, 0, 0 ] );
 
         var request = osgDB.readNodeURL( '../media/models/animation/' + url );
         root.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );

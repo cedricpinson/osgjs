@@ -3,7 +3,8 @@ var assert = require( 'chai' ).assert;
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var Camera = require( 'osg/Camera' );
 var Viewport = require( 'osg/Viewport' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/Shape' );
 var TransformEnums = require( 'osg/TransformEnums' );
 
@@ -20,8 +21,8 @@ module.exports = function () {
             return true;
         },
         setCurrentTransformation: function ( matrix ) {
-            Matrix.inverse( matrix, matrix );
-            this.stackTransforms.push( Matrix.transformVec3( matrix, this.point, [ 0.0, 0.0, 0.0 ] ) );
+            mat4.invert( matrix, matrix );
+            this.stackTransforms.push( vec3.transformMat4( vec3.create(), this.point, matrix ) );
         },
         intersect: function () {
             return true;
@@ -32,8 +33,9 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
         camera.addChild( Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 ) );
 
         var di = new DummyIntersector();
@@ -48,13 +50,15 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         var camera2 = new Camera();
         camera2.setViewport( new Viewport() );
-        camera2.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera2.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera2.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera2.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
         camera2.addChild( Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 ) );
 
         camera.addChild( camera2 );
@@ -71,14 +75,16 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         var camera2 = new Camera();
         camera2.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
         camera2.setViewport( new Viewport() );
-        camera2.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera2.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera2.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera2.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
         camera2.addChild( Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 ) );
 
         camera.addChild( camera2 );

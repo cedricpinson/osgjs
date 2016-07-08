@@ -129,20 +129,20 @@
     var myReservedMatrixStack = new osg.MatrixMemoryPool();
 
     var projectToScreen = ( function () {
-        var mat = osg.Matrix.create();
-        var winMat = osg.Matrix.create();
+        var mat = osg.mat4.create();
+        var winMat = osg.mat4.create();
         return function ( cam, hit ) {
-            osg.Matrix.makeIdentity( mat );
-            osg.Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix( winMat ) : winMat );
-            osg.Matrix.preMult( mat, cam.getProjectionMatrix() );
-            osg.Matrix.preMult( mat, cam.getViewMatrix() );
+            osg.mat4.identity( mat );
+            osg.mat4.mul( mat, mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix( winMat ) : winMat );
+            osg.mat4.mul( mat, mat, cam.getProjectionMatrix() );
+            osg.mat4.mul( mat, mat, cam.getViewMatrix() );
 
             myReservedMatrixStack.reset();
             // Node 0 in nodepath is the Camera of the Viewer, so we take next child
-            osg.Matrix.preMult( mat, osg.computeLocalToWorld( hit.nodepath.slice( 1 ), true, myReservedMatrixStack.get() ) );
+            osg.mat4.mul( mat, mat, osg.computeLocalToWorld( hit.nodepath.slice( 1 ), true, myReservedMatrixStack.get() ) );
 
             var pt = [ 0.0, 0.0, 0.0 ];
-            osg.Matrix.transformVec3( mat, hit.point, pt );
+            osg.vec3.transformMat4( pt, hit.point, mat );
             return pt;
         };
     } )();
@@ -188,9 +188,9 @@
             var si = new osgUtil.SphereIntersector();
             //compute world point
             //for sphere intersection
-            var worldPoint = osg.Vec3.create();
+            var worldPoint = osg.vec3.create();
             myReservedMatrixStack.reset();
-            osg.Matrix.transformVec3( osg.computeLocalToWorld( hits[ 0 ].nodepath.slice( 1 ), true, myReservedMatrixStack.get() ), point, worldPoint );
+            osg.vec3.transformMat4( worldPoint, point, osg.computeLocalToWorld( hits[ 0 ].nodepath.slice( 1 ), true, myReservedMatrixStack.get() ) );
 
             si.set( worldPoint, viewer.getSceneData().getBound().radius() * 0.1 );
             var iv = new osgUtil.IntersectionVisitor();

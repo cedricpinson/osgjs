@@ -155,6 +155,13 @@ osg.Vec3 = Vec3;
 osg.Vec4 = Vec4;
 osg.Viewport = Viewport;
 
+var glm = require( 'osg/glMatrix' );
+osg.vec2 = glm.vec2;
+osg.vec3 = glm.vec3;
+osg.vec4 = glm.vec4;
+osg.quat = glm.quat;
+osg.mat4 = glm.mat4;
+
 osg.memoryPools = osgPool.memoryPools;
 
 osg.Transform.RELATIVE_RF = TransformEnums.RELATIVE_RF;

@@ -1,12 +1,11 @@
 'use strict';
-var Matrix = require( 'osg/Matrix' );
 var MACROUTILS = require( 'osg/Utils' );
-var Vec4 = require( 'osg/Vec4' );
-var Vec3 = require( 'osg/Vec3' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
 /** @class Plane Operations */
-var Plane = MACROUTILS.objectInherit( Vec4, {
+var Plane = MACROUTILS.objectInherit( vec4, {
     // Many case (frustum, convexity)
     // needs to know where from a plane it stands,
     // not just boolean intersection
@@ -16,11 +15,21 @@ var Plane = MACROUTILS.objectInherit( Vec4, {
     /* Transform the plane */
     transformProvidingInverse: function () {
         var iplane = Plane.create();
-        return function ( plane, matrix ) {
-            Matrix.transformVec4PostMult( matrix, plane, iplane );
+        return function ( p, m ) {
+            //Matrix.transformVec4PostMult( matrix, plane, iplane );
+            var x = p[ 0 ];
+            var y = p[ 1 ];
+            var z = p[ 2 ];
+            var w = p[ 3 ];
+
+            iplane[ 0 ] = m[ 0 ] * x + m[ 1 ] * y + m[ 2 ] * z + m[ 3 ] * w;
+            iplane[ 1 ] = m[ 4 ] * x + m[ 5 ] * y + m[ 6 ] * z + m[ 7 ] * w;
+            iplane[ 2 ] = m[ 8 ] * x + m[ 9 ] * y + m[ 10 ] * z + m[ 11 ] * w;
+            iplane[ 3 ] = m[ 12 ] * x + m[ 13 ] * y + m[ 14 ] * z + m[ 15 ] * w;
+
             Plane.normalizeEquation( iplane );
-            Plane.copy( iplane, plane );
-            return plane;
+            Plane.copy( iplane, p );
+            return p;
         };
     },
 
@@ -78,24 +87,24 @@ var Plane = MACROUTILS.objectInherit( Vec4, {
     // absPlane optional paramter is an optimisation for the
     // DOD case: on plane, many bounding boxes
     intersectsOrContainsBoundingBox: function () {
-        var center = Vec3.create();
-        var extent = Vec3.create();
-        var absTemp = Vec3.create();
+        var center = vec3.create();
+        var extent = vec3.create();
+        var absTemp = vec3.create();
         return function ( plane, bbox, absPlane ) {
-            Vec3.add( bbox.getMax(), bbox.getMin(), center );
-            Vec3.mult( center, 0.5, center );
+            vec3.add( center, bbox.getMax(), bbox.getMin() );
+            vec3.scale( center, center, 0.5 );
 
-            Vec3.sub( bbox.getMax(), bbox.getMin(), center );
-            Vec3.mult( extent, 0.5, extent );
+            vec3.sub( center, bbox.getMax(), bbox.getMin() );
+            vec3.scale( extent, extent, 0.5 );
 
-            var d = Vec3.dot( center, plane );
+            var d = vec3.dot( center, plane );
             if ( !absPlane ) {
                 absPlane = absTemp;
                 absPlane[ 0 ] = Math.abs( plane[ 0 ] );
                 absPlane[ 1 ] = Math.abs( plane[ 1 ] );
                 absPlane[ 2 ] = Math.abs( plane[ 2 ] );
             }
-            var r = Vec3.dot( extent, absPlane );
+            var r = vec3.dot( extent, absPlane );
             if ( d + r > 0 ) return Plane.INTERSECT; // partially inside
             if ( d - r >= 0 ) return Plane.INSIDE; // fully inside
             return Plane.OUTSIDE;

@@ -21,7 +21,7 @@
 
             var m = node.getMatrix();
             var current = [];
-            osg.Matrix.getTrans( m, current );
+            osg.mat4.getTranslation( current, m );
             var target = this._target;
             var dx = target[ 0 ] - current[ 0 ];
             var dy = target[ 1 ] - current[ 1 ];
@@ -43,8 +43,8 @@
             current[ 1 ] += dy * dt * ratio;
             current[ 2 ] += dz * dt * ratio;
 
-            osg.Matrix.makeRotate( -( t - node._start ) * ratio, node._axis[ 0 ], node._axis[ 1 ], node._axis[ 2 ], m );
-            osg.Matrix.setTrans( m, current[ 0 ], current[ 1 ], current[ 2 ] );
+            osg.mat4.fromRotation( m, -( t - node._start ) * ratio, node._axis );
+            osg.mat4.setTranslation( m, current );
             return true;
         }
     };
@@ -140,8 +140,7 @@
                 var rx = x * size[ 0 ] - maxx * size[ 0 ] * 0.5 + center[ 0 ];
                 var ry = 0 + center[ 1 ];
                 var rz = y * size[ 2 ] - maxy * size[ 2 ] * 0.5 + center[ 2 ];
-                mtr.setMatrix( osg.Matrix.makeTranslate( rx, ry, rz, [] ) );
-
+                mtr.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ rx, ry, rz ] ) );
                 var model = createTexturedBox( 0, 0, 0,
                     size[ 0 ], size[ 1 ], size[ 2 ],
                     x / ( maxx + 1 ), ( x + 1 ) / ( maxx + 1 ),
@@ -155,7 +154,7 @@
                 mtr._lastUpdate = t;
                 mtr._start = t;
                 mtr._axis = [ Math.random(), Math.random(), Math.random() ];
-                osg.Vec3.normalize( mtr._axis, mtr._axis );
+                osg.vec3.normalize( mtr._axis, mtr._axis );
             }
         }
         return group;
@@ -193,24 +192,19 @@
         var canvas = document.getElementById( 'View' );
 
         var viewer;
-        try {
-            viewer = new osgViewer.Viewer( canvas, {
-                antialias: true,
-                alpha: true
-            } );
-            viewer.init();
-            var rotate = new osg.MatrixTransform();
-            rotate.addChild( createScene() );
-            viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
-            viewer.setSceneData( rotate );
-            viewer.setupManipulator();
-            viewer.getManipulator().computeHomePosition();
+        viewer = new osgViewer.Viewer( canvas, {
+            antialias: true,
+            alpha: true
+        } );
+        viewer.init();
+        var rotate = new osg.MatrixTransform();
+        rotate.addChild( createScene() );
+        viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+        viewer.setSceneData( rotate );
+        viewer.setupManipulator();
+        viewer.getManipulator().computeHomePosition();
 
-            viewer.run();
-
-        } catch ( er ) {
-            osg.log( 'exception in osgViewer ' + er );
-        }
+        viewer.run();
     };
 
     window.addEventListener( 'load', main, true );

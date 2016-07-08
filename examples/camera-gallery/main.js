@@ -21,10 +21,10 @@
             var camera = [];
             for ( var x = 0; x < nb; x++ ) {
                 var vec = [ ( Math.random() - 0.5 ) * range[ 0 ], ( Math.random() - 0.5 ) * range[ 1 ], ( Math.random() - 0.5 ) * range[ 2 ] ];
-                var position = osg.Vec3.add( center, vec, [] );
+                var position = osg.vec3.add( osg.vec3.create(), center, vec );
                 camera.push( {
                     'position': position,
-                    'target': osg.Vec3.copy( center, [] ),
+                    'target': osg.vec3.clone( center ),
                     'duration': 4.0
                 } );
             }
@@ -67,8 +67,8 @@
             var srcTarget = this._camera[ this._currentCamera ].target;
             var dstTarget = this._camera[ ( this._currentCamera + 1 ) % this._camera.length ].target;
             var frac = delta / duration;
-            var currentPosition = osg.Vec3.lerp( frac, srcPosition, dstPosition, [] );
-            var currentTarget = osg.Vec3.lerp( frac, srcTarget, dstTarget, [] );
+            var currentPosition = osg.vec3.lerp( osg.vec3.create(), srcPosition, dstPosition, frac );
+            var currentTarget = osg.vec3.lerp( osg.vec3.create(), srcTarget, dstTarget, frac );
 
             this._currentPosition = currentPosition;
             this._currentTarget = currentTarget;
@@ -82,8 +82,6 @@
         }
 
     };
-
-
 
 
     var main = function () {
@@ -110,12 +108,11 @@
         manipulator.update = function ( nv ) {
             this._cameraSwitcher.update( nv );
 
-            osg.Matrix.makeLookAt(
+            osg.mat4.lookAt(
+                this._inverseMatrix,
                 this._cameraSwitcher.getCurrentPosition(), // eye
                 this._cameraSwitcher.getCurrentTarget(), // center
-                [ 0, 1, 0 ], // up
-                this._inverseMatrix
-            );
+                [ 0, 1, 0 ] ); // up
         };
 
         viewer = new osgViewer.Viewer( canvas, {

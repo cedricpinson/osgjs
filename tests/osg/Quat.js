@@ -1,169 +1,170 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var Quat = require( 'osg/Quat' );
-var Vec3 = require( 'osg/Vec3' );
-var Matrix = require( 'osg/Matrix' );
+var quat = require( 'osg/glMatrix' ).quat;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 
 module.exports = function () {
 
     // shared const
-    var id = Quat.create(); // inited with identity
+    var id = quat.create(); // inited with identity
     var sqrt2 = Math.sqrt( 0.5 );
 
     // remarquable quaternion list
-    var Y90Rot = Quat.createAndSet( sqrt2, 0.0, sqrt2, 0.0 );
-    var Y90RotNeg = Quat.createAndSet( -sqrt2, 0.0, -sqrt2, 0.0 );
-    var Y90RotNegX180Rot = Quat.createAndSet( 0.0, sqrt2, 0.0, sqrt2 );
-    var Y180Rot = Quat.createAndSet( 0.0, 0.0, 1.0, 0.0 );
-    var Y180X90NegRot = Quat.createAndSet( 0.0, 0.0, sqrt2, sqrt2 );
-    var Y45Rot = Quat.createAndSet( 0.5, 0.0, 0.5, 0.7071067811865475 );
-    var Y45RotNeg = Quat.createAndSet( -0.5, 0.0, -0.5, 0.7071067811865475 );
+    var Y90Rot = quat.fromValues( sqrt2, 0.0, sqrt2, 0.0 );
+    var Y90RotNeg = quat.fromValues( -sqrt2, 0.0, -sqrt2, 0.0 );
+    var Y90RotNegX180Rot = quat.fromValues( 0.0, sqrt2, 0.0, sqrt2 );
+    var Y180Rot = quat.fromValues( 0.0, 0.0, 1.0, 0.0 );
+    var Y180X90NegRot = quat.fromValues( 0.0, 0.0, sqrt2, sqrt2 );
+    var Y45Rot = quat.fromValues( 0.5, 0.0, 0.5, 0.7071067811865475 );
+    var Y45RotNeg = quat.fromValues( -0.5, 0.0, -0.5, 0.7071067811865475 );
     //Quat.createAndSet(0.0, 0.38, 0.0, 0.92 );
 
 
     test( 'Quat.init', function () {
-        var q = Quat.create();
-        Quat.init( q );
-        assert.equalVector( q, Quat.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
+        var q = quat.create();
+        quat.init( q );
+        assert.equalVector( q, quat.fromValues( 0.0, 0.0, 0.0, 1.0 ) );
     } );
 
     test( 'Quat.makeRotate', function () {
-        var q0 = Quat.makeRotate( Math.PI, 1.0, 0.0, 0.0, Quat.create() );
-        assert.equalVector( q0, Quat.createAndSet( 1.0, 0.0, 0.0, 6.12303e-17 ), 1e-5 );
+        var q0 = quat.setAxisAngle( quat.create(), [ 1.0, 0.0, 0.0 ], Math.PI );
+        assert.equalVector( q0, quat.fromValues( 1.0, 0.0, 0.0, 6.12303e-17 ), 1e-5 );
 
-        var q1 = Quat.makeRotate( Math.PI / 2, 0.0, 1.0, 0.0, Quat.create() );
-        assert.equalVector( q1, Quat.createAndSet( 0.0, 0.707107, 0.0, 0.707107 ) );
+        var q1 = quat.setAxisAngle( quat.create(), [ 0.0, 1.0, 0.0 ], Math.PI / 2 );
+        assert.equalVector( q1, quat.fromValues( 0.0, 0.707107, 0.0, 0.707107 ) );
 
-        var q2 = Quat.makeRotate( Math.PI / 4, 0.0, 0.0, 1.0, Quat.create() );
-        assert.equalVector( q2, Quat.createAndSet( 0.0, 0.0, 0.382683, 0.92388 ) );
+        var q2 = quat.setAxisAngle( quat.create(), [ 0.0, 0.0, 1.0 ], Math.PI / 4 );
+        assert.equalVector( q2, quat.fromValues( 0.0, 0.0, 0.382683, 0.92388 ) );
     } );
 
     test( 'Quat.makeRotateFromTo', function () {
-        var q1 = Quat.makeRotateFromTo( Vec3.createAndSet( 1.0, 0.0, 0.0 ), Vec3.createAndSet( 0.0, 1.0, 0.0 ), Quat.create() );
-        assert.equalVector( q1, Quat.createAndSet( 0.0, 0.0, 0.707107, 0.707107 ), 1e-5 );
+        //var q1 = quat.makeRotateFromTo( vec3.fromValues( 1.0, 0.0, 0.0 ), vec3.fromValues( 0.0, 1.0, 0.0 ), Quat.create() );
+        var q1 = quat.rotationTo( quat.create(), vec3.fromValues( 1.0, 0.0, 0.0 ), vec3.fromValues( 0.0, 1.0, 0.0 ) );
+        assert.equalVector( q1, quat.fromValues( 0.0, 0.0, 0.707107, 0.707107 ), 1e-5 );
 
         // it test both makeRotate and makeRotateFromTo
-        var qyrot = Quat.makeRotate( Math.PI / 2.0, 0.0, 1.0, 0.0, Quat.create() );
-        var q2 = Quat.makeRotateFromTo( Vec3.createAndSet( 0.0, 0.0, 1.0 ), Vec3.createAndSet( 1.0, 0.0, 0.0 ), Quat.create() );
+        var qyrot = quat.setAxisAngle( quat.create(), [ 0.0, 1.0, 0.0 ], Math.PI / 2.0 );
+        var q2 = quat.rotationTo( quat.create(), vec3.fromValues( 0.0, 0.0, 1.0 ), vec3.fromValues( 1.0, 0.0, 0.0 ) );
         assert.equalVector( q2, qyrot, 1e-5 );
     } );
 
-    // test('Quat.rotateVec3', function() {
+    // test('Quat.rotatevec3', function() {
     //     var q0 = Quat.makeRotate(Math.PI, 1.0, 0.0, 0);
-    //     var result = Quat.rotateVec3(q0, [10, 0.0,0), Quat.create());
+    //     var result = Quat.rotatevec3(q0, [10, 0.0,0), Quat.create());
     //     near(result , [-10.0, 0.0, 0]);
     // });
 
-    test( 'Quat.mult', function () {
-        var q0 = Quat.makeRotate( Math.PI, 1.0, 0.0, 0.0, Quat.create() );
-        var q1 = Quat.makeRotate( Math.PI / 2, 0.0, 1.0, 0.0, Quat.create() );
-        var q2 = Quat.makeRotate( Math.PI / 4, 0.0, 0.0, 1.0, Quat.create() );
+    test( 'Quat.multiply', function () {
+        var q0 = quat.setAxisAngle( quat.create(), [ 1.0, 0.0, 0.0 ], Math.PI );
+        var q1 = quat.setAxisAngle( quat.create(), [ 0.0, 1.0, 0.0 ], Math.PI / 2 );
+        var q2 = quat.setAxisAngle( quat.create(), [ 0.0, 0.0, 1.0 ], Math.PI / 4 );
 
-        var qr = Quat.create();
-        Quat.mult( q1, q0, qr );
-        assert.equalVector( qr, Quat.createAndSet( 0.707107, 4.32964e-17, -0.707107, 4.32964e-17 ) );
+        var qr = quat.create();
+        quat.multiply( qr, q1, q0 );
+        assert.equalVector( qr, quat.fromValues( 0.707107, 4.32964e-17, -0.707107, 4.32964e-17 ) );
 
         // check consistency with quaternion and matrix multiplication order
-        var m1 = Matrix.create();
-        var m0 = Matrix.create();
-        var mr = Matrix.create();
-        Matrix.makeRotateFromQuat( q1, m1 );
-        Matrix.makeRotateFromQuat( q0, m0 );
-        Matrix.mult( m1, m0, mr );
+        var m1 = mat4.create();
+        var m0 = mat4.create();
+        var mr = mat4.create();
+        mat4.fromQuat( m1, q1 );
+        mat4.fromQuat( m0, q0 );
+        mat4.mul( mr, m1, m0 );
 
-        var qr2 = Quat.create();
-        Matrix.getRotate( mr, qr2 );
+        var qr2 = quat.create();
+        mat4.getRotation( qr2, mr );
         assert.equalVector( qr, qr2 );
         // consistency
 
-        assert.equalVector( Quat.mult( q2, Quat.mult( q1, q0, Quat.create() ), Quat.create() ), Quat.createAndSet( 0.653281, 0.270598, -0.653281, 0.270598 ) );
+        assert.equalVector( quat.multiply( quat.create(), q2, quat.multiply( quat.create(), q1, q0 ) ), quat.fromValues( 0.653281, 0.270598, -0.653281, 0.270598 ) );
     } );
 
     test( 'Quat.slerp', function () {
 
-        var res = Quat.createAndSet( 0.0, 0.0, 0.0, 0.0 );
+        var res = quat.fromValues( 0.0, 0.0, 0.0, 0.0 );
 
         // t = 0.5, half the angle between Y90RotNegX180Rot and ?Z90Rot?
-        Quat.slerp( 0.5, Y90RotNegX180Rot, Quat.createAndSet( 0.0, 0.0, 0.382683, 0.92388 ), res );
-        assert.equalVector( res, Quat.createAndSet( 0.0, 0.388863, 0.210451, 0.896937 ) );
+        quat.slerp( res, Y90RotNegX180Rot, quat.fromValues( 0.0, 0.0, 0.382683, 0.92388 ), 0.5 );
+        assert.equalVector( res, quat.fromValues( 0.0, 0.388863, 0.210451, 0.896937 ) );
 
-        Quat.slerp( 0.0, id, Y90Rot, res );
+        quat.slerp( res, id, Y90Rot, 0.0 );
         assert.equalVector( res, id, 1e-5, 't = 0' );
 
-        Quat.slerp( 1.0, id, Y90Rot, res );
+        quat.slerp( res, id, Y90Rot, 1.0 );
         assert.equalVector( res, Y90Rot, 1e-5, 't = 1' );
 
-        Quat.slerp( 0.5, id, Y90Rot, res );
+        quat.slerp( res, id, Y90Rot, 0.5 );
         assert.equalVector( res, Y45Rot, 1e-5, '0 -> 90; t:0.5' );
 
-        Quat.slerp( 0.5, Y90Rot, id, res );
+        quat.slerp( res, Y90Rot, id, 0.5 );
         assert.equalVector( res, Y45Rot, 1e-5, '90 -> 0 t:0.5' );
 
-        Quat.slerp( 0.5, id, Y90RotNeg, res );
+        quat.slerp( res, id, Y90RotNeg, 0.5 );
         assert.equalVector( res, Y45RotNeg, 1e-5, 'shortest path t:0.5' );
 
-        Quat.slerp( 0.5, Y90RotNeg, id, res );
+        quat.slerp( res, Y90RotNeg, id, 0.5 );
         assert.equalVector( res, Y45RotNeg, 1e-5, 'shortest path inverted t:0.5' );
 
-        Quat.slerp( 0.5, Y90Rot, Y90Rot, res );
+        quat.slerp( res, Y90Rot, Y90Rot, 0.5 );
         assert.equalVector( res, Y90Rot, 1e-5, 'same input t:0.5' );
 
-        Quat.slerp( 0.5, id, Y180Rot, res );
+        quat.slerp( res, id, Y180Rot, 0.5 );
         assert.equalVector( res, Y180X90NegRot, 1e-5, '0 to 180 t:0.5' );
 
-        Quat.slerp( 0.5, id, Quat.createAndSet( 0.0, 0.0, 0.0, 0.999 ), res );
+        quat.slerp( res, id, quat.fromValues( 0.0, 0.0, 0.0, 0.999 ), 0.5 );
         assert.equalVector( res, id, 1e4, 'a~n, t:0.5' ); // less prec than nlerp
 
-        Quat.slerp( 0.5, id, Quat.createAndSet( 0.0, 0.0, 0.0, -1.0 ), res );
+        quat.slerp( res, id, quat.fromValues( 0.0, 0.0, 0.0, -1.0 ), 0.5 );
         assert.equalVector( res, id, 1e-5, 'opposite sign, t:0.5' );
     } );
 
     test( 'Quat.nlerp', function () {
 
-        var res = Quat.createAndSet( 0.0, 0.0, 0.0, 0.0 );
+        var res = quat.fromValues( 0.0, 0.0, 0.0, 0.0 );
 
         // t = 0.5, half the angle between Y90RotNegX180Rot and ?Z90Rot?
-        Quat.nlerp( 0.5, Y90RotNegX180Rot, Quat.createAndSet( 0.0, 0.0, 0.382683, 0.92388 ), res );
-        assert.equalVector( res, Quat.createAndSet( 0.0, 0.388863, 0.210451, 0.896937 ) );
+        quat.nlerp( res, Y90RotNegX180Rot, quat.fromValues( 0.0, 0.0, 0.382683, 0.92388 ), 0.5 );
+        assert.equalVector( res, quat.fromValues( 0.0, 0.388863, 0.210451, 0.896937 ) );
 
-        Quat.nlerp( 0.0, id, Y90Rot, res );
+        quat.nlerp( res, id, Y90Rot, 0.0 );
         assert.equalVector( res, id, 1e-5, 't = 0' );
 
-        Quat.nlerp( 1.0, id, Y90Rot, res );
+        quat.nlerp( res, id, Y90Rot, 1.0 );
         assert.equalVector( res, Y90Rot, 1e-5, 't = 1' );
 
-        Quat.nlerp( 0.5, id, Y90Rot, res );
+        quat.nlerp( res, id, Y90Rot, 0.5 );
         assert.equalVector( res, Y45Rot, 1e-5, '0 -> 90; t:0.5' );
 
-        Quat.nlerp( 0.5, Y90Rot, id, res );
+        quat.nlerp( res, Y90Rot, id, 0.5 );
         assert.equalVector( res, Y45Rot, 1e-5, '90 -> 0 t:0.5' );
 
-        Quat.nlerp( 0.5, id, Y90RotNeg, res );
+        quat.nlerp( res, id, Y90RotNeg, 0.5 );
         assert.equalVector( res, Y45RotNeg, 1e-5, 'shortest path t:0.5' );
 
-        Quat.nlerp( 0.5, Y90RotNeg, id, res );
+        quat.nlerp( res, Y90RotNeg, id, 0.5 );
         assert.equalVector( res, Y45RotNeg, 1e-5, 'shortest path inverted t:0.5' );
 
-        Quat.nlerp( 0.5, Y90Rot, Y90Rot, res );
+        quat.nlerp( res, Y90Rot, Y90Rot, 0.5 );
         assert.equalVector( res, Y90Rot, 1e-5, 'same input t:0.5' );
 
-        Quat.nlerp( 0.5, id, Y180Rot, res );
+        quat.nlerp( res, id, Y180Rot, 0.5 );
         assert.equalVector( res, Y180X90NegRot, 1e-5, '0 to 180 t:0.5' );
 
-        Quat.nlerp( 0.5, id, Quat.createAndSet( 0.0, 0.0, 0.0, 0.999 ), res );
+        quat.nlerp( res, id, quat.fromValues( 0.0, 0.0, 0.0, 0.999 ), 0.5 );
         assert.equalVector( res, id, 1e-5, 'a~n, t:0.5' );
 
-        Quat.nlerp( 0.5, id, Quat.createAndSet( 0.0, 0.0, 0.0, -1.0 ), res );
+        quat.nlerp( res, id, quat.fromValues( 0.0, 0.0, 0.0, -1.0 ), 0.5 );
         assert.equalVector( res, id, 1e-5, 'opposite sign, t:0.5' );
 
     } );
 
     test( 'Quat.transformVec3', function () {
-        var v = Vec3.createAndSet( 1.0, 2.0, 3.0 );
-        Quat.transformVec3( Quat.createAndSet( 0.0, 0.707107, 0.0, 0.707107 ), v, v );
-        assert.equalVector( v, Vec3.createAndSet( 3.0, 2.0, -1.0 ) );
+        var v = vec3.fromValues( 1.0, 2.0, 3.0 );
+        vec3.transformQuat( v, v, quat.fromValues( 0.0, 0.707107, 0.0, 0.707107 ) );
+        assert.equalVector( v, vec3.fromValues( 3.0, 2.0, -1.0 ) );
     } );
 
 

@@ -13,7 +13,7 @@
         var rttSize = [ 512, 512 ];
         var rttCamera = new osg.Camera();
         rttCamera.setName( 'rttCamera' );
-        osg.Matrix.makeOrtho( 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5, rttCamera.getProjectionMatrix() );
+        osg.mat4.ortho( rttCamera.getProjectionMatrix(), 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5 );
         rttCamera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
         rttCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
         rttCamera.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
@@ -51,8 +51,8 @@
         // we create a ortho camera to display the rtt in hud like
         var hudCamera = new osg.Camera();
 
-        osg.Matrix.makeOrtho( 0, canvas.width, 0, canvas.height, -5, 5, hudCamera.getProjectionMatrix() );
-        osg.Matrix.makeTranslate( 25, 25, 0, hudCamera.getViewMatrix() );
+        osg.mat4.ortho( hudCamera.getProjectionMatrix(), 0, canvas.width, 0, canvas.height, -5, 5 );
+        osg.mat4.fromTranslation( hudCamera.getViewMatrix(), [ 25, 25, 0 ] );
         hudCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
         hudCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
 

@@ -220,10 +220,10 @@
 
             // create camera to setup RTT in overlay
             var cameraProjection = debugComposerCamera.getProjectionMatrix();
-            osg.Matrix.makeOrtho( 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5, cameraProjection );
+            osg.mat4.ortho( cameraProjection, 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5 );
 
             var cameraView = debugComposerCamera.getViewMatrix();
-            osg.Matrix.makeTranslate( 0, 0, 0, cameraView );
+            osg.mat4.fromTranslation( cameraView, [ 0, 0, 0 ] );
 
             debugComposerCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
             debugComposerCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );

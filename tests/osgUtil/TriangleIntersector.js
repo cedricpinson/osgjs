@@ -1,7 +1,7 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/Shape' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
@@ -18,14 +18,13 @@ module.exports = function () {
             var ti = new TriangleIntersector();
             var start = [ 0.4, 0.2, -2.0 ];
             var end = [ 0.4, 0.2, 0.5 ];
-            var dir = Vec3.sub( end, start, [] );
+            var dir = vec3.sub( vec3.create(), end, start );
             ti.set( start, end );
 
             ti.apply( geom );
             assert.isOk( ti._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + ti._intersections.length );
             var result = [ 0.4, 0.2, 0 ];
-            var found = Vec3.add( start,
-                Vec3.mult( dir, ti._intersections[ 0 ].ratio, [] ), [] );
+            var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, ti._intersections[ 0 ].ratio ) );
             assert.equalVector( found, result, 1e-4 );
 
             var ti2 = new TriangleIntersector();

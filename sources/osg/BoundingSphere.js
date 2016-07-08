@@ -1,17 +1,18 @@
 'use strict';
 var BoundingBox = require( 'osg/BoundingBox' );
 var Notify = require( 'osg/Notify' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 
 var BoundingSphere = function () {
-    this._center = Vec3.create();
+    this._center = vec3.create();
     this._radius = -1.0;
 };
 
 BoundingSphere.prototype = {
     init: function () {
-        Vec3.init( this._center );
+        vec3.init( this._center );
         this._radius = -1.0;
     },
     valid: function () {
@@ -32,7 +33,7 @@ BoundingSphere.prototype = {
     },
 
     expandByBoundingBox: ( function () {
-        var v = Vec3.create();
+        var v = vec3.create();
         var newbb = new BoundingBox();
 
         return function ( bb ) {
@@ -40,15 +41,15 @@ BoundingSphere.prototype = {
                 return;
 
             if ( this.valid() ) {
-                Vec3.copy( bb._min, newbb._min );
-                Vec3.copy( bb._max, newbb._max );
+                vec3.copy( newbb._min, bb._min );
+                vec3.copy( newbb._max, bb._max );
 
                 for ( var i = 0; i < 8; i++ ) {
-                    Vec3.sub( bb.corner( i, v ), this._center, v ); // get the direction vector from corner
-                    Vec3.normalize( v, v ); // normalise it.
-                    Vec3.mult( v, -this._radius, v ); // move the vector in the opposite direction distance radius.
-                    Vec3.add( v, this._center, v ); // move to absolute position.
-                    newbb.expandByVec3( v ); // add it into the new bounding box.
+                    vec3.sub( v, bb.corner( i, v ), this._center ); // get the direction vector from corner
+                    vec3.normalize( v, v ); // normalise it.
+                    vec3.scale( v, v, -this._radius ); // move the vector in the opposite direction distance radius.
+                    vec3.add( v, v, this._center ); // move to absolute position.
+                    newbb.expandByvec3( v ); // add it into the new bounding box.
                 }
 
                 newbb.center( this._center );
@@ -65,12 +66,12 @@ BoundingSphere.prototype = {
         return this.expandByBoundingBox( bb );
     },
 
-    expandByVec3: ( function () {
-        var dv = Vec3.create();
+    expandByvec3: ( function () {
+        var dv = vec3.create();
         return function ( v ) {
             if ( this.valid() ) {
-                Vec3.sub( v, this.center( dv ), dv );
-                var r = Vec3.length( dv );
+                vec3.sub( dv, v, this.center( dv ) );
+                var r = vec3.length( dv );
                 if ( r > this.radius() ) {
                     var dr = ( r - this.radius() ) * 0.5;
                     this._center[ 0 ] += dv[ 0 ] * ( dr / r );
@@ -90,13 +91,13 @@ BoundingSphere.prototype = {
     expandRadiusBySphere: function ( sh ) {
         if ( sh.valid() ) {
             if ( this.valid() ) {
-                var r = Vec3.distance( sh._center, this._center ) + sh._radius;
+                var r = vec3.distance( this._center, sh._center ) + sh._radius;
                 if ( r > this._radius ) {
                     this._radius = r;
                 }
                 // else do nothing as vertex is within sphere.
             } else {
-                Vec3.copy( sh._center, this._center );
+                vec3.copy( this._center, sh._center );
                 this._radius = sh._radius;
             }
         }
@@ -124,7 +125,7 @@ BoundingSphere.prototype = {
         }
 
         // Calculate d == The distance between the sphere centers
-        var d = Vec3.distance( this.center(), sh.center() );
+        var d = vec3.distance( sh.center(), this.center() );
 
         // New sphere is already inside this one
         if ( d + sh.radius() <= this.radius() ) {
@@ -159,14 +160,37 @@ BoundingSphere.prototype = {
     contains: function ( v ) {
         if ( !this.valid() )
             return false;
-        return Vec3.distance2( v, this.center() ) <= this.radius2();
+        return vec3.sqrDist( this.center(), v ) <= this.radius2();
     },
     intersects: function ( bs ) {
         if ( !this.valid() || !bs.valid() )
             return false;
         var r = this.radius() + bs.radius();
-        return Vec3.distance2( this.center(), bs.center() ) <= r * r;
-    }
+        return vec3.sqrDist( bs.center(), this.center() ) <= r * r;
+    },
+
+    transformMat4: ( function () {
+        var scaleVec = vec3.create();
+        return function ( out, matrix ) {
+            if ( !this.valid() ) return out;
+
+            if ( out._center !== this._center ) {
+                vec3.copy( out._center, this._center );
+                out._radius = this._radius;
+            }
+            var sphCenter = out._center;
+            var sphRadius = out._radius;
+
+            mat4.getSqrScale( scaleVec, matrix );
+            var scale = Math.sqrt( Math.max( Math.max( scaleVec[ 0 ], scaleVec[ 1 ] ), scaleVec[ 2 ] ) );
+            sphRadius = sphRadius * scale;
+            out._radius = sphRadius;
+            vec3.transformMat4( sphCenter, sphCenter, matrix );
+
+            return out;
+        };
+    } )()
+
 };
 
 module.exports = BoundingSphere;

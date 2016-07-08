@@ -1,9 +1,9 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Geometry = require( 'osg/Geometry' );
 var Notify = require( 'osg/Notify' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var StateSet = require( 'osg/StateSet' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 var UpdateRigGeometry = require( 'osgAnimation/UpdateRigGeometry' );
@@ -40,8 +40,8 @@ var RigGeometry = function () {
 
     this._boneNameID = {};
 
-    this._matrixFromSkeletonToGeometry = Matrix.create();
-    this._invMatrixFromSkeletonToGeometry = Matrix.create();
+    this._matrixFromSkeletonToGeometry = mat4.create();
+    this._invMatrixFromSkeletonToGeometry = mat4.create();
 
     this._rigTransformImplementation = new RigTransformHardware();
 
@@ -145,9 +145,9 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             return;
         }
 
-        Matrix.makeIdentity( this._matrixFromSkeletonToGeometry );
+        mat4.identity( this._matrixFromSkeletonToGeometry );
         ComputeMatrixFromNodePath.computeLocalToWorld( this._pathToRoot, true, this._matrixFromSkeletonToGeometry );
-        Matrix.inverse( this._matrixFromSkeletonToGeometry, this._invMatrixFromSkeletonToGeometry );
+        mat4.invert( this._invMatrixFromSkeletonToGeometry, this._matrixFromSkeletonToGeometry );
 
         if ( !this._isAnimatedPath )
             this._needToComputeMatrix = false;
@@ -201,7 +201,7 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
     },
 
     computeTransformedVertex: function ( id, out ) {
-        out = out || Vec3.create();
+        out = out || vec3.create();
 
         var vList = this.getVertexAttributeList();
         var vWeights = vList.Weights.getElements();

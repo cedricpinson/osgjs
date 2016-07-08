@@ -23,12 +23,13 @@
             var group32 = new osg.MatrixTransform();
             var group4 = new osg.MatrixTransform();
 
-            osg.Matrix.makeTranslate( +5, 10, -5, group1.getMatrix() );
-            osg.Matrix.makeTranslate( 0, 10, 0, group21.getMatrix() );
-            osg.Matrix.makeTranslate( 10, 0, 0, group22.getMatrix() );
-            osg.Matrix.makeTranslate( 0, 0, -5, group3.getMatrix() );
-            osg.Matrix.makeTranslate( 0, -5, 0, group31.getMatrix() );
-            osg.Matrix.makeTranslate( -5, 0, 0, group32.getMatrix() );
+            osg.mat4.fromTranslation( group1.getMatrix(), [ +5, 10, -5 ] );
+            osg.mat4.fromTranslation( group21.getMatrix(), [ 0, 10, 0 ] );
+            osg.mat4.fromTranslation( group22.getMatrix(), [ 10, 0, 0 ] );
+            osg.mat4.fromTranslation( group3.getMatrix(), [ 0, 0, -5 ] );
+
+            osg.mat4.fromTranslation( group31.getMatrix(), [ 0, -5, 0 ] );
+            osg.mat4.fromTranslation( group32.getMatrix(), [ -5, 0, 0 ] );
 
             var ground1 = osg.createTexturedBoxGeometry( 0, 0, 0, 6, 5, 4 );
             var ground2 = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );

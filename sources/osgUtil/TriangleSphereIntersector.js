@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 var Notify = require( 'osg/Notify' );
 
@@ -38,23 +38,23 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleIntersec
     // from http://www.geometrictools.com/Source/Distance3D.html#PointPlanar
     // js : https://github.com/stephomi/sculptgl/blob/master/src/math3d/Geometry.js#L89
     intersect: ( function () {
-        var edge1 = Vec3.create();
-        var edge2 = Vec3.create();
-        var diff = Vec3.create();
+        var edge1 = vec3.create();
+        var edge2 = vec3.create();
+        var diff = vec3.create();
         return function ( v1, v2, v3, i1, i2, i3 ) {
 
             // sphere is a 'volume' here (so if the triangle is inside the ball it will intersects)
 
-            Vec3.sub( v2, v1, edge1 );
-            Vec3.sub( v3, v1, edge2 );
-            var a00 = Vec3.length2( edge1 );
-            var a01 = Vec3.dot( edge1, edge2 );
-            var a11 = Vec3.length2( edge2 );
+            vec3.sub( edge1, v2, v1 );
+            vec3.sub( edge2, v3, v1 );
+            var a00 = vec3.sqrLen( edge1 );
+            var a01 = vec3.dot( edge1, edge2 );
+            var a11 = vec3.sqrLen( edge2 );
 
-            Vec3.sub( v1, this._center, diff );
-            var b0 = Vec3.dot( diff, edge1 );
-            var b1 = Vec3.dot( diff, edge2 );
-            var c = Vec3.length2( diff );
+            vec3.sub( diff, v1, this._center );
+            var b0 = vec3.dot( diff, edge1 );
+            var b1 = vec3.dot( diff, edge2 );
+            var c = vec3.sqrLen( diff );
             var det = Math.abs( a00 * a11 - a01 * a01 );
             if ( det < 1e-10 )
                 return;
@@ -215,16 +215,16 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleIntersec
             if ( sqrDistance > ( this._radius * this._radius ) )
                 return;
 
-            var closest = Vec3.create();
+            var closest = vec3.create();
             if ( closest ) {
                 closest[ 0 ] = v1[ 0 ] + s * edge1[ 0 ] + t * edge2[ 0 ];
                 closest[ 1 ] = v1[ 1 ] + s * edge1[ 1 ] + t * edge2[ 1 ];
                 closest[ 2 ] = v1[ 2 ] + s * edge1[ 2 ] + t * edge2[ 2 ];
             }
 
-            var normal = Vec3.create();
-            Vec3.cross( edge1, edge2, normal );
-            Vec3.normalize( normal, normal );
+            var normal = vec3.create();
+            vec3.cross( normal, edge1, edge2 );
+            vec3.normalize( normal, normal );
 
             // TODO: gc TriangleIntersection, closest, normal ? (stack pool)
             this._intersections.push( {

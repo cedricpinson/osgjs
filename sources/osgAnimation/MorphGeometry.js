@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var BufferArrayProxy = require( 'osg/BufferArrayProxy' );
 var Notify = require( 'osg/Notify' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Geometry = require( 'osg/Geometry' );
 var StateSet = require( 'osg/StateSet' );
 var MorphAttribute = require( 'osgAnimation/MorphAttribute' );
@@ -136,7 +136,7 @@ MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
     },
 
     computeTransformedVertex: function ( id, out ) {
-        out = out || Vec3.create();
+        out = out || vec3.create();
 
         var id3 = id * 3;
 

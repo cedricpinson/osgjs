@@ -2,9 +2,9 @@
 var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var BaseObject = require( 'osg/Object' );
-var Quat = require( 'osg/Quat' );
-var Vec3 = require( 'osg/Vec3' );
-var Matrix = require( 'osg/Matrix' );
+var quat = require( 'osg/glMatrix' ).quat;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Channel = require( 'osgAnimation/Channel' );
 var Animation = require( 'osgAnimation/Animation' );
 var Interpolator = require( 'osgAnimation/Interpolator' );
@@ -14,7 +14,7 @@ var UpdateMorph = require( 'osgAnimation/UpdateMorph' );
 
 
 var Float = {
-    lerp: function ( t, a, b ) {
+    lerp: function ( a, b, t ) {
         return a + ( b - a ) * t;
     },
     init: function () {
@@ -40,13 +40,13 @@ TypeToSize[ Channel.ChannelType.Matrix ] = 16;
 
 var ResultType = [];
 ResultType.length = Channel.ChannelType.Count;
-ResultType[ Channel.ChannelType.Vec3 ] = Vec3;
-ResultType[ Channel.ChannelType.Quat ] = Quat;
-ResultType[ Channel.ChannelType.QuatSlerp ] = Quat;
+ResultType[ Channel.ChannelType.Vec3 ] = vec3;
+ResultType[ Channel.ChannelType.Quat ] = quat;
+ResultType[ Channel.ChannelType.QuatSlerp ] = quat;
 ResultType[ Channel.ChannelType.Float ] = Float;
 ResultType[ Channel.ChannelType.FloatCubicBezier ] = Float;
-ResultType[ Channel.ChannelType.Vec3CubicBezier ] = Vec3;
-ResultType[ Channel.ChannelType.Matrix ] = Matrix;
+ResultType[ Channel.ChannelType.Vec3CubicBezier ] = vec3;
+ResultType[ Channel.ChannelType.Matrix ] = mat4;
 
 /**
  *  BasicAnimationManager
@@ -83,7 +83,7 @@ var BasicAnimationManager = function () {
 
     // target id with active lists
     // [
-    //   Vec3: [ targetID0, targetID1 ]
+    //   vec3: [ targetID0, targetID1 ]
     //   Quat: [ targetID2, targetID3,  ... ]
     //   Float: [ ... ]
     // ]
@@ -98,7 +98,7 @@ var BasicAnimationManager = function () {
     this._activeAnimationList = [];
 
     // current actives channels by types
-    //   [ chanel0, channel1, ... ] // Vec3 type
+    //   [ chanel0, channel1, ... ] // vec3 type
     //   [ chanel2, channel3, ... ] // Quat type
     //   [ chanel5, channel6, ... ] // Float type
     this._activeChannelsByTypes = [];
@@ -552,7 +552,7 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
                         continue;
 
                     var ratio = weight / accumulatedWeight;
-                    target.value = operatorType.lerp( ratio, target.value, achannel.value, target.value );
+                    target.value = operatorType.lerp( target.value, target.value, achannel.value, ratio );
                 }
             }
         }

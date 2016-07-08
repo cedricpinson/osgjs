@@ -1,7 +1,7 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var vec2 = require( 'osg/glMatrix' ).vec2;
 
 
 var OrbitManipulatorLeapMotionController = function ( manipulator ) {
@@ -39,12 +39,12 @@ var ModeConfig = {
 
 OrbitManipulatorLeapMotionController.prototype = {
     init: function () {
-        this._virtualCursor = Vec2.createAndSet( 0.0, 0.0 );
-        this._targetPosition = Vec2.createAndSet( 0.0, 0.0 );
+        this._virtualCursor = vec2.fromValues( 0.0, 0.0 );
+        this._targetPosition = vec2.fromValues( 0.0, 0.0 );
         this._previousFrame = undefined;
-        this._displacement = Vec2.createAndSet( 0.0, 0.0 );
-        this._top = Vec2.createAndSet( 0.0, 1.0, 0.0 );
-        this._motion = Vec2.createAndSet( 0.0, 0.0 );
+        this._displacement = vec2.fromValues( 0.0, 0.0 );
+        this._top = vec2.fromValues( 0.0, 1.0 );
+        this._motion = vec2.fromValues( 0.0, 0.0 );
         this._delay = 0.05;
         this._threshold = 0.08;
         this._directionDotThreshold = 0.5;
@@ -102,8 +102,8 @@ OrbitManipulatorLeapMotionController.prototype = {
                 mode = 'rotate';
             }
         } else if ( frame.hands.length === 2 ) {
-            var d0 = Math.abs( Vec3.dot( frame.hands[ 0 ].palmNormal, this._top ) ),
-                d1 = Math.abs( Vec3.dot( frame.hands[ 1 ].palmNormal, this._top ) );
+            var d0 = Math.abs( vec3.dot( frame.hands[ 0 ].palmNormal, this._top ) ),
+                d1 = Math.abs( vec3.dot( frame.hands[ 1 ].palmNormal, this._top ) );
 
             // two hands : zoom
             if ( d0 < this._directionDotThreshold && d1 < this._directionDotThreshold ) {
@@ -155,7 +155,7 @@ OrbitManipulatorLeapMotionController.prototype = {
             zoom.setTarget( dist );
         } else if ( mode === 'zoom-twohands' ) { // two hands zoom
             // distance between two hands
-            var handsDistance = Vec3.distance( frame.hands[ 0 ].palmPosition, frame.hands[ 1 ].palmPosition );
+            var handsDistance = vec3.distance( frame.hands[ 1 ].palmPosition, frame.hands[ 0 ].palmPosition );
 
             if ( this._handsDistanceOld !== undefined ) {
                 // compare distance with lastframe and zoom if they get nearer, unzoom if they separate

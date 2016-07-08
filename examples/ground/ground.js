@@ -60,9 +60,9 @@
         // size. So we scale the ground size with this per-model scale factor (radius of bounding sphere)
         this._scale = 1.0;
 
-        this._scaleMatrix = osg.Matrix.create();
-        this._yTranslateMatrix = osg.Matrix.create();
-        this._center = osg.Vec3.create();
+        this._scaleMatrix = osg.mat4.create();
+        this._yTranslateMatrix = osg.mat4.create();
+        this._center = osg.vec3.create();
 
         // Create geometry for the ground, 1 unit and centered around 0
         var quad = osg.createTexturedQuadGeometry( -0.5, -0.5, 0.0,
@@ -95,17 +95,17 @@
             this._normalizedHeight = -1.0;
             this._scale = bsphere.radius() * this._correction;
 
-            osg.Vec3.copy( bsphere.center(), this._center );
+            osg.vec3.copy( this._center, bsphere.center() );
 
             this.computeMatrix();
         },
 
         computeMatrix: function () {
 
-            osg.Matrix.makeScale( this._scale * this._size, this._scale * this._size, 1, this._scaleMatrix );
-            osg.Matrix.makeTranslate( this._center[ 0 ], this._center[ 1 ], this._center[ 2 ] + ( this._normalizedHeight * this._scale ), this._yTranslateMatrix );
+            osg.mat4.fromScaling( this._scaleMatrix, [ this._scale * this._size, this._scale * this._size, 1 ] );
+            osg.mat4.fromTranslation( this._yTranslateMatrix, [ this._center[ 0 ], this._center[ 1 ], this._center[ 2 ] + ( this._normalizedHeight * this._scale ) ] );
 
-            osg.Matrix.mult( this._yTranslateMatrix, this._scaleMatrix, this.getMatrix() );
+            osg.mat4.mul( this.getMatrix(), this._yTranslateMatrix, this._scaleMatrix );
         },
 
         setNormalizedHeight: function ( normalizedHeight ) {

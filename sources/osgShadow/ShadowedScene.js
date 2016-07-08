@@ -1,11 +1,11 @@
 'use strict';
 var CullVisitor = require( 'osg/CullVisitor' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Node = require( 'osg/Node' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var StateSet = require( 'osg/StateSet' );
 var MACROUTILS = require( 'osg/Utils' );
-var Vec4 = require( 'osg/Vec4' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
 
 
 /**
@@ -22,9 +22,9 @@ var ShadowedScene = function () {
 
     this._optimizedFrustum = false;
 
-    this._frustumReceivers = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
+    this._frustumReceivers = [ vec4.create(), vec4.create(), vec4.create(), vec4.create(), vec4.create(), vec4.create() ];
 
-    this._tmpMat = Matrix.create();
+    this._tmpMat = mat4.create();
 
     this._receivingStateset = new StateSet();
 

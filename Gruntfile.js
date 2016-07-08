@@ -186,7 +186,8 @@ var gruntTasks = {};
             }
         },
         src: srcFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1;
+            return pathName.indexOf( 'vendors' ) === -1 && pathName.indexOf( 'glMatrix' ) === -1 ;
+
         } ).map( function ( pathname ) {
             return path.join( SOURCE_PATH, pathname );
         } )
@@ -200,7 +201,7 @@ var gruntTasks = {};
             }
         },
         src: testsFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1;
+            return pathName.indexOf( 'vendors' ) === -1 && pathName.indexOf( 'glMatrix' ) === -1;
         } ).map( function ( pathname ) {
             return path.join( SOURCE_PATH, pathname );
         } )

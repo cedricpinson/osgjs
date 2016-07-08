@@ -342,7 +342,7 @@
             camera._textureOpaque = textureOpaque;
             camera._textureTransparent = textureTranparent;
 
-            camera.setClearColor( osg.Vec4.create( [ 0.0, 0.0, 0.1, 1.0 ] ) );
+            camera.setClearColor( osg.vec4.fromValues( 0.0, 0.0, 0.1, 1.0 ) );
             return camera;
         },
 
@@ -388,8 +388,8 @@
             var model0 = this.createModel( '../media/models/material-test/file.osgjs' );
             var model1 = this.createModel( '../media/models/material-test/file.osgjs' );
 
-            osg.Matrix.makeTranslate( -10, 0, 0, model0.getMatrix() );
-            osg.Matrix.makeTranslate( 10, 0, 0, model1.getMatrix() );
+            osg.mat4.fromTranslation( model0.getMatrix(), [ -10, 0, 0 ] );
+            osg.mat4.fromTranslation( model1.getMatrix(), [ 10, 0, 0 ] );
 
 
             var stateSet = model1.getOrCreateStateSet();

@@ -1,7 +1,7 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
 var EllipsoidModel = function () {
@@ -31,7 +31,7 @@ EllipsoidModel.prototype = {
     convertLatLongHeightToXYZ: function ( latitude, longitude, height, result ) {
         if ( result === undefined ) {
             Notify.warn( 'deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )' );
-            result = Vec3.create();
+            result = vec3.create();
         }
         var sinLatitude = Math.sin( latitude );
         var cosLatitude = Math.cos( latitude );
@@ -47,7 +47,7 @@ EllipsoidModel.prototype = {
     convertXYZToLatLongHeight: function ( X, Y, Z, result ) {
         if ( result === undefined ) {
             Notify.warn( 'deprecated, use this signature convertXYZToLatLongHeight( X,  Y,  Z , result)' );
-            result = Vec3.create();
+            result = vec3.create();
         }
         // http://www.colorado.edu/geography/gcraft/notes/datum/gif/xyzllh.gif
         var p = Math.sqrt( X * X + Y * Y );
@@ -97,23 +97,23 @@ EllipsoidModel.prototype = {
     computeLocalToWorldTransformFromLatLongHeight: function ( latitude, longitude, height, result ) {
         if ( result === undefined ) {
             Notify.warn( 'deprecated, use this signature computeLocalToWorldTransformFromLatLongHeight(latitude, longitude, height, result)' );
-            result = Matrix.create();
+            result = mat4.create();
         }
         var pos = this.convertLatLongHeightToXYZ( latitude, longitude, height, result );
-        Matrix.makeTranslate( pos[ 0 ], pos[ 1 ], pos[ 2 ], result );
+        mat4.fromTranslation( result, pos );
         this.computeCoordinateFrame( latitude, longitude, result );
         return result;
     },
     computeLocalToWorldTransformFromXYZ: function ( X, Y, Z ) {
         var lla = this.convertXYZToLatLongHeight( X, Y, Z );
-        var m = Matrix.makeTranslate( X, Y, Z, Matrix.create() );
+        var m = mat4.fromTranslation( mat4.create(), [ X, Y, Z ] );
         this.computeCoordinateFrame( lla[ 0 ], lla[ 1 ], m );
         return m;
     },
     computeCoordinateFrame: ( function () {
-        var up = Vec3.create();
-        var east = Vec3.create();
-        var north = Vec3.create();
+        var up = vec3.create();
+        var east = vec3.create();
+        var north = vec3.create();
         return function ( latitude, longitude, localToWorld ) {
             // Compute up vector
             up[ 0 ] = Math.cos( longitude ) * Math.cos( latitude );
@@ -125,20 +125,14 @@ EllipsoidModel.prototype = {
             east[ 1 ] = -Math.cos( longitude );
 
             // Compute north vector = outer product up x east
-            Vec3.cross( up, east, north );
+            vec3.cross( north, up, east );
 
             // set matrix
-            Matrix.set( localToWorld, 0, 0, east[ 0 ] );
-            Matrix.set( localToWorld, 0, 1, east[ 1 ] );
-            Matrix.set( localToWorld, 0, 2, east[ 2 ] );
-
-            Matrix.set( localToWorld, 1, 0, north[ 0 ] );
-            Matrix.set( localToWorld, 1, 1, north[ 1 ] );
-            Matrix.set( localToWorld, 1, 2, north[ 2 ] );
-
-            Matrix.set( localToWorld, 2, 0, up[ 0 ] );
-            Matrix.set( localToWorld, 2, 1, up[ 1 ] );
-            Matrix.set( localToWorld, 2, 2, up[ 2 ] );
+            mat4.set( localToWorld,
+                east[ 0 ], east[ 1 ], east[ 2 ], 0,
+                north[ 0 ], north[ 1 ], north[ 2 ], 0,
+                up[ 0 ], up[ 1 ], up[ 2 ], 0,
+                0, 0, 0, 1 );
         };
     } )()
 };

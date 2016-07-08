@@ -1,5 +1,5 @@
 'use strict';
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var TransformEnums = require( 'osg/TransformEnums' );
 
 
@@ -10,7 +10,7 @@ var computeLocalToWorld = function ( nodePath, ignoreCameras, userMatrix ) {
 
     if ( ignoreCamera === undefined ) ignoreCamera = true;
 
-    var matrix = userMatrix || Matrix.create();
+    var matrix = userMatrix || mat4.create();
 
     var j = 0;
 

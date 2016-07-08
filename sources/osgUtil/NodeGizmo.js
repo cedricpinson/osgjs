@@ -6,11 +6,11 @@ var Depth = require( 'osg/Depth' );
 var BlendFunc = require( 'osg/BlendFunc' );
 var CullFace = require( 'osg/CullFace' );
 var Uniform = require( 'osg/Uniform' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
-var Matrix = require( 'osg/Matrix' );
-var Quat = require( 'osg/Quat' );
+var vec2 = require( 'osg/glMatrix' ).vec2;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var vec4 = require( 'osg/glMatrix' ).vec4;
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var quat = require( 'osg/glMatrix' ).quat;
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var GizmoGeometry = require( 'osgUtil/GizmoGeometry' );
@@ -34,7 +34,7 @@ var blendAttribute = new BlendFunc( BlendFunc.SRC_ALPHA, BlendFunc.ONE_MINUS_SRC
 
 var LineCustomIntersector = function ( testPlane ) {
     this._testPlane = testPlane; // intersection plane or line
-    this._inter = Vec3.create(); // translate distance
+    this._inter = vec3.create(); // translate distance
     LineSegmentIntersector.call( this );
 };
 LineCustomIntersector.prototype = MACROUTILS.objectInherit( LineSegmentIntersector.prototype, {
@@ -45,30 +45,30 @@ LineCustomIntersector.prototype = MACROUTILS.objectInherit( LineSegmentIntersect
         return this._inter;
     },
     enter: ( function () {
-        var axis = Vec3.create();
-        var dir = Vec3.create();
+        var axis = vec3.create();
+        var dir = vec3.create();
 
         return function ( node ) {
             if ( node._nbAxis === undefined )
                 return true;
 
-            Vec3.init( axis );
+            vec3.init( axis );
             axis[ node._nbAxis ] = 1.0;
             if ( !this._testPlane ) {
                 // intersection line line
-                Vec3.normalize( Vec3.sub( this._iEnd, this._iStart, dir ), dir );
+                vec3.normalize( dir, vec3.sub( dir, this._iEnd, this._iStart ) );
 
-                var a01 = -Vec3.dot( dir, axis );
-                var b0 = Vec3.dot( this._iStart, dir );
+                var a01 = -vec3.dot( dir, axis );
+                var b0 = vec3.dot( this._iStart, dir );
                 var det = Math.abs( 1.0 - a01 * a01 );
 
-                var b1 = -Vec3.dot( this._iStart, axis );
-                Vec3.init( this._inter );
+                var b1 = -vec3.dot( this._iStart, axis );
+                vec3.init( this._inter );
                 this._inter[ node._nbAxis ] = ( a01 * b0 - b1 ) / det;
             } else {
                 // intersection line plane
-                var dist1 = Vec3.dot( this._iStart, axis );
-                var dist2 = Vec3.dot( this._iEnd, axis );
+                var dist1 = vec3.dot( this._iStart, axis );
+                var dist2 = vec3.dot( this._iEnd, axis );
                 // ray copplanar to triangle
                 if ( dist1 === dist2 )
                     return false;
@@ -125,22 +125,22 @@ var NodeGizmo = function ( viewer ) {
     this._showAngle = new MatrixTransform();
 
     //for realtime picking
-    this._downCanvasCoord = Vec2.create();
+    this._downCanvasCoord = vec2.create();
     this._hoverNode = null; // the hovered x/y/z MT node
-    this._keepHoverColor = Vec4.create();
+    this._keepHoverColor = vec4.create();
 
     // for editing
     this._isEditing = false;
 
-    this._editLineOrigin = Vec3.create();
-    this._editLineDirection = Vec3.create();
-    this._editOffset = Vec3.create();
+    this._editLineOrigin = vec3.create();
+    this._editLineDirection = vec3.create();
+    this._editOffset = vec3.create();
 
     // cached matrices when starting the editing operations
-    this._editLocal = Matrix.create();
-    this._editWorldTrans = Matrix.create();
-    this._editWorldScaleRot = Matrix.create();
-    this._editInvWorldScaleRot = Matrix.create();
+    this._editLocal = mat4.create();
+    this._editWorldTrans = mat4.create();
+    this._editWorldScaleRot = mat4.create();
+    this._editInvWorldScaleRot = mat4.create();
 
     // red line, it can be useful as helpers too
     this._debugNode = new Node();
@@ -152,8 +152,8 @@ var NodeGizmo = function ( viewer ) {
 
     // Intersectors
     this._lsi = new LineCustomIntersector();
-    this._origIntersect = Vec3.create();
-    this._dstIntersect = Vec3.create();
+    this._origIntersect = vec3.create();
+    this._dstIntersect = vec3.create();
     this._iv = new IntersectionVisitor();
     this._iv.setIntersector( this._lsi );
 
@@ -318,7 +318,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     },
 
     onNodeHovered: ( function () {
-        var hoverColor = Vec4.createAndSet( 1.0, 1.0, 0.0, 1.0 );
+        var hoverColor = vec4.fromValues( 1.0, 1.0, 0.0, 1.0 );
 
         return function ( hit ) {
 
@@ -341,7 +341,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
             var unif = node.getStateSet().getUniform( 'uColor' );
             this._hoverNode = node;
-            Vec4.copy( unif.getInternalArray(), this._keepHoverColor );
+            vec4.copy( this._keepHoverColor, unif.getInternalArray() );
             unif.setFloat4( hoverColor );
         };
     } )(),
@@ -379,15 +379,15 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mtY.addChild( hideNode );
         mtZ.addChild( hideNode );
 
-        mtXYZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ), 'uColor' ) );
-        mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 1.0, 0.0, 0.0, 1.0 ), 'uColor' ) );
-        mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 1.0, 0.0, 1.0 ), 'uColor' ) );
-        mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 0.0, 1.0, 1.0 ), 'uColor' ) );
+        mtXYZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 0.2, 0.2, 0.2, 1.0 ), 'uColor' ) );
+        mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 1.0, 0.0, 0.0, 1.0 ), 'uColor' ) );
+        mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 0.0, 1.0, 0.0, 1.0 ), 'uColor' ) );
+        mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 0.0, 0.0, 1.0, 1.0 ), 'uColor' ) );
 
         var showAngle = this._showAngle;
         showAngle.getOrCreateStateSet().setAttributeAndModes( blendAttribute );
         showAngle.setNodeMask( 0x0 );
-        showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat3( Vec3.createAndSet( 1.0, 0.0, 0.0 ), 'uBase' ) );
+        showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat3( vec3.fromValues( 1.0, 0.0, 0.0 ), 'uBase' ) );
         showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat( 0.0, 'uAngle' ) );
         showAngle.addChild( GizmoGeometry.createQuadCircleGeometry() );
 
@@ -409,11 +409,11 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // cone arrow
         var mtCone = new MatrixTransform();
-        Matrix.makeTranslate( 0.0, 0.0, aHeight + aConeHeight * 0.5, mtCone.getMatrix() );
+        mat4.fromTranslation( mtCone.getMatrix(), [ 0.0, 0.0, aHeight + aConeHeight * 0.5 ] );
         mtCone.addChild( GizmoGeometry.createCylinderGeometry( 0.0, 0.07, aConeHeight, 32, 1, true, true ) );
         // arrow base
         var mtArrow = new MatrixTransform();
-        Matrix.makeTranslate( 0.0, 0.0, aHeight * 0.5, mtArrow.getMatrix() );
+        mat4.fromTranslation( mtArrow.getMatrix(), [ 0.0, 0.0, aHeight * 0.5 ] );
         mtArrow.addChild( GizmoGeometry.createCylinderGeometry( 0.01, 0.01, aHeight, 32, 1, true, true ) );
         // draw arrow
         var drawArrow = new Node();
@@ -429,12 +429,12 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mtY._nbAxis = 1;
         mtZ._nbAxis = 2;
 
-        Matrix.makeRotate( Math.PI * 0.5, 0.0, 1.0, 0.0, mtX.getMatrix() );
-        Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, mtY.getMatrix() );
+        mat4.fromRotation( mtX.getMatrix(), Math.PI * 0.5, [ 0.0, 1.0, 0.0 ] );
+        mat4.fromRotation( mtY.getMatrix(), -Math.PI * 0.5, [ 1.0, 0.0, 0.0 ] );
 
         var hideNode = new MatrixTransform();
         hideNode.setCullCallback( new HideCullCallback() );
-        Matrix.makeTranslate( 0.0, 0.0, pickStart + pickHeight * 0.5, hideNode.getMatrix() );
+        mat4.fromTranslation( hideNode.getMatrix(), [ 0.0, 0.0, pickStart + pickHeight * 0.5 ] );
         hideNode.addChild( pickArrow );
 
         // set masks
@@ -451,9 +451,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mtY.addChild( hideNode );
         mtZ.addChild( hideNode );
 
-        mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 1.0, 0.0, 0.0, 1.0 ), 'uColor' ) );
-        mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 1.0, 0.0, 1.0 ), 'uColor' ) );
-        mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 0.0, 1.0, 1.0 ), 'uColor' ) );
+        mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 1.0, 0.0, 0.0, 1.0 ), 'uColor' ) );
+        mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 0.0, 1.0, 0.0, 1.0 ), 'uColor' ) );
+        mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 0.0, 0.0, 1.0, 1.0 ), 'uColor' ) );
 
         var translate = this._translateNode;
         translate.setNodeMask( NodeGizmo.PICK_ARROW );
@@ -465,8 +465,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     initNodeTranslatePlane: function () {
         var mtPlane = new MatrixTransform();
-        Matrix.makeTranslate( 0.5, 0.5, 0.0, mtPlane.getMatrix() );
-        Matrix.postMult( Matrix.makeScale( 0.5, 0.5, 1.0, Matrix.create() ), mtPlane.getMatrix() );
+        mat4.fromTranslation( mtPlane.getMatrix(), [ 0.5, 0.5, 0.0 ] );
+        mat4.mul( mtPlane.getMatrix(), mat4.fromScaling( mat4.create(), [ 0.5, 0.5, 1.0 ] ), mtPlane.getMatrix() );
         mtPlane.addChild( GizmoGeometry.createPlaneGeometry() );
 
         var mtX = new MatrixTransform();
@@ -476,8 +476,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mtY._nbAxis = 1;
         mtZ._nbAxis = 2;
 
-        Matrix.makeRotate( -Math.PI * 0.5, 0.0, 1.0, 0.0, mtX.getMatrix() );
-        Matrix.makeRotate( Math.PI * 0.5, 1.0, 0.0, 0.0, mtY.getMatrix() );
+        mat4.fromRotation( mtX.getMatrix(), -Math.PI * 0.5, [ 0.0, 1.0, 0.0 ] );
+        mat4.fromRotation( mtY.getMatrix(), Math.PI * 0.5, [ 1.0, 0.0, 0.0 ] );
 
         // set masks
         mtX.setNodeMask( NodeGizmo.PICK_PLANE_X );
@@ -488,9 +488,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mtY.addChild( mtPlane );
         mtZ.addChild( mtPlane );
 
-        mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 1.0, 0.0, 0.0, 0.3 ), 'uColor' ) );
-        mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 1.0, 0.0, 0.3 ), 'uColor' ) );
-        mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 0.0, 1.0, 0.3 ), 'uColor' ) );
+        mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 1.0, 0.0, 0.0, 0.3 ), 'uColor' ) );
+        mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 0.0, 1.0, 0.0, 0.3 ), 'uColor' ) );
+        mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( vec4.fromValues( 0.0, 0.0, 1.0, 0.3 ), 'uColor' ) );
 
         var plane = this._planeNode;
         plane.setNodeMask( NodeGizmo.PICK_PLANE );
@@ -502,30 +502,30 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     },
 
     updateArcRotation: ( function () {
-        var quat = Quat.create();
-        var quatx = Quat.makeRotate( -Math.PI * 0.5, 0.0, 1.0, 0.0, Quat.create() );
-        var quaty = Quat.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, Quat.create() );
+        var qTmp = quat.create();
+        var quatx = quat.setAxisAngle( quat.create(), [ 0.0, 1.0, 0.0 ], -Math.PI * 0.5 );
+        var quaty = quat.setAxisAngle( quat.create(), [ 1.0, 0.0, 0.0 ], -Math.PI * 0.5 );
         return function ( eye ) {
             var rotateNode = this._rotateNode;
             var arcs = rotateNode.getChildren();
             // eye arc
-            quat[ 0 ] = -eye[ 1 ];
-            quat[ 1 ] = eye[ 0 ];
-            quat[ 2 ] = 0.0;
-            quat[ 3 ] = 1.0 + eye[ 2 ];
-            Quat.normalize( quat, quat );
-            Matrix.makeRotateFromQuat( quat, arcs[ 0 ].getMatrix() );
+            qTmp[ 0 ] = -eye[ 1 ];
+            qTmp[ 1 ] = eye[ 0 ];
+            qTmp[ 2 ] = 0.0;
+            qTmp[ 3 ] = 1.0 + eye[ 2 ];
+            quat.normalize( qTmp, qTmp );
+            mat4.fromQuat( arcs[ 0 ].getMatrix(), qTmp );
             // x arc
-            Quat.makeRotate( Math.atan2( eye[ 2 ], eye[ 1 ] ), 1.0, 0.0, 0.0, quat );
-            Quat.mult( quat, quatx, quat );
-            Matrix.makeRotateFromQuat( quat, arcs[ 1 ].getMatrix() );
+            quat.setAxisAngle( qTmp, [ 1.0, 0.0, 0.0 ], Math.atan2( eye[ 2 ], eye[ 1 ] ) );
+            quat.mul( qTmp, qTmp, quatx );
+            mat4.fromQuat( arcs[ 1 ].getMatrix(), qTmp );
             // y arc
-            Quat.makeRotate( Math.atan2( -eye[ 0 ], -eye[ 2 ] ), 0.0, 1.0, 0.0, quat );
-            Quat.mult( quat, quaty, quat );
-            Matrix.makeRotateFromQuat( quat, arcs[ 2 ].getMatrix() );
+            quat.setAxisAngle( qTmp, [ 0.0, 1.0, 0.0 ], Math.atan2( -eye[ 0 ], -eye[ 2 ] ) );
+            quat.mul( qTmp, qTmp, quaty );
+            mat4.fromQuat( arcs[ 2 ].getMatrix(), qTmp );
             // z arc
-            Quat.makeRotate( Math.atan2( -eye[ 0 ], eye[ 1 ] ), 0.0, 0.0, 1.0, quat );
-            Matrix.makeRotateFromQuat( quat, arcs[ 3 ].getMatrix() );
+            quat.setAxisAngle( qTmp, [ 0.0, 0.0, 1.0 ], Math.atan2( -eye[ 0 ], eye[ 1 ] ) );
+            mat4.fromQuat( arcs[ 3 ].getMatrix(), qTmp );
 
             arcs[ 1 ].dirtyBound();
             arcs[ 2 ].dirtyBound();
@@ -544,14 +544,14 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     },
 
     updateGizmo: ( function () {
-        var eye = Vec3.create();
-        var trVec = Vec3.create();
-        var tmpVec = Vec3.create();
+        var eye = vec3.create();
+        var trVec = vec3.create();
+        var tmpVec = vec3.create();
 
-        var temp = Matrix.create();
-        var trWorld = Matrix.create();
-        var invScale = Matrix.create();
-        var scGiz = Matrix.create();
+        var temp = mat4.create();
+        var trWorld = mat4.create();
+        var invScale = mat4.create();
+        var scGiz = mat4.create();
 
         return function () {
             if ( !this._attachedNode )
@@ -562,8 +562,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             var worldMat = this._attachedNode.getWorldMatrices()[ 0 ];
 
             // world trans
-            Matrix.getTrans( worldMat, trVec );
-            Matrix.makeTranslate( trVec[ 0 ], trVec[ 1 ], trVec[ 2 ], trWorld );
+            mat4.getTranslation( trVec, worldMat );
+            mat4.fromTranslation( trWorld, trVec );
 
             // normalize gizmo size
             var scaleFactor = 3.0;
@@ -578,39 +578,39 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
                 // while we are editing we don't normalize the gizmo
                 // it gives a better depth feedback, especially if we are editing a geometry that has
                 // a constant screen size (for example an icon)
-                this._lastDistToEye = this._isEditing ? this._lastDistToEye : Vec3.distance( eye, trVec );
+                this._lastDistToEye = this._isEditing ? this._lastDistToEye : vec3.distance( trVec, eye );
                 scaleFactor *= this._lastDistToEye / scaleFov;
             }
-            Matrix.makeScale( scaleFactor, scaleFactor, scaleFactor, scGiz );
+            mat4.fromScaling( scGiz, [ scaleFactor, scaleFactor, scaleFactor ] );
 
             // gizmo node
-            Matrix.mult( trWorld, scGiz, this.getMatrix() );
+            mat4.mul( this.getMatrix(), trWorld, scGiz );
 
-            Vec3.sub( eye, trVec, eye );
-            Vec3.normalize( eye, eye );
+            vec3.sub( eye, eye, trVec );
+            vec3.normalize( eye, eye );
 
             // rotate node
             if ( this._rotateInLocal || this._translateInLocal ) {
                 // world scale
-                Matrix.getScale( worldMat, tmpVec );
-                Matrix.makeScale( tmpVec[ 0 ], tmpVec[ 1 ], tmpVec[ 2 ], invScale );
-                Matrix.inverse( invScale, invScale );
+                mat4.getScale( tmpVec, worldMat );
+                mat4.fromScaling( invScale, tmpVec );
+                mat4.invert( invScale, invScale );
 
-                Matrix.mult( worldMat, invScale, temp );
+                mat4.mul( temp, worldMat, invScale );
                 temp[ 12 ] = temp[ 13 ] = temp[ 14 ] = 0.0;
 
                 if ( this._translateInLocal ) {
-                    Matrix.copy( temp, this._translateNode.getMatrix() );
-                    Matrix.copy( temp, this._planeNode.getMatrix() );
+                    mat4.copy( this._translateNode.getMatrix(), temp );
+                    mat4.copy( this._planeNode.getMatrix(), temp );
                 }
 
                 if ( this._rotateInLocal ) {
-                    Matrix.copy( temp, this._rotateNode.getMatrix() );
-                    Matrix.inverse( temp, temp );
-                    Matrix.transformVec3( temp, eye, eye );
+                    mat4.copy( this._rotateNode.getMatrix(), temp );
+                    mat4.invert( temp, temp );
+                    vec3.transformMat4( eye, eye, temp );
                 }
             } else {
-                Matrix.makeIdentity( this._rotateNode.getMatrix() );
+                mat4.identity( this._rotateNode.getMatrix() );
             }
 
             this.updateArcRotation( eye );
@@ -620,7 +620,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             this._planeNode.dirtyBound();
 
             if ( this._isEditing )
-                Matrix.copy( this._hoverNode.getMatrix(), this._showAngle.getMatrix() );
+                mat4.copy( this._showAngle.getMatrix(), this._hoverNode.getMatrix() );
         };
     } )(),
 
@@ -628,7 +628,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         var sortByRatio = function ( a, b ) {
             return a.ratio - b.ratio;
         };
-        var coord = Vec2.create();
+        var coord = vec2.create();
 
         return function ( e, tmask ) {
             getCanvasCoord( coord, e );
@@ -670,7 +670,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     },
 
     getCanvasPositionFromWorldPoint: ( function () {
-        var mat = Matrix.create();
+        var mat = mat4.create();
 
         return function ( worldPoint, out ) {
             var cam = this._viewer.getCamera();
@@ -678,20 +678,20 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             var screenPoint = out;
             if ( !out ) {
                 Notify.warn( 'deprecated, use out argument for result ' );
-                screenPoint = Vec3.create();
+                screenPoint = vec3.create();
             }
 
             if ( cam.getViewport() ) {
                 cam.getViewport().computeWindowMatrix( mat );
             } else {
-                Matrix.makeIdentity( mat );
+                mat4.identity( mat );
             }
 
-            Matrix.preMult( mat, cam.getProjectionMatrix() );
+            mat4.mul( mat, mat, cam.getProjectionMatrix() );
             if ( this.getReferenceFrame() === TransformEnums.RELATIVE_RF )
-                Matrix.preMult( mat, cam.getViewMatrix() );
+                mat4.mul( mat, mat, cam.getViewMatrix() );
 
-            Matrix.transformVec3( mat, worldPoint, screenPoint );
+            vec3.transformMat4( screenPoint, worldPoint, mat );
 
             // canvas to webgl coord
             var viewer = this._viewer;
@@ -728,23 +728,23 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     },
 
     saveEditMatrices: function () {
-        Matrix.copy( this._attachedNode.getMatrix(), this._editLocal );
+        mat4.copy( this._editLocal, this._attachedNode.getMatrix() );
         // save the world translation
         var wm = this._attachedNode.getWorldMatrices()[ 0 ];
-        Matrix.makeTranslate( wm[ 12 ], wm[ 13 ], wm[ 14 ], this._editWorldTrans );
+        mat4.fromTranslation( this._editWorldTrans, [ wm[ 12 ], wm[ 13 ], wm[ 14 ] ] );
         // save the inv of world rotation + scale
-        Matrix.copy( wm, this._editWorldScaleRot );
+        mat4.copy( this._editWorldScaleRot, wm );
         // removes translation
         this._editWorldScaleRot[ 12 ] = this._editWorldScaleRot[ 13 ] = this._editWorldScaleRot[ 14 ] = 0.0;
-        Matrix.inverse( this._editWorldScaleRot, this._editInvWorldScaleRot );
+        mat4.invert( this._editInvWorldScaleRot, this._editWorldScaleRot );
     },
 
     startRotateEdit: function ( e ) {
         var gizmoMat = this._rotateNode.getWorldMatrices()[ 0 ];
 
         // center of gizmo on screen
-        var projCenter = Vec3.create();
-        Matrix.transformVec3( gizmoMat, projCenter, projCenter );
+        var projCenter = vec3.create();
+        vec3.transformMat4( projCenter, projCenter, gizmoMat );
         this.getCanvasPositionFromWorldPoint( projCenter, projCenter );
 
         // pick rotate gizmo
@@ -753,27 +753,27 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // compute tangent direction
         var sign = this._hoverNode._nbAxis === 0 ? -1.0 : 1.0;
-        var tang = Vec3.create();
+        var tang = vec3.create();
         tang[ 0 ] = sign * hit.point[ 1 ];
         tang[ 1 ] = -sign * hit.point[ 0 ];
         tang[ 2 ] = hit.point[ 2 ];
 
         // project tangent on screen
-        var projArc = Vec3.create();
-        Matrix.transformVec3( this._hoverNode.getMatrix(), tang, projArc );
-        Matrix.transformVec3( gizmoMat, projArc, projArc );
+        var projArc = vec3.create();
+        vec3.transformMat4( projArc, tang, this._hoverNode.getMatrix() );
+        vec3.transformMat4( projArc, projArc, gizmoMat );
         this.getCanvasPositionFromWorldPoint( projArc, projArc );
 
         var dir = this._editLineDirection;
-        Vec2.sub( projArc, projCenter, dir );
-        Vec2.normalize( dir, dir );
+        vec2.sub( dir, projArc, projCenter );
+        vec2.normalize( dir, dir );
 
         // show angle
         this._showAngle.setNodeMask( NodeGizmo.NO_PICK );
         hit.point[ 2 ] = 0.0;
         var stateAngle = this._showAngle.getStateSet();
         stateAngle.getUniform( 'uAngle' ).setFloat( 0.0 );
-        stateAngle.getUniform( 'uBase' ).setVec3( Vec3.normalize( hit.point, hit.point ) );
+        stateAngle.getUniform( 'uBase' ).setVec3( vec3.normalize( hit.point, hit.point ) );
 
         getCanvasCoord( this._editLineOrigin, e );
     },
@@ -784,27 +784,27 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // 3d origin (center of gizmo)
         var gizmoMat = this._translateNode.getWorldMatrices()[ 0 ];
-        Matrix.getTrans( gizmoMat, origin );
+        mat4.getTranslation( origin, gizmoMat );
 
         // 3d direction
-        Vec3.init( dir );
+        vec3.init( dir );
         dir[ this._hoverNode._nbAxis ] = 1.0;
         if ( this._translateInLocal ) {
-            Matrix.transformVec3( this._editWorldScaleRot, dir, dir );
-            Vec3.normalize( dir, dir );
+            vec3.transformMat4( dir, dir, this._editWorldScaleRot );
+            vec3.normalize( dir, dir );
         }
-        Vec3.add( origin, dir, dir );
+        vec3.add( dir, origin, dir );
 
         // project on canvas
         this.getCanvasPositionFromWorldPoint( origin, origin );
         this.getCanvasPositionFromWorldPoint( dir, dir );
 
-        Vec2.sub( dir, origin, dir );
-        Vec2.normalize( dir, dir );
+        vec2.sub( dir, dir, origin );
+        vec2.normalize( dir, dir );
 
         var offset = this._editOffset;
         getCanvasCoord( offset, e );
-        Vec2.sub( offset, origin, offset );
+        vec2.sub( offset, offset, origin );
     },
 
     startPlaneEdit: function ( e ) {
@@ -812,14 +812,14 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // 3d origin (center of gizmo)
         var gizmoMat = this._planeNode.getWorldMatrices()[ 0 ];
-        Matrix.getTrans( gizmoMat, origin );
+        mat4.getTranslation( origin, gizmoMat );
 
         // project on canvas
         this.getCanvasPositionFromWorldPoint( origin, origin );
 
         var offset = this._editOffset;
         getCanvasCoord( offset, e );
-        Vec2.sub( offset, origin, offset );
+        vec2.sub( offset, offset, origin );
     },
 
     drawLineCanvasDebug: function ( x1, y1, x2, y2 ) {
@@ -850,9 +850,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         if ( this._debugNode )
             this._debugNode.setNodeMask( 0x0 );
 
-        var v = Vec2.create();
+        var v = vec2.create();
         getCanvasCoord( v, e );
-        if ( Vec2.distance( this._downCanvasCoord, v ) === 0.0 )
+        if ( vec2.distance( v, this._downCanvasCoord ) === 0.0 )
             this.pickAndSelect( e );
 
         this._showAngle.setNodeMask( 0x0 );
@@ -885,8 +885,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     },
 
     updateRotateEdit: ( function () {
-        var mrot = Matrix.create();
-        var vec = Vec2.create();
+        var mrot = mat4.create();
+        var vec = vec2.create();
 
         return function ( e ) {
 
@@ -894,8 +894,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             var dir = this._editLineDirection;
 
             getCanvasCoord( vec, e );
-            Vec2.sub( vec, origin, vec );
-            var dist = Vec2.dot( vec, dir );
+            vec2.sub( vec, vec, origin );
+            var dist = vec2.dot( vec, dir );
 
             if ( this._debugNode )
                 this.drawLineCanvasDebug( origin[ 0 ], origin[ 1 ], origin[ 0 ] + dir[ 0 ] * dist, origin[ 1 ] + dir[ 1 ] * dist );
@@ -904,28 +904,28 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             angle %= ( Math.PI * 2 );
             var nbAxis = this._hoverNode._nbAxis;
             if ( nbAxis === 0 )
-                Matrix.makeRotate( -angle, 1.0, 0.0, 0.0, mrot );
+                mat4.fromRotation( mrot, -angle, [ 1.0, 0.0, 0.0 ] );
             else if ( nbAxis === 1 )
-                Matrix.makeRotate( -angle, 0.0, 1.0, 0.0, mrot );
+                mat4.fromRotation( mrot, -angle, [ 0.0, 1.0, 0.0 ] );
             else if ( nbAxis === 2 )
-                Matrix.makeRotate( -angle, 0.0, 0.0, 1.0, mrot );
+                mat4.fromRotation( mrot, -angle, [ 0.0, 0.0, 1.0 ] );
 
             this._showAngle.getOrCreateStateSet().getUniform( 'uAngle' ).setFloat( nbAxis === 0 ? -angle : angle );
 
             if ( !this._rotateInLocal ) {
-                Matrix.postMult( this._editInvWorldScaleRot, mrot );
-                Matrix.preMult( mrot, this._editWorldScaleRot );
+                mat4.mul( mrot, this._editInvWorldScaleRot, mrot );
+                mat4.mul( mrot, mrot, this._editWorldScaleRot );
             }
 
-            Matrix.mult( this._editLocal, mrot, this._attachedNode.getMatrix() );
+            mat4.mul( this._attachedNode.getMatrix(), this._editLocal, mrot );
 
             this._attachedNode.dirtyBound();
         };
     } )(),
 
     updateTranslateEdit: ( function () {
-        var vec = Vec2.create();
-        var tra = Vec3.create();
+        var vec = vec2.create();
+        var tra = vec3.create();
 
         return function ( e ) {
 
@@ -933,10 +933,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             var dir = this._editLineDirection;
 
             getCanvasCoord( vec, e );
-            Vec2.sub( vec, origin, vec );
-            Vec2.sub( vec, this._editOffset, vec );
+            vec2.sub( vec, vec, origin );
+            vec2.sub( vec, vec, this._editOffset );
 
-            var dist = Vec2.dot( vec, dir );
+            var dist = vec2.dot( vec, dir );
             vec[ 0 ] = origin[ 0 ] + dir[ 0 ] * dist;
             vec[ 1 ] = origin[ 1 ] + dir[ 1 ] * dist;
 
@@ -952,39 +952,39 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             // project 2D point on the 3d line
             this._lsi.reset();
             this._lsi.setTestPlane( false );
-            this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
+            this._lsi.set( vec3.set( this._origIntersect, coordx, coordy, 0.0 ),
+                vec3.set( this._dstIntersect, coordx, coordy, 1.0 ) );
             this._iv.reset();
             this._iv.setTraversalMask( this._hoverNode.getNodeMask() );
 
-            Matrix.copy( this._editWorldTrans, this.getMatrix() );
+            mat4.copy( this.getMatrix(), this._editWorldTrans );
 
             this.setOnlyGizmoPicking();
             this._viewer._camera.accept( this._iv );
             this.setOnlyScenePicking();
 
             if ( !this._translateInLocal ) {
-                Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), tra );
+                vec3.transformMat4( tra, this._lsi.getTranslateDistance(), this._editInvWorldScaleRot );
             } else {
-                Matrix.getScale( this._editInvWorldScaleRot, tra );
+                mat4.getScale( tra, this._editInvWorldScaleRot );
+
                 var inter = this._lsi.getTranslateDistance();
-                tra[ 0 ] *= inter[ 0 ];
-                tra[ 1 ] *= inter[ 1 ];
-                tra[ 2 ] *= inter[ 2 ];
+                vec3.mul( tra, tra, inter );
             }
 
-            Matrix.multTranslate( this._editLocal, tra, this._attachedNode.getMatrix() );
+            mat4.translate( this._attachedNode.getMatrix(), this._editLocal, tra );
 
             this._attachedNode.dirtyBound();
         };
     } )(),
 
     updatePlaneEdit: ( function () {
-        var vec = Vec2.create();
-        var tra = Vec3.create();
+        var vec = vec2.create();
+        var tra = vec3.create();
 
         return function ( e ) {
             getCanvasCoord( vec, e );
-            Vec2.sub( vec, this._editOffset, vec );
+            vec2.sub( vec, vec, this._editOffset );
 
             // canvas to webgl coord
             var viewer = this._viewer;
@@ -995,31 +995,30 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             // project 2D point on the 3d plane
             this._lsi.reset();
             this._lsi.setTestPlane( true );
-            this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
+            this._lsi.set( vec3.set( this._origIntersect, coordx, coordy, 0.0 ),
+                vec3.set( this._dstIntersect, coordx, coordy, 1.0 ) );
             this._iv.reset();
             this._iv.setTraversalMask( this._hoverNode.getNodeMask() );
 
-            Matrix.copy( this._editWorldTrans, this.getMatrix() );
+            mat4.copy( this.getMatrix(), this._editWorldTrans );
 
             this.setOnlyGizmoPicking();
             this._viewer._camera.accept( this._iv );
             this.setOnlyScenePicking();
 
             if ( !this._translateInLocal ) {
-                Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), tra );
+                vec3.transformMat4( tra, this._lsi.getTranslateDistance(), this._editInvWorldScaleRot );
             } else {
-                Matrix.getScale( this._editInvWorldScaleRot, tra );
+                mat4.getScale( tra, this._editInvWorldScaleRot );
                 var inter = this._lsi.getTranslateDistance();
-                tra[ 0 ] *= inter[ 0 ];
-                tra[ 1 ] *= inter[ 1 ];
-                tra[ 2 ] *= inter[ 2 ];
+                vec3.mul( tra, tra, inter );
             }
 
-            Matrix.multTranslate( this._editLocal, tra, this._attachedNode.getMatrix() );
+            mat4.translate( this._attachedNode.getMatrix(), this._editLocal, tra );
 
             this._attachedNode.dirtyBound();
         };
-    } )(),
+    } )()
 
 } );
 

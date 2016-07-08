@@ -193,7 +193,7 @@
                         x = ( -nbx * 0.5 + 0.5 + i ) * 1.1;
                         y = ( -nby * 0.5 + 0.5 + j ) * 1.1;
 
-                        osg.Matrix.makeTranslate( x, y, 0, mt.getMatrix() );
+                        osg.mat4.fromTranslation( mt.getMatrix(), [ x, y, 0 ] );
                         mt.addChild( this.createItem() );
 
                     } else {
@@ -201,7 +201,7 @@
                         x = ( -nbx * 0.5 + 0.5 + i ) * ( s );
                         y = ( -nby * 0.5 + 0.5 + j ) * ( s * 9 / 16.0 );
                         //osg.log([x,y]);
-                        osg.Matrix.makeTranslate( x, y, 0, mt.getMatrix() );
+                        osg.mat4.fromTranslation( mt.getMatrix(), [ x, y, 0 ] );
                         mt.addChild( this.createItems( deep - 1 ) );
                     }
 
@@ -226,7 +226,7 @@
             this._gui.add( this._config, 'textureSize', [ '64', '128', '256', '512', '1024', '2048', '4096' ] );
             this._gui.add( this._config, 'numTextures', 0, 60 ).step( 1 );;
 
-            //button            
+            //button
             this._gui.add( this._config, 'update' );
             this._gui.add( this._config, 'frustumCulling' );
             //this._gui.add( this._config, 'postProc' );

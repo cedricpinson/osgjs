@@ -115,7 +115,7 @@
             material.setDiffuse( [ 1.0, 1.0, 1.0, alpha ] );
             ss.setAttributeAndModes( material );
             var transformSphere = new osg.MatrixTransform();
-            transformSphere.setMatrix( osg.Matrix.makeTranslate( bbs._center[ 0 ], bbs._center[ 1 ], bbs._center[ 2 ], [] ) );
+            transformSphere.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), bbs._center ) );
             transformSphere.addChild( bs );
             return transformSphere;
         },

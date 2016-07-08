@@ -1,14 +1,14 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
-var Matrix = require( 'osg/Matrix' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var vec4 = require( 'osg/glMatrix' ).vec4;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var AutoTransform = require( 'osg/AutoTransform' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var BlendFunc = require( 'osg/BlendFunc' );
-var Quat = require( 'osg/Quat' );
+var quat = require( 'osg/glMatrix' ).quat;
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var Node = require( 'osg/Node' );
 /**
@@ -35,7 +35,7 @@ var Text = function ( text ) {
     if ( text !== undefined ) this._text = text;
     this._font = 'monospace';
     // Vec4 value to load/return
-    this._color = Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 );
+    this._color = vec4.fromValues( 0.0, 0.0, 0.0, 1.0 );
     // This determines the text color, it can take a hex value or rgba value (e.g. rgba(255,0,0,0.5))
     this._fillStyle = 'rgba( 0, 0, 0, 1 )';
     // This determines the alignment of text, e.g. left, center, right
@@ -51,7 +51,7 @@ var Text = function ( text ) {
     this._fontSize = 32;
     this._geometry = undefined;
     this._autoRotateToScreen = false;
-    this._position = Vec3.create();
+    this._position = vec3.create();
     this._layout = Text.LEFT_TO_RIGHT;
     this._alignment = Text.CENTER_CENTER;
     // NPOT textures
@@ -62,7 +62,7 @@ var Text = function ( text ) {
     this._dirty = false;
 
     // We need to keep track of modelView Matrix
-    this._previousModelView = Matrix.create();
+    this._previousModelView = mat4.create();
 };
 
 // CharacterSizeMode
@@ -159,7 +159,7 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
     setCharacterSize: function ( size ) {
         this._characterSize = size;
         if ( this._characterSizeMode !== Text.OBJECT_COORDS ) {
-            Matrix.makeScale( this._characterSize, this._characterSize, this._characterSize, this._matrixTransform.getMatrix() );
+            mat4.fromScaling( this._matrixTransform.getMatrix(), [ this._characterSize, this._characterSize, this._characterSize ] );
             if ( this._characterSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
                 this.setMaximumScale( this._characterSize );
         }
@@ -173,13 +173,13 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
     setCharacterSizeMode: function ( mode ) {
         this._characterSizeMode = mode;
         if ( this._characterSizeMode !== Text.OBJECT_COORDS ) {
-            Matrix.makeScale( this._characterSize, this._characterSize, this._characterSize, this._matrixTransform.getMatrix() );
+            mat4.fromScaling( this._matrixTransform.getMatrix(), [ this._characterSize, this._characterSize, this._characterSize ] );
             this.setAutoScaleToScreen( true );
             this.setMaximumScale( Number.MAX_VALUE );
             if ( this._characterSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
                 this.setMaximumScale( this._characterSize );
         } else {
-            this._matrixTransform.setMatrix( Matrix.create() );
+            this._matrixTransform.setMatrix( mat4.create() );
             this.setAutoScaleToScreen( false );
         }
         this._dirty = true;
@@ -200,7 +200,7 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
 
     setPosition: function ( position ) {
         this._position = position;
-        Matrix.makeTranslate( position[ 0 ], position[ 1 ], position[ 2 ], this.getMatrix() );
+        mat4.fromTranslation( this.getMatrix(), position );
     },
 
     getPosition: function () {
@@ -263,13 +263,13 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
                 var doUpdate = this._firstTimeToInitEyePoint;
 
                 if ( !this._firstTimeToInitEyePoint ) {
-                    if ( !Matrix.equal( modelViewMat, this._previousModelView ) ) {
+                    if ( !mat4.exactEquals( modelViewMat, this._previousModelView ) ) {
                         doUpdate = true;
                     } else if ( width !== this._previousWidth || height !== this._previousHeight ) {
                         doUpdate = true;
-                    } else if ( !Matrix.equal( projMat, this._previousProjection ) ) {
+                    } else if ( !mat4.exactEquals( projMat, this._previousProjection ) ) {
                         doUpdate = true;
-                    } else if ( !Vec3.equal( position, this._previousPosition ) ) {
+                    } else if ( !vec3.exactEquals( position, this._previousPosition ) ) {
                         doUpdate = true;
                     }
                 }
@@ -278,8 +278,8 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
                     if ( this._autoScaleToScreen ) {
                         var viewport = visitor.getViewport();
                         var psvector = this.computePixelSizeVector( viewport, projMat, modelViewMat );
-                        var v = Vec4.createAndSet( this._position[ 0 ], this._position[ 1 ], this._position[ 2 ], 1.0 );
-                        var pixelSize = Vec4.dot( v, psvector );
+                        var v = vec4.fromValues( this._position[ 0 ], this._position[ 1 ], this._position[ 2 ], 1.0 );
+                        var pixelSize = vec4.dot( v, psvector );
                         pixelSize = 0.48 / pixelSize;
                         var size = 1.0 / pixelSize;
                         if ( this._autoScaleTransitionWidthRatio > 0.0 ) {
@@ -313,16 +313,16 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
                         this.setScale( size );
                     }
                     if ( this._autoRotateToScreen ) {
-                        var rotation = Quat.create();
+                        var rotation = quat.create();
                         var modelView = visitor.getCurrentModelViewMatrix();
-                        Matrix.getRotate( modelView, rotation );
-                        this.setRotation( Quat.inverse( rotation, rotation ) );
+                        mat4.getRotation( rotation, modelView );
+                        this.setRotation( quat.invert( rotation, rotation ) );
                     }
                     this._previousWidth = width;
                     this._previousHeight = height;
-                    Vec3.copy( position, this._previousPosition );
-                    Matrix.copy( projMat, this._previousProjection );
-                    Matrix.copy( modelViewMat, this._previousModelView );
+                    vec3.copy( this._previousPosition, position );
+                    mat4.copy( this._previousProjection, projMat );
+                    mat4.copy( this._previousModelView, modelViewMat );
                 }
             }
 

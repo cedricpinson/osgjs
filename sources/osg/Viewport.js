@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 
 var Viewport = function ( x, y, w, h ) {
@@ -50,16 +50,15 @@ Viewport.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
     },
 
     computeWindowMatrix: ( function () {
-        var translate = Matrix.create();
-        var scale = Matrix.create();
+        var translate = mat4.create();
+        var scale = mat4.create();
         return function ( destination ) {
             // res = Matrix offset * Matrix scale * Matrix translate
-            Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
-            Matrix.makeScale( 0.5 * this._width, 0.5 * this._height, 0.5, scale );
-            var offset = Matrix.makeTranslate( this._x, this._y, 0.0, destination );
-            //return Matrix.mult(Matrix.mult(translate, scale, translate), offset, offset);
+            mat4.fromTranslation( translate, [ 1.0, 1.0, 1.0 ] );
+            mat4.fromScaling( scale, [ 0.5 * this._width, 0.5 * this._height, 0.5 ] );
+            var offset = mat4.fromTranslation( destination, [ this._x, this._y, 0.0 ] );
 
-            return Matrix.preMult( offset, Matrix.preMult( scale, translate ) );
+            return mat4.mul( offset, offset, mat4.mul( scale, scale, translate ) );
 
         };
     } )()

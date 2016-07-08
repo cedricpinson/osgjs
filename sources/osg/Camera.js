@@ -2,10 +2,10 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Transform = require( 'osg/Transform' );
 var CullSettings = require( 'osg/CullSettings' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Texture = require( 'osg/Texture' );
 var TransformEnums = require( 'osg/TransformEnums' );
-var Vec4 = require( 'osg/Vec4' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
 
 
 /**
@@ -19,15 +19,15 @@ var Camera = function () {
 
     this.viewport = undefined;
     this._graphicContext = undefined;
-    this.setClearColor( Vec4.createAndSet( 0, 0, 0, 1.0 ) );
+    this.setClearColor( vec4.fromValues( 0, 0, 0, 1.0 ) );
     this.setClearDepth( 1.0 );
 
     /*jshint bitwise: false */
     this.setClearMask( Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT );
     /*jshint bitwise: true */
 
-    this.setViewMatrix( Matrix.create() );
-    this.setProjectionMatrix( Matrix.create() );
+    this.setViewMatrix( mat4.create() );
+    this.setProjectionMatrix( mat4.create() );
     this.renderOrder = Camera.NESTED_RENDER;
     this.renderOrderNum = 0;
 
@@ -140,7 +140,7 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             this.modelviewMatrix = matrix;
         },
         setViewMatrixAsLookAt: function ( eye, center, up ) {
-            Matrix.makeLookAt( eye, center, up, this.getViewMatrix() );
+            mat4.lookAt( this.getViewMatrix(), eye, center, up );
         },
         setProjectionMatrix: function ( matrix ) {
             this.projectionMatrix = matrix;
@@ -150,7 +150,7 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         setProjectionMatrixAsOrtho: function ( left, right,
             bottom, top,
             zNear, zFar ) {
-            Matrix.makeOrtho( left, right, bottom, top, zNear, zFar, this.getProjectionMatrix() );
+            mat4.ortho( this.getProjectionMatrix(), left, right, bottom, top, zNear, zFar );
         },
         isRenderToTextureCamera: function () {
             return window.Object.keys( this._attachments ).length > 0;
@@ -225,21 +225,21 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
         computeLocalToWorldMatrix: function ( matrix /*,nodeVisitor*/ ) {
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                Matrix.preMult( matrix, this.modelviewMatrix );
+                mat4.mul( matrix, matrix, this.modelviewMatrix );
             } else { // absolute
-                Matrix.copy( this.modelviewMatrix, matrix );
+                mat4.copy( matrix, this.modelviewMatrix );
             }
             return true;
         },
 
         computeWorldToLocalMatrix: ( function () {
-            var minverse = Matrix.create();
+            var minverse = mat4.create();
             return function ( matrix /*, nodeVisitor */ ) {
-                Matrix.inverse( this.modelviewMatrix, minverse );
+                mat4.invert( minverse, this.modelviewMatrix );
                 if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                    Matrix.postMult( minverse, matrix );
+                    mat4.mul( matrix, minverse, matrix );
                 } else {
-                    Matrix.copy( minverse, matrix );
+                    mat4.copy( matrix, minverse );
                 }
                 return true;
             };

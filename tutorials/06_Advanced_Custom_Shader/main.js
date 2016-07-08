@@ -159,8 +159,6 @@ function createScene() {
         2,
         2 );
 
-
-
     var targetModel2 = osg.createTexturedBoxGeometry( 4,
         0,
         0,
@@ -176,18 +174,14 @@ function createScene() {
     target2.getOrCreateStateSet().setAttributeAndModes( getShaderVariant2() );
 
 
-
-
     var density = osg.Uniform.createFloat1( 0.0, 'density' );
     target.getOrCreateStateSet().addUniform( density );
     target2.getOrCreateStateSet().addUniform( density );
 
-    //color = osg.Uniform.createVec4(vec4(1,1,0,0),'color');
     var lightPos = osg.Uniform.createFloat3( [ 0, 0, -10 ], 'lightPos' );
     target.getOrCreateStateSet().addUniform( lightPos );
     target2.getOrCreateStateSet().addUniform( lightPos );
 
-    //color = osg.Uniform.createVec4(vec4(1,1,0,0),'color');
     var eyePos = osg.Uniform.createFloat3( [ 0, 0, -1 ], 'eyePos' );
     target.getOrCreateStateSet().addUniform( eyePos );
     target2.getOrCreateStateSet().addUniform( eyePos );

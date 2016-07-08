@@ -1,16 +1,16 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
-var Quat = require( 'osg/Quat' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var quat = require( 'osg/glMatrix' ).quat;
 var Target = require( 'osgAnimation/Target' );
 
 
 var StackedRotateAxis = function ( name, axis, angle ) {
     Object.call( this );
-    this._axis = Vec3.set( 0, 0, 1, Vec3.create() );
-    if ( axis ) Vec3.copy( axis, this._axis );
+    this._axis = vec3.fromValues( 0, 0, 1 );
+    if ( axis ) vec3.copy( this._axis, axis );
     this._target = Target.createFloatTarget( typeof angle === 'number' ? angle : 0.0 );
     if ( name ) this.setName( name );
 };
@@ -24,7 +24,7 @@ StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
     setAxis: function ( axis ) {
-        Vec3.copy( axis, this._axis );
+        vec3.copy( this._axis, axis );
     },
 
     setAngle: function ( angle ) {
@@ -40,8 +40,8 @@ StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
     applyToMatrix: ( function () {
-        var matrixTmp = Matrix.create();
-        var quatTmp = Quat.create();
+        var matrixTmp = mat4.create();
+        var quatTmp = quat.create();
 
         return function ( m ) {
             var axis = this._axis;
@@ -49,9 +49,9 @@ StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
             var mtmp = matrixTmp;
             var angle = this._target.value;
 
-            Quat.makeRotate( angle, axis[ 0 ], axis[ 1 ], axis[ 2 ], qtmp );
-            Matrix.setRotateFromQuat( mtmp, qtmp );
-            Matrix.preMult( m, mtmp );
+            quat.setAxisAngle( qtmp, axis, angle );
+            mat4.fromQuat( mtmp, qtmp );
+            mat4.mul( m, m, mtmp );
         };
     } )()
 

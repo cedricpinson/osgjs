@@ -17,7 +17,7 @@
         viewer.init();
         viewer.setupManipulator();
         var rotate = new osg.MatrixTransform();
-        osg.Matrix.makeRotate( Math.PI * 0.5, 1, 0, 0, rotate.getMatrix() );
+        osg.mat4.fromRotation( rotate.getMatrix(), Math.PI * 0.5, [ 1, 0, 0 ] );
         P.resolve( osgDB.parseSceneGraph( getModel() ) ).then( function ( data ) {
             rotate.addChild( data );
         } );

@@ -191,23 +191,25 @@
             var x = 50 * Math.cos( currentTime );
             var y = 50 * Math.sin( currentTime );
             var h = 80;
-            //osg.Matrix.makeTranslate(x ,y,h, node.getMatrix());
+            //osg.mat4.fromTranslation( node.getMatrix(), [x ,y,h ]);
 
             var parents = node.getParents();
             var matrixList = parents[ 0 ].getWorldMatrices();
             var worldMatrix = matrixList[ 0 ];
 
-            var worldCameraPosition = osg.Matrix.transformVec3( worldMatrix, [ x, y, 80 ], [] );
-            var worldCameraTarget = osg.Matrix.transformVec3( worldMatrix, [ 0, 0, -5 ], [] );
+            var worldCameraPosition = osg.vec3.transformMat4( osg.vec3.create(), [ x, y, 80 ], worldMatrix );
+            var worldCameraTarget = osg.vec3.transformMat4( osg.vec3.create(), [ 0, 0, -5 ], worldMatrix );
 
-            osg.Matrix.makeLookAt( worldCameraPosition, worldCameraTarget, [ 0, -1, 0 ], this.camera.getViewMatrix() );
 
-            var biasScale = osg.Matrix.preMult( osg.Matrix.makeTranslate( 0.5, 0.5, 0.5, [] ), osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
-            var shadowProj = osg.Matrix.copy( this.camera.getProjectionMatrix(), [] );
-            osg.Matrix.postMult( biasScale, shadowProj );
+            osg.mat4.lookAt( this.camera.getViewMatrix(), worldCameraPosition, worldCameraTarget, [ 0, -1, 0 ] );
+
+            var biasMat = osg.mat4.create();
+            var biasScale = osg.mat4.mul( biasMat, osg.mat4.fromTranslation( biasMat, [ 0.5, 0.5, 0.5 ] ), osg.mat4.fromScaling( osg.mat4.create(), [ 0.5, 0.5, 0.5 ] ) );
+            var shadowProj = osg.mat4.clone( this.camera.getProjectionMatrix() );
+            osg.mat4.mul( shadowProj, biasScale, shadowProj );
 
             this.shadowScene.setMatrix( worldMatrix );
-            var shadowView = osg.Matrix.mult( this.camera.getViewMatrix(), worldMatrix, [] );
+            var shadowView = osg.mat4.mul( osg.mat4.create(), this.camera.getViewMatrix(), worldMatrix );
 
             this.projectionShadow.setMatrix4( shadowProj );
             this.modelviewShadow.setMatrix4( shadowView );
@@ -226,8 +228,9 @@
         rtt.setName( 'rtt_camera' );
         var rttSize = [ 512, 512 ];
 
-        osg.Matrix.makePerspective( 15, 1, 1.0, 1000.0, rtt.getProjectionMatrix() );
-        osg.Matrix.makeLookAt( [ 0, 0, 80 ], [ 0, 0, 0 ], [ 0, 1, 0 ], rtt.getViewMatrix() );
+        osg.mat4.perspective( rtt.getProjectionMatrix(), Math.PI / 180 * 15, 1, 1.0, 1000.0 );
+
+        osg.mat4.lookAt( rtt.getViewMatrix(), [ 0, 0, 80 ], [ 0, 0, 0 ], [ 0, 1, 0 ] );
         rtt.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
         rtt.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
         rtt.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
@@ -260,8 +263,8 @@
 
         q.getOrCreateStateSet().setTextureAttributeAndModes( 0, rttTexture );
         q.getOrCreateStateSet().setAttributeAndModes( getTextureProjectedShadowShader() );
-        var projectionShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), 'ProjectionShadow' );
-        var modelViewShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), 'ModelViewShadow' );
+        var projectionShadow = new osg.Uniform.createMatrix4( osg.mat4.create(), 'ProjectionShadow' );
+        var modelViewShadow = new osg.Uniform.createMatrix4( osg.mat4.create(), 'ModelViewShadow' );
         q.getOrCreateStateSet().addUniform( projectionShadow );
 
         q.getOrCreateStateSet().addUniform( modelViewShadow );
@@ -274,7 +277,7 @@
 
 
         var blurr = new osg.Camera();
-        osg.Matrix.makeOrtho( 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5, blurr.getProjectionMatrix() );
+        osg.mat4.ortho( blurr.getProjectionMatrix(), 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5 );
         blurr.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
         blurr.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
         blurr.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
@@ -587,23 +590,24 @@
             var x = 50 * Math.cos( currentTime );
             var y = 50 * Math.sin( currentTime );
             var h = 80;
-            osg.Matrix.makeTranslate( x, y, h, node.getMatrix() );
+            osg.mat4.fromTranslation( node.getMatrix(), [ x, y, h ] );
 
             var parents = node.getParents();
             var matrixList = parents[ 0 ].getWorldMatrices();
             var worldMatrix = matrixList[ 0 ];
 
-            var worldCameraPosition = osg.Matrix.transformVec3( worldMatrix, [ x, y, 80 ], [] );
-            var worldCameraTarget = osg.Matrix.transformVec3( worldMatrix, [ 0, 0, -5 ], [] );
+            var worldCameraPosition = osg.vec3.transformMat4( osg.vec3.create(), [ x, y, 80 ], worldMatrix );
+            var worldCameraTarget = osg.vec3.transformMat4( osg.vec3.create(), [ 0, 0, -5 ], worldMatrix );
 
-            osg.Matrix.makeLookAt( worldCameraPosition, worldCameraTarget, [ 0, -1, 0 ], this.camera.getViewMatrix() );
+            osg.mat4.lookAt( this.camera.getViewMatrix(), worldCameraPosition, worldCameraTarget, [ 0, -1, 0 ] );
 
-            var biasScale = osg.Matrix.preMult( osg.Matrix.makeTranslate( 0.5, 0.5, 0.5, [] ), osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
-            var shadowProj = osg.Matrix.copy( this.camera.getProjectionMatrix(), [] );
-            osg.Matrix.postMult( biasScale, shadowProj );
+            var biasMat = osg.mat4.create();
+            var biasScale = osg.mat4.mul( biasMat, osg.mat4.fromTranslation( biasMat, [ 0.5, 0.5, 0.5 ] ), osg.mat4.fromScaling( osg.mat4.create(), [ 0.5, 0.5, 0.5 ] ) );
+            var shadowProj = osg.mat4.clone( this.camera.getProjectionMatrix() );
+            osg.mat4.mul( shadowProj, biasScale, shadowProj );
 
             this.shadowScene.setMatrix( worldMatrix );
-            var shadowView = osg.Matrix.mult( this.camera.getViewMatrix(), worldMatrix, [] );
+            var shadowView = osg.mat4.mul( osg.mat4.create(), this.camera.getViewMatrix(), worldMatrix );
 
             this.projectionShadow.setMatrix4( shadowProj );
             this.modelviewShadow.setMatrix4( shadowView );
@@ -639,10 +643,11 @@
         var nearShadow = new osg.Uniform.createFloat1( near, 'nearShadow' );
         var farShadow = new osg.Uniform.createFloat1( far, 'farShadow' );
 
-        var projectionShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), 'ProjectionShadow' );
-        var modelViewShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), 'ModelViewShadow' );
+        var projectionShadow = new osg.Uniform.createMatrix4( osg.mat4.create(), 'ProjectionShadow' );
+        var modelViewShadow = new osg.Uniform.createMatrix4( osg.mat4.create(), 'ModelViewShadow' );
 
-        osg.Matrix.makePerspective( 15, 1, near, far, rtt.getProjectionMatrix() );
+        osg.mat4.perspective( rtt.getProjectionMatrix(), Math.PI / 180 * 15, 1, near, far );
+
         rtt.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
         rtt.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
         rtt.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
@@ -719,7 +724,7 @@
         if ( true ) {
             P.resolve( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
                 var project = createProjectedShadowScene( model );
-                project.setMatrix( osg.Matrix.makeTranslate( -10, 0, 0.0, [] ) );
+                project.setMatrix( osg.mat4.fromTranslation( [], [ -10, 0, 0.0 ] ) );
                 root.addChild( project );
             } );
         }
@@ -727,7 +732,7 @@
         if ( true ) {
             P.resolve( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
                 var texproject = createTextureProjectedShadowScene( model );
-                texproject.setMatrix( osg.Matrix.makeTranslate( 0, 0, 0.0, [] ) );
+                texproject.setMatrix( osg.mat4.fromTranslation( [], [ 0, 0, 0.0 ] ) );
                 root.addChild( texproject );
             } );
         }
@@ -735,7 +740,7 @@
         if ( true ) {
             P.resolve( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
                 var shadowmap = createShadowMapScene( model );
-                shadowmap.setMatrix( osg.Matrix.makeTranslate( 10, 0, 0.0, [] ) );
+                shadowmap.setMatrix( osg.mat4.fromTranslation( [], [ 10, 0, 0.0 ] ) );
                 root.addChild( shadowmap );
             } );
         }

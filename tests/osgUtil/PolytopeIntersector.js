@@ -5,8 +5,8 @@ var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
 var Camera = require( 'osg/Camera' );
 var Viewport = require( 'osg/Viewport' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawElements = require( 'osg/DrawElements' );
@@ -20,8 +20,9 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         var scene = createPoints();
         camera.addChild( scene );
@@ -82,8 +83,9 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         var scene = createLines( PrimitiveSet.LINES );
         camera.addChild( scene );
@@ -115,8 +117,9 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         var scene = createLines( PrimitiveSet.LINE_STRIP );
         camera.addChild( scene );
@@ -135,8 +138,9 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+        camera.setViewMatrix( mat4.lookAt( mat4.create(), [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         var scene = createTriangle();
         camera.addChild( scene );
@@ -156,9 +160,9 @@ module.exports = function () {
             var alreadyInserted = false;
 
             for ( var j = 0; j < uniquePoints.length; j++ ) {
-                if ( Vec3.equal( uniquePoints[ j ], p ) ) {
-                        alreadyInserted = true;
-                        break;
+                if ( vec3.equals( uniquePoints[ j ], p ) ) {
+                    alreadyInserted = true;
+                    break;
                 }
             }
             if ( !alreadyInserted )

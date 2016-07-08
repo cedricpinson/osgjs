@@ -1,10 +1,11 @@
 'use strict';
 var Camera = require( 'osg/Camera' );
+var CullVisitor = require( 'osg/CullVisitor' );
 var BlendFunc = require( 'osg/BlendFunc' );
 var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
 var Depth = require( 'osg/Depth' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Notify = require( 'osg/Notify' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var StateSet = require( 'osg/StateSet' );
@@ -12,8 +13,8 @@ var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
 var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var vec4 = require( 'osg/glMatrix' ).vec4;
 var Viewport = require( 'osg/Viewport' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 var ShadowReceiveAttribute = require( 'osgShadow/ShadowReceiveAttribute' );
@@ -41,11 +42,11 @@ CameraCullCallback.prototype = {
         if ( nv.getComputeNearFar() === true && nv.getComputedFar() >= nv.getComputedNear() ) {
             var m = nv.getCurrentProjectionMatrix();
 
-            //Matrix.clampProjectionMatrix( m, nv.getComputedNear(), nv.getComputedFar(), nv.getNearFarRatio() );
             this._shadowTechnique.getDepthRange()[ 0 ] = nv.getComputedNear();
             this._shadowTechnique.getDepthRange()[ 1 ] = nv.getComputedFar();
 
-            Matrix.getFrustumPlanes( m, nv.getCurrentModelViewMatrix(), cs.getFrustum().getPlanes(), false );
+            mat4.getFrustumPlanes( cs.getFrustum().getPlanes(), m, nv.getCurrentModelViewMatrix(), false );
+
             // TODO: no far no near.
             // should check if we have them
             // should add at least a near 0 clip if not
@@ -64,10 +65,10 @@ CameraCullCallback.prototype = {
 var ShadowMap = function ( settings ) {
     ShadowTechnique.call( this );
 
-    this._projectionMatrix = Matrix.create();
-    this._viewMatrix = Matrix.create();
+    this._projectionMatrix = mat4.create();
+    this._viewMatrix = mat4.create();
 
-    this._lightUp = Vec3.createAndSet( 0.0, 0.0, 1.0 );
+    this._lightUp = vec3.fromValues( 0.0, 0.0, 1.0 );
 
     this._light = settings.light;
 
@@ -76,7 +77,7 @@ var ShadowMap = function ( settings ) {
     this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
     this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
     this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-    this._cameraShadow.setClearColor( Vec4.createAndSet( 1.0, 1.0, 1.0, 1.0 ) );
+    this._cameraShadow.setClearColor( vec4.fromValues( 1.0, 1.0, 1.0, 1.0 ) );
 
     this._texture = new ShadowTexture();
     this._textureUnitBase = 4;
@@ -124,9 +125,9 @@ var ShadowMap = function ( settings ) {
     this._depthRange[ 2 ] = far - near;
     this._depthRange[ 3 ] = 1.0 / ( far - near );
 
-    this._worldLightPos = Vec4.create();
+    this._worldLightPos = vec4.create();
     this._worldLightPos[ 3 ] = 0;
-    this._worldLightDir = Vec4.create();
+    this._worldLightDir = vec4.create();
     this._worldLightDir[ 3 ] = 1;
 
     this._castsShadowDrawTraversalMask = 0xffffffff;
@@ -136,10 +137,10 @@ var ShadowMap = function ( settings ) {
     this._shaderProcessor = undefined;
 
     // tmp variables
-    this._tmpVec = Vec3.create();
-    this._tmpVecBis = Vec3.create();
-    this._tmpVecTercio = Vec3.create();
-    this._tmpMatrix = Matrix.create();
+    this._tmpVec = vec3.create();
+    this._tmpVecBis = vec3.create();
+    this._tmpVecTercio = vec3.create();
+    this._tmpMatrix = mat4.create();
 
     if ( settings )
         this.setShadowSettings( settings );
@@ -351,7 +352,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
             this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
             this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-            this._cameraShadow.setClearColor( Vec4.createAndSet( 1.0, 1.0, 1.0, 1.0 ) );
+            this._cameraShadow.setClearColor( vec4.fromValues( 1.0, 1.0, 1.0, 1.0 ) );
         }
 
         this.initTexture();
@@ -593,11 +594,11 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         // compute a up vector ensuring avoiding parallel vectors
         // also might reverting to it once got the change here done once
-        // Vec3.createAndSet( 0.0, 0.0, 1.0 );
+        // vec3.fromValues( 0.0, 0.0, 1.0 );
 
-        if ( Math.abs( Vec3.dot( this._lightUp, dir ) ) >= 1.0 ) {
+        if ( Math.abs( vec3.dot( this._lightUp, dir ) ) >= 1.0 ) {
             // another camera up
-            // Vec3.createAndSet( 1.0, 0.0, 0.0 );
+            // vec3.fromValues( 1.0, 0.0, 0.0 );
             if ( this._lightUp[ 0 ] === 1.0 ) {
                 this._lightUp[ 0 ] = 0.0;
                 this._lightUp[ 1 ] = 1.0;
@@ -646,16 +647,16 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         var zNear = epsilon;
         var zFar = 1.0;
 
-        Vec3.copy( eyeDir, this._tmpVecBis );
-        Vec3.neg( this._tmpVecBis, this._tmpVecBis );
-        Vec3.normalize( this._tmpVecBis, this._tmpVecBis );
+        vec3.copy( this._tmpVecBis, eyeDir );
+        vec3.neg( this._tmpVecBis, this._tmpVecBis );
+        vec3.normalize( this._tmpVecBis, this._tmpVecBis );
 
         // light Near Plane Equation
         // E = eyeDir + d
-        var d = Vec3.dot( eyePos, this._tmpVecBis );
+        var d = vec3.dot( eyePos, this._tmpVecBis );
         // then distance to center point of sphere
         // perpendicular to lightdir
-        var distance = Vec3.dot( center, this._tmpVecBis ) + d;
+        var distance = vec3.dot( center, this._tmpVecBis ) + d;
 
         // inside or not have unfluence
         // on using radius for fov
@@ -701,12 +702,14 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         var up = this.getUp( eyeDir );
 
         if ( this._infiniteFrustum ) {
-            Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, this._depthRange[ 0 ], this._depthRange[ 1 ], projection );
+            mat4.infiniteFrustum( projection, xmin, xmax, ymin, ymax, this._depthRange[ 0 ] );
         } else {
-            Matrix.makeFrustum( xmin, xmax, ymin, ymax, this._depthRange[ 0 ], this._depthRange[ 1 ], projection );
+            mat4.frustum( projection, xmin, xmax, ymin, ymax, this._depthRange[ 0 ], this._depthRange[ 1 ] );
+
         }
 
-        Matrix.makeLookFromDirection( eyePos, eyeDir, up, view );
+        mat4.lookAtDirection( view, eyePos, eyeDir, up );
+
     },
 
     makeOrthoFromBoundingBox: function ( bbox, eyeDir, view, projection ) {
@@ -722,10 +725,10 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         // compute eye Pos from a inverted lightDir Ray shot from center of bbox
         // firs make a RAY
         var ray = this._tmpVecBis;
-        Vec3.mult( eyeDir, -diameter, ray );
+        vec3.scale( ray, eyeDir, -diameter );
         // then move the eye to the that far pos following the ray
         var eyePos = this._tmpVec;
-        Vec3.add( center, ray, eyePos );
+        vec3.add( eyePos, center, ray );
 
         zNear = radius;
         zFar += radius;
@@ -736,12 +739,13 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         }
 
         var up = this.getUp( eyeDir );
-        Matrix.makeLookFromDirection( eyePos, eyeDir, up, view );
+        mat4.lookAtDirection( view, eyePos, eyeDir, up );
+
 
         var right, top;
         top = radius;
         right = top;
-        Matrix.makeOrtho( -right, right, -top, top, zNear, zFar, projection );
+        mat4.ortho( projection, -right, right, -top, top, zNear, zFar );
 
         this._depthRange[ 0 ] = zNear;
         this._depthRange[ 1 ] = zFar;
@@ -769,8 +773,8 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         // make sure it's not modified outside our computations
         // camera matrix can be modified by cullvisitor afterwards...
-        Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
-        Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
+        mat4.copy( this._projectionMatrix, camera.getProjectionMatrix() );
+        mat4.copy( this._viewMatrix, camera.getViewMatrix() );
         var projection = this._projectionMatrix;
         var view = this._viewMatrix;
 
@@ -796,42 +800,43 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         }
 
         var eyeToWorld = this._tmpMatrix;
-        Matrix.inverse( cullVisitor.getCurrentModelViewMatrix(), eyeToWorld );
+        mat4.invert( eyeToWorld, cullVisitor.getCurrentModelViewMatrix() );
 
         //  light pos & lightTarget in World Space
         if ( light.getPosition()[ 3 ] !== 0.0 && light.getSpotCutoff() < 180 ) {
             //TODO: check when spot light is camera attached?
-            Matrix.mult( eyeToWorld, lightMatrix, this._tmpMatrix );
+            mat4.mul( this._tmpMatrix, eyeToWorld, lightMatrix );
             var worldMatrix = this._tmpMatrix;
             // same code as light spot shader
-            Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
+            vec3.transformMat4( worldLightPos, light.getPosition(), worldMatrix );
             worldMatrix[ 12 ] = 0;
             worldMatrix[ 13 ] = 0;
             worldMatrix[ 14 ] = 0;
-            Matrix.inverse( worldMatrix, worldMatrix );
-            Matrix.transpose( worldMatrix, worldMatrix );
+            mat4.invert( worldMatrix, worldMatrix );
+            mat4.transpose( worldMatrix, worldMatrix );
 
             // not a directionnal light, compute the world light dir
-            Vec3.copy( light.getDirection(), worldLightDir );
-            Matrix.transformVec4( worldMatrix, worldLightDir, worldLightDir );
-            Vec3.normalize( worldLightDir, worldLightDir );
+            vec3.copy( worldLightDir, light.getDirection() );
+            vec4.transformMat4( worldLightDir, worldLightDir, worldMatrix );
+            vec3.normalize( worldLightDir, worldLightDir );
 
             // and compute a perspective frustum
             this.makePerspectiveFromBoundingBox( frustumBound, light.getSpotCutoff(), worldLightPos, worldLightDir, view, projection );
         } else {
-            Matrix.transformVec4( lightMatrix, light.getPosition(), worldLightPos );
-            Matrix.transformVec4( eyeToWorld, worldLightPos, worldLightPos );
+
+            vec4.transformMat4( worldLightPos, light.getPosition(), lightMatrix );
+            vec4.transformMat4( worldLightPos, worldLightPos, eyeToWorld );
             // same code as light sun shader
             // lightpos is a light dir
             // so we now have to normalize
             // since the transform to world above
-            Vec3.mult( worldLightPos, -1.0, worldLightPos );
-            Vec3.normalize( worldLightPos, worldLightPos );
+            vec3.scale( worldLightPos, worldLightPos, -1.0 );
+            vec3.normalize( worldLightPos, worldLightPos );
             this.makeOrthoFromBoundingBox( frustumBound, worldLightPos, view, projection );
         }
 
-        Matrix.copy( this._projectionMatrix, camera.getProjectionMatrix() );
-        Matrix.copy( this._viewMatrix, camera.getViewMatrix() );
+        mat4.copy( camera.getProjectionMatrix(), this._projectionMatrix );
+        mat4.copy( camera.getViewMatrix(), this._viewMatrix );
 
         // set values now
         this.setShadowUniformsDepthValue();
@@ -845,14 +850,14 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         if ( !this._infiniteFrustum ) {
             this.nearFarBounding();
-            Matrix.clampProjectionMatrix( this._projectionMatrix, this._depthRange[ 0 ], this._depthRange[ 1 ], cullVisitor.getNearFarRatio(), this._depthRange );
+            CullVisitor.prototype.clampProjectionMatrix( this._projectionMatrix, this._depthRange[ 0 ], this._depthRange[ 1 ], cullVisitor.getNearFarRatio(), this._depthRange );
             this.setShadowUniformsDepthValue();
         }
 
         // overwrite any cullvisitor wrongness
         var camera = this._cameraShadow;
-        Matrix.copy( this._projectionMatrix, camera.getProjectionMatrix() );
-        Matrix.copy( this._viewMatrix, camera.getViewMatrix() );
+        mat4.copy( camera.getProjectionMatrix(), this._projectionMatrix );
+        mat4.copy( camera.getViewMatrix(), this._viewMatrix );
 
     },
 
@@ -889,8 +894,8 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         // make sure it's not modified outside our computations
         // camera matrix can be modified by cullvisitor afterwards...
-        Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
-        Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
+        mat4.copy( this._projectionMatrix, camera.getProjectionMatrix() );
+        mat4.copy( this._viewMatrix, camera.getViewMatrix() );
 
         this._texture.setViewMatrix( this._viewMatrix );
         this._texture.setProjectionMatrix( this._projectionMatrix );
@@ -938,7 +943,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         // to get any world transform ABOVE the shadowedScene
         var worldMatrix = cullVisitor.getCurrentModelWorldMatrix();
         // it does fuck up the results.
-        Matrix.transformBoundingBox( worldMatrix, bbox, bbox );
+        bbox.transformMat4( bbox, worldMatrix );
 
         this._emptyCasterScene = false;
         this.aimShadowCastingCamera( cullVisitor, bbox );

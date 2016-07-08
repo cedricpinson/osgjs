@@ -4,11 +4,11 @@ var Camera = require( 'osg/Camera' );
 var FrameStamp = require( 'osg/FrameStamp' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Light = require( 'osg/Light' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Texture = require( 'osg/Texture' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Viewport = require( 'osg/Viewport' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
@@ -162,8 +162,9 @@ View.prototype = {
         this._camera.setViewport( new Viewport( 0, 0, width, height ) );
 
         this._camera.setGraphicContext( this.getGraphicContext() );
-        Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10.0 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), this._camera.getViewMatrix() );
-        Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
+        mat4.lookAt( this._camera.getViewMatrix(), vec3.fromValues( 0.0, 0.0, -10.0 ), vec3.create(), vec3.fromValues( 0.0, 1.0, 0.0 ) );
+        mat4.perspective( this._camera.getProjectionMatrix(), Math.PI / 180 * 55, ratio, 1.0, 1000.0 );
+
 
 
         if ( options && options.enableFrustumCulling )
@@ -206,11 +207,12 @@ View.prototype = {
         }
 
         if ( !this._origIntersect ) {
-            this._origIntersect = Vec3.create();
-            this._dstIntersect = Vec3.create();
+            this._origIntersect = vec3.create();
+            this._dstIntersect = vec3.create();
         }
 
-        this._lsi.set( Vec3.set( x, y, 0.0, this._origIntersect ), Vec3.set( x, y, 1.0, this._dstIntersect ) );
+        this._lsi.set( vec3.set( this._origIntersect, x, y, 0.0 ),
+            vec3.set( this._dstIntersect, x, y, 1.0 ) );
 
 
         if ( !this._iv ) {

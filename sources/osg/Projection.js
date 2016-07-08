@@ -1,11 +1,11 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 var Projection = function () {
     Node.call( this );
-    this.projection = Matrix.create();
+    this.projection = mat4.create();
 };
 Projection.prototype = MACROUTILS.objectInherit( Node.prototype, {
     getProjectionMatrix: function () {

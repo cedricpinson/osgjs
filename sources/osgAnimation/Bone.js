@@ -1,8 +1,8 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var BoundingBox = require( 'osg/BoundingBox' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var UpdateBone = require( 'osgAnimation/UpdateBone' );
 
@@ -16,8 +16,8 @@ var Bone = function ( name ) {
         this.setName( name );
 
     MatrixTransform.call( this );
-    this._invBindInSkeletonSpace = Matrix.create();
-    this._boneInSkeletonSpace = Matrix.create();
+    this._invBindInSkeletonSpace = mat4.create();
+    this._boneInSkeletonSpace = mat4.create();
     this._boneBoundingBox = new BoundingBox();
 };
 
@@ -29,14 +29,14 @@ Bone.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
     //     return x - Math.floor( x );
     // },
     // _generateBoneColor: function ( id ) {
-    //     return Vec3.createAndSet( this._rand( id + 2.16 ), this._rand( id * 57.27 ), this._rand( id * 0.874 ) );
+    //     return vec3.fromValues( this._rand( id + 2.16 ), this._rand( id * 57.27 ), this._rand( id * 0.874 ) );
     // },
 
     getOrCreateDebugColor: function () {
         // for bone display (debugging, etc)
         if ( this._boneColor ) return this._boneColor;
         // this._boneColor = this._generateBoneColor( this.getInstanceID() );
-        this._boneColor = Vec3.createAndSet( Math.random(), Math.random(), Math.random() );
+        this._boneColor = vec3.fromValues( Math.random(), Math.random(), Math.random() );
         return this._boneColor;
     },
 
@@ -57,11 +57,11 @@ Bone.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
     },
 
     setMatrixInSkeletonSpace: function ( m ) {
-        Matrix.copy( m, this._boneInSkeletonSpace );
+        mat4.copy( this._boneInSkeletonSpace, m );
     },
 
     setInvBindMatrixInSkeletonSpace: function ( m ) {
-        Matrix.copy( m, this._invBindInSkeletonSpace );
+        mat4.copy( this._invBindInSkeletonSpace, m );
     },
 
     getBoneParent: function () {

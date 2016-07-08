@@ -195,9 +195,8 @@ window.addEventListener( 'load',
 
                     osg.Matrix.inverse4x3( this._inv, this._inverseDeviceMatrix );
 
-                    osg.Matrix.copy( this._inverseDeviceMatrix, viewer.getCamera().getViewMatrix() );
+                    osg.mat4.copy( viewer.getCamera().getViewMatrix(), this._inverseDeviceMatrix );
 
-                    //  osg.Matrix.copy( this._inv, viewer.getCamera().getViewMatrix() );
                 }
             },
             lightUpdate: function ( currentTime, node /*, nv*/ ) {
@@ -211,12 +210,11 @@ window.addEventListener( 'load',
                     var y = fac * Math.sin( currentTime + i / numLights );
 
 
-
                     //  GENERIC Code getting direction
                     //var lightPos = l.getPosition();
                     var lightPos = l._position;
                     var lightTarget = [ x, y, 1, 1 ];
-                    var lightDir = osg.Vec3.sub( lightPos, lightTarget, [] );
+                    var lightDir = osg.Vec3.sub( osg.Vec3.create(), lightPos, lightTarget );
                     osg.Vec3.normalize( lightDir, lightDir );
 
                     var up = [ 0, 0, -1 ]; //   camera up
@@ -229,8 +227,8 @@ window.addEventListener( 'load',
                     // that part is just for updating the 'debug' axis node
                     // you can comment it and ligths will still rotates
                     var lightMatrix = n.getMatrix();
-                    osg.Matrix.makeLookAt( lightPos, lightTarget, up, lightMatrix );
-                    osg.Matrix.inverse( lightMatrix, lightMatrix );
+                    osg.mat4.lookAt( lightMatrix, lightPos, lightTarget, up );
+                    osg.mat4.invert( lightMatrix, lightMatrix );
 
                     // that's where we actually update the light
                     l.setDirection( lightDir );
@@ -308,9 +306,9 @@ window.addEventListener( 'load',
 
 
         // setting light, each above its cube
-        mainNode.lightPos[ 0 ].setMatrix( osg.Matrix.makeTranslate( -10, -10, 10, osg.Matrix.create() ) );
-        mainNode.lightPos[ 1 ].setMatrix( osg.Matrix.makeTranslate( 10, -10, 10, osg.Matrix.create() ) );
-        mainNode.lightPos[ 2 ].setMatrix( osg.Matrix.makeTranslate( 10, 10, 10, osg.Matrix.create() ) );
+        mainNode.lightPos[ 0 ].setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ -10, -10, 10 ] ) );
+        mainNode.lightPos[ 1 ].setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ 10, -10, 10 ] ) );
+        mainNode.lightPos[ 2 ].setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ 10, 10, 10 ] ) );
 
 
         // Each light has a channel for visual debug

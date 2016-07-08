@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var TransformEnums = require( 'osg/TransformEnums' );
 
 /**
@@ -24,17 +24,17 @@ Transform.prototype = MACROUTILS.objectInherit( Node.prototype, {
     },
 
     computeBoundingSphere: ( function () {
-        var matrix = Matrix.create();
+        var matrix = mat4.create();
         return function ( bSphere ) {
             Node.prototype.computeBoundingSphere.call( this, bSphere );
             if ( !bSphere.valid() ) {
                 return bSphere;
             }
 
-            Matrix.makeIdentity( matrix );
+            mat4.identity( matrix );
             // local to local world (not Global World)
             this.computeLocalToWorldMatrix( matrix );
-            Matrix.transformBoundingSphere( matrix, bSphere, bSphere );
+            bSphere.transformMat4( bSphere, matrix );
             return bSphere;
         };
     } )()

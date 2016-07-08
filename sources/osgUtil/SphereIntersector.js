@@ -1,12 +1,12 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
-var Matrix = require( 'osg/Matrix' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var TriangleSphereIntersector = require( 'osgUtil/TriangleSphereIntersector' );
 
 
 var SphereIntersector = function () {
-    this._center = Vec3.create();
-    this._iCenter = Vec3.create();
+    this._center = vec3.create();
+    this._iCenter = vec3.create();
     this._radius = 1.0;
     this._iRadius = 1.0;
     this._intersections = [];
@@ -15,14 +15,14 @@ var SphereIntersector = function () {
 SphereIntersector.prototype = {
     set: function ( center, radius ) {
         // we copy iCenter and iRadius in case setCurrentTransformation is never called
-        Vec3.copy( center, this._center );
-        Vec3.copy( center, this._iCenter );
+        vec3.copy( this._center, center );
+        vec3.copy( this._iCenter, center );
         this._radius = this._iRadius = radius;
         this.reset();
     },
     setCenter: function ( center ) {
-        Vec3.copy( center, this._center );
-        Vec3.copy( center, this._iCenter );
+        vec3.copy( this._center, center );
+        vec3.copy( this._iCenter, center );
     },
     setRadius: function ( radius ) {
         this._radius = this._iRadius = radius;
@@ -35,11 +35,11 @@ SphereIntersector.prototype = {
         // Not working if culling disabled ??
         return !node.isCullingActive() || this.intersects( node.getBound() );
     },
-    // Intersection Sphere/Sphere 
+    // Intersection Sphere/Sphere
     intersects: function ( bsphere ) {
         if ( !bsphere.valid() ) return false;
         var r = this._iRadius + bsphere.radius();
-        return Vec3.distance2( this._iCenter, bsphere.center() ) <= r * r;
+        return vec3.sqrDist( bsphere.center(), this._iCenter ) <= r * r;
     },
 
     intersect: ( function () {
@@ -62,7 +62,7 @@ SphereIntersector.prototype = {
                 var originVerts = vList.Vertex.getElements();
 
                 // temporarily hook vertex buffer for the tri intersections
-                // don't call setElements as it dirty some stuffs because of gl buffer 
+                // don't call setElements as it dirty some stuffs because of gl buffer
                 vList.Vertex._elements = node.computeTransformedVertices();
                 ti.apply( node );
                 vList.Vertex._elements = originVerts;
@@ -84,12 +84,12 @@ SphereIntersector.prototype = {
     },
 
     setCurrentTransformation: ( function () {
-        var tmp = Vec3.create();
+        var tmp = vec3.create();
 
         return function ( matrix ) {
-            Matrix.inverse( matrix, matrix );
-            Matrix.transformVec3( matrix, this._center, this._iCenter );
-            this._iRadius = this._radius * Matrix.getScale( matrix, tmp )[ 0 ];
+            mat4.invert( matrix, matrix );
+            vec3.transformMat4( this._iCenter, this._center, matrix );
+            this._iRadius = this._radius * mat4.getScale( tmp, matrix )[ 0 ];
         };
     } )()
 };

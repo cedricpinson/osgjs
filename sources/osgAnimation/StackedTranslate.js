@@ -1,8 +1,8 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Target = require( 'osgAnimation/Target' );
 
 
@@ -11,7 +11,7 @@ var Target = require( 'osgAnimation/Target' );
  */
 var StackedTranslate = function ( name, translate ) {
     Object.call( this );
-    this._target = Target.createVec3Target( translate || Vec3.zero );
+    this._target = Target.createVec3Target( translate || vec3.ZERO );
     if ( name ) this.setName( name );
 };
 
@@ -20,11 +20,11 @@ StackedTranslate.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( translate ) {
         this.setTranslate( translate );
-        Vec3.copy( translate, this._target.defaultValue );
+        vec3.copy( this._target.defaultValue, translate );
     },
 
     setTranslate: function ( translate ) {
-        Vec3.copy( translate, this._target.value );
+        vec3.copy( this._target.value, translate );
     },
 
     getTarget: function () {
@@ -36,7 +36,7 @@ StackedTranslate.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
     applyToMatrix: function ( m ) {
-        Matrix.preMultTranslate( m, this._target.value );
+        mat4.translate( m, m, this._target.value );
     }
 } );
 

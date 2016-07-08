@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
-var Vec4 = require( 'osg/Vec4' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
 
 /**
  *  Manage BlendColor attribute
@@ -11,8 +11,8 @@ var Vec4 = require( 'osg/Vec4' );
  */
 var BlendColor = function ( color ) {
     StateAttribute.call( this );
-    this._constantColor = Vec4.create();
-    Vec4.set( 1.0, 1.0, 1.0, 1.0, this._constantColor );
+    this._constantColor = vec4.create();
+    vec4.set( this._constantColor, 1.0, 1.0, 1.0, 1.0 );
     if ( color !== undefined ) {
         this.setConstantColor( color );
     }
@@ -32,7 +32,7 @@ BlendColor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( 
      * @param {} color
      */
     setConstantColor: function ( color ) {
-        Vec4.copy( color, this._constantColor );
+        vec4.copy( this._constantColor, color );
     },
     getConstantColor: function () {
         return this._constantColor;

@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
 var TransformEnums = require( 'osg/TransformEnums' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 /**
  *  LightSource is a positioned node to use with StateAttribute Light
@@ -29,7 +29,7 @@ LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         return this._referenceFrame;
     },
     computeBoundingSphere: ( function () {
-        var tmp = Vec3.create();
+        var tmp = vec3.create();
 
         return function ( bsphere ) {
             Node.prototype.computeBoundingSphere.call( this, bsphere );
@@ -38,7 +38,7 @@ LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
                 var position = this._light.getPosition();
 
                 if ( position[ 3 ] !== 0.0 ) {
-                    bsphere.expandByVec3( Vec3.mult( position, 1.0 / position[ 3 ], tmp ) );
+                    bsphere.expandByvec3( vec3.scale( tmp, position, 1.0 / position[ 3 ] ) );
                 }
             }
 

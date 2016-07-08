@@ -4,7 +4,7 @@ var Camera = require( 'osg/Camera' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Notify = require( 'osg/Notify' );
 var RenderBin = require( 'osg/RenderBin' );
-var Vec4 = require( 'osg/Vec4' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
 
 
 /**
@@ -20,7 +20,7 @@ var Vec4 = require( 'osg/Vec4' );
 var RenderStage = function () {
 
     RenderBin.call( this );
-    this.clearColor = Vec4.create();
+    this.clearColor = vec4.create();
     this.preRenderList = [];
     this.postRenderList = [];
     // calling prototype to make sure
@@ -40,7 +40,7 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         RenderBin.prototype.init.call( this );
         this.positionedAttribute.length = 0;
         this.clearDepth = 1.0;
-        Vec4.set( 0.0, 0.0, 0.0, 1.0, this.clearColor );
+        vec4.set( this.clearColor, 0.0, 0.0, 0.0, 1.0 );
         /*jshint bitwise: false */
         this.clearMask = Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT;
         /*jshint bitwise: true */
@@ -68,7 +68,7 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
     },
 
     setClearColor: function ( color ) {
-        Vec4.copy( color, this.clearColor );
+        vec4.copy( this.clearColor, color );
     },
 
     getClearColor: function () {

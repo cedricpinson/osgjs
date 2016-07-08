@@ -118,14 +118,13 @@
 
             camera.setCullCallback( {
                 cull: function ( node, nv ) {
-                    osg.Matrix.makeIdentity( nv.getCurrentModelViewMatrix() );
+                    osg.mat4.identity( nv.getCurrentModelViewMatrix() );
                     // node.setProjectionMatrix( self._viewer.getCamera().getProjectionMatrix() );
                     return true;
                 }
             } );
 
             var mt = new osg.MatrixTransform();
-            // osg.Matrix.makeTranslate( 0, 0, 0, mt.getMatrix() );
             camera.addChild( mt );
 
             var geometry = osg.createTexturedQuadGeometry( -size / 2, -size / 2, 0, size, 0, 0, 0, size, 0 );
@@ -141,7 +140,7 @@
             scale.addUpdateCallback( {
                 update: function ( node ) {
                     var scaleCursor = window.cursorSize || defaultCursorSize;
-                    osg.Matrix.makeScale( scaleCursor, scaleCursor, scaleCursor, node.getMatrix() );
+                    osg.mat4.fromScaling( node.getMatrix(), [ scaleCursor, scaleCursor, scaleCursor ] );
                     node.dirtyBound();
                     return true;
                 }
@@ -162,7 +161,7 @@
             var UpdateCallback = function () {
 
                 this.update = function ( node ) {
-                    osg.Matrix.makeTranslate( 0, 0, -window.translateZ, node.getMatrix() );
+                    osg.mat4.fromTranslation( node.getMatrix(), [ 0, 0, -window.translateZ ] );
                     node.dirtyBound();
 
                     return true;
@@ -199,7 +198,7 @@
 
             var sphere = new osg.MatrixTransform();
             sphere.addChild( osg.createTexturedBox() );
-            osg.Matrix.makeTranslate( 0, 5, 5, sphere.getMatrix() );
+            osg.mat4.fromTranslation( sphere.getMatrix(), [ 0, 5, 5 ] );
 
             node.addChild( tg );
             node.addChild( mt );
@@ -220,8 +219,8 @@
                     fps.getTarget( target );
                     window.camTarget = target;
                     window.camPos = fps.getEyePosition( [] );
-                    osg.Matrix.makeTranslate( target[ 0 ], target[ 1 ], target[ 2 ], tg.getMatrix() );
-                    osg.Matrix.inverse( fps.getInverseMatrix(), node.getMatrix() );
+                    osg.mat4.fromTranslation( tg.getMatrix(), [ target[ 0 ], target[ 1 ], target[ 2 ] ] );
+                    osg.mat4.invert( node.getMatrix(), fps.getInverseMatrix() );
 
 
                     return true;
@@ -277,7 +276,7 @@
             console.log( x + size / 2 );
             var sizey = size / ( 640 / 436 );
             var mt = new osg.MatrixTransform();
-            osg.Matrix.makeTranslate( x, 0, y, mt.getMatrix() );
+            osg.mat4.fromTranslation( mt.getMatrix(), [ x, 0, y ] );
 
             var geometry = osg.createTexturedQuadGeometry( -size / 2, 0, -sizey / 2, size, 0, 0, 0, 0, sizey );
             if ( img ) {
@@ -394,23 +393,23 @@
                 this.update = function ( node ) {
                     if ( window.disableRay ) return true;
                     var camera = self._viewer.getCamera();
-                    var cameraInverse = osg.Matrix.create();
-                    osg.Matrix.inverse( camera.getViewMatrix(), cameraInverse );
+                    var cameraInverse = osg.mat4.create();
+                    osg.mat4.invert( cameraInverse, camera.getViewMatrix() );
 
                     var eye = [],
                         center = [],
                         up = [];
                     lsi.reset();
                     iv.reset();
-                    osg.Matrix.getLookAt( camera.getViewMatrix(), eye, center, up );
+                    osg.mat4.getLookAt( eye, center, up, camera.getViewMatrix() );
 
-                    var dir = osg.Vec3.sub( center, eye, osg.Vec3.create() );
-                    osg.Vec3.mult( dir, 1000.0, dir );
+                    var dir = osg.vec3.sub( osg.vec3.create(), center, eye );
+                    osg.vec3.scale( dir, dir, 1000.0 );
 
-                    var start = osg.Vec3.create();
-                    var end = osg.Vec3.create();
-                    osg.Matrix.transformVec3( cameraInverse, osg.Vec3.zero, start );
-                    osg.Matrix.transformVec3( cameraInverse, [ 0, 0, -1000 ], end );
+                    var start = osg.vec3.create();
+                    var end = osg.vec3.create();
+                    osg.vec3.transformMat4( start, osg.vec3.ZERO, cameraInverse );
+                    osg.vec3.transformMat4( end, [ 0, 0, -1000 ], cameraInverse );
                     lsi.set( eye, dir );
                     lsi.set( start, end );
 
@@ -418,10 +417,10 @@
 
                     var hit = self.hoverPicking( lsi.getIntersections() );
                     if ( hit ) {
-                        var tmp = osg.Vec3.create();
-                        osg.Vec3.sub( end, start, tmp );
-                        osg.Vec3.mult( tmp, hit.ratio, tmp );
-                        window.translateZ = Math.min( Math.max( osg.Vec3.length( tmp ), 1.0 ), 4.0 );
+                        var tmp = osg.vec3.create();
+                        osg.vec3.sub( tmp, end, start );
+                        osg.vec3.scale( tmp, tmp, hit.ratio );
+                        window.translateZ = Math.min( Math.max( osg.vec3.length( tmp ), 1.0 ), 4.0 );
                     }
 
                     return true;

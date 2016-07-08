@@ -1,8 +1,8 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Quat = require( 'osg/Quat' );
-var Vec3 = require( 'osg/Vec3' );
-var Matrix = require( 'osg/Matrix' );
+var quat = require( 'osg/glMatrix' ).quat;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 
 var WebVR = function ( viewer ) {
@@ -14,8 +14,8 @@ var WebVR = function ( viewer ) {
     this._sensor = undefined;
 
     this._lastPose = undefined; // so that we can pass it to the submitFrame call
-    this._quat = Quat.create();
-    this._pos = Vec3.create();
+    this._quat = quat.create();
+    this._pos = vec3.create();
 
     this._worldScale = 1.0;
 };
@@ -72,8 +72,8 @@ WebVR.prototype = {
     },
 
     update: ( function () {
-        var tempQuat = Quat.create();
-        var tempPos = Vec3.create();
+        var tempQuat = quat.create();
+        var tempPos = vec3.create();
 
         return function () {
 
@@ -96,23 +96,23 @@ WebVR.prototype = {
 
             var sitToStand = this._hmd.stageParameters && this._hmd.stageParameters.sittingToStandingTransform;
 
-            var quat = this._lastPose.orientation;
-            if ( quat ) {
+            var q = this._lastPose.orientation;
+            if ( q ) {
                 if ( sitToStand ) {
-                    quat = Matrix.getRotate( sitToStand, tempQuat );
-                    Quat.mult( quat, this._lastPose.orientation, quat );
+                    q = mat4.getRotation( tempQuat, sitToStand );
+                    quat.mul( q, q, this._lastPose.orientation );
                 }
 
-                this._quat[ 0 ] = quat[ 0 ];
-                this._quat[ 1 ] = -quat[ 2 ];
-                this._quat[ 2 ] = quat[ 1 ];
-                this._quat[ 3 ] = quat[ 3 ];
+                this._quat[ 0 ] = q[ 0 ];
+                this._quat[ 1 ] = -q[ 2 ];
+                this._quat[ 2 ] = q[ 1 ];
+                this._quat[ 3 ] = q[ 3 ];
             }
 
             var pos = this._lastPose.position;
             if ( pos ) {
                 if ( sitToStand ) {
-                    pos = Matrix.transformVec3( sitToStand, pos, tempPos );
+                    pos = vec3.transformMat4( tempPos, pos, sitToStand );
                 }
                 this._pos[ 0 ] = pos[ 0 ] * this._worldScale;
                 this._pos[ 1 ] = -pos[ 2 ] * this._worldScale;

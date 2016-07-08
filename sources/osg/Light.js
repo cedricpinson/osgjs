@@ -2,9 +2,9 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var vec4 = require( 'osg/glMatrix' ).vec4;
 var Map = require( 'osg/Map' );
 var Notify = require( 'osg/Notify' );
 
@@ -18,28 +18,28 @@ var Light = function ( lightNum, disable ) {
 
     var lightNumber = lightNum !== undefined ? lightNum : 0;
 
-    this._ambient = Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 );
-    this._diffuse = Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 );
-    this._specular = Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 );
+    this._ambient = vec4.fromValues( 0.2, 0.2, 0.2, 1.0 );
+    this._diffuse = vec4.fromValues( 0.8, 0.8, 0.8, 1.0 );
+    this._specular = vec4.fromValues( 0.2, 0.2, 0.2, 1.0 );
 
     // Default is directional as postion[3] is 0
-    this._position = Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 );
-    this._direction = Vec3.createAndSet( 0.0, 0.0, -1.0 );
+    this._position = vec4.fromValues( 0.0, 0.0, 1.0, 0.0 );
+    this._direction = vec3.fromValues( 0.0, 0.0, -1.0 );
 
     // TODO : refactor lights management w=1.0 (isHemi), w=-1.0
     // (isNotHemi) _ground contains the color but w says if it's
     // an hemi or not
-    this._ground = Vec4.createAndSet( 0.2, 0.2, 0.2, -1.0 );
+    this._ground = vec4.fromValues( 0.2, 0.2, 0.2, -1.0 );
 
     this._spotCutoff = 180.0;
     this._spotBlend = 0.01;
 
     // the array contains constant, linear, quadratic factor
-    this._attenuation = Vec4.createAndSet( 1.0, 0.0, 0.0, 0.0 );
+    this._attenuation = vec4.fromValues( 1.0, 0.0, 0.0, 0.0 );
 
     this._lightUnit = lightNumber;
 
-    this._invMatrix = Matrix.create();
+    this._invMatrix = mat4.create();
 
     this._enable = !disable;
 
@@ -135,7 +135,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     // colors
     setAmbient: function ( a ) {
-        Vec4.copy( a, this._ambient );
+        vec4.copy( this._ambient, a );
     },
 
     getAmbient: function () {
@@ -143,7 +143,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     },
 
     setDiffuse: function ( a ) {
-        Vec4.copy( a, this._diffuse );
+        vec4.copy( this._diffuse, a );
     },
 
     getDiffuse: function () {
@@ -151,7 +151,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     },
 
     setSpecular: function ( a ) {
-        Vec4.copy( a, this._specular );
+        vec4.copy( this._specular, a );
     },
 
     getSpecular: function () {
@@ -163,7 +163,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // position[3] === 0 means directional
     // see creating lightsources http://www.glprogramming.com/red/chapter05.html
     setPosition: function ( a ) {
-        Vec4.copy( a, this._position );
+        vec4.copy( this._position, a );
     },
 
     getPosition: function () {
@@ -172,7 +172,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     // unused for directional
     setDirection: function ( a ) {
-        Vec3.copy( a, this._direction );
+        vec3.copy( this._direction, a );
     },
 
     getDirection: function () {
@@ -198,7 +198,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     // set/get the color of the ground
     setGround: function ( a ) {
-        Vec3.copy( a, this._ground );
+        vec3.copy( this._ground, a );
     },
 
     getGround: function () {
@@ -251,26 +251,26 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     },
 
     setLightAsSpot: function () {
-        Vec4.set( 0.0, 0.0, 0.0, 1.0, this._position );
-        Vec3.set( 0.0, 0.0, -1.0, this._direction );
+        vec4.set( this._position, 0.0, 0.0, 0.0, 1.0 );
+        vec3.set( this._direction, 0.0, 0.0, -1.0 );
         this._ground[ 3 ] = -1.0;
         this._spotCutoff = 90;
     },
 
     setLightAsPoint: function () {
-        Vec4.set( 0.0, 0.0, 0.0, 1.0, this._position );
-        Vec3.set( 0.0, 0.0, -1.0, this._direction );
+        vec4.set( this._position, 0.0, 0.0, 0.0, 1.0 );
+        vec3.set( this._direction, 0.0, 0.0, -1.0 );
         this._ground[ 3 ] = -1.0;
     },
 
     setLightAsDirection: function () {
-        Vec4.set( 0.0, 0.0, 1.0, 0.0, this._position );
+        vec4.set( this._position, 0.0, 0.0, 1.0, 0.0 );
         this._spotCutoff = 180;
         this._ground[ 3 ] = -1.0;
     },
 
     setLightAsHemi: function () {
-        Vec4.set( 0.0, 0.0, 1.0, 0.0, this._position );
+        vec4.set( this._position, 0.0, 0.0, 1.0, 0.0 );
         this._spotCutoff = 180;
         this._ground[ 3 ] = 1.0;
     },
@@ -307,15 +307,15 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
         var matrixArray = uniformMap.matrix.getInternalArray();
         var invMatrixArray = uniformMap.invMatrix.getInternalArray();
 
-        Matrix.copy( matrix, matrixArray );
-        Matrix.copy( matrix, invMatrixArray );
+        mat4.copy( matrixArray, matrix );
+        mat4.copy( invMatrixArray, matrix );
 
         invMatrixArray[ 12 ] = 0.0;
         invMatrixArray[ 13 ] = 0.0;
         invMatrixArray[ 14 ] = 0.0;
 
-        Matrix.inverse( invMatrixArray, invMatrixArray );
-        Matrix.transpose( invMatrixArray, invMatrixArray );
+        mat4.invert( invMatrixArray, invMatrixArray );
+        mat4.transpose( invMatrixArray, invMatrixArray );
     },
 
     apply: function () {

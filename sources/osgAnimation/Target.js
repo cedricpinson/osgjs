@@ -1,7 +1,7 @@
 'use strict';
-var Matrix = require( 'osg/Matrix' );
-var Quat = require( 'osg/Quat' );
-var Vec3 = require( 'osg/Vec3' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var quat = require( 'osg/glMatrix' ).quat;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var channelType = require( 'osgAnimation/channelType' );
 
 
@@ -21,20 +21,20 @@ var createTarget = function ( type, value, defaultValue ) {
 
 var createQuatTarget = function ( defaultValue ) {
     return createTarget( channelType.Quat,
-        Quat.copy( defaultValue, Quat.create() ),
-        Quat.copy( defaultValue, Quat.create() ) );
+        quat.copy( quat.create(), defaultValue ),
+        quat.copy( quat.create(), defaultValue ) );
 };
 
 var createMatrixTarget = function ( defaultValue ) {
     return createTarget( channelType.Matrix,
-        Matrix.copy( defaultValue, Matrix.create() ),
-        Matrix.copy( defaultValue, Matrix.create() ) );
+        mat4.copy( mat4.create(), defaultValue ),
+        mat4.copy( mat4.create(), defaultValue ) );
 };
 
 var createVec3Target = function ( defaultValue ) {
     return createTarget( channelType.Vec3,
-        Vec3.copy( defaultValue, Vec3.create() ),
-        Vec3.copy( defaultValue, Vec3.create() ) );
+        vec3.copy( vec3.create(), defaultValue ),
+        vec3.copy( vec3.create(), defaultValue ) );
 };
 
 var createFloatTarget = function ( defaultValue ) {

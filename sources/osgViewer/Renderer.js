@@ -6,7 +6,7 @@ var Object = require( 'osg/Object' );
 var RenderStage = require( 'osg/RenderStage' );
 var State = require( 'osg/State' );
 var StateGraph = require( 'osg/StateGraph' );
-var Vec4 = require( 'osg/Vec4' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
 var osgShader = require( 'osgShader/osgShader' );
 var DisplayGraph = require( 'osgUtil/DisplayGraph' );
 
@@ -38,7 +38,7 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._cullVisitor.setRenderer( this );
         this._stateGraph = new StateGraph();
 
-        this.getCamera().setClearColor( Vec4.create() );
+        this.getCamera().setClearColor( vec4.create() );
         this.setRenderStage( new RenderStage() );
 
         var osg = require( 'osg/osg' );

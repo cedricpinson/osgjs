@@ -373,16 +373,16 @@
         geom.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
         geom.getOrCreateStateSet().setAttributeAndModes( getShaderBackground() );
 
-        var cubemapTransform = osg.Uniform.createMatrix4( osg.Matrix.create(), 'CubemapTransform' );
+        var cubemapTransform = osg.Uniform.createMatrix4( osg.mat4.create(), 'CubemapTransform' );
         var mt = new osg.MatrixTransform();
-        mt.setMatrix( osg.Matrix.makeRotate( -Math.PI / 2.0, 1, 0, 0, [] ) );
+        mt.setMatrix( osg.mat4.fromRotation( osg.mat4.create(), -Math.PI / 2.0, [ 1, 0, 0 ] ) );
         mt.addChild( geom );
         var CullCallback = function () {
             this.cull = function ( node, nv ) {
                 // overwrite matrix, remove translate so environment is always at camera origin
-                osg.Matrix.setTrans( nv.getCurrentModelViewMatrix(), 0, 0, 0 );
+                osg.mat4.setTranslation( nv.getCurrentModelViewMatrix(), [ 0, 0, 0 ] );
                 var m = nv.getCurrentModelViewMatrix();
-                osg.Matrix.copy( m, cubemapTransform.getInternalArray() );
+                osg.mat4.copy( cubemapTransform.getInternalArray(), m );
                 return true;
             };
         };
@@ -403,9 +403,10 @@
 
                 //rootCam.
                 var info = {};
-                osg.Matrix.getPerspective( rootCam.getProjectionMatrix(), info );
+                osg.mat4.getPerspective( info, rootCam.getProjectionMatrix() );
                 var proj = [];
-                osg.Matrix.makePerspective( info.fovy, info.aspectRatio, 1.0, 100.0, proj );
+                osg.mat4.perspective( proj, Math.PI / 180 * info.fovy, info.aspectRatio, 1.0, 100.0 );
+
                 cam.setProjectionMatrix( proj );
                 cam.setViewMatrix( rootCam.getViewMatrix() );
 
@@ -421,7 +422,7 @@
 
     var getModel = function () {
         var root = new osg.MatrixTransform();
-        osg.Matrix.makeRotate( Math.PI, 0, 0, 1, root.getMatrix() );
+        osg.mat4.fromRotation( root.getMatrix(), Math.PI, [ 0, 0, 1 ] );
         addLoading();
         osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( node ) {
             root.addChild( node );

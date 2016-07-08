@@ -1,5 +1,5 @@
 'use strict';
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var StateAttribute = require( 'osg/StateAttribute' );
 var SkinningAttribute = require( 'osgAnimation/SkinningAttribute' );
 var CollectBoneVisitor = require( 'osgAnimation/CollectBoneVisitor' );
@@ -82,7 +82,7 @@ RigTransformHardware.prototype = {
 
     computeMatrixPalette: ( function () {
 
-        var mTmp = Matrix.create();
+        var mTmp = mat4.create();
 
         return function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
 
@@ -96,9 +96,9 @@ RigTransformHardware.prototype = {
                 var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
                 var boneMatrix = bone.getMatrixInSkeletonSpace();
 
-                Matrix.mult( boneMatrix, invBindMatrix, mTmp );
-                Matrix.postMult( invTransformFromSkeletonToGeometry, mTmp );
-                Matrix.preMult( mTmp, transformFromSkeletonToGeometry );
+                mat4.mul( mTmp, boneMatrix, invBindMatrix );
+                mat4.mul( mTmp, invTransformFromSkeletonToGeometry, mTmp );
+                mat4.mul( mTmp, mTmp, transformFromSkeletonToGeometry );
 
                 // TODO: maybe change upload order so that we can use
                 // glsl constructor :

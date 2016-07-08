@@ -1,5 +1,5 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
 var Notify = require( 'osg/Notify' );
 
@@ -23,7 +23,7 @@ var TriangleIntersector = function () {
 
     this._intersections = [];
     this._nodePath = [];
-    this._dir = Vec3.create();
+    this._dir = vec3.create();
 };
 
 TriangleIntersector.prototype = {
@@ -36,17 +36,17 @@ TriangleIntersector.prototype = {
     set: function ( start, end ) {
         this._start = start;
         this._end = end;
-        this._dir = Vec3.sub( end, start, this._dir );
-        this._length = Vec3.length( this._dir );
+        this._dir = vec3.sub( this._dir, end, start );
+        this._length = vec3.length( this._dir );
         this._invLength = 1.0 / this._length;
-        Vec3.mult( this._dir, this._invLength, this._dir );
+        vec3.scale( this._dir, this._dir, this._invLength );
     },
 
     apply: ( function () {
 
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
-        var v3 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var v3 = vec3.create();
         var tif = new TriangleIndexFunctor();
 
         return function ( node ) {
@@ -87,40 +87,40 @@ TriangleIntersector.prototype = {
 
     intersect: ( function () {
 
-        var normal = Vec3.create();
-        var e2 = Vec3.create();
-        var e1 = Vec3.create();
-        var tvec = Vec3.create();
-        var pvec = Vec3.create();
-        var qvec = Vec3.create();
+        var normal = vec3.create();
+        var e2 = vec3.create();
+        var e1 = vec3.create();
+        var tvec = vec3.create();
+        var pvec = vec3.create();
+        var qvec = vec3.create();
         var epsilon = 1E-20;
 
         return function ( v0, v1, v2, i0, i1, i2 ) {
 
             var d = this._dir;
 
-            Vec3.sub( v2, v0, e2 );
-            Vec3.sub( v1, v0, e1 );
-            Vec3.cross( d, e2, pvec );
+            vec3.sub( e2, v2, v0 );
+            vec3.sub( e1, v1, v0 );
+            vec3.cross( pvec, d, e2 );
 
-            var det = Vec3.dot( pvec, e1 );
+            var det = vec3.dot( pvec, e1 );
             if ( det > -epsilon && det < epsilon )
                 return;
             var invDet = 1.0 / det;
 
-            Vec3.sub( this._start, v0, tvec );
+            vec3.sub( tvec, this._start, v0 );
 
-            var u = Vec3.dot( pvec, tvec ) * invDet;
+            var u = vec3.dot( pvec, tvec ) * invDet;
             if ( u < 0.0 || u > 1.0 )
                 return;
 
-            Vec3.cross( tvec, e1, qvec );
+            vec3.cross( qvec, tvec, e1 );
 
-            var v = Vec3.dot( qvec, d ) * invDet;
+            var v = vec3.dot( qvec, d ) * invDet;
             if ( v < 0.0 || ( u + v ) > 1.0 )
                 return;
 
-            var t = Vec3.dot( qvec, e2 ) * invDet;
+            var t = vec3.dot( qvec, e2 ) * invDet;
 
             if ( t < epsilon || t > this._length ) //no intersection
                 return;
@@ -134,16 +134,16 @@ TriangleIntersector.prototype = {
             var interY = v0[ 1 ] * r0 + v1[ 1 ] * r1 + v2[ 1 ] * r2;
             var interZ = v0[ 2 ] * r0 + v1[ 2 ] * r1 + v2[ 2 ] * r2;
 
-            Vec3.cross( e1, e2, normal );
-            Vec3.normalize( normal, normal );
+            vec3.cross( normal, e1, e2 );
+            vec3.normalize( normal, normal );
 
             // GC TriangleIntersection & Point
             this._intersections.push( {
                 ratio: r,
                 backface: det < 0.0,
                 nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
-                TriangleIntersection: new TriangleIntersection( Vec3.copy( normal, Vec3.create() ), i0, i1, i2, r0, r1, r2 ),
-                point: Vec3.createAndSet( interX, interY, interZ )
+                TriangleIntersection: new TriangleIntersection( vec3.clone( normal ), i0, i1, i2, r0, r1, r2 ),
+                point: vec3.fromValues( interX, interY, interZ )
             } );
             this.hit = true;
         };

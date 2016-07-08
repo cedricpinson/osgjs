@@ -286,7 +286,7 @@
             if ( !this._model ) {
 
                 this._model = new osg.MatrixTransform();
-                osg.Matrix.makeRotate( -Math.PI, 0, 0, 1, this._model.getMatrix() );
+                osg.mat4.fromRotation( this._model.getMatrix(), -Math.PI, [ 0, 0, 1 ] );
                 var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
 
                 // copy tex coord 0 to tex coord1 for multi texture
@@ -310,7 +310,7 @@
             if ( !this._sphere ) {
 
                 this._sphere = new osg.MatrixTransform();
-                osg.Matrix.makeTranslate( 0, 0, 15, this._sphere.getMatrix() );
+                osg.mat4.fromTranslation( this._sphere.getMatrix(), [ 0, 0, 15 ] );
 
                 var sphere = osg.createTexturedSphere( 10, 30, 30 );
 
@@ -518,24 +518,24 @@
 
             var model2 = this.createModelInstance();
             this._stateSet2 = model2.getOrCreateStateSet();
-            osg.Matrix.makeTranslate( 30, 0, 0, model2.getMatrix() );
+            osg.mat4.fromTranslation( model2.getMatrix(), [ 30, 0, 0 ] );
             this.updateMaterial2();
 
 
             var model3 = this.createModelInstance();
             this._stateSet3 = model3.getOrCreateStateSet();
-            osg.Matrix.makeTranslate( 60, 0, 0, model3.getMatrix() );
+            osg.mat4.fromTranslation( model3.getMatrix(), [ 60, 0, 0 ] );
             this.updateMaterial3();
 
 
             var model4 = this.createModelInstance();
             this._stateSet4 = model4.getOrCreateStateSet();
-            osg.Matrix.makeTranslate( 90, 0, 0, model4.getMatrix() );
+            osg.mat4.fromTranslation( model4.getMatrix(), [ 90, 0, 0 ] );
             this.updateMaterial4();
 
             var model5 = this.createSphereInstance();
             this._stateSet5 = model5.getOrCreateStateSet();
-            osg.Matrix.makeTranslate( 120, 0, 0, model5.getMatrix() );
+            osg.mat4.fromTranslation( model5.getMatrix(), [ 120, 0, 0 ] );
             this.updateMaterial5();
 
 

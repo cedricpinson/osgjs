@@ -1,7 +1,7 @@
 'use strict';
 var Camera = require( 'osg/Camera' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Node = require( 'osg/Node' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
@@ -9,7 +9,7 @@ var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
 var Uniform = require( 'osg/Uniform' );
-var Vec4 = require( 'osg/Vec4' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
 var Viewport = require( 'osg/Viewport' );
 var Composer = require( 'osgUtil/Composer' );
 
@@ -22,14 +22,14 @@ var UpdateRttCameraCallback = function ( rootView, offsetView ) {
 UpdateRttCameraCallback.prototype = {
     update: function ( node /*, nv */ ) {
         var nodeView = node.getViewMatrix();
-        Matrix.mult( this._offsetView, this._rootView, nodeView );
+        mat4.mul( nodeView, this._offsetView, this._rootView );
         return true;
     }
 };
 
 var perspectiveMatrixFromVRFieldOfView = function ( fov, zNear, zFar ) {
 
-    var matrix = Matrix.create();
+    var matrix = mat4.create();
 
     var degToRad = Math.PI / 180.0;
     var upTan = Math.tan( fov.upDegrees * degToRad );
@@ -104,7 +104,7 @@ var createCameraCanvas = function ( leftEyeTexture, rightEyeTexture, viewport ) 
     orthoCamera.setViewport( viewport );
     orthoCamera.setRenderOrder( Camera.NESTED_RENDER, 0 );
     orthoCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
-    Matrix.makeOrtho( 0.0, 1.0, 0.0, 1.0, -5.0, 5.0, orthoCamera.getProjectionMatrix() );
+    mat4.ortho( orthoCamera.getProjectionMatrix(), 0.0, 1.0, 0.0, 1.0, -5.0, 5.0 );
 
     var stateSet = orthoCamera.getOrCreateStateSet();
     stateSet.addUniform( Uniform.createInt( 0, 'TextureLeft' ) );
@@ -124,7 +124,7 @@ var createCameraRtt = function ( texture, projection ) {
     camera.setName( 'rtt camera' );
     camera.setViewport( new Viewport( 0.0, 0.0, texture.getWidth(), texture.getHeight() ) );
     camera.setProjectionMatrix( projection );
-    camera.setClearColor( Vec4.createAndSet( 0.3, 0.3, 0.3, 0.0 ) );
+    camera.setClearColor( vec4.fromValues( 0.3, 0.3, 0.3, 0.0 ) );
     camera.setRenderOrder( Camera.POST_RENDER, 0 );
     camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture );
     camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );
@@ -145,8 +145,8 @@ WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldF
     // Compute projections and view matrices for both eyes
     var projectionLeft = perspectiveMatrixFromVRFieldOfView( left.fieldOfView, 0.1, 1000.0 );
     var projectionRight = perspectiveMatrixFromVRFieldOfView( right.fieldOfView, 0.1, 1000.0 );
-    var viewLeft = Matrix.makeTranslate( -worldFactor * left.offset[ 0 ], left.offset[ 1 ], left.offset[ 2 ], Matrix.create() );
-    var viewRight = Matrix.makeTranslate( -worldFactor * right.offset[ 0 ], right.offset[ 1 ], right.offset[ 2 ], Matrix.create() );
+    var viewLeft = mat4.fromTranslation( mat4.create(), [ -worldFactor * left.offset[ 0 ], left.offset[ 1 ], left.offset[ 2 ] ] );
+    var viewRight = mat4.fromTranslation( mat4.create(), [ -worldFactor * right.offset[ 0 ], right.offset[ 1 ], right.offset[ 2 ] ] );
 
     // Each eye is rendered on a texture whose width is half of the final combined texture
     var eyeTextureSize = {

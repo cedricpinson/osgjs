@@ -6,10 +6,10 @@ var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
 var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
-var Matrix = require( 'osg/Matrix' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec3 = require( 'osg/Vec3' );
-var Quat = require( 'osg/Quat' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec2 = require( 'osg/glMatrix' ).vec2;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var quat = require( 'osg/glMatrix' ).quat;
 var CADManipulatorStandardMouseKeyboardController = require( 'osgGA/CADManipulatorStandardMouseKeyboardController' );
 var CADManipulatorHammerController = require( 'osgGA/CADManipulatorHammerController' );
 
@@ -27,7 +27,7 @@ var CADManipulatorHammerController = require( 'osgGA/CADManipulatorHammerControl
 
 var CADManipulator = function () {
     Manipulator.call( this );
-    this._tmpHomePosition = Vec3.create();
+    this._tmpHomePosition = vec3.create();
     this._intersectionVisitor = new IntersectionVisitor();
     this._lineSegmentIntersector = new LineSegmentIntersector();
     this._polytopeIntersector = undefined;
@@ -37,9 +37,9 @@ var CADManipulator = function () {
 };
 
 CADManipulator.Interpolator = function () {
-    this._current = Vec2.create();
-    this._target = Vec2.create();
-    this._delta = Vec2.create();
+    this._current = vec2.create();
+    this._target = vec2.create();
+    this._delta = vec2.create();
     this._reset = false;
     this.reset();
     this._width = undefined;
@@ -114,14 +114,14 @@ CADManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Hammer' ];
 CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     init: function () {
         this._distance = 25.0;
-        this._target = Vec3.create();
-        this._upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
-        Vec3.init( this._target );
+        this._target = vec3.create();
+        this._upz = vec3.fromValues( 0.0, 0.0, 1.0 );
+        vec3.init( this._target );
 
-        var rot1 = Matrix.makeRotate( -Math.PI, 0.0, 0.0, 1.0, Matrix.create() );
-        var rot2 = Matrix.makeRotate( Math.PI / 10.0, 1.0, 0.0, 0.0, Matrix.create() );
-        this._rotation = Matrix.create();
-        Matrix.mult( rot1, rot2, this._rotation );
+        var rot1 = mat4.fromRotation( mat4.create(), -Math.PI, [ 0.0, 0.0, 1.0 ] );
+        var rot2 = mat4.fromRotation( mat4.create(), Math.PI / 10.0, [ 1.0, 0.0, 0.0 ] );
+        this._rotation = mat4.create();
+        mat4.mul( this._rotation, rot1, rot2 );
         this._time = 0.0;
 
         this._rotate = new CADManipulator.Interpolator();
@@ -132,20 +132,20 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._rotateFactor = 1;
         this._zoomFactor = 1;
 
-        this._inverseMatrix = Matrix.create();
+        this._inverseMatrix = mat4.create();
 
         this._homeEye = undefined;
         this._homeCenter = undefined;
-        this._homeUp = Vec3.createAndSet( 0.0, 0.0, 1.0 );
+        this._homeUp = vec3.fromValues( 0.0, 0.0, 1.0 );
 
-        this._orientation = Quat.create();
-        this._pivotPoint = Vec3.create();
+        this._orientation = quat.create();
+        this._pivotPoint = vec3.create();
 
         this._eye = undefined;
 
-        this._right = Vec3.createAndSet( 1.0, 0.0, 0.0 );
+        this._right = vec3.fromValues( 1.0, 0.0, 0.0 );
 
-        this._zoomDir = Vec3.create();
+        this._zoomDir = vec3.create();
 
         // instance of controller
         var self = this;
@@ -171,22 +171,21 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
     setPivotPoint: function ( pivotPoint ) {
         // First calculate offset
-        Vec3.copy( pivotPoint, this._pivotPoint );
-
+        vec3.copy( this._pivotPoint, pivotPoint );
     },
 
     setTarget: ( function () {
-        var eyePos = Vec3.create();
+        var eyePos = vec3.create();
         return function ( target ) {
-            Vec3.copy( target, this._target );
+            vec3.copy( this._target, target );
             this.getEyePosition( eyePos );
-            this._distance = Vec3.distance( eyePos, target );
+            this._distance = vec3.distance( target, eyePos );
         };
     } )(),
 
     setEyePosition: function ( eye ) {
-        Vec3.copy( eye, this._eye );
-        this._distance = Vec3.distance( eye, this._target );
+        vec3.copy( this._eye, eye );
+        this._distance = vec3.distance( this._target, eye );
     },
 
     setHomePosition: function ( eye, center, up ) {
@@ -196,10 +195,10 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
 
     computeHomePosition: ( function () {
-        var f = Vec3.create();
-        var s = Vec3.create();
-        var u = Vec3.create();
-        var result = Matrix.create();
+        var f = vec3.create();
+        var s = vec3.create();
+        var u = vec3.create();
+        var result = mat4.create();
         return function ( boundStrategy ) {
 
             var bs = this.getHomeBound( boundStrategy );
@@ -209,35 +208,35 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             this.setPivotPoint( bs.center() );
 
             if ( this._homeEye === undefined ) {
-                this._homeEye = Vec3.create();
+                this._homeEye = vec3.create();
                 this.getEyePosition( this._homeEye );
             }
 
             if ( this._homeCenter === undefined ) {
-                this._homeCenter = Vec3.create();
-                Vec3.copy( bs.center(), this._homeCenter );
+                this._homeCenter = vec3.create();
+                vec3.copy( this._homeCenter, bs.center() );
             }
 
             if ( this._eye === undefined ) {
-                this._eye = Vec3.create();
+                this._eye = vec3.create();
             }
 
-            Vec3.copy( this._homeEye, this._eye );
-            Vec3.copy( this._homeCenter, this._target );
-            Vec3.copy( this._homeUp, this._upz );
+            vec3.copy( this._eye, this._homeEye );
+            vec3.copy( this._target, this._homeCenter );
+            vec3.copy( this._upz, this._homeUp );
 
-            Matrix.copy( this._rotation, result );
+            mat4.copy( result, this._rotation );
             var center = this._target;
             var eye = this._eye;
 
-            Vec3.sub( center, eye, f );
-            Vec3.normalize( f, f );
+            vec3.sub( f, center, eye );
+            vec3.normalize( f, f );
 
-            Vec3.cross( f, this._upz, s );
-            Vec3.normalize( s, s );
+            vec3.cross( s, f, this._upz );
+            vec3.normalize( s, s );
 
-            Vec3.cross( s, f, u );
-            Vec3.normalize( u, u );
+            vec3.cross( u, s, f );
+            vec3.normalize( u, u );
 
             // s[0], f[0], u[0], 0.0,
             // s[1], f[1], u[1], 0.0,
@@ -260,8 +259,8 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             result[ 14 ] = 0;
             result[ 15 ] = 1.0;
 
-            Matrix.getRotate( result, this._orientation );
-            Quat.inverse( this._orientation, this._orientation );
+            mat4.getRotation( this._orientation, result );
+            quat.invert( this._orientation, this._orientation );
         };
     } )(),
 
@@ -328,96 +327,96 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
 
     getTarget: function ( target ) {
-        Vec3.copy( this._target, target );
+        vec3.copy( target, this._target );
         return target;
     },
 
     getEyePosition: function ( eye ) {
         if ( this._eye === undefined )
             this.computeEyePosition( this._target, this._distance, eye );
-        else Vec3.copy( this._eye, eye );
+        else vec3.copy( eye, this._eye );
     },
 
     computeEyePosition: ( function () {
-        var tmpDist = Vec3.create();
-        var tmpInverse = Matrix.create();
+        var tmpDist = vec3.create();
+        var tmpInverse = mat4.create();
         return function ( target, distance, eye ) {
-            Matrix.inverse( this._rotation, tmpInverse );
+            mat4.invert( tmpInverse, this._rotation );
             tmpDist[ 1 ] = distance;
-            Matrix.transformVec3( tmpInverse, tmpDist, eye );
-            Vec3.add( target, eye, eye );
+            vec3.transformMat4( eye, tmpDist, tmpInverse );
+            vec3.add( eye, target, eye );
         };
     } )(),
 
     computePan: ( function () {
-        var trans = Vec3.create();
-        var rotPos = Vec3.create();
-        var speedTmp = Vec3.create();
+        var trans = vec3.create();
+        var rotPos = vec3.create();
+        var speedTmp = vec3.create();
         return function ( dx, dy, rotMat ) {
-            var speed = Vec3.length( Vec3.sub( this._eye, this._pivotPoint, speedTmp ) ) / this._panFactor;
+            var speed = vec3.length( vec3.sub( speedTmp, this._eye, this._pivotPoint ) ) / this._panFactor;
             if ( speed < 10 ) speed = 10;
             trans[ 0 ] = dx * speed / 2;
             trans[ 1 ] = dy * speed / 2;
             trans[ 2 ] = 0;
-            Matrix.transformVec3( rotMat, trans, rotPos );
-            Vec3.add( this._eye, rotPos, this._eye );
+            vec3.transformMat4( rotPos, trans, rotMat );
+            vec3.add( this._eye, this._eye, rotPos );
         };
     } )(),
 
     computeZoom: ( function () {
-        var vectorDistance = Vec3.create();
-        var speedDist = Vec3.create();
+        var vectorDistance = vec3.create();
+        var speedDist = vec3.create();
         return function ( dz ) {
             var zoomSpeed = dz * this._zoomFactor;
-            Vec3.sub( this._pivotPoint, this._eye, vectorDistance );
-            Vec3.add( this._eye, Vec3.mult( vectorDistance, zoomSpeed, speedDist ), this._eye );
+            vec3.sub( vectorDistance, this._pivotPoint, this._eye );
+            vec3.add( this._eye, this._eye, vec3.scale( speedDist, vectorDistance, zoomSpeed ) );
         };
     } )(),
 
     computeRotation: ( function () {
 
-        var rightNormalized = Vec3.create();
-        var right = Vec3.create();
-        var dir = Vec3.create();
-        var offset = Vec3.create();
-        var pitchQuat = Quat.create();
-        var yawQuat = Quat.create();
-        var pitchyawQuat = Quat.create();
-        var tmp = Vec3.create();
-        var rightScalar = Vec3.create;
+        var rightNormalized = vec3.create();
+        var right = vec3.create();
+        var dir = vec3.create();
+        var offset = vec3.create();
+        var pitchQuat = quat.create();
+        var yawQuat = quat.create();
+        var pitchyawQuat = quat.create();
+        var tmp = vec3.create();
+        var rightScalar = vec3.create();
 
         return function ( yawDelta, pitchDelta ) {
 
-            Quat.transformVec3( this._orientation, this._right, right );
-            Vec3.normalize( right, rightNormalized );
-            Vec3.sub( this._eye, this._pivotPoint, dir );
-            var scalar = Vec3.dot( rightNormalized, dir );
-            Vec3.sub( dir, Vec3.mult( rightNormalized, scalar, rightScalar ), offset );
-            var xy = Vec3.createAndSet( -offset[ 0 ], -offset[ 1 ], 0 );
+            vec3.transformQuat( right, this._right, this._orientation );
+            vec3.normalize( rightNormalized, right );
+            vec3.sub( dir, this._eye, this._pivotPoint );
+            var scalar = vec3.dot( rightNormalized, dir );
+            vec3.sub( offset, dir, vec3.scale( rightScalar, rightNormalized, scalar ) );
+            var xy = vec3.fromValues( -offset[ 0 ], -offset[ 1 ], 0 );
 
-            var positionPitch = Math.atan2( -offset[ 2 ], Vec3.length( xy ) );
+            var positionPitch = Math.atan2( -offset[ 2 ], vec3.length( xy ) );
             pitchDelta = Math.max( -Math.PI / 2 + 0.01, Math.min( Math.PI / 2 - 0.01, ( positionPitch + pitchDelta ) ) ) - positionPitch;
 
-            Quat.makeRotate( pitchDelta * this._rotateFactor, right[ 0 ], right[ 1 ], right[ 2 ], pitchQuat );
-            Quat.makeRotate( yawDelta * this._rotateFactor, this._upz[ 0 ], this._upz[ 1 ], this._upz[ 2 ], yawQuat );
+            quat.setAxisAngle( pitchQuat, right, pitchDelta * this._rotateFactor );
+            quat.setAxisAngle( yawQuat, this._upz, yawDelta * this._rotateFactor );
 
-            Quat.mult( yawQuat, pitchQuat, pitchyawQuat );
-            Quat.transformVec3( pitchyawQuat, dir, tmp );
-            Vec3.add( tmp, this._pivotPoint, this._eye );
+            quat.mul( pitchyawQuat, yawQuat, pitchQuat );
+            vec3.transformQuat( tmp, dir, pitchyawQuat );
+            vec3.add( this._eye, tmp, this._pivotPoint );
 
             // Find rotation offset and target
-            Quat.mult( yawQuat, this._orientation, this._orientation );
+            quat.mul( this._orientation, yawQuat, this._orientation );
 
-            Quat.transformVec3( this._orientation, this._right, right );
-            Quat.makeRotate( pitchDelta * this._rotateFactor, right[ 0 ], right[ 1 ], right[ 2 ], pitchQuat );
-            Quat.mult( pitchQuat, this._orientation, this._orientation );
+            vec3.transformQuat( right, this._right, this._orientation );
+            quat.setAxisAngle( pitchQuat, right, pitchDelta * this._rotateFactor );
+            quat.mul( this._orientation, pitchQuat, this._orientation );
         };
     } )(),
 
 
     update: ( function () {
-        var rotMat = Matrix.create();
-        var transMat = Matrix.create();
+        var rotMat = mat4.create();
+        var transMat = mat4.create();
         return function ( nv ) {
 
             var dt = nv.getFrameStamp().getDeltaTime();
@@ -426,7 +425,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             //Note inverted y
             var delta = this._rotate.update();
             this.computeRotation( -delta[ 0 ] * mouseFactor, delta[ 1 ] * mouseFactor );
-            Matrix.makeRotateFromQuat( this._orientation, rotMat );
+            mat4.fromQuat( rotMat, this._orientation );
 
             var deltapan = this._pan.update();
             this.computePan( -deltapan[ 0 ] * mouseFactor, -deltapan[ 1 ] * mouseFactor, rotMat );
@@ -434,9 +433,9 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             delta = this._zoom.update( dt );
             this.computeZoom( -delta[ 0 ] / 10.0 );
 
-            Matrix.makeTranslate( this._eye[ 0 ], this._eye[ 1 ], this._eye[ 2 ], transMat );
-            Matrix.mult( transMat, rotMat, this._inverseMatrix );
-            Matrix.inverse( this._inverseMatrix, this._inverseMatrix );
+            mat4.fromTranslation( transMat, this._eye );
+            mat4.mul( this._inverseMatrix, transMat, rotMat );
+            mat4.invert( this._inverseMatrix, this._inverseMatrix );
         };
     } )(),
     getInverseMatrix: function () {
@@ -445,7 +444,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
     computeIntersections: ( function () {
         var hits = [];
-        var pTrans = Vec3.create();
+        var pTrans = vec3.create();
         return function ( pos ) {
             var viewer = this._camera.getView();
 
@@ -465,7 +464,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                     point = hits[ 0 ].point;
                     hits[ 0 ].nodepath.shift();
                     matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodepath );
-                    Matrix.transformVec3( matrix, point, pTrans );
+                    vec3.transformMat4( pTrans, point, matrix );
                     this.setPivotPoint( pTrans );
                 }
             }
@@ -485,7 +484,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                     point = hits[ 0 ]._center;
                     hits[ 0 ].nodePath.shift();
                     matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodePath );
-                    Matrix.transformVec3( matrix, point, pTrans );
+                    vec3.transformMat4( pTrans, point, matrix );
                     this.setPivotPoint( pTrans );
                 }
             }
@@ -493,8 +492,8 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     } )(),
 
     getPositionRelativeToCanvas: ( function () {
-        var offset = Vec2.create();
-        var pos = Vec2.create();
+        var offset = vec2.create();
+        var pos = vec2.create();
         return function ( x, y ) {
             var canvas = this._camera._graphicContext.canvas;
             this.getOffsetRect( canvas, offset );
@@ -507,8 +506,8 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     } )(),
 
     getCanvasCenter: ( function () {
-        var offset = Vec2.create();
-        var pos = Vec2.create();
+        var offset = vec2.create();
+        var pos = vec2.create();
         return function () {
             var canvas = this._camera.getGraphicContext().canvas;
             this.getOffsetRect( canvas, offset );

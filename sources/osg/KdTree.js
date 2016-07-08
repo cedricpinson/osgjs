@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var BoundingBox = require( 'osg/BoundingBox' );
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
@@ -47,8 +47,8 @@ var KdNode = function ( first, second ) {
     this._second = second;
     // These variables represent the local clipped ray (for intersection test)
     // They are mostly temporary because they are recomputed for each intersection test
-    this._nodeRayStart = Vec3.create();
-    this._nodeRayEnd = Vec3.create();
+    this._nodeRayStart = vec3.create();
+    this._nodeRayEnd = vec3.create();
 };
 
 var BuildKdTree = function ( kdTree ) {
@@ -56,7 +56,7 @@ var BuildKdTree = function ( kdTree ) {
     this._bb = new BoundingBox();
     this._primitiveIndices = null; // Uint32Array
     this._centers = null; // Float32Array
-    this._axisOrder = Vec3.create();
+    this._axisOrder = vec3.create();
     this._stackLength = 0;
 };
 

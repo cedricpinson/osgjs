@@ -5,7 +5,7 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var Camera = require( 'osg/Camera' );
 var CullSettings = require( 'osg/CullSettings' );
 var CullVisitor = require( 'osg/CullVisitor' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Node = require( 'osg/Node' );
 var RenderBin = require( 'osg/RenderBin' );
@@ -15,7 +15,7 @@ var StateGraph = require( 'osg/StateGraph' );
 var State = require( 'osg/State' );
 var StateSet = require( 'osg/StateSet' );
 var TransformEnums = require( 'osg/TransformEnums' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Viewport = require( 'osg/Viewport' );
 var View = require( 'osgViewer/View' );
 var Viewer = require( 'osgViewer/Viewer' );
@@ -108,9 +108,9 @@ module.exports = function () {
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
 
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
             camera0.accept( cull );
 
             assert.isOk( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
@@ -151,9 +151,9 @@ module.exports = function () {
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
 
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
             cull.pushStateSet( new StateSet() );
 
             camera0.accept( cull );
@@ -169,7 +169,7 @@ module.exports = function () {
             var camera0 = new Camera();
 
             var mt = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 10, mt.getMatrix() );
+            mat4.fromTranslation( mt.getMatrix(), [ 0, 0, 10 ] );
             var geom = Shape.createTexturedQuadGeometry( -5.0, -5, 0,
                 10, 0, 0,
                 0, 10, 0,
@@ -177,8 +177,9 @@ module.exports = function () {
             mt.addChild( geom );
             camera0.addChild( mt );
 
-            Matrix.makeLookAt( [ -10, 0, 10 ], [ 0, 0, 10 ], [ 0, 1, 0 ], camera0.getViewMatrix() );
-            Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() );
+            mat4.lookAt( camera0.getViewMatrix(), [ -10, 0, 10 ], [ 0, 0, 10 ], [ 0, 1, 0 ] );
+            mat4.perspective( camera0.getProjectionMatrix(), Math.PI / 180 * 60, 800 / 600, 1.0, 1000.0 );
+
 
             var stack = [];
 
@@ -202,9 +203,9 @@ module.exports = function () {
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
 
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
 
             camera0.accept( cull );
             var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
@@ -218,7 +219,7 @@ module.exports = function () {
             var camera0 = new Camera();
 
             var mt = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 10, mt.getMatrix() );
+            mat4.fromTranslation( mt.getMatrix(), [ 0, 0, 10 ] );
             var geom = Shape.createTexturedQuadGeometry( -5.0, -5, 0,
                 10, 0, 0,
                 0, 10, 0,
@@ -226,8 +227,9 @@ module.exports = function () {
             mt.addChild( geom );
             camera0.addChild( mt );
 
-            Matrix.makeLookAt( [ 0, 0, 20 ], [ 0, 0, 10 ], [ 0, 1, 0 ], camera0.getViewMatrix() );
-            Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() );
+            mat4.lookAt( camera0.getViewMatrix(), [ 0, 0, 20 ], [ 0, 0, 10 ], [ 0, 1, 0 ] );
+            mat4.perspective( camera0.getProjectionMatrix(), Math.PI / 180 * 60, 800 / 600, 1.0, 1000.0 );
+
 
             var stack = [];
 
@@ -254,9 +256,9 @@ module.exports = function () {
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
 
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
 
             camera0.accept( cull );
             assert.isOk( mockup.checkNear( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
@@ -306,8 +308,9 @@ module.exports = function () {
             //      var bbCornerFar = 1;
             //      var bbCornerNear = 6;
 
-            Matrix.makeLookAt( Vec3.add( eye, target, [] ), target, [ 0, 0, 1 ], camera0.getViewMatrix() );
-            Matrix.makePerspective( 60, 800 / 450, 1.0, 1000.0, camera0.getProjectionMatrix() );
+            mat4.lookAt( camera0.getViewMatrix(), vec3.add( vec3.create(), eye, target ), target, [ 0, 0, 1 ] );
+            mat4.perspective( camera0.getProjectionMatrix(), Math.PI / 180 * 60, 800 / 450, 1.0, 1000.0 );
+
 
             var stack = [];
 
@@ -339,9 +342,9 @@ module.exports = function () {
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
 
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
 
             camera0.accept( cull );
             assert.isOk( mockup.checkNear( stack[ 1 ][ 0 ], dNear, 1.0 ), 'near should be ' + dNear + ' and is ' + stack[ 1 ][ 0 ] );
@@ -356,24 +359,24 @@ module.exports = function () {
             var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
             var node3 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 20, node3.getMatrix() );
+            mat4.fromTranslation( node3.getMatrix(), [ 0, 0, 20 ] );
             node3.getOrCreateStateSet().setRenderBinDetails( 1, '' );
             node3.getOrCreateStateSet().setName( 'Node3' );
             node3.addChild( q );
 
             var node0 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
+            mat4.fromTranslation( node0.getMatrix(), [ 0, 0, -10 ] );
             node0.getOrCreateStateSet().setRenderBinDetails( 0, 'DepthSortedBin' );
             node0.getOrCreateStateSet().setName( 'Node0' );
             node0.addChild( q );
 
             var node1 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
+            mat4.fromTranslation( node1.getMatrix(), [ 0, 0, 5 ] );
             node1.getOrCreateStateSet().setName( 'Node1' );
             node1.addChild( q );
 
             var node2 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, -20, node2.getMatrix() );
+            mat4.fromTranslation( node2.getMatrix(), [ 0, 0, -20 ] );
             node2.getOrCreateStateSet().setRenderBinDetails( 0, 'RenderBin' );
             node2.getOrCreateStateSet().setName( 'Node2' );
             node2.addChild( q );
@@ -385,9 +388,9 @@ module.exports = function () {
             var cull = new CullVisitor();
             var rs = new RenderStage();
             var sg = new StateGraph();
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
             cull.setComputeNearFar( false );
@@ -408,13 +411,13 @@ module.exports = function () {
             var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
             var node0 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
+            mat4.fromTranslation( node0.getMatrix(), [ 0, 0, -10 ] );
             node0.getOrCreateStateSet().setRenderingHint( 'OPAQUE_BIN' );
             node0.getOrCreateStateSet().setName( 'Node0' );
             node0.addChild( q );
 
             var node1 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
+            mat4.fromTranslation( node1.getMatrix(), [ 0, 0, 5 ] );
             node0.getOrCreateStateSet().setRenderingHint( 'TRANSPARENT_BIN' );
             node1.getOrCreateStateSet().setName( 'Node1' );
             node1.addChild( q );
@@ -431,9 +434,9 @@ module.exports = function () {
             //var cull = new CullVisitor();
             var rs = new RenderStage();
             var sg = new StateGraph();
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
             cull.setComputeNearFar( false );
@@ -458,13 +461,13 @@ module.exports = function () {
             var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
             var node0 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
+            mat4.fromTranslation( node0.getMatrix(), [ 0, 0, -10 ] );
             node0.getOrCreateStateSet().setRenderingHint( 'OPAQUE_BIN' );
             node0.getOrCreateStateSet().setName( 'Node0' );
             node0.addChild( q );
 
             var node1 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
+            mat4.fromTranslation( node1.getMatrix(), [ 0, 0, 5 ] );
             node0.getOrCreateStateSet().setRenderingHint( 'TRANSPARENT_BIN' );
             node1.getOrCreateStateSet().setName( 'Node1' );
             node1.addChild( q );
@@ -477,9 +480,9 @@ module.exports = function () {
             var rs = new RenderStage();
             var sg = new StateGraph();
             rs.setViewport( new Viewport() );
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
             cull.setComputeNearFar( false );
@@ -540,7 +543,7 @@ module.exports = function () {
             } );
 
             var scene = new Node();
-            var mat = Matrix.create();
+            var mat = mat4.create();
             var mt = new MatrixTransform();
             var quad = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
             mt.setMatrix( mat );
@@ -575,7 +578,7 @@ module.exports = function () {
 
 
             // TEST2
-            Matrix.setTrans( mat, 200, 0, 0 );
+            mat4.setTranslation( mat, [ 200, 0, 0 ] );
             mt.setMatrix( mat ); // dirty Bounds
 
             // test done inside Camera cullcallback
@@ -601,8 +604,8 @@ module.exports = function () {
             viewer.renderingTraversal();
 
             // test3
-            Matrix.makeScale( 500, 0, 0, mat );
-            Matrix.setTrans( mat, 200, 0, 0 );
+            mat4.fromScaling( mat, [ 500, 0, 0 ] );
+            mat4.setTranslation( mat, [ 200, 0, 0 ] );
             mt.setMatrix( mat ); // dirty Bounds
 
             // test done inside Camera cullcallback
@@ -636,8 +639,8 @@ module.exports = function () {
     test( 'CullVisitor World/View matrix', function () {
 
         var checkLeaf = function ( leaf ) {
-            var tmp = Matrix.create();
-            Matrix.mult( leaf._view, leaf._modelWorld, tmp );
+            var tmp = mat4.create();
+            mat4.mul( tmp, leaf._view, leaf._modelWorld );
 
             assert.equalVector( tmp, leaf._modelView );
             //assert.isOk( mockup.checkNear( tmp, leaf.modelview ), 'View * World === ModelView' );
@@ -650,35 +653,35 @@ module.exports = function () {
         node4.addChild( node5 );
         var camera4 = new Camera();
         camera4.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
-        Matrix.makeLookAt( [ 0, 20, 10 ], [ 0, 2, 0 ], [ 0, 0, 1 ], camera4.getViewMatrix() );
+        mat4.lookAt( camera4.getViewMatrix(), [ 0, 20, 10 ], [ 0, 2, 0 ], [ 0, 0, 1 ] );
         node5.addChild( camera4 );
         var node6 = new MatrixTransform();
-        Matrix.makeTranslate( 0, 0, -10, node6.getMatrix() );
+        mat4.fromTranslation( node6.getMatrix(), [ 0, 0, -10 ] );
         camera4.addChild( node6 );
         node6.addChild( q );
 
         var node0 = new MatrixTransform();
-        Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
+        mat4.fromTranslation( node0.getMatrix(), [ 0, 0, -10 ] );
         node0.getOrCreateStateSet().setName( 'Node0' );
         node0.addChild( q );
 
         var node1 = new MatrixTransform();
-        Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
+        mat4.fromTranslation( node1.getMatrix(), [ 0, 0, 5 ] );
         node1.getOrCreateStateSet().setName( 'Node1' );
         node1.addChild( q );
 
         var camera0 = new Camera();
         var node2 = new MatrixTransform();
-        Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
+        mat4.fromTranslation( node1.getMatrix(), [ 0, 0, 5 ] );
         camera0.addChild( node2 );
         node2.addChild( q );
 
 
         var camera1 = new Camera();
         camera1.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
-        Matrix.makeLookAt( [ 0, 0, 0 ], [ 0, 2, 0 ], [ 0, 0, 1 ], camera1.getViewMatrix() );
+        mat4.lookAt( camera1.getViewMatrix(), [ 0, 0, 0 ], [ 0, 2, 0 ], [ 0, 0, 1 ] );
         var node3 = new MatrixTransform();
-        Matrix.makeTranslate( 0, 0, 5, node3.getMatrix() );
+        mat4.fromTranslation( node3.getMatrix(), [ 0, 0, 5 ] );
         camera1.addChild( node3 );
         node3.addChild( q );
 
@@ -693,9 +696,9 @@ module.exports = function () {
         var rs = new RenderStage();
         var sg = new StateGraph();
         rs.setViewport( new Viewport() );
-        cull.pushProjectionMatrix( Matrix.create() );
-        cull.pushModelViewMatrix( Matrix.create() );
-        cull.pushModelViewMatrix( Matrix.create() );
+        cull.pushProjectionMatrix( mat4.create() );
+        cull.pushModelViewMatrix( mat4.create() );
+        cull.pushModelViewMatrix( mat4.create() );
         cull.setRenderStage( rs );
         cull.setStateGraph( sg );
         cull.setComputeNearFar( false );

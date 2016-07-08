@@ -1,6 +1,6 @@
 'use strict';
 var Map = require( 'osg/Map' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Notify = require( 'osg/Notify' );
 var Object = require( 'osg/Object' );
 var Program = require( 'osg/Program' );
@@ -66,11 +66,11 @@ var State = function ( shaderGeneratorProxy ) {
 
     this.attributeMap = new Map();
 
-    this.modelWorldMatrix = Uniform.createMatrix4( Matrix.create(), 'ModelWorldMatrix' );
-    this.viewMatrix = Uniform.createMatrix4( Matrix.create(), 'ViewMatrix' );
-    this.modelViewMatrix = Uniform.createMatrix4( Matrix.create(), 'ModelViewMatrix' );
-    this.projectionMatrix = Uniform.createMatrix4( Matrix.create(), 'ProjectionMatrix' );
-    this.normalMatrix = Uniform.createMatrix4( Matrix.create(), 'NormalMatrix' );
+    this.modelWorldMatrix = Uniform.createMatrix4( mat4.create(), 'ModelWorldMatrix' );
+    this.viewMatrix = Uniform.createMatrix4( mat4.create(), 'ViewMatrix' );
+    this.modelViewMatrix = Uniform.createMatrix4( mat4.create(), 'ModelViewMatrix' );
+    this.projectionMatrix = Uniform.createMatrix4( mat4.create(), 'ProjectionMatrix' );
+    this.normalMatrix = Uniform.createMatrix4( mat4.create(), 'NormalMatrix' );
 
     // track uniform for color array enabled
     var arrayColorEnable = new Stack();
@@ -247,7 +247,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     applyModelViewMatrix: ( function () {
 
-        var normal = Matrix.create();
+        var normal = mat4.create();
 
         return function StateApplyModelViewMatrix( matrix ) {
 
@@ -296,8 +296,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                     normal[ 9 ] = matrix[ 9 ];
                     normal[ 10 ] = matrix[ 10 ];
 
-                    Matrix.inverse( normal, normal );
-                    Matrix.transpose( normal, normal );
+                    mat4.invert( normal, normal );
+                    mat4.transpose( normal, normal );
 
                     mu.setMatrix4( normal );
                     mu.apply( gc, mul );
@@ -312,7 +312,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     applyModelViewMatrixEperiment: ( function () {
 
-        var normal = Matrix.create();
+        var normal = mat4.create();
 
         var checkMatrix = function ( m0, m1 ) {
             if ( m0[ 0 ] !== m1[ 0 ] ) return true;
@@ -363,7 +363,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 mul = program.getUniformsCache().NormalMatrix;
                 if ( mul ) {
 
-                    // Matrix.copy( matrix, normal );
+                    // mat4.copy( normal , matrix );
                     normal[ 0 ] = matrix[ 0 ];
                     normal[ 1 ] = matrix[ 1 ];
                     normal[ 2 ] = matrix[ 2 ];
@@ -384,8 +384,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                         ylen > scaleEpsilonMax || ylen < scaleEpsilonMin ||
                         zlen > scaleEpsilonMax || zlen < scaleEpsilonMin ) {
 
-                        Matrix.inverse( normal, normal );
-                        Matrix.transpose( normal, normal );
+                        mat4.invert( normal, normal );
+                        mat4.transpose( normal, normal );
                     }
 
                     mu.setMatrix4( normal );

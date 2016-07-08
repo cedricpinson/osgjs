@@ -1,10 +1,10 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
-var Quat = require( 'osg/Quat' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var quat = require( 'osg/glMatrix' ).quat;
 var Channel = require( 'osgAnimation/Channel' );
 
 
-var Vec3CopyKeyFrame = function ( i, keys, result ) {
+var vec3CopyKeyFrame = function ( i, keys, result ) {
     result[ 0 ] = keys[ i++ ];
     result[ 1 ] = keys[ i++ ];
     result[ 2 ] = keys[ i++ ];
@@ -28,12 +28,12 @@ var Vec3LerpInterpolator = function ( t, channelInstance ) {
 
     if ( t >= end ) {
         channelInstance.key = 0;
-        Vec3CopyKeyFrame( keys.length - 3, keys, value );
+        vec3CopyKeyFrame( keys.length - 3, keys, value );
         return;
 
     } else if ( t <= start ) {
         channelInstance.key = 0;
-        Vec3CopyKeyFrame( 0, keys, value );
+        vec3CopyKeyFrame( 0, keys, value );
         return;
     }
 
@@ -66,8 +66,8 @@ var Vec3LerpInterpolator = function ( t, channelInstance ) {
 
 var QuatLerpInterpolator = ( function () {
 
-    var q0 = Quat.create();
-    var q1 = Quat.create();
+    var q0 = quat.create32();
+    var q1 = quat.create32();
 
     return function ( t, channelInstance ) {
 
@@ -111,7 +111,7 @@ var QuatLerpInterpolator = ( function () {
 
         var r = ( t - t1 ) / ( t2 - t1 );
 
-        Quat.nlerp( r, q0, q1, value );
+        quat.nlerp( value, q0, q1, r );
         channelInstance.key = i1;
     };
 
@@ -119,8 +119,8 @@ var QuatLerpInterpolator = ( function () {
 
 var QuatSlerpInterpolator = ( function () {
 
-    var q0 = Quat.create();
-    var q1 = Quat.create();
+    var q0 = quat.create32();
+    var q1 = quat.create32();
 
     return function ( t, channelInstance ) {
 
@@ -164,7 +164,7 @@ var QuatSlerpInterpolator = ( function () {
 
         var r = ( t - t1 ) / ( t2 - t1 );
 
-        Quat.slerp( r, q0, q1, value );
+        quat.slerp( value, q0, q1, r );
 
         channelInstance.key = i1;
     };
@@ -255,10 +255,10 @@ var FloatCubicBezierInterpolator = function ( t, channelInstance ) {
 };
 
 var Vec3CubicBezierInterpolator = ( function () {
-    var v0 = Vec3.create();
-    var v1 = Vec3.create();
-    var v2 = Vec3.create();
-    var v3 = Vec3.create();
+    var v0 = vec3.create();
+    var v1 = vec3.create();
+    var v2 = vec3.create();
+    var v3 = vec3.create();
 
     return function ( t, channelInstance ) {
         var channel = channelInstance.channel;
@@ -270,12 +270,12 @@ var Vec3CubicBezierInterpolator = ( function () {
 
         if ( t >= end ) {
             channelInstance.key = 0;
-            Vec3CopyKeyFrame( keys.length - 9, keys, value );
+            vec3CopyKeyFrame( keys.length - 9, keys, value );
             return;
 
         } else if ( t <= start ) {
             channelInstance.key = 0;
-            Vec3CopyKeyFrame( 0, keys, value );
+            vec3CopyKeyFrame( 0, keys, value );
             return;
         }
 
@@ -292,10 +292,10 @@ var Vec3CubicBezierInterpolator = ( function () {
         var t2 = tt * tt;
 
         var id = i * 9;
-        Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v0 ), oneMinusT3, v0 );
-        Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v1 ), ( 3.0 * tt * oneMinusT2 ), v1 );
-        Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v2 ), ( 3.0 * t2 * oneMinusT ), v2 );
-        Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v3 ), ( t2 * tt ), v3 );
+        vec3.scale( v0, vec3.set( v0, keys[ id++ ], keys[ id++ ], keys[ id++ ] ), oneMinusT3 );
+        vec3.scale( v1, vec3.set( v1, keys[ id++ ], keys[ id++ ], keys[ id++ ] ), ( 3.0 * tt * oneMinusT2 ) );
+        vec3.scale( v2, vec3.set( v2, keys[ id++ ], keys[ id++ ], keys[ id++ ] ), ( 3.0 * t2 * oneMinusT ) );
+        vec3.scale( v3, vec3.set( v3, keys[ id++ ], keys[ id++ ], keys[ id++ ] ), ( t2 * tt ) );
 
         value[ 0 ] = v0[ 0 ] + v1[ 0 ] + v2[ 0 ] + v3[ 0 ];
         value[ 1 ] = v0[ 1 ] + v1[ 1 ] + v2[ 1 ] + v3[ 1 ];

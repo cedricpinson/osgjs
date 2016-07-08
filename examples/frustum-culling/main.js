@@ -248,7 +248,7 @@
                     for ( var wH = 0; wH < count; wH++ ) {
                         var groundSubNodeTrans = new osg.MatrixTransform();
                         groundSubNodeTrans.setMatrix(
-                            osg.Matrix.makeTranslate( wG * groundSize - 100, wH * groundSize - 100, -5.0, [] ) );
+                            osg.mat4.fromTranslation( osg.mat4.create(), [ wG * groundSize - 100, wH * groundSize - 100, -5.0 ] ) );
                         // only node are culled in CullVisitor frustum culling
                         groundSubNode = new osg.Node();
 
@@ -286,7 +286,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
 
                             var transformSphere = new osg.MatrixTransform();
                             transformSphere.setMatrix(
-                                osg.Matrix.makeTranslate( 2.5 + wG * groundSize - 100, 2.5 + wH * groundSize - 100, -5.0, [] ) );
+                                osg.mat4.fromTranslation( osg.mat4.create(), [ 2.5 + wG * groundSize - 100, 2.5 + wH * groundSize - 100, -5.0 ] ) );
                             groundSubNode.addChild( transformSphere );
                             transformSphere.addChild( bs );
 
@@ -312,7 +312,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
 
                     var transformSphere2 = new osg.MatrixTransform();
                     transformSphere2.setMatrix(
-                        osg.Matrix.makeTranslate( count * groundSize * 0.5 - 100, count * groundSize * 0.5 - 100, -5.0, [] ) );
+                        osg.mat4.fromTranslation( osg.mat4.create(), [ count * groundSize * 0.5 - 100, count * groundSize * 0.5 - 100, -5.0 ] ) );
                     this._groundNode.addChild( transformSphere2 );
                     transformSphere2.addChild( bs );
 
@@ -331,7 +331,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var rttSize = [ 512, 512 ];
             var rttCamera = new osg.Camera();
             rttCamera.setName( 'TopView' );
-            osg.Matrix.makeOrtho( 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5, rttCamera.getProjectionMatrix() );
+            osg.mat4.ortho( rttCamera.getProjectionMatrix(), 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5 );
             rttCamera.setRenderOrder( osg.Camera.POST_RENDER, 0 );
             rttCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
             rttCamera.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
@@ -385,11 +385,11 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
 
 
             var matrixDest = this._ComposerdebugCamera.getProjectionMatrix();
-            osg.Matrix.makeOrtho( 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5, matrixDest );
+            osg.mat4.ortho( matrixDest, 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5 );
             this._ComposerdebugCamera.setProjectionMatrix( matrixDest ); //not really needed until we do matrix caches
 
             matrixDest = this._ComposerdebugCamera.getViewMatrix();
-            osg.Matrix.makeTranslate( 0, 0, 0, matrixDest );
+            osg.mat4.fromTranslation( matrixDest, [ 0, 0, 0 ] );
             this._ComposerdebugCamera.setViewMatrix( matrixDest );
             this._ComposerdebugCamera.setViewport( new osg.Viewport( 0, 0, this._canvas.width, this._canvas.height ) );
             this._ComposerdebugCamera.setRenderOrder( osg.Camera.POST_RENDER, 0 );

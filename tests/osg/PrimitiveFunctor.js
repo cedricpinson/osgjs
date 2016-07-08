@@ -8,7 +8,7 @@ var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
 module.exports = function () {
@@ -85,8 +85,8 @@ module.exports = function () {
         var cb = function () {
             return {
                 operatorLine: function ( v1, v2 ) {
-                    vectors.push( Vec3.copy( v1, Vec3.create() ) );
-                    vectors.push( Vec3.copy( v2, Vec3.create() ) );
+                    vectors.push( vec3.clone( v1 ) );
+                    vectors.push( vec3.clone( v2 ) );
                 }
             };
         };
@@ -117,8 +117,8 @@ module.exports = function () {
         var cb = function () {
             return {
                 operatorLine: function ( v1, v2 ) {
-                    vectors.push( Vec3.copy( v1, Vec3.create() ) );
-                    vectors.push( Vec3.copy( v2, Vec3.create() ) );
+                    vectors.push( vec3.clone( v1 ) );
+                    vectors.push( vec3.clone( v2 ) );
                 }
             };
         };
@@ -153,9 +153,9 @@ module.exports = function () {
         var cb = function () {
             return {
                 operatorTriangle: function ( v1, v2, v3 ) {
-                    vectors.push( Vec3.copy( v1, Vec3.create() ) );
-                    vectors.push( Vec3.copy( v2, Vec3.create() ) );
-                    vectors.push( Vec3.copy( v3, Vec3.create() ) );
+                    vectors.push( vec3.clone( v1 ) );
+                    vectors.push( vec3.clone( v2 ) );
+                    vectors.push( vec3.clone( v3 ) );
                 }
             };
         };

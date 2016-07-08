@@ -1,31 +1,31 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
-var Matrix = require( 'osg/Matrix' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 
 
 var LineSegmentIntersector = function () {
-    this._start = Vec3.create();
-    this._end = Vec3.create();
-    this._iStart = Vec3.create();
-    this._iEnd = Vec3.create();
+    this._start = vec3.create();
+    this._end = vec3.create();
+    this._iStart = vec3.create();
+    this._iEnd = vec3.create();
     this._intersections = [];
 };
 
 LineSegmentIntersector.prototype = {
     set: function ( start, end ) {
-        Vec3.copy( start, this._start );
-        Vec3.copy( start, this._iStart );
-        Vec3.copy( end, this._end );
-        Vec3.copy( end, this._iEnd );
+        vec3.copy( this._start, start );
+        vec3.copy( this._iStart, start );
+        vec3.copy( this._end, end );
+        vec3.copy( this._iEnd, end );
     },
     setStart: function ( start ) {
-        Vec3.copy( start, this._start );
-        Vec3.copy( start, this._iStart );
+        vec3.copy( this._start, start );
+        vec3.copy( this._iStart, start );
     },
     setEnd: function ( end ) {
-        Vec3.copy( end, this._end );
-        Vec3.copy( end, this._iEnd );
+        vec3.copy( this._end, end );
+        vec3.copy( this._iEnd, end );
     },
     reset: function () {
         // Clear the intersections vector
@@ -37,20 +37,20 @@ LineSegmentIntersector.prototype = {
     },
     // Intersection Segment/Sphere
     intersects: ( function () {
-        var sm = Vec3.create();
-        var se = Vec3.create();
+        var sm = vec3.create();
+        var se = vec3.create();
         return function ( bsphere ) {
             // test for _start inside the bounding sphere
             if ( !bsphere.valid() ) return false;
-            Vec3.sub( this._iStart, bsphere.center(), sm );
-            var c = Vec3.length2( sm ) - bsphere.radius2();
+            vec3.sub( sm, this._iStart, bsphere.center() );
+            var c = vec3.sqrLen( sm ) - bsphere.radius2();
             if ( c <= 0.0 ) {
                 return true;
             }
             // solve quadratic equation
-            Vec3.sub( this._iEnd, this._iStart, se );
-            var a = Vec3.length2( se );
-            var b = Vec3.dot( sm, se ) * 2.0;
+            vec3.sub( se, this._iEnd, this._iStart );
+            var a = vec3.sqrLen( se );
+            var b = vec3.dot( sm, se ) * 2.0;
             var d = b * b - 4.0 * a * c;
             // no intersections if d<0
             if ( d < 0.0 ) {
@@ -117,9 +117,9 @@ LineSegmentIntersector.prototype = {
         return this._intersections;
     },
     setCurrentTransformation: function ( matrix ) {
-        Matrix.inverse( matrix, matrix );
-        Matrix.transformVec3( matrix, this._start, this._iStart );
-        Matrix.transformVec3( matrix, this._end, this._iEnd );
+        mat4.invert( matrix, matrix );
+        vec3.transformMat4( this._iStart, this._start, matrix );
+        vec3.transformMat4( this._iEnd, this._end, matrix );
     }
 };
 

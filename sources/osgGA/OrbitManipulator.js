@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
-var Matrix = require( 'osg/Matrix' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Manipulator = require( 'osgGA/Manipulator' );
 var OrbitManipulatorDeviceOrientationController = require( 'osgGA/OrbitManipulatorDeviceOrientationController' );
 var OrbitManipulatorGamePadController = require( 'osgGA/OrbitManipulatorGamePadController' );
@@ -17,7 +17,7 @@ var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRContr
  */
 var OrbitManipulator = function ( boundStrategy ) {
     Manipulator.call( this, boundStrategy );
-    this._homePosition = Vec3.create();
+    this._homePosition = vec3.create();
     this._frustum = {};
     this.init();
 };
@@ -115,17 +115,17 @@ var DOT_LIMIT = 0.99; // angle limit around the pole
 OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     init: function () {
         this._distance = 25.0;
-        this._target = Vec3.create();
-        this._upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
-        Vec3.init( this._target );
+        this._target = vec3.create();
+        this._upz = vec3.fromValues( 0.0, 0.0, 1.0 );
+        vec3.init( this._target );
 
-        var rot1 = Matrix.makeRotate( -Math.PI, 0.0, 0.0, 1.0, Matrix.create() );
-        var rot2 = Matrix.makeRotate( Math.PI / 10.0, 1.0, 0.0, 0.0, Matrix.create() );
-        this._rotation = Matrix.create();
-        Matrix.mult( rot1, rot2, this._rotation );
+        var rot1 = mat4.fromRotation( mat4.create(), -Math.PI, [ 0.0, 0.0, 1.0 ] );
+        var rot2 = mat4.fromRotation( mat4.create(), Math.PI / 10.0, [ 1.0, 0.0, 0.0 ] );
+        this._rotation = mat4.create();
+        mat4.mul( this._rotation, rot1, rot2 );
         this._time = 0.0;
 
-        this._vrMatrix = Matrix.create();
+        this._vrMatrix = mat4.create();
 
         this._rotate = new OrbitManipulator.Interpolator( 2 );
         this._pan = new OrbitManipulator.Interpolator( 2 );
@@ -136,7 +136,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._minSpeed = 1e-4; // set a limit to pan/zoom speed
         this._scaleMouseMotion = 1.0;
 
-        this._inverseMatrix = Matrix.create();
+        this._inverseMatrix = mat4.create();
 
         // if we hit the min distance and can't zoom anymore, maybe we still want to move on
         // with a very low _minDistance, it's like a fps manipulator as long as you don't unzoom
@@ -160,27 +160,27 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this.init();
     },
     setTarget: function ( target ) {
-        Vec3.copy( target, this._target );
-        var eyePos = Vec3.create();
+        vec3.copy( this._target, target );
+        var eyePos = vec3.create();
         this.getEyePosition( eyePos );
-        this._distance = Vec3.distance( eyePos, target );
+        this._distance = vec3.distance( target, eyePos );
     },
     setEyePosition: ( function () {
-        var f = Vec3.create();
-        var s = Vec3.create();
-        var u = Vec3.create();
+        var f = vec3.create();
+        var s = vec3.create();
+        var u = vec3.create();
         return function ( eye ) {
             var result = this._rotation;
             var center = this._target;
 
-            Vec3.sub( eye, center, f );
-            Vec3.normalize( f, f );
+            vec3.sub( f, eye, center );
+            vec3.normalize( f, f );
 
-            Vec3.cross( f, this._upz, s );
-            Vec3.normalize( s, s );
+            vec3.cross( s, f, this._upz );
+            vec3.normalize( s, s );
 
-            Vec3.cross( s, f, u );
-            Vec3.normalize( u, u );
+            vec3.cross( u, s, f );
+            vec3.normalize( u, u );
 
             // s[0], f[0], u[0], 0.0,
             // s[1], f[1], u[1], 0.0,
@@ -203,7 +203,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             result[ 14 ] = 0;
             result[ 15 ] = 1.0;
 
-            this._distance = Vec3.distance( eye, center );
+            this._distance = vec3.distance( center, eye );
         };
     } )(),
 
@@ -261,9 +261,9 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         return Math.max( this._distance, this._minSpeed );
     },
     computePan: ( function () {
-        var inv = Matrix.create();
-        var x = Vec3.create();
-        var y = Vec3.create();
+        var inv = mat4.create();
+        var x = vec3.create();
+        var y = vec3.create();
         return function ( dx, dy ) {
             var proj = this._camera.getProjectionMatrix();
             // modulate panning speed with verticalFov value
@@ -275,47 +275,47 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             dy *= speed;
             dx *= speed;
 
-            Matrix.inverse( this._rotation, inv );
-            x[ 0 ] = Matrix.get( inv, 0, 0 );
-            x[ 1 ] = Matrix.get( inv, 0, 1 );
-            x[ 2 ] = Matrix.get( inv, 0, 2 );
-            Vec3.normalize( x, x );
+            mat4.invert( inv, this._rotation );
+            x[ 0 ] = inv[ 0 ];
+            x[ 1 ] = inv[ 1 ];
+            x[ 2 ] = inv[ 2 ];
+            vec3.normalize( x, x );
 
-            y[ 0 ] = Matrix.get( inv, 2, 0 );
-            y[ 1 ] = Matrix.get( inv, 2, 1 );
-            y[ 2 ] = Matrix.get( inv, 2, 2 );
-            Vec3.normalize( y, y );
+            y[ 0 ] = inv[ 8 ];
+            y[ 1 ] = inv[ 9 ];
+            y[ 2 ] = inv[ 10 ];
+            vec3.normalize( y, y );
 
-            Vec3.mult( x, -dx, x );
-            Vec3.mult( y, dy, y );
-            Vec3.add( this._target, x, this._target );
-            Vec3.add( this._target, y, this._target );
+            vec3.scale( x, x, -dx );
+            vec3.scale( y, y, dy );
+            vec3.add( this._target, this._target, x );
+            vec3.add( this._target, this._target, y );
         };
     } )(),
     computeRotation: ( function () {
-        var of = Matrix.create();
-        var r = Matrix.create();
-        var r2 = Matrix.create();
-        var tmp = Vec3.create();
+        var of = mat4.create();
+        var r = mat4.create();
+        var r2 = mat4.create();
+        var tmp = vec3.create();
         var radLimit = Math.acos( DOT_LIMIT ) * 2.0;
         return function ( dx, dy ) {
-            Matrix.makeRotate( -dx / 10.0, 0.0, 0.0, 1.0, of );
-            Matrix.mult( this._rotation, of, r );
+            mat4.fromRotation( of, -dx / 10.0, [ 0.0, 0.0, 1.0 ] );
+            mat4.mul( r, this._rotation, of );
 
             // limit the dy movement to the range [-radLimit, radLimit]
             // so that we can't "jump" to the other side of the poles
             // with a rapid mouse movement
             dy = Math.max( Math.min( dy / 10.0, radLimit ), -radLimit );
-            Matrix.makeRotate( -dy, 1.0, 0.0, 0.0, of );
-            Matrix.mult( of, r, r2 );
+            mat4.fromRotation( of, -dy, [ 1.0, 0.0, 0.0 ] );
+            mat4.mul( r2, of, r );
 
             // prevent going on the other side of the sphere (block y)
-            Matrix.transformVec3( r2, this._upz, tmp );
+            vec3.transformMat4( tmp, this._upz, r2 );
             if ( Math.abs( tmp[ 1 ] ) > DOT_LIMIT ) {
-                Matrix.copy( r, this._rotation );
+                mat4.copy( this._rotation, r );
                 return;
             }
-            Matrix.copy( r2, this._rotation );
+            mat4.copy( this._rotation, r2 );
         };
     } )(),
     computeZoom: function ( dz ) {
@@ -327,17 +327,17 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
 
     zoom: ( function () {
-        var dir = Vec3.create();
+        var dir = vec3.create();
         return function ( ratio ) {
             var newValue = this._distance + this.getSpeedFactor() * ( ratio - 1.0 );
 
             if ( newValue < this._minDistance ) {
                 if ( this._autoPushTarget ) {
                     // push the target instead of zooming on it
-                    Vec3.sub( this._target, this.getEyePosition( dir ), dir );
-                    Vec3.normalize( dir, dir );
-                    Vec3.mult( dir, this._minDistance - newValue, dir );
-                    Vec3.add( this._target, dir, this._target );
+                    vec3.sub( dir, this._target, this.getEyePosition( dir ) );
+                    vec3.normalize( dir, dir );
+                    vec3.scale( dir, dir, this._minDistance - newValue );
+                    vec3.add( this._target, this._target, dir );
                 }
                 newValue = this._minDistance;
             }
@@ -359,7 +359,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         return this._zoom;
     },
     getTarget: function ( target ) {
-        return Vec3.copy( this._target, target );
+        return vec3.copy( target, this._target );
     },
     getEyePosition: function ( eye ) {
         this.computeEyePosition( this._target, this._distance, eye );
@@ -367,18 +367,18 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
 
     computeEyePosition: ( function () {
-        var tmpDist = Vec3.create();
-        var tmpInverse = Matrix.create();
+        var tmpDist = vec3.create();
+        var tmpInverse = mat4.create();
         return function ( target, distance, eye ) {
-            Matrix.inverse( this._rotation, tmpInverse );
+            mat4.invert( tmpInverse, this._rotation );
             tmpDist[ 1 ] = distance;
-            Matrix.transformVec3( tmpInverse, tmpDist, eye );
-            Vec3.add( target, eye, eye );
+            vec3.transformMat4( eye, tmpDist, tmpInverse );
+            vec3.add( eye, target, eye );
         };
     } )(),
 
     update: ( function () {
-        var eye = Vec3.create();
+        var eye = vec3.create();
         return function ( nv ) {
             var dt = nv.getFrameStamp().getDeltaTime();
 
@@ -399,25 +399,26 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             var distance = this._distance;
 
             /* 1. Works but bypass other manipulators */
-            // Matrix.copy( this._vrMatrix, this._inverseMatrix );
+            // mat4.copy( this._inverseMatrix , this._vrMatrix );
 
             /* 2. Works but gets broken by other manipulators */
-            Matrix.inverse( this._rotation, this._inverseMatrix );
-            Matrix.postMult( this._vrMatrix, this._inverseMatrix );
+            mat4.invert( this._inverseMatrix, this._rotation );
+            mat4.mul( this._inverseMatrix, this._vrMatrix, this._inverseMatrix );
 
             /* 3. Doesnt' work */
-            // Matrix.preMult( this._vrMatrix, this._rotation );
-            // Matrix.inverse( this._vrMatrix, this._inverseMatrix );
+            // mat4.mul( this._vrMatrix,  this._vrMatrix, this._rotation );
+            // mat4.invert( this._inverseMatrix, this._vrMatrix );
 
-            Vec3.set( 0.0, distance, 0.0, eye );
-            Matrix.transformVec3( this._inverseMatrix, eye, eye );
+            vec3.set( eye, 0.0, distance, 0.0 );
+            vec3.transformMat4( eye, eye, this._inverseMatrix );
 
-            Matrix.makeLookAt( Vec3.add( target, eye, eye ), target, this._upz, this._inverseMatrix );
+            mat4.lookAt( this._inverseMatrix, vec3.add( eye, target, eye ), target, this._upz );
+
         };
     } )(),
 
-    setPoseVR: function ( quat /*, pos*/ ) {
-        Matrix.makeRotateFromQuat( quat, this._vrMatrix );
+    setPoseVR: function ( q /*, pos*/ ) {
+        mat4.fromQuat( this._vrMatrix, q );
         // this._vrMatrix[ 12 ] = pos[ 0 ];
         // this._vrMatrix[ 13 ] = pos[ 1 ];
         // this._vrMatrix[ 14 ] = pos[ 2 ];
