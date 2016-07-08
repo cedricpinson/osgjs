@@ -74,7 +74,7 @@ var Composer = function () {
     this.getOrCreateStateSet().setAttributeAndModes( new CullFace( 'BACK' ) );
 };
 
-Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( Composer, MACROUTILS.objectInherit( Node.prototype, {
     dirty: function () {
         for ( var i = 0, l = this._stack.length; i < l; i++ ) {
             this._stack[ i ].filter.dirty();
@@ -277,7 +277,7 @@ Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
         // undefined if rendering directly to screen
         this._resultTexture = lastTextureResult;
     }
-} );
+} ), 'osgUtil', 'Composer' );
 
 Composer.Filter = function () {
     this._stateSet = new StateSet();
@@ -288,7 +288,7 @@ Composer.Filter = function () {
     this._vertexName = '';
 };
 
-Composer.Filter.prototype = {
+MACROUTILS.createPrototypeObject( Composer.Filter, {
     setFragmentName: function ( fname ) {
         this._fragmentName = fname;
     },
@@ -321,7 +321,7 @@ Composer.Filter.prototype = {
     isDirty: function () {
         return this._dirty;
     }
-};
+}, 'osgUtil', 'ComposerFilter' );
 
 // default means you do use the special optimized full screen triangle
 // dubbed fakeFullscreenQuad
@@ -428,7 +428,7 @@ Composer.Filter.Custom = function ( fragmentShader, uniforms ) {
     this._vertexShader = Composer.Filter.defaultVertexShader;
 };
 
-Composer.Filter.Custom.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.Custom, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     getFragmentShader: function () {
         return this._fragmentShader;
     },
@@ -497,7 +497,7 @@ Composer.Filter.Custom.prototype = MACROUTILS.objectInherit( Composer.Filter.pro
         this._dirty = false;
 
     }
-} );
+} ), 'osgUtil', 'ComposerFilterCustom' );
 
 
 // filter that switch its render target and its input at each frame
@@ -514,7 +514,7 @@ Composer.Filter.PingPong = function ( cameraRtt0, rtt0, cameraRtt1, rtt1, fragme
     this._fragmentName = 'PingPong';
 };
 
-Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.Custom.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.PingPong, MACROUTILS.objectInherit( Composer.Filter.Custom.prototype, {
 
     // Constraints:
     // - Next Filter: texture unit 0 === rtt0 && texture unit 1 === rtt1
@@ -630,7 +630,7 @@ Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.C
 
     }
 
-} );
+} ), 'osgUtil', 'ComposerFilterPingPong' );
 
 Composer.Filter.AverageHBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
     Composer.Filter.call( this );
@@ -642,7 +642,7 @@ Composer.Filter.AverageHBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
     this._fragmentName = 'AverageHBlur' + this._nbSamples;
 };
 
-Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.AverageHBlur, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     setBlurSize: function ( nbSamples ) {
         if ( nbSamples % 2 !== 1 ) {
             nbSamples += 1;
@@ -756,18 +756,18 @@ Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInherit( Composer.Filt
         this._stateSet.setAttributeAndModes( program );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterAverageHBlur' );
 
 
 Composer.Filter.AverageVBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
     Composer.Filter.AverageHBlur.call( this, nbSamplesOpt, linear, unpack, pack );
     this._fragmentName = 'AverageVBlur' + this._nbSamples;
 };
-Composer.Filter.AverageVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.AverageHBlur.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.AverageVBlur, MACROUTILS.objectInherit( Composer.Filter.AverageHBlur.prototype, {
     getUVOffset: function ( value ) {
         return 'vec2(0.0, float(' + value + ')/RenderSize[1]);';
     }
-} );
+} ), 'osgUtil', 'ComposerFilterAverageVBlur' );
 
 Composer.Filter.BilateralHBlur = function ( options, unpack, pack ) {
     Composer.Filter.call( this );
@@ -791,7 +791,7 @@ Composer.Filter.BilateralHBlur = function ( options, unpack, pack ) {
     this._fragmentName = 'BilateralHBlur' + this._nbSamples;
 };
 
-Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.BilateralHBlur, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     setBlurSize: function ( nbSamples ) {
         if ( nbSamples % 2 !== 1 ) {
             nbSamples += 1;
@@ -891,18 +891,18 @@ Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInherit( Composer.Fi
         this._stateSet.setAttributeAndModes( program );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterBilateralHBlur' );
 
 Composer.Filter.BilateralVBlur = function ( options, unpack, pack ) {
     Composer.Filter.BilateralHBlur.call( this, options, unpack, pack );
     this._fragmentName = 'BilateralVBlur' + this._nbSamples;
 };
 
-Composer.Filter.BilateralVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.BilateralHBlur.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.BilateralVBlur, MACROUTILS.objectInherit( Composer.Filter.BilateralHBlur.prototype, {
     getUVOffset: function ( value ) {
         return 'vec2(float(' + value + ')*pixelSize/RenderSize[0],0.0);';
     }
-} );
+} ), 'osgUtil', 'ComposerFilterBilateralVBlur' );
 
 // InputTexture is a fake filter to setup the first texture
 // in the composer pipeline
@@ -911,11 +911,11 @@ Composer.Filter.InputTexture = function ( texture ) {
     this._stateSet.setTextureAttributeAndModes( 0, texture );
     this._fragmentName = 'InputTexture';
 };
-Composer.Filter.InputTexture.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.InputTexture, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     build: function () {
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterInputTexture' );
 
 // Operate a Gaussian horizontal blur
 Composer.Filter.HBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
@@ -927,7 +927,7 @@ Composer.Filter.HBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
     this._fragmentName = 'HBlur' + this._nbSamples;
 };
 
-Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.HBlur, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     setBlurSize: function ( nbSamples ) {
         if ( nbSamples % 2 !== 0 ) {
             nbSamples += 1;
@@ -1034,7 +1034,7 @@ Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prot
         this._stateSet.setAttributeAndModes( program );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterHBlur' );
 
 // Operate a Gaussian vertical blur
 Composer.Filter.VBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
@@ -1042,11 +1042,11 @@ Composer.Filter.VBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
     this._fragmentName = 'VBlur' + this._nbSamples;
 };
 
-Composer.Filter.VBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.HBlur.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.VBlur, MACROUTILS.objectInherit( Composer.Filter.HBlur.prototype, {
     getUVOffset: function ( value ) {
         return 'vec2(0.0, float(' + value + ')/RenderSize[1]) ;';
     }
-} );
+} ), 'osgUtil', 'ComposerFilterVBlur' );
 
 // Sobel filter
 // http://en.wikipedia.org/wiki/Sobel_operator
@@ -1057,7 +1057,7 @@ Composer.Filter.SobelFilter = function () {
     this._fragmentName = 'SobelFilter';
 };
 
-Composer.Filter.SobelFilter.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.SobelFilter, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     setColor: function ( color ) {
         this._color.setVec3( color );
     },
@@ -1107,7 +1107,7 @@ Composer.Filter.SobelFilter.prototype = MACROUTILS.objectInherit( Composer.Filte
         stateSet.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterSobelFilter' );
 
 Composer.Filter.BlendMix = function () {
     Composer.Filter.call( this );
@@ -1137,7 +1137,7 @@ Composer.Filter.BlendMix = function () {
     this._fragmentName = 'BlendMix';
 };
 
-Composer.Filter.BlendMix.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.BlendMix, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     getBlendFactorUniform: function () {
         return this._mixValueUniform;
     },
@@ -1165,7 +1165,7 @@ Composer.Filter.BlendMix.prototype = MACROUTILS.objectInherit( Composer.Filter.p
         stateSet.setAttributeAndModes( program );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterBlendMix' );
 
 
 Composer.Filter.BlendMultiply = function () {
@@ -1189,7 +1189,7 @@ Composer.Filter.BlendMultiply = function () {
     this._fragmentName = 'BlendMultiply';
 };
 
-Composer.Filter.BlendMultiply.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.BlendMultiply, MACROUTILS.objectInherit( Composer.Filter.prototype, {
     build: function () {
         var vtx = Composer.Filter.defaultVertexShader;
         var fgt = [
@@ -1212,7 +1212,7 @@ Composer.Filter.BlendMultiply.prototype = MACROUTILS.objectInherit( Composer.Fil
         this._stateSet.setAttributeAndModes( program );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterBlendMultiply' );
 
 Composer.Filter.SSAO = function ( options ) {
     Composer.Filter.call( this );
@@ -1252,7 +1252,7 @@ Composer.Filter.SSAO = function ( options ) {
     this._fragmentName = 'SSAO';
 };
 
-Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.SSAO, MACROUTILS.objectInherit( Composer.Filter.prototype, {
 
     initNoise: function () {
         var sizeNoise = this._noiseTextureSize;
@@ -1430,14 +1430,14 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
         stateSet.setAttributeAndModes( program );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterSSAO' );
 
 Composer.Filter.SSAO8 = function ( options ) {
     Composer.Filter.SSAO.call( this, options );
     this._fragmentName = 'SSAO8';
 };
 
-Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO.prototype, {
+MACROUTILS.createPrototypeObject( Composer.Filter.SSAO8, MACROUTILS.objectInherit( Composer.Filter.SSAO.prototype, {
     buildGeometry: function ( quad ) {
         quad.getAttributes().TexCoord1 = this._texCoord1;
         return quad;
@@ -1602,6 +1602,6 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
         stateSet.setAttributeAndModes( program );
         this._dirty = false;
     }
-} );
+} ), 'osgUtil', 'ComposerFilterSSAO8' );
 
 module.exports = Composer;

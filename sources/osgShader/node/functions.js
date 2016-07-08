@@ -11,33 +11,33 @@ var NodeFunctions = function () {
     Node.call( this );
 };
 
-NodeFunctions.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( NodeFunctions, MACROUTILS.objectInherit( Node.prototype, {
 
     globalFunctionDeclaration: function () {
         return '#pragma include "functions.glsl"';
     }
 
-} );
+} ), 'osgShader', 'NodeFunctions' );
 
 
 var Normalize = function () {
     NodeFunctions.call( this );
 };
-Normalize.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
+MACROUTILS.createPrototypeObject( Normalize, MACROUTILS.objectInherit( NodeFunctions.prototype, {
     type: 'Normalize',
     validInputs: [ 'vec' ],
     validOuputs: [ 'vec' ],
     computeShader: function () {
         return utils.callFunction( 'normalize', this._outputs.vec, [ this._inputs.vec ] );
     }
-} );
+} ), 'osgShader', 'Normalize' );
 
 
 var sRGBToLinear = function () {
     NodeFunctions.call( this );
 };
 
-sRGBToLinear.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
+MACROUTILS.createPrototypeObject( sRGBToLinear, MACROUTILS.objectInherit( NodeFunctions.prototype, {
 
     type: 'sRGBToLinear',
 
@@ -55,18 +55,18 @@ sRGBToLinear.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
         return utils.callFunction( funcName, out.getVariable() + rgb, [ color.getVariable() + rgb ] );
     }
 
-} );
+} ), 'osgShader', 'sRGBToLinear' );
 
 var LinearTosRGB = function () {
     sRGBToLinear.call( this );
 };
 
-LinearTosRGB.prototype = MACROUTILS.objectInherit( sRGBToLinear.prototype, {
+MACROUTILS.createPrototypeObject( LinearTosRGB, MACROUTILS.objectInherit( sRGBToLinear.prototype, {
     type: 'LinearTosRGB',
     computeShader: function () {
         return this.computeConversion( 'linearTosRGB' );
     }
-} );
+} ), 'osgShader', 'LinearTosRGB' );
 
 var FrontNormal = function () {
     NodeFunctions.call( this );
@@ -74,7 +74,7 @@ var FrontNormal = function () {
 
 // https://twitter.com/pyalot/status/711956736639418369
 // https://github.com/mrdoob/three.js/issues/10331
-FrontNormal.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
+MACROUTILS.createPrototypeObject( FrontNormal, MACROUTILS.objectInherit( NodeFunctions.prototype, {
 
     type: 'FrontNormal',
     validInputs: [ 'normal' ],
@@ -87,41 +87,42 @@ FrontNormal.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
             this._inputs.normal.getVariable()
         ] );
     }
-} );
+} ), 'osgShader', 'FrontNormal' );
 
 var getVec3 = function ( vec ) {
     return vec.getType && vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
 };
+
 var EncodeRGBM = function () {
     NodeFunctions.call( this );
 };
-EncodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
+MACROUTILS.createPrototypeObject( EncodeRGBM, MACROUTILS.objectInherit( NodeFunctions.prototype, {
     type: 'EncodeRGBM',
     validInputs: [ 'color', 'range' ],
     validOutputs: [ 'color' ],
     computeShader: function () {
         return utils.callFunction( 'encodeRGBM', this._outputs.color, [ getVec3( this._inputs.color ), this._inputs.range ] );
     }
-} );
+} ), 'osgShader', 'EncodeRGBM' );
 
 var DecodeRGBM = function () {
     NodeFunctions.call( this );
 };
-DecodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
+MACROUTILS.createPrototypeObject( DecodeRGBM, MACROUTILS.objectInherit( NodeFunctions.prototype, {
     type: 'DecodeRGBM',
     validInputs: [ 'color', 'range' ],
     validOutputs: [ 'color' ],
     computeShader: function () {
         return utils.callFunction( 'decodeRGBM', this._outputs.color, [ this._inputs.color, this._inputs.range ] );
     }
-} );
+} ), 'osgShader', 'DecodeRGBM' );
 
 var Define = function ( name ) {
     Node.call( this );
     this._defineName = name;
     this._defineValue = '';
 };
-Define.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( Define, MACROUTILS.objectInherit( Node.prototype, {
     type: 'Define',
     setValue: function ( value ) {
         this._defineValue = value;
@@ -130,7 +131,7 @@ Define.prototype = MACROUTILS.objectInherit( Node.prototype, {
     getDefines: function () {
         return [ '#define ' + this._defineName + ' ' + this._defineValue ];
     }
-} );
+} ), 'osgShader', 'Define' );
 
 module.exports = {
     NodeFunctions: NodeFunctions,

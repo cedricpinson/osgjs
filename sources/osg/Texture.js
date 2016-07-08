@@ -260,7 +260,7 @@ Texture.getEnumFromString = function ( v ) {
     return value;
 };
 
-Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( Texture, MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'Texture',
 
@@ -850,8 +850,6 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
 
 } ) ), 'osg', 'Texture' );
-
-MACROUTILS.setTypeID( Texture );
 
 Texture.textureNull = new Texture();
 

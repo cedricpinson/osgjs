@@ -28,7 +28,7 @@ var funcWeights = function ( a, b ) {
     return Math.abs( b.value ) - Math.abs( a.value );
 };
 
-UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
+MACROUTILS.createPrototypeObject( UpdateMorph, MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
 
     init: function ( node ) {
         this._maxMorphGPU = MorphGeometry.MAX_MORPH_GPU;
@@ -281,6 +281,6 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
 
         return true;
     }
-} );
+} ), 'osgAnimation', 'UpdateMorph' );
 
 module.exports = UpdateMorph;

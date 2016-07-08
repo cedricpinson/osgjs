@@ -9,7 +9,7 @@ var BoundingBox = function () {
     this._max = vec3.create();
     this.init();
 };
-BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
+MACROUTILS.createPrototypeObject( BoundingBox, {
 
     init: function () {
         vec3.copy( this._min, vec3.INFINITY );

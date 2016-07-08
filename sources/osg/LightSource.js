@@ -16,7 +16,7 @@ var LightSource = function () {
 };
 
 /** @lends LightSource.prototype */
-LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeNode( LightSource, MACROUTILS.objectInherit( Node.prototype, {
     getLight: function () {
         return this._light;
     },
@@ -48,7 +48,5 @@ LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
     } )()
 
 } ), 'osg', 'LightSource' );
-
-MACROUTILS.setTypeID( LightSource );
 
 module.exports = LightSource;

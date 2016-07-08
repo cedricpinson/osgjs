@@ -15,7 +15,7 @@ var StackedRotateAxis = function ( name, axis, angle ) {
     if ( name ) this.setName( name );
 };
 
-StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( StackedRotateAxis, MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( axis, angle ) {
         this.setAxis( axis );
@@ -55,6 +55,6 @@ StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
         };
     } )()
 
-} );
+} ), 'osgAnimation', 'StackedRotateAxis' );
 
 module.exports = StackedRotateAxis;

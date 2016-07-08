@@ -10,7 +10,7 @@ var Scene = function () {
     this._sceneData = undefined;
 };
 
-Scene.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( Scene, MACROUTILS.objectInherit( Object.prototype, {
 
     getSceneData: function () {
         return this._sceneData;

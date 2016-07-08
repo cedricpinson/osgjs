@@ -32,7 +32,7 @@ var SphereIntersectFunctor = function () {
     this._radius = 0;
 };
 
-SphereIntersectFunctor.prototype = MACROUTILS.objectInherit( LineSegmentIntersectFunctor.prototype, {
+MACROUTILS.createPrototypeObject( SphereIntersectFunctor, MACROUTILS.objectInherit( LineSegmentIntersectFunctor.prototype, {
     set: function ( center, radius, settings ) {
         this._center = center;
         this._radius = radius;
@@ -274,6 +274,6 @@ SphereIntersectFunctor.prototype = MACROUTILS.objectInherit( LineSegmentIntersec
             this._hit = true;
         };
     } )()
-} );
+} ), 'osgUtil', 'TriangleSphereIntersector' );
 
 module.exports = SphereIntersectFunctor;

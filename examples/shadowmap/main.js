@@ -853,7 +853,7 @@
                 }
             } else {
                 var mt = new osg.MatrixTransform();
-                osg.mat4.fromTranslation( mt.getMatrix(), [ -300,-300, -5.0 ] );
+                osg.mat4.fromTranslation( mt.getMatrix(), [ -300, -300, -5.0 ] );
                 mt.addChild( ground );
                 groundNode = mt;
             }

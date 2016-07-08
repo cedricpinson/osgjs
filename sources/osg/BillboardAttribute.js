@@ -8,7 +8,7 @@ var BillboardAttribute = function () {
     this._attributeEnable = false;
 };
 
-BillboardAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( BillboardAttribute, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'Billboard',
 

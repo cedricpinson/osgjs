@@ -13,7 +13,7 @@ var KdTreeBuilder = function ( options ) {
     };
 };
 
-KdTreeBuilder.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( KdTreeBuilder, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     apply: function ( node ) {
         if ( node.getShape ) {
             var shape = node.getShape();
@@ -27,6 +27,6 @@ KdTreeBuilder.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         }
         this.traverse( node );
     }
-} );
+} ), 'osg', 'KdTreeBuilder' );
 
 module.exports = KdTreeBuilder;

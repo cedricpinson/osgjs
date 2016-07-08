@@ -68,8 +68,7 @@ Shader.flushAllDeletedGLShaders = function ( gl ) {
     return;
 };
 
-/** @lends Shader.prototype */
-Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
+MACROUTILS.createPrototypeObject( Shader, MACROUTILS.objectInherit( GLObject.prototype, {
     setText: function ( text ) {
         this.text = text;
     },
@@ -198,6 +197,6 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         }
         this.shader = undefined;
     }
-} );
+} ), 'osg', 'Shader' );
 
 module.exports = Shader;

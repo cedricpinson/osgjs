@@ -15,7 +15,7 @@ var Material = function () {
     this._shininess = 12.5;
 };
 
-Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( Material, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'Material',
 

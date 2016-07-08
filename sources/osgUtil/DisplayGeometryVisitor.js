@@ -22,7 +22,14 @@ var CompilerColorGeometry = function () {
     Compiler.apply( this, arguments );
 };
 
-CompilerColorGeometry.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
+var configColor = Compiler.cloneStateAttributeConfig( Compiler );
+configColor.textureAttribute = [];
+configColor.attribute = [];
+
+Compiler.setStateAttributeConfig( CompilerColorGeometry, configColor );
+
+
+MACROUTILS.createPrototypeObject( CompilerColorGeometry, MACROUTILS.objectInherit( Compiler.prototype, {
     getCompilerName: function () {
         return 'CompilerDebugGeometry';
     },
@@ -39,13 +46,14 @@ CompilerColorGeometry.prototype = MACROUTILS.objectInherit( Compiler.prototype, 
 
         return [ frag ];
     }
-} );
+} ), 'osgUtil', 'CompilerColorGeometry' );
 
 var ShaderGeneratorCompilerColorGeometry = function () {
     ShaderGenerator.apply( this, arguments );
     this.setShaderCompiler( CompilerColorGeometry );
 };
-ShaderGeneratorCompilerColorGeometry.prototype = ShaderGenerator.prototype;
+
+MACROUTILS.createPrototypeObject( ShaderGeneratorCompilerColorGeometry, MACROUTILS.objectInherit( ShaderGenerator.prototype, {} ), 'osgUtil', 'ShaderGeneratorCompilerColorGeometry' );
 
 
 ////////////////////////
@@ -55,7 +63,14 @@ var CompilerColorSkinning = function () {
     Compiler.apply( this, arguments );
 };
 
-CompilerColorSkinning.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
+
+var configSkinning = Compiler.cloneStateAttributeConfig( Compiler );
+configSkinning.textureAttribute = [];
+
+Compiler.setStateAttributeConfig( CompilerColorSkinning, configSkinning );
+
+
+MACROUTILS.createPrototypeObject( CompilerColorSkinning, MACROUTILS.objectInherit( Compiler.prototype, {
     getCompilerName: function () {
         return 'CompilerDebugSkinning';
     },
@@ -77,13 +92,14 @@ CompilerColorSkinning.prototype = MACROUTILS.objectInherit( Compiler.prototype, 
         this.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec3', 'BonesColor' ) ).outputs( color );
         return Compiler.prototype.declareVertexVaryings.call( this, roots );
     }
-} );
+} ), 'osgUtil', 'CompilerColorSkinning' );
 
 var ShaderGeneratorCompilerColorSkinning = function () {
     ShaderGenerator.apply( this, arguments );
     this.setShaderCompiler( CompilerColorSkinning );
 };
-ShaderGeneratorCompilerColorSkinning.prototype = ShaderGenerator.prototype;
+
+MACROUTILS.createPrototypeObject( ShaderGeneratorCompilerColorSkinning, MACROUTILS.objectInherit( ShaderGenerator.prototype, {} ), 'osgUtil', 'ShaderGeneratorCompilerColorSkinning' );
 
 ///////////////////////////
 // DISPLAY GEOMETRY VISITOR
@@ -104,7 +120,7 @@ GeometryColorDebugVisitor.ShaderGeneratorCompilerColorGeometry = ShaderGenerator
 GeometryColorDebugVisitor.CompilerSkinningGeometry = CompilerColorSkinning;
 GeometryColorDebugVisitor.ShaderGeneratorCompilerColorSkinning = ShaderGeneratorCompilerColorSkinning;
 
-GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( GeometryColorDebugVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     setGeometryDebug: function ( node ) {
         this._stCenter.setAttributeAndModes( new Depth( Depth.ALWAYS ) );
         this._debugColor = true;
@@ -220,6 +236,6 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
 
         this.traverse( node );
     }
-} );
+} ), 'osgUtil', 'GeometryColorDebugVisitor' );
 
 module.exports = GeometryColorDebugVisitor;

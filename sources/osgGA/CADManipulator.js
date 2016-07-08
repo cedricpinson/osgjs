@@ -112,7 +112,7 @@ CADManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Hammer' ];
 CADManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Hammer' ];
 
 /** @lends CADManipulator.prototype */
-CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
+MACROUTILS.createPrototypeObject( CADManipulator, MACROUTILS.objectInherit( Manipulator.prototype, {
     init: function () {
         this._distance = 25.0;
         this._target = vec3.create();
@@ -536,7 +536,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         return offset;
     }
 
-} );
+} ), 'osgGA', 'CADManipulator' );
 
 CADManipulator.StandardMouseKeyboard = CADManipulatorStandardMouseKeyboardController;
 CADManipulator.Hammer = CADManipulatorHammerController;

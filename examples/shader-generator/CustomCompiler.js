@@ -11,6 +11,12 @@
         osgShader.Compiler.apply( this, arguments );
     };
 
+    // we use same attributes than the default compiler
+    var config = osgShader.Compiler.cloneStateAttributeConfig( osgShader.Compiler );
+    config.attribute.push( 'Ramp' );
+    config.attribute.push( 'Negatif' );
+    osgShader.Compiler.setStateAttributeConfig( CustomCompiler, config );
+
     CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
 
         createLighting: function () {

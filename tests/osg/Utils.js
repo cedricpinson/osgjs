@@ -5,49 +5,49 @@ var Utils = require( 'osg/Utils' );
 
 module.exports = function () {
 
-    var checkBaseClass = function ( BaseObject ) {
+    var checkBaseClass = function ( BaseObject, libraryName, className ) {
         var a = new BaseObject();
-        assert.isOk( a.className() === 'Asticot', 'check className' );
-        assert.isOk( a.libraryName() === 'toto', 'check libraryName' );
-        assert.isOk( a.getTypeID() === BaseObject.getTypeID(), 'check typeID' );
+        assert.equal( a.className(), className, 'check className' );
+        assert.equal( a.libraryName(), libraryName, 'check libraryName' );
+        assert.equal( a.getTypeID(), BaseObject.getTypeID(), 'check typeID' );
     };
 
-    var checkExtendedClass = function ( BaseObject, ExtendedObject ) {
+    var checkExtendedClass = function ( BaseObject, ExtendedObject, libraryName, className ) {
         var a = new BaseObject();
         var b = new ExtendedObject();
-        assert.isOk( b.className() === 'LeRigolo', 'check className' );
-        assert.isOk( b.libraryName() === 'toto', 'check libraryName' );
+        assert.equal( b.className(), className, 'check className' );
+        assert.equal( b.libraryName(), libraryName, 'check libraryName' );
         assert.isOk( b.getTypeID() === ExtendedObject.getTypeID() && b.getTypeID() !== a.getTypeID(), 'check typeID' );
         assert.isOk( b instanceof BaseObject, 'check b is instance of BaseObject' );
     };
 
-    test( 'createPrototypeClass', function () {
+    test( 'createPrototypeObject', function () {
 
         var BaseObject = function () {
             this._var0 = 1;
         };
 
-        Utils.createPrototypeClass( BaseObject, {
+        Utils.createPrototypeObject( BaseObject, {
             getMember: function () {
                 return 1;
             }
 
         }, 'toto', 'Asticot' );
 
-        checkBaseClass( BaseObject );
+        checkBaseClass( BaseObject, 'toto', 'Asticot' );
 
         var ExtendedObject = function () {
             BaseObject.call( this );
             this._var1 = 1;
         };
 
-        Utils.createPrototypeClass( ExtendedObject, Utils.objectInherit( BaseObject.prototype, {
+        Utils.createPrototypeObject( ExtendedObject, Utils.objectInherit( BaseObject.prototype, {
             getMember: function () {
                 return 2;
             }
         } ), 'toto', 'LeRigolo' );
 
-        checkExtendedClass( BaseObject, ExtendedObject );
+        checkExtendedClass( BaseObject, ExtendedObject, 'toto', 'LeRigolo' );
 
 
         var BaseObjectOld = function () {
@@ -58,9 +58,9 @@ module.exports = function () {
                 return 1;
             }
 
-        }, 'toto', 'Asticot' );
+        }, 'toto1', 'Asticot1' );
         Utils.setTypeID( BaseObjectOld );
-        checkBaseClass( BaseObjectOld );
+        checkBaseClass( BaseObjectOld, 'toto1', 'Asticot1' );
 
         var ExtendedObjectOld = function () {
             BaseObjectOld.call( this );
@@ -71,10 +71,10 @@ module.exports = function () {
             getMember: function () {
                 return 2;
             }
-        } ), 'toto', 'LeRigolo' );
+        } ), 'toto1', 'LeRigolo1' );
         Utils.setTypeID( ExtendedObjectOld );
 
-        checkExtendedClass( BaseObjectOld, ExtendedObjectOld );
+        checkExtendedClass( BaseObjectOld, ExtendedObjectOld, 'toto1', 'LeRigolo1' );
 
     } );
 

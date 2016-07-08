@@ -32,7 +32,8 @@ var ShadowTextureAtlas = function () {
 
 ShadowTextureAtlas.uniforms = {};
 /** @lends Texture.prototype */
-ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Texture.prototype, {
+
+MACROUTILS.createPrototypeStateAttribute( ShadowTextureAtlas, MACROUTILS.objectInherit( Texture.prototype, {
 
     cloneType: function () {
         return new ShadowTextureAtlas();
@@ -171,7 +172,5 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
     }
 
 } ), 'osgShadow', 'ShadowTextureAtlas' );
-
-MACROUTILS.setTypeID( ShadowTextureAtlas );
 
 module.exports = ShadowTextureAtlas;

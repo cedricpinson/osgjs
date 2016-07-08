@@ -28,7 +28,7 @@ var Add = function () {
     BaseOperator.call( this );
 };
 
-Add.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
+MACROUTILS.createPrototypeObject( Add, MACROUTILS.objectInherit( BaseOperator.prototype, {
 
     type: 'Add',
 
@@ -58,7 +58,7 @@ Add.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
         str += ';';
         return str;
     }
-} );
+} ), 'osgShader', 'Add' );
 
 
 
@@ -68,19 +68,20 @@ var Mult = function () {
     Add.call( this );
 };
 
-Mult.prototype = MACROUTILS.objectInherit( Add.prototype, {
+MACROUTILS.createPrototypeObject( Mult, MACROUTILS.objectInherit( Add.prototype, {
     type: 'Mult',
     operator: '*'
-} );
+} ), 'osgShader', 'Mult' );
 
 // basic assignement alias: output = input
 // glsl code output = input0
 var SetFromNode = function () {
     Add.call( this );
 };
-SetFromNode.prototype = MACROUTILS.objectInherit( Add.prototype, {
+
+MACROUTILS.createPrototypeObject( SetFromNode, MACROUTILS.objectInherit( Add.prototype, {
     type: 'SetFromNode'
-} );
+} ), 'osgShader', 'SetFromNode' );
 
 // Mult Matrix * vector4
 // making the cast vector4(input.xyz, 0)
@@ -93,7 +94,7 @@ var MatrixMultDirection = function () {
     this._inverseOp = false;
 };
 
-MatrixMultDirection.prototype = MACROUTILS.objectInherit( Add.prototype, {
+MACROUTILS.createPrototypeObject( MatrixMultDirection, MACROUTILS.objectInherit( Add.prototype, {
     type: 'MatrixMultDirection',
     operator: '*',
     validInputs: [ 'vec', 'matrix' ],
@@ -157,7 +158,7 @@ MatrixMultDirection.prototype = MACROUTILS.objectInherit( Add.prototype, {
 
         return strOut;
     }
-} );
+} ), 'osgShader', 'MatrixMultDirection' );
 
 // override only for complement.
 // glsl code output = matrix * vector4(vec.xyz, 1)
@@ -165,10 +166,11 @@ var MatrixMultPosition = function () {
     MatrixMultDirection.call( this );
     this._forceComplement = false;
 };
-MatrixMultPosition.prototype = MACROUTILS.objectInherit( MatrixMultDirection.prototype, {
+
+MACROUTILS.createPrototypeObject( MatrixMultPosition, MACROUTILS.objectInherit( MatrixMultDirection.prototype, {
     type: 'MatrixMultPosition',
     complement: '1.'
-} );
+} ), 'osgShader', 'MatrixMultPosition' );
 
 // For all you custom needs.
 //
@@ -184,7 +186,7 @@ var InlineCode = function () {
     Node.call( this );
 };
 
-InlineCode.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( InlineCode, MACROUTILS.objectInherit( Node.prototype, {
     type: 'InlineCode',
     code: function ( txt ) {
         this._text = txt;
@@ -219,7 +221,7 @@ InlineCode.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
         return text;
     }
-} );
+} ), 'osgShader', 'InlineCode' );
 
 
 // glsl code  output = vec4( color.rgb, alpha )
@@ -227,7 +229,7 @@ var SetAlpha = function () {
     BaseOperator.call( this );
 };
 
-SetAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
+MACROUTILS.createPrototypeObject( SetAlpha, MACROUTILS.objectInherit( BaseOperator.prototype, {
     type: 'SetAlpha',
     validInputs: [ 'color', 'alpha' ],
     validOuputs: [ 'color' ],
@@ -239,7 +241,7 @@ SetAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
             alpha.getType() !== 'float' ? alpha.getVariable() + '.a' : alpha.getVariable()
         ] );
     }
-} );
+} ), 'osgShader', 'SetAlpha' );
 
 
 
@@ -249,8 +251,7 @@ var PreMultAlpha = function () {
     BaseOperator.call( this );
 };
 
-// TODO put the code in glsl
-PreMultAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
+MACROUTILS.createPrototypeObject( PreMultAlpha, MACROUTILS.objectInherit( BaseOperator.prototype, {
 
     type: 'PreMultAlpha',
     validInputs: [ 'color' /*,'alpha'*/ ],
@@ -271,7 +272,7 @@ PreMultAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
             srcAlpha
         ] );
     }
-} );
+} ), 'osgShader', 'PreMultAlpha' );
 
 module.exports = {
     BaseOperator: BaseOperator,

@@ -33,15 +33,16 @@ Uniform.prototype = {
         return this._type;
     },
 
-    apply: function UniformApply( gl, location ) {
 
+    apply: function UniformApply( gl, location ) {
         if ( !this._cache )
             this._cache = gl[ this._glCall ];
 
-        if ( this._isMatrix )
+        if ( this._isMatrix ) {
             this._cache.call( gl, location, this._transpose, this._data );
-        else
+        } else {
             this._cache.call( gl, location, this._data );
+        }
     },
 
     // no type checking, so array should be valid

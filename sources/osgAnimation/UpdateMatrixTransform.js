@@ -19,7 +19,7 @@ var UpdateMatrixTransform = function () {
 };
 
 
-UpdateMatrixTransform.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
+MACROUTILS.createPrototypeObject( UpdateMatrixTransform, MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
 
     getStackedTransforms: function () {
         return this._stackedTransforms;
@@ -46,6 +46,6 @@ UpdateMatrixTransform.prototype = MACROUTILS.objectInherit( AnimationUpdateCallb
         return true;
     }
 
-} );
+} ), 'osgAnimation', 'UpdateMatrixTransform' );
 
 module.exports = UpdateMatrixTransform;

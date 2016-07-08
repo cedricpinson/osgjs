@@ -13,7 +13,7 @@ var Scissor = function ( x, y, w, h ) {
     this._height = h !== undefined ? h : -1;
 };
 
-Scissor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( Scissor, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'Scissor',
 

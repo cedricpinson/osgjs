@@ -28,7 +28,7 @@ var Renderer = function ( camera ) {
 
 Renderer.debugGraph = false;
 
-Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( Renderer, MACROUTILS.objectInherit( Object.prototype, {
 
     setDefaults: function () {
 

@@ -18,7 +18,7 @@ CullFace.BACK = 0x0405;
 CullFace.FRONT_AND_BACK = 0x0408;
 
 /** @lends CullFace.prototype */
-CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( CullFace, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'CullFace',
 

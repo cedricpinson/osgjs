@@ -16,7 +16,7 @@ var StackedTranslate = function ( name, translate ) {
 };
 
 
-StackedTranslate.prototype = MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( StackedTranslate, MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( translate ) {
         this.setTranslate( translate );
@@ -38,6 +38,6 @@ StackedTranslate.prototype = MACROUTILS.objectInherit( Object.prototype, {
     applyToMatrix: function ( m ) {
         mat4.translate( m, m, this._target.value );
     }
-} );
+} ), 'osgAnimation', 'StackedTranslate' );
 
 module.exports = StackedTranslate;

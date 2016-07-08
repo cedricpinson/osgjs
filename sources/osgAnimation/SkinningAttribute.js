@@ -22,7 +22,7 @@ SkinningAttribute.uniforms = {};
 SkinningAttribute.maxBoneUniformSize = 1;
 SkinningAttribute.maxBoneUniformAllowed = Infinity; // can be overriden by application specific limit on startup (typically gl limit)
 
-SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( SkinningAttribute, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'Skinning',
 
@@ -80,7 +80,5 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
     }
 
 } ), 'osgAnimation', 'SkinningAttribute' );
-
-MACROUTILS.setTypeID( SkinningAttribute );
 
 module.exports = SkinningAttribute;

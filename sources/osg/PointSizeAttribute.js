@@ -14,7 +14,7 @@ var PointSizeAttribute = function ( disable ) {
     this._circleShape = false;
 };
 
-PointSizeAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( PointSizeAttribute, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'PointSize',
 
@@ -67,7 +67,5 @@ PointSizeAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
     }
 
 } ), 'osg', 'PointSizeAttribute' );
-
-MACROUTILS.setTypeID( PointSizeAttribute );
 
 module.exports = PointSizeAttribute;

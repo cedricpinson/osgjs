@@ -11,7 +11,7 @@ var getVec3 = function ( vec ) {
     return vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
 };
 
-Morph.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( Morph, MACROUTILS.objectInherit( Node.prototype, {
     type: 'Morph',
     validInputs: [ 'weights', 'vertex', 'target0', /*'target1','target2','target3'*/ ],
     validOutputs: [ 'out' ],
@@ -68,7 +68,7 @@ Morph.prototype = MACROUTILS.objectInherit( Node.prototype, {
         return ShaderUtils.callFunction( 'morphTransform', this._outputs.out, inputs );
 
     }
-} );
+} ), 'osgShader', 'Morph' );
 
 module.exports = {
     Morph: Morph

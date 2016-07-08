@@ -8,7 +8,7 @@ var ShadowReceive = function () {
 
 };
 
-ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( ShadowReceive, MACROUTILS.objectInherit( Node.prototype, {
     type: 'ShadowReceiveNode',
 
     validInputs: [
@@ -74,14 +74,14 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
         return ShaderUtils.callFunction( 'computeShadow', this._outputs.float, inputs );
     }
 
-} );
+} ), 'osgShader', 'ShadowReceive' );
 
 var ShadowCast = function () {
     Node.call( this );
 
 };
 
-ShadowCast.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( ShadowCast, MACROUTILS.objectInherit( Node.prototype, {
 
     type: 'ShadowCast',
     validInputs: [ 'shadowDepthRange', 'fragEye' ],
@@ -107,7 +107,7 @@ ShadowCast.prototype = MACROUTILS.objectInherit( Node.prototype, {
         return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange ] );
     }
 
-} );
+} ), 'osgShader', 'ShadowCast' );
 
 module.exports = {
     ShadowCast: ShadowCast,

@@ -15,7 +15,7 @@ var DisplayGraphNode = function ( selectables ) {
     this._uniqueEdges = new window.Set();
 };
 
-DisplayGraphNode.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( DisplayGraphNode, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     getColorFromClassName: function ( name ) {
         switch ( name ) {
         case 'ShadowedScene':
@@ -196,6 +196,6 @@ DisplayGraphNode.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
             g.addEdge( null, this._linkList[ j ].parentNode, this._linkList[ j ].childrenNode );
         }
     }
-} );
+} ), 'osgUtil', 'DisplayGraphNode' );
 
 module.exports = DisplayGraphNode;

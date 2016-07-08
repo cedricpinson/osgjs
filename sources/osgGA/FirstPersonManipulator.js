@@ -30,7 +30,7 @@ var FirstPersonManipulator = function ( boundStrategy ) {
 FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'WebVR', 'DeviceOrientation', 'Hammer' ];
 FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'WebVR', 'DeviceOrientation', 'Hammer' ];
 
-FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
+MACROUTILS.createPrototypeObject( FirstPersonManipulator, MACROUTILS.objectInherit( Manipulator.prototype, {
 
     computeHomePosition: function ( boundStrategy ) {
         var bs = this.getHomeBound( boundStrategy );
@@ -280,7 +280,7 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         };
     } )()
 
-} );
+} ), 'osgGA', 'FirstPersonManipulator' );
 
 FirstPersonManipulator.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
 FirstPersonManipulator.Hammer = FirstPersonManipulatorHammerController;

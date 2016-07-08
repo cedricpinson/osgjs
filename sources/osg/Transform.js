@@ -15,7 +15,7 @@ var Transform = function () {
 };
 
 /** @lends Transform.prototype */
-Transform.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeNode( Transform, MACROUTILS.objectInherit( Node.prototype, {
     setReferenceFrame: function ( value ) {
         this.referenceFrame = value;
     },
@@ -38,6 +38,6 @@ Transform.prototype = MACROUTILS.objectInherit( Node.prototype, {
             return bSphere;
         };
     } )()
-} );
+} ), 'osg', 'Transform' );
 
 module.exports = Transform;

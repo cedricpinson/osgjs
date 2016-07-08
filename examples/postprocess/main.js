@@ -157,7 +157,7 @@
             } );
         }
 
-        var currentComposer = postScenes[ 0 ].buildComposer( finalTexture, quad, scene );
+        var currentComposer = postScenes[ 0 ].buildComposer( finalTexture );
         addSceneController();
         postScenes[ 0 ].buildGui( gui );
 
@@ -168,7 +168,7 @@
 
             // Put the composer in cache at first utilisation
             if ( cachedComposers[ effectName ] === undefined ) {
-                cachedComposers[ effectName ] = effects[ effectName ].buildComposer( finalTexture, quad, scene );
+                cachedComposers[ effectName ] = effects[ effectName ].buildComposer( finalTexture );
             }
 
             // Recreate the whole gui

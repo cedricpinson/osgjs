@@ -27,7 +27,7 @@ var ComputeMultiFrustumBoundsVisitor = function () {
 /*
  * TODO: apply world matrix on the traverse instead of per node
  */
-ComputeMultiFrustumBoundsVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( ComputeMultiFrustumBoundsVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     reset: function ( traversalMask, worldLightPos, cameraFrustum, cameraNearFar, lightFrustum ) {
 
         this.setTraversalMask( traversalMask );
@@ -179,6 +179,6 @@ ComputeMultiFrustumBoundsVisitor.prototype = MACROUTILS.objectInherit( NodeVisit
         this._matrixStack.pop();
     },
 
-} );
+} ), 'osgShadow', 'ComputeMultiFrustumBoundsVisitor' );
 
 module.exports = ComputeMultiFrustumBoundsVisitor;

@@ -7,7 +7,8 @@ var Billboard = function () {
     Node.apply( this );
 };
 
-Billboard.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( Billboard, MACROUTILS.objectInherit( Node.prototype, {
+
     type: 'Billboard',
     validInputs: [ 'Vertex', 'ModelViewMatrix', 'ProjectionMatrix' ],
     validOutputs: [ 'vec' ],
@@ -18,7 +19,7 @@ Billboard.prototype = MACROUTILS.objectInherit( Node.prototype, {
     computeShader: function () {
         return ShaderUtils.callFunction( 'billboard', this._outputs.vec, [ this._inputs.Vertex, this._inputs.ModelViewMatrix, this._inputs.ProjectionMatrix ] );
     }
-} );
+} ), 'osgShader', 'Billboard' );
 
 module.exports = {
     Billboard: Billboard

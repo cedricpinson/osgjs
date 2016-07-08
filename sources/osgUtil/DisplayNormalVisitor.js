@@ -23,7 +23,12 @@ var CompilerOffsetNormal = function () {
     Compiler.apply( this, arguments );
 };
 
-CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
+var configNormal = Compiler.cloneStateAttributeConfig( Compiler );
+configNormal.textureAttribute = [];
+
+Compiler.setStateAttributeConfig( CompilerOffsetNormal, configNormal );
+
+MACROUTILS.createPrototypeObject( CompilerOffsetNormal, MACROUTILS.objectInherit( Compiler.prototype, {
     getCompilerName: function () {
         return 'CompilerOffsetNormal';
     },
@@ -75,13 +80,13 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
 
         return out;
     }
-} );
+} ), 'osgUtil', 'CompilerOffsetNormal' );
 
 var ShaderGeneratorCompilerOffsetNormal = function () {
     ShaderGenerator.apply( this, arguments );
     this.setShaderCompiler( CompilerOffsetNormal );
 };
-ShaderGeneratorCompilerOffsetNormal.prototype = ShaderGenerator.prototype;
+MACROUTILS.createPrototypeObject( ShaderGeneratorCompilerOffsetNormal, MACROUTILS.objectInherit( ShaderGenerator.prototype, {} ), 'osgUtil', 'ShaderGeneratorCompilerOffsetNormal' );
 
 ////////////////////////
 // COMPILER OFFSET TANGENT
@@ -90,20 +95,24 @@ var CompilerOffsetTangent = function () {
     CompilerOffsetNormal.apply( this, arguments );
 };
 
-CompilerOffsetTangent.prototype = MACROUTILS.objectInherit( CompilerOffsetNormal.prototype, {
+var configTangent = configNormal;
+Compiler.setStateAttributeConfig( CompilerOffsetTangent, configTangent );
+
+MACROUTILS.createPrototypeObject( CompilerOffsetTangent, MACROUTILS.objectInherit( CompilerOffsetNormal.prototype, {
     getCompilerName: function () {
         return 'CompilerOffsetTangent';
     },
     getOffsetDirection: function () {
         return this.getOrCreateModelTangent();
     }
-} );
+} ), 'osgUtil', 'CompilerOffsetTangent' );
 
 var ShaderGeneratorCompilerOffsetTangent = function () {
     ShaderGenerator.apply( this, arguments );
     this.setShaderCompiler( CompilerOffsetTangent );
 };
-ShaderGeneratorCompilerOffsetTangent.prototype = ShaderGenerator.prototype;
+
+MACROUTILS.createPrototypeObject( ShaderGeneratorCompilerOffsetTangent, MACROUTILS.objectInherit( ShaderGenerator.prototype, {} ), 'osgUtil', 'ShaderGeneratorCompilerOffsetTangent' );
 
 ////////////////////////
 // DISPLAY NORMAL VISITOR
@@ -132,7 +141,7 @@ DisplayNormalVisitor.CompilerOffsetTangent = CompilerOffsetTangent;
 DisplayNormalVisitor.ShaderGeneratorCompilerOffsetNormal = ShaderGeneratorCompilerOffsetNormal;
 DisplayNormalVisitor.ShaderGeneratorCompilerOffsetTangent = ShaderGeneratorCompilerOffsetTangent;
 
-DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( DisplayNormalVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     setScale: function ( scale ) {
         this._unifScale.setFloat( scale );
     },
@@ -276,7 +285,7 @@ DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype
 
         return geom;
     }
-} );
+} ), 'osgUtil', 'DisplayNormalVisitor' );
 
 
 module.exports = DisplayNormalVisitor;

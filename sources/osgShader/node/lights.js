@@ -9,7 +9,7 @@ var NodeLights = function () {
     Node.call( this );
 };
 
-NodeLights.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( NodeLights, MACROUTILS.objectInherit( Node.prototype, {
 
     validOutputs: [ 'color', 'lighted' ],
 
@@ -17,7 +17,7 @@ NodeLights.prototype = MACROUTILS.objectInherit( Node.prototype, {
         return '#pragma include "lights.glsl"';
     }
 
-} );
+} ), 'osgShader', 'NodeLights' );
 
 var getVec3 = function ( vec ) {
     return vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
@@ -27,7 +27,7 @@ var PointLight = function () {
     NodeLights.call( this );
 };
 
-PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject( PointLight, MACROUTILS.objectInherit( NodeLights.prototype, {
 
     type: 'PointLight',
 
@@ -66,7 +66,7 @@ PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
         ] );
     }
 
-} );
+} ), 'osgShader', 'PointLight' );
 
 
 
@@ -74,7 +74,7 @@ var SpotLight = function () {
     NodeLights.call( this );
 };
 
-SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject( SpotLight, MACROUTILS.objectInherit( NodeLights.prototype, {
 
     type: 'SpotLight',
 
@@ -121,14 +121,14 @@ SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
         ] );
     }
 
-} );
+} ), 'osgShader', 'SpotLight' );
 
 
 var SunLight = function () {
     NodeLights.call( this );
 };
 
-SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject( SunLight, MACROUTILS.objectInherit( NodeLights.prototype, {
 
     type: 'SunLight',
 
@@ -164,13 +164,13 @@ SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
             this._outputs.lighted
         ] );
     }
-} );
+} ), 'osgShader', 'SunLight' );
 
 var HemiLight = function () {
     NodeLights.call( this );
 };
 
-HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject( HemiLight, MACROUTILS.objectInherit( NodeLights.prototype, {
 
     type: 'HemiLight',
 
@@ -205,7 +205,7 @@ HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
             this._outputs.lighted
         ] );
     }
-} );
+} ), 'osgShader', 'HemiLight' );
 
 module.exports = {
     PointLight: PointLight,

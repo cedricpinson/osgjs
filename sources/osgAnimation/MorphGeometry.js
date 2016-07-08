@@ -39,12 +39,12 @@ var EFFECTIVE_EPS = MorphGeometry.EFFECTIVE_EPS = 0.05;
 // this should be constant, if you change it only do it at parse time, otherwise it's better to call setMaximumPossibleMorphGPU
 MorphGeometry.MAX_MORPH_GPU = 4;
 
-MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
+MACROUTILS.createPrototypeNode( MorphGeometry, MACROUTILS.objectInherit( Geometry.prototype, {
 
     init: function () {
         if ( this._morphAttribute ) {
             this._isInitialized = true;
-            return;
+            return false;
         }
 
         this._morphAttribute = new MorphAttribute( Math.min( this._maxMorphGPU, this.getMorphTargets().length ) );
@@ -215,7 +215,5 @@ MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
 
 } ), 'osgAnimation', 'MorphGeometry' );
-
-MACROUTILS.setTypeID( MorphGeometry );
 
 module.exports = MorphGeometry;

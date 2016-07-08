@@ -11,6 +11,7 @@ var AutoTransform = require( 'osg/AutoTransform' );
 var Projection = require( 'osg/Projection' );
 var LightSource = require( 'osg/LightSource' );
 var osgPool = require( 'osgUtil/osgPool' );
+var cullVisitorHelper = require( 'osg/cullVisitorHelper' );
 var Geometry = require( 'osg/Geometry' );
 var RenderLeaf = require( 'osg/RenderLeaf' );
 var RenderBin = require( 'osg/RenderBin' );
@@ -26,7 +27,6 @@ var Skeleton = require( 'osgAnimation/Skeleton' );
 var RigGeometry = require( 'osgAnimation/RigGeometry' );
 var Bone = require( 'osgAnimation/Bone' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
-
 /**
  * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
  * @class CullVisitor
@@ -76,408 +76,414 @@ var CullVisitor = function () {
 
 };
 
-/** @lends CullVisitor.prototype */
-CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTILS.objectInherit( NodeVisitor.prototype, {
-    distance: function ( coord, matrix ) {
-        return -( coord[ 0 ] * matrix[ 2 ] + coord[ 1 ] * matrix[ 6 ] + coord[ 2 ] * matrix[ 10 ] + matrix[ 14 ] );
-    },
+CullVisitor.registerApplyFunction = cullVisitorHelper.registerApplyFunction;
+CullVisitor.getApplyFunction = cullVisitorHelper.getApplyFunction;
 
-    getComputedNear: function () {
-        return this._computedNear;
-    },
+MACROUTILS.createPrototypeObject( CullVisitor, MACROUTILS.objectInherit( CullStack.prototype,
+    MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
-    getComputedFar: function () {
-        return this._computedFar;
-    },
+        applyFunctionArray: cullVisitorHelper.applyFunctionArray,
 
-    resetStats: function () {
-        this._numCamera = 0;
-        this._numMatrixTransform = 0;
-        this._numProjection = 0;
-        this._numNode = 0;
-        this._numLightSource = 0;
-        this._numGeometry = 0;
-    },
+        distance: function ( coord, matrix ) {
+            return -( coord[ 0 ] * matrix[ 2 ] + coord[ 1 ] * matrix[ 6 ] + coord[ 2 ] * matrix[ 10 ] + matrix[ 14 ] );
+        },
 
-    handleCullCallbacksAndTraverse: function ( node ) {
-        var ccb = node.getCullCallback();
-        if ( ccb && !ccb.cull( node, this ) )
-            return;
-        this.traverse( node );
-    },
+        getComputedNear: function () {
+            return this._computedNear;
+        },
 
-    getCurrentCamera: function () {
-        return this._currentRenderBin.getStage().getCamera();
-    },
+        getComputedFar: function () {
+            return this._computedFar;
+        },
 
-    updateCalculatedNearFar: ( function () {
-        var nearVec = vec3.create();
-        var farVec = vec3.create();
+        resetStats: function () {
+            this._numCamera = 0;
+            this._numMatrixTransform = 0;
+            this._numProjection = 0;
+            this._numNode = 0;
+            this._numLightSource = 0;
+            this._numGeometry = 0;
+        },
 
-        return function ( matrix, drawable ) {
+        handleCullCallbacksAndTraverse: function ( node ) {
+            var ccb = node.getCullCallback();
+            if ( ccb && !ccb.cull( node, this ) )
+                return;
+            this.traverse( node );
+        },
 
-            var bb = drawable.getBoundingBox();
-            var dNear, dFar;
+        getCurrentCamera: function () {
+            return this._currentRenderBin.getStage().getCamera();
+        },
 
-            // efficient computation of near and far, only taking into account the nearest and furthest
-            // corners of the bounding box.
-            dNear = this.distance( bb.corner( this._bbCornerNear, nearVec ), matrix );
-            dFar = this.distance( bb.corner( this._bbCornerFar, farVec ), matrix );
+        updateCalculatedNearFar: ( function () {
+            var nearVec = vec3.create();
+            var farVec = vec3.create();
 
-            if ( dNear > dFar ) {
-                var tmp = dNear;
-                dNear = dFar;
-                dFar = tmp;
+            return function ( matrix, drawable ) {
+
+                var bb = drawable.getBoundingBox();
+                var dNear, dFar;
+
+                // efficient computation of near and far, only taking into account the nearest and furthest
+                // corners of the bounding box.
+                dNear = this.distance( bb.corner( this._bbCornerNear, nearVec ), matrix );
+                dFar = this.distance( bb.corner( this._bbCornerFar, farVec ), matrix );
+
+                if ( dNear > dFar ) {
+                    var tmp = dNear;
+                    dNear = dFar;
+                    dFar = tmp;
+                }
+
+                if ( dFar < 0.0 ) {
+                    // whole object behind the eye point so discard
+                    return false;
+                }
+
+                if ( dNear < this._computedNear ) {
+                    this._computedNear = dNear;
+                }
+
+                if ( dFar > this._computedFar ) {
+                    this._computedFar = dFar;
+                }
+
+                return true;
+
+            };
+        } )(),
+
+
+        setStateGraph: function ( sg ) {
+            this._rootStateGraph = sg;
+            this._currentStateGraph = sg;
+        },
+        setRenderStage: function ( rg ) {
+            this._rootRenderStage = rg;
+            this._currentRenderBin = rg;
+        },
+        setRenderer: function ( renderer ) {
+            this._renderer = renderer;
+        },
+        getRenderer: function () {
+            return this._renderer;
+        },
+
+        reset: function () {
+            CullStack.prototype.reset.call( this );
+            // Reset the stack before reseting the current leaf index.
+            // Reseting elements and refilling them later is faster than create new elements
+            // That's the reason to have a leafStack, see http://jsperf.com/refill/2
+            this.resetRenderLeafStack();
+            this._reserveLeafStackCurrent = 0;
+
+            this.resetCullSettingsStack();
+            this._reserveCullSettingsStackCurrent = 0;
+
+            // renderstage / renderbin pools
+            for ( var key in this._reserveRenderStageStacks ) {
+                this._reserveRenderStageStacks[ key ].reset();
             }
+            RenderBin.resetStack();
 
-            if ( dFar < 0.0 ) {
-                // whole object behind the eye point so discard
+            this._computedNear = Number.POSITIVE_INFINITY;
+            this._computedFar = Number.NEGATIVE_INFINITY;
+        },
+
+        getCurrentRenderBin: function () {
+            return this._currentRenderBin;
+        },
+
+        setCurrentRenderBin: function ( rb ) {
+            this._currentRenderBin = rb;
+        },
+
+        // mimic the osg implementation
+        // in osg you can push 0, in this case an identity matrix will be loaded
+        addPositionedAttribute: function ( matrix, attribute ) {
+
+            var m = matrix ? matrix : this._identityMatrix;
+            this._currentRenderBin.getStage().positionedAttribute.push( [ m, attribute ] );
+
+        },
+
+        pushStateSet: function ( stateset ) {
+            this._currentStateGraph = this._currentStateGraph.findOrInsert( stateset );
+            if ( stateset.getBinName() !== undefined ) {
+                var renderBinStack = this._renderBinStack;
+                var currentRenderBin = this._currentRenderBin;
+                renderBinStack.push( currentRenderBin );
+                this._currentRenderBin = currentRenderBin.getStage().findOrInsert( stateset.getBinNumber(), stateset.getBinName() );
+            }
+        },
+
+        /** Pop the top state set and hence associated state group.
+         * Move the current state group to the parent of the popped
+         * state group.
+         */
+        popStateSet: function () {
+            var currentStateGraph = this._currentStateGraph;
+            var stateset = currentStateGraph.getStateSet();
+            this._currentStateGraph = currentStateGraph.parent;
+            if ( stateset.getBinName() !== undefined ) {
+                var renderBinStack = this._renderBinStack;
+                if ( renderBinStack.length === 0 ) {
+                    this._currentRenderBin = this._currentRenderBin.getStage();
+                } else {
+                    this._currentRenderBin = renderBinStack.pop();
+                }
+            }
+        },
+
+        popProjectionMatrix: function () {
+            if ( this._computeNearFar === true && this._computedFar >= this._computedNear ) {
+                var m = this.getCurrentProjectionMatrix();
+                if ( this._clampProjectionMatrixCallback !== undefined ) {
+                    this._clampProjectionMatrixCallback( m, this._computedNear, this._computedFar, this._nearFarRatio );
+                } else {
+                    this.clampProjectionMatrix( m, this._computedNear, this._computedFar, this._nearFarRatio );
+                }
+            }
+            CullStack.prototype.popProjectionMatrix.call( this );
+        },
+
+
+        clampProjectionMatrix: function ( projection, znear, zfar, nearFarRatio, resultNearFar ) {
+            var epsilon = 1e-6;
+            if ( zfar < znear - epsilon ) {
+                Notify.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar, false, true );
                 return false;
             }
 
-            if ( dNear < this._computedNear ) {
-                this._computedNear = dNear;
+            var desiredZnear, desiredZfar;
+            if ( zfar < znear + epsilon ) {
+                // znear and zfar are too close together and could cause divide by zero problems
+                // late on in the clamping code, so move the znear and zfar apart.
+                var average = ( znear + zfar ) * 0.5;
+                znear = average - epsilon;
+                zfar = average + epsilon;
+                // OSG_INFO << '_clampProjectionMatrix widening znear and zfar to '<<znear<<' '<<zfar<<std::endl;
             }
 
-            if ( dFar > this._computedFar ) {
-                this._computedFar = dFar;
-            }
+            if ( Math.abs( projection[ 3 ] ) < epsilon &&
+                Math.abs( projection[ 7 ] ) < epsilon &&
+                Math.abs( projection[ 11 ] ) < epsilon ) {
+                // OSG_INFO << 'Orthographic matrix before clamping'<<projection<<std::endl;
 
+                var deltaSpan = ( zfar - znear ) * 0.02;
+                if ( deltaSpan < 1.0 ) {
+                    deltaSpan = 1.0;
+                }
+                desiredZnear = znear - deltaSpan;
+                desiredZfar = zfar + deltaSpan;
+
+                // assign the clamped values back to the computed values.
+                znear = desiredZnear;
+                zfar = desiredZfar;
+
+                projection[ 10 ] = -2.0 / ( desiredZfar - desiredZnear );
+                projection[ 14 ] = -( desiredZfar + desiredZnear ) / ( desiredZfar - desiredZnear );
+                // OSG_INFO << 'Orthographic matrix after clamping '<<projection<<std::endl;
+            } else {
+
+                // OSG_INFO << 'Persepective matrix before clamping'<<projection<<std::endl;
+                //std::cout << '_computed_znear'<<_computed_znear<<std::endl;
+                //std::cout << '_computed_zfar'<<_computed_zfar<<std::endl;
+
+                var zfarPushRatio = 1.02;
+                var znearPullRatio = 0.98;
+
+                //znearPullRatio = 0.99;
+
+                desiredZnear = znear * znearPullRatio;
+                desiredZfar = zfar * zfarPushRatio;
+
+                // near plane clamping.
+                var minNearPlane = zfar * nearFarRatio;
+                if ( desiredZnear < minNearPlane ) {
+                    desiredZnear = minNearPlane;
+                }
+
+                // assign the clamped values back to the computed values.
+                znear = desiredZnear;
+                zfar = desiredZfar;
+
+                var m22 = projection[ 10 ];
+                var m32 = projection[ 14 ];
+                var m23 = projection[ 11 ];
+                var m33 = projection[ 15 ];
+                var transNearPlane = ( -desiredZnear * m22 + m32 ) / ( -desiredZnear * m23 + m33 );
+                var transFarPlane = ( -desiredZfar * m22 + m32 ) / ( -desiredZfar * m23 + m33 );
+
+                var ratio = Math.abs( 2.0 / ( transNearPlane - transFarPlane ) );
+                var center = -( transNearPlane + transFarPlane ) / 2.0;
+
+                var centerRatio = center * ratio;
+                projection[ 2 ] = projection[ 2 ] * ratio + projection[ 3 ] * centerRatio;
+                projection[ 6 ] = projection[ 6 ] * ratio + projection[ 7 ] * centerRatio;
+                projection[ 10 ] = m22 * ratio + m23 * centerRatio;
+                projection[ 14 ] = m32 * ratio + m33 * centerRatio;
+                // same as
+                // var matrix = [ 1.0, 0.0, 0.0, 0.0,
+                //     0.0, 1.0, 0.0, 0.0,
+                //     0.0, 0.0, ratio, 0.0,
+                //     0.0, 0.0, center * ratio, 1.0
+                // ];
+                // mat4.mul( projection , matrix, projection );
+
+                // OSG_INFO << 'Persepective matrix after clamping'<<projection<<std::endl;
+            }
+            if ( resultNearFar !== undefined ) {
+                resultNearFar[ 0 ] = znear;
+                resultNearFar[ 1 ] = zfar;
+            }
             return true;
+        },
 
-        };
-    } )(),
+        popCameraModelViewProjectionMatrix: function () {
+            this.popModelViewMatrix();
+            this.popProjectionMatrix();
+        },
 
+        pushCameraModelViewProjectionMatrix: function ( camera, modelview, projection ) {
+            this.pushModelViewMatrix( modelview );
+            this.pushProjectionMatrix( projection );
+        },
 
-    setStateGraph: function ( sg ) {
-        this._rootStateGraph = sg;
-        this._currentStateGraph = sg;
-    },
-    setRenderStage: function ( rg ) {
-        this._rootRenderStage = rg;
-        this._currentRenderBin = rg;
-    },
-    setRenderer: function ( renderer ) {
-        this._renderer = renderer;
-    },
-    getRenderer: function () {
-        return this._renderer;
-    },
+        apply: function ( node ) {
+            this.applyFunctionArray[ node.nodeTypeID ].call( this, node );
+        },
 
-    reset: function () {
-        CullStack.prototype.reset.call( this );
-        // Reset the stack before reseting the current leaf index.
-        // Reseting elements and refilling them later is faster than create new elements
-        // That's the reason to have a leafStack, see http://jsperf.com/refill/2
-        this.resetRenderLeafStack();
-        this._reserveLeafStackCurrent = 0;
+        createOrReuseRenderStage: function ( classInstance ) {
 
-        this.resetCullSettingsStack();
-        this._reserveCullSettingsStackCurrent = 0;
+            var type = !classInstance ? 'RenderStage' : classInstance.className();
+            var classCtor = !classInstance ? RenderStage : classInstance.constructor;
 
-        // renderstage / renderbin pools
-        for ( var key in this._reserveRenderStageStacks ) {
-            this._reserveRenderStageStacks[ key ].reset();
-        }
-        RenderBin.resetStack();
-
-        this._computedNear = Number.POSITIVE_INFINITY;
-        this._computedFar = Number.NEGATIVE_INFINITY;
-    },
-
-    getCurrentRenderBin: function () {
-        return this._currentRenderBin;
-    },
-
-    setCurrentRenderBin: function ( rb ) {
-        this._currentRenderBin = rb;
-    },
-
-    // mimic the osg implementation
-    // in osg you can push 0, in this case an identity matrix will be loaded
-    addPositionedAttribute: function ( matrix, attribute ) {
-
-        var m = matrix ? matrix : this._identityMatrix;
-        this._currentRenderBin.getStage().positionedAttribute.push( [ m, attribute ] );
-
-    },
-
-    pushStateSet: function ( stateset ) {
-        this._currentStateGraph = this._currentStateGraph.findOrInsert( stateset );
-        if ( stateset.getBinName() !== undefined ) {
-            var renderBinStack = this._renderBinStack;
-            var currentRenderBin = this._currentRenderBin;
-            renderBinStack.push( currentRenderBin );
-            this._currentRenderBin = currentRenderBin.getStage().findOrInsert( stateset.getBinNumber(), stateset.getBinName() );
-        }
-    },
-
-    /** Pop the top state set and hence associated state group.
-     * Move the current state group to the parent of the popped
-     * state group.
-     */
-    popStateSet: function () {
-        var currentStateGraph = this._currentStateGraph;
-        var stateset = currentStateGraph.getStateSet();
-        this._currentStateGraph = currentStateGraph.parent;
-        if ( stateset.getBinName() !== undefined ) {
-            var renderBinStack = this._renderBinStack;
-            if ( renderBinStack.length === 0 ) {
-                this._currentRenderBin = this._currentRenderBin.getStage();
+            var stack;
+            if ( this._reserveRenderStageStacks[ type ] ) {
+                stack = this._reserveRenderStageStacks[ type ];
             } else {
-                this._currentRenderBin = renderBinStack.pop();
+                stack = new osgPool.OsgObjectMemoryStack( classCtor );
+                this._reserveRenderStageStacks[ type ] = stack;
             }
-        }
-    },
+            return stack.get().init();
 
-    popProjectionMatrix: function () {
-        if ( this._computeNearFar === true && this._computedFar >= this._computedNear ) {
-            var m = this.getCurrentProjectionMatrix();
-            if ( this._clampProjectionMatrixCallback !== undefined ) {
-                this._clampProjectionMatrixCallback( m, this._computedNear, this._computedFar, this._nearFarRatio );
-            } else {
-                this.clampProjectionMatrix( m, this._computedNear, this._computedFar, this._nearFarRatio );
+        },
+
+        createOrReuseRenderLeaf: function () {
+            var l = this._reserveLeafStack[ this._reserveLeafStackCurrent++ ];
+            if ( this._reserveLeafStackCurrent === this._reserveLeafStack.length ) {
+                this._reserveLeafStack.push( new RenderLeaf() );
             }
-        }
-        CullStack.prototype.popProjectionMatrix.call( this );
-    },
+            return l;
+        },
 
-
-    clampProjectionMatrix: function ( projection, znear, zfar, nearFarRatio, resultNearFar ) {
-        var epsilon = 1e-6;
-        if ( zfar < znear - epsilon ) {
-            Notify.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar, false, true );
-            return false;
-        }
-
-        var desiredZnear, desiredZfar;
-        if ( zfar < znear + epsilon ) {
-            // znear and zfar are too close together and could cause divide by zero problems
-            // late on in the clamping code, so move the znear and zfar apart.
-            var average = ( znear + zfar ) * 0.5;
-            znear = average - epsilon;
-            zfar = average + epsilon;
-            // OSG_INFO << '_clampProjectionMatrix widening znear and zfar to '<<znear<<' '<<zfar<<std::endl;
-        }
-
-        if ( Math.abs( projection[ 3 ] ) < epsilon &&
-            Math.abs( projection[ 7 ] ) < epsilon &&
-            Math.abs( projection[ 11 ] ) < epsilon ) {
-            // OSG_INFO << 'Orthographic matrix before clamping'<<projection<<std::endl;
-
-            var deltaSpan = ( zfar - znear ) * 0.02;
-            if ( deltaSpan < 1.0 ) {
-                deltaSpan = 1.0;
+        resetRenderLeafStack: function () {
+            for ( var i = 0, j = this._reserveLeafStackCurrent; i <= j; i++ ) {
+                this._reserveLeafStack[ i ].reset();
             }
-            desiredZnear = znear - deltaSpan;
-            desiredZfar = zfar + deltaSpan;
+        },
 
-            // assign the clamped values back to the computed values.
-            znear = desiredZnear;
-            zfar = desiredZfar;
+        createOrReuseCullSettings: function () {
+            var l = this._reserveCullSettingsStack[ this._reserveCullSettingsStackCurrent++ ];
 
-            projection[ 10 ] = -2.0 / ( desiredZfar - desiredZnear );
-            projection[ 14 ] = -( desiredZfar + desiredZnear ) / ( desiredZfar - desiredZnear );
-            // OSG_INFO << 'Orthographic matrix after clamping '<<projection<<std::endl;
-        } else {
+            if ( this._reserveCullSettingsStackCurrent === this._reserveCullSettingsStack.length ) {
 
-            // OSG_INFO << 'Persepective matrix before clamping'<<projection<<std::endl;
-            //std::cout << '_computed_znear'<<_computed_znear<<std::endl;
-            //std::cout << '_computed_zfar'<<_computed_zfar<<std::endl;
+                this._reserveCullSettingsStack.push( new CullSettings() );
 
-            var zfarPushRatio = 1.02;
-            var znearPullRatio = 0.98;
-
-            //znearPullRatio = 0.99;
-
-            desiredZnear = znear * znearPullRatio;
-            desiredZfar = zfar * zfarPushRatio;
-
-            // near plane clamping.
-            var minNearPlane = zfar * nearFarRatio;
-            if ( desiredZnear < minNearPlane ) {
-                desiredZnear = minNearPlane;
             }
+            return l;
+        },
 
-            // assign the clamped values back to the computed values.
-            znear = desiredZnear;
-            zfar = desiredZfar;
+        resetCullSettingsStack: function () {
+            for ( var i = 0, j = this._reserveCullSettingsStackCurrent; i <= j; i++ ) {
+                this._reserveCullSettingsStack[ i ].reset();
+            }
+        },
 
-            var m22 = projection[ 10 ];
-            var m32 = projection[ 14 ];
-            var m23 = projection[ 11 ];
-            var m33 = projection[ 15 ];
-            var transNearPlane = ( -desiredZnear * m22 + m32 ) / ( -desiredZnear * m23 + m33 );
-            var transFarPlane = ( -desiredZfar * m22 + m32 ) / ( -desiredZfar * m23 + m33 );
+        // function call after the push state in the geometry apply function
+        // the idea is to avoid heavy copy-paste for the rigGeometry apply
+        // since the only difference is that we want to push an additional state
+        // Maybe it will be useful when we'll add morph target geometry or something...
+        postPushGeometry: function ( cull, node ) {
 
-            var ratio = Math.abs( 2.0 / ( transNearPlane - transFarPlane ) );
-            var center = -( transNearPlane + transFarPlane ) / 2.0;
+            var sourceGeometry;
+            var geometryStateSetAnimation;
 
-            var centerRatio = center * ratio;
-            projection[ 2 ] = projection[ 2 ] * ratio + projection[ 3 ] * centerRatio;
-            projection[ 6 ] = projection[ 6 ] * ratio + projection[ 7 ] * centerRatio;
-            projection[ 10 ] = m22 * ratio + m23 * centerRatio;
-            projection[ 14 ] = m32 * ratio + m33 * centerRatio;
-            // same as
-            // var matrix = [ 1.0, 0.0, 0.0, 0.0,
-            //     0.0, 1.0, 0.0, 0.0,
-            //     0.0, 0.0, ratio, 0.0,
-            //     0.0, 0.0, center * ratio, 1.0
-            // ];
-            // mat4.mul( projection , matrix, projection );
+            if ( node instanceof RigGeometry ) {
 
-            // OSG_INFO << 'Persepective matrix after clamping'<<projection<<std::endl;
-        }
-        if ( resultNearFar !== undefined ) {
-            resultNearFar[ 0 ] = znear;
-            resultNearFar[ 1 ] = zfar;
-        }
-        return true;
-    },
+                geometryStateSetAnimation = node.getStateSetAnimation();
+                if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
 
-    popCameraModelViewProjectionMatrix: function () {
-        this.popModelViewMatrix();
-        this.popProjectionMatrix();
-    },
+                sourceGeometry = node.getSourceGeometry();
 
-    pushCameraModelViewProjectionMatrix: function ( camera, modelview, projection ) {
-        this.pushModelViewMatrix( modelview );
-        this.pushProjectionMatrix( projection );
-    },
+                if ( sourceGeometry instanceof MorphGeometry ) {
 
-    apply: function ( node ) {
-        this[ node.typeID ]( node );
-    },
+                    geometryStateSetAnimation = sourceGeometry.getStateSetAnimation();
+                    if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
 
-    createOrReuseRenderStage: function ( classInstance ) {
+                }
 
-        var type = !classInstance ? 'RenderStage' : classInstance.className();
-        var classCtor = !classInstance ? RenderStage : classInstance.constructor;
+            } else if ( node instanceof MorphGeometry ) {
 
-        var stack;
-        if ( this._reserveRenderStageStacks[ type ] ) {
-            stack = this._reserveRenderStageStacks[ type ];
-        } else {
-            stack = new osgPool.OsgObjectMemoryStack( classCtor );
-            this._reserveRenderStageStacks[ type ] = stack;
-        }
-        return stack.get().init();
-
-    },
-
-    createOrReuseRenderLeaf: function () {
-        var l = this._reserveLeafStack[ this._reserveLeafStackCurrent++ ];
-        if ( this._reserveLeafStackCurrent === this._reserveLeafStack.length ) {
-            this._reserveLeafStack.push( new RenderLeaf() );
-        }
-        return l;
-    },
-
-    resetRenderLeafStack: function () {
-        for ( var i = 0, j = this._reserveLeafStackCurrent; i <= j; i++ ) {
-            this._reserveLeafStack[ i ].reset();
-        }
-    },
-
-    createOrReuseCullSettings: function () {
-        var l = this._reserveCullSettingsStack[ this._reserveCullSettingsStackCurrent++ ];
-
-        if ( this._reserveCullSettingsStackCurrent === this._reserveCullSettingsStack.length ) {
-
-            this._reserveCullSettingsStack.push( new CullSettings() );
-
-        }
-        return l;
-    },
-
-    resetCullSettingsStack: function () {
-        for ( var i = 0, j = this._reserveCullSettingsStackCurrent; i <= j; i++ ) {
-            this._reserveCullSettingsStack[ i ].reset();
-        }
-    },
-
-    // function call after the push state in the geometry apply function
-    // the idea is to avoid heavy copy-paste for the rigGeometry apply
-    // since the only difference is that we want to push an additional state
-    // Maybe it will be useful when we'll add morph target geometry or something...
-    postPushGeometry: function ( cull, node ) {
-
-        var sourceGeometry;
-        var geometryStateSetAnimation;
-
-        if ( node instanceof RigGeometry ) {
-
-            geometryStateSetAnimation = node.getStateSetAnimation();
-            if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
-
-            sourceGeometry = node.getSourceGeometry();
-
-            if ( sourceGeometry instanceof MorphGeometry ) {
-
-                geometryStateSetAnimation = sourceGeometry.getStateSetAnimation();
+                geometryStateSetAnimation = node.getStateSetAnimation();
                 if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
 
             }
 
-        } else if ( node instanceof MorphGeometry ) {
+        },
 
-            geometryStateSetAnimation = node.getStateSetAnimation();
-            if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
+        // same comment as above (postPushGeometry)
+        prePopGeometry: function ( cull, node ) {
 
-        }
+            if ( node instanceof RigGeometry ) {
 
-    },
+                var sourceGeometry = node.getSourceGeometry();
 
-    // same comment as above (postPushGeometry)
-    prePopGeometry: function ( cull, node ) {
+                if ( sourceGeometry instanceof MorphGeometry ) {
 
-        if ( node instanceof RigGeometry ) {
+                    if ( sourceGeometry.getStateSetAnimation() ) cull.popStateSet();
 
-            var sourceGeometry = node.getSourceGeometry();
+                }
 
-            if ( sourceGeometry instanceof MorphGeometry ) {
+                if ( node.getStateSetAnimation() ) cull.popStateSet();
 
-                if ( sourceGeometry.getStateSetAnimation() ) cull.popStateSet();
+            } else if ( node instanceof MorphGeometry && node.getStateSetAnimation() ) {
+
+                cull.popStateSet();
 
             }
 
-            if ( node.getStateSetAnimation() ) cull.popStateSet();
+        },
 
-        } else if ( node instanceof MorphGeometry && node.getStateSetAnimation() ) {
+        pushLeaf: function ( node, depth ) {
+            var leafs = this._currentStateGraph.leafs;
+            if ( leafs.length === 0 ) {
+                this._currentRenderBin.addStateGraph( this._currentStateGraph );
+            }
 
-            cull.popStateSet();
+            var leaf = this.createOrReuseRenderLeaf();
+
+            leaf.init( this._currentStateGraph,
+                node,
+                this.getCurrentProjectionMatrix(),
+                this.getCurrentViewMatrix(),
+                this.getCurrentModelViewMatrix(),
+                this.getCurrentModelMatrix(),
+                depth );
+
+            leafs.push( leaf );
 
         }
 
-    },
-
-    pushLeaf: function ( node, depth ) {
-        var leafs = this._currentStateGraph.leafs;
-        if ( leafs.length === 0 ) {
-            this._currentRenderBin.addStateGraph( this._currentStateGraph );
-        }
-
-        var leaf = this.createOrReuseRenderLeaf();
-
-        leaf.init( this._currentStateGraph,
-            node,
-            this.getCurrentProjectionMatrix(),
-            this.getCurrentViewMatrix(),
-            this.getCurrentModelViewMatrix(),
-            this.getCurrentModelMatrix(),
-            depth );
-
-        leafs.push( leaf );
-
-    }
-
-} ) );
+    } ) ), 'osg', 'CullVisitor' );
 
 
 // Camera cull visitor call
 // ANY CHANGE, any change : double check in rendere Camera code
 // for the first camera
-CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
+var cameraApply = function ( camera ) {
     this._numCamera++;
 
     var stateset = camera.getStateSet();
@@ -594,7 +600,7 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
 };
 
 
-CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
+var matrixTransformApply = function ( node ) {
     this._numMatrixTransform++;
 
     // Camera and lights must enlarge node parent bounding boxes for this not to cull
@@ -626,7 +632,7 @@ CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
     this.popCurrentMask();
 };
 
-CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
+var projectionApply = function ( node ) {
     this._numProjection++;
 
     var lastMatrixStack = this.getCurrentProjectionMatrix();
@@ -647,7 +653,7 @@ CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
 // here it's treated as a group node for culling
 // as there's isn't any in osgjs
 // so frustumCulling is done here
-CullVisitor.prototype[ Node.typeID ] = function ( node ) {
+var nodeApply = function ( node ) {
     this._numNode++;
 
     // Camera and lights must enlarge node parent bounding boxes for this not to cull
@@ -669,18 +675,7 @@ CullVisitor.prototype[ Node.typeID ] = function ( node ) {
     this.popCurrentMask();
 };
 
-// same code like MatrixTransform
-CullVisitor.prototype[ AutoTransform.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
-
-// same code like Node
-CullVisitor.prototype[ Lod.typeID ] = CullVisitor.prototype[ Node.typeID ];
-CullVisitor.prototype[ Switch.typeID ] = CullVisitor.prototype[ Node.typeID ];
-
-// same code like Node
-CullVisitor.prototype[ PagedLOD.typeID ] = CullVisitor.prototype[ Node.typeID ];
-
-
-CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
+var lightSourceApply = function ( node ) {
     this._numLightSource++;
 
     var stateset = node.getStateSet();
@@ -700,7 +695,7 @@ CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
     if ( stateset ) this.popStateSet();
 };
 
-CullVisitor.prototype[ Geometry.typeID ] = ( function () {
+var geometryApply = ( function () {
 
     var tempVec = vec3.create();
     var loggedOnce = false;
@@ -750,12 +745,20 @@ CullVisitor.prototype[ Geometry.typeID ] = ( function () {
     };
 } )();
 
-CullVisitor.prototype[ Skeleton.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
 
-CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Geometry.typeID ];
-
-CullVisitor.prototype[ MorphGeometry.typeID ] = CullVisitor.prototype[ Geometry.typeID ];
-
-CullVisitor.prototype[ Bone.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
+cullVisitorHelper.registerApplyFunction( Node.nodeTypeID, nodeApply );
+cullVisitorHelper.registerApplyFunction( Switch.nodeTypeID, nodeApply );
+cullVisitorHelper.registerApplyFunction( PagedLOD.nodeTypeID, nodeApply );
+cullVisitorHelper.registerApplyFunction( Camera.nodeTypeID, cameraApply );
+cullVisitorHelper.registerApplyFunction( MatrixTransform.nodeTypeID, matrixTransformApply );
+cullVisitorHelper.registerApplyFunction( Projection.nodeTypeID, projectionApply );
+cullVisitorHelper.registerApplyFunction( Geometry.nodeTypeID, geometryApply );
+cullVisitorHelper.registerApplyFunction( Skeleton.nodeTypeID, matrixTransformApply );
+cullVisitorHelper.registerApplyFunction( Bone.nodeTypeID, matrixTransformApply );
+cullVisitorHelper.registerApplyFunction( AutoTransform.nodeTypeID, matrixTransformApply );
+cullVisitorHelper.registerApplyFunction( Lod.nodeTypeID, nodeApply );
+cullVisitorHelper.registerApplyFunction( LightSource.nodeTypeID, lightSourceApply );
+cullVisitorHelper.registerApplyFunction( RigGeometry.nodeTypeID, geometryApply );
+cullVisitorHelper.registerApplyFunction( MorphGeometry.nodeTypeID, geometryApply );
 
 module.exports = CullVisitor;

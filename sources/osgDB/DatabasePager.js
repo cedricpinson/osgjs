@@ -42,7 +42,8 @@ var FindPagedLODsVisitor = function ( pagedLODList, frameNumber ) {
     this._activePagedLODList = pagedLODList;
     this._frameNumber = frameNumber;
 };
-FindPagedLODsVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+
+MACROUTILS.createPrototypeObject( FindPagedLODsVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     apply: function ( node ) {
         if ( node.getTypeID() === PagedLOD.getTypeID() ) {
             node.setFrameNumberOfLastTraversal( this._frameNumber );
@@ -50,25 +51,27 @@ FindPagedLODsVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype
         }
         this.traverse( node );
     }
-} );
+} ), 'osgDB', 'FindPagedLODsVisitor' );
 
 var ReleaseVisitor = function () {
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
 };
-ReleaseVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+
+MACROUTILS.createPrototypeObject( ReleaseVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     apply: function ( node ) {
         // mark GLResources in nodes to be released
         node.releaseGLObjects();
         this.traverse( node );
     }
-} );
+} ), 'osgDB', 'ReleaseVisitor' );
+
 
 var ExpirePagedLODVisitor = function () {
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
     this._childrenList = [];
 };
 
-ExpirePagedLODVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( ExpirePagedLODVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
     apply: function ( node ) {
         if ( node.getTypeID() === PagedLOD.getTypeID() ) {
@@ -100,9 +103,9 @@ ExpirePagedLODVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
             }
         }
     }
-} );
+} ), 'osgDB', 'ExpirePagedLODVisitor' );
 
-DatabasePager.prototype = MACROUTILS.objectLibraryClass( {
+MACROUTILS.createPrototypeObject( DatabasePager, {
 
     setTargetMaximumNumberOfPageLOD: function ( target ) {
         this._targetMaximumNumberOfPagedLOD = target;

@@ -12,7 +12,8 @@
         this._attributeEnable = false;
     };
 
-    RampAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( osg.StateAttribute.prototype, {
+    osg.createPrototypeStateAttribute( RampAttribute, osg.objectInherit( osg.StateAttribute.prototype, {
+
         attributeType: 'Ramp',
 
         cloneType: function () {

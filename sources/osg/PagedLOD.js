@@ -37,7 +37,7 @@ var PerRangeData = function () {
 };
 
 /** @lends PagedLOD.prototype */
-PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Lod.prototype, {
+MACROUTILS.createPrototypeNode( PagedLOD, MACROUTILS.objectInherit( Lod.prototype, {
     // Functions here
     setRange: function ( childNo, min, max ) {
         if ( childNo >= this._range.length ) {
@@ -240,5 +240,4 @@ PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Lo
 
 } ), 'osg', 'PagedLOD' );
 
-MACROUTILS.setTypeID( PagedLOD );
 module.exports = PagedLOD;

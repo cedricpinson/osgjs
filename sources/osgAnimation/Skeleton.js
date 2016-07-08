@@ -10,7 +10,8 @@ var Bone = require( 'osgAnimation/Bone' );
 var ResetRestPoseVisitor = function () {
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
 };
-ResetRestPoseVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+
+MACROUTILS.createPrototypeObject( ResetRestPoseVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     apply: function ( node ) {
         if ( node.getTypeID() === Bone.getTypeID() ) {
             var cb = node.getUpdateCallback();
@@ -25,7 +26,7 @@ ResetRestPoseVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype
         }
         this.traverse( node );
     }
-} );
+} ), 'osgAnimation', 'ResetRestPoseVisitor' );
 
 var resetter = new ResetRestPoseVisitor();
 
@@ -33,7 +34,7 @@ var Skeleton = function () {
     MatrixTransform.call( this );
 };
 
-Skeleton.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
+MACROUTILS.createPrototypeNode( Skeleton, MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     setDefaultUpdateCallback: function () {
         this.addUpdateCallback( new UpdateSkeleton() );
@@ -44,6 +45,5 @@ Skeleton.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ma
     }
 
 } ), 'osgAnimation', 'Skeleton' );
-MACROUTILS.setTypeID( Skeleton );
 
 module.exports = Skeleton;

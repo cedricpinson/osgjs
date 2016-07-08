@@ -45,7 +45,7 @@ Camera.DEPTH_BUFFER_BIT = 0x00000100;
 Camera.STENCIL_BUFFER_BIT = 0x00000400;
 
 /** @lends Camera.prototype */
-Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
+MACROUTILS.createPrototypeNode( Camera, MACROUTILS.objectInherit(
     CullSettings.prototype,
     MACROUTILS.objectInherit( Transform.prototype, {
         // at which view this camera is attached
@@ -247,6 +247,5 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
     } ) ), 'osg', 'Camera' );
 
-MACROUTILS.setTypeID( Camera );
 
 module.exports = Camera;

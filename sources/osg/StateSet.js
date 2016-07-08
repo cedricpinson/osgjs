@@ -17,9 +17,13 @@ var StateSet = function () {
     Object.call( this );
 
     this._parents = [];
-    this.attributeMap = {};
+    this._attributeArray = [];
+    this._textureAttributeArrayList = [];
 
-    this.textureAttributeMapList = [];
+    // cache what is really used
+    this._activeTextureAttributeUnit = [];
+    this._activeAttribute = [];
+    this._activeTextureAttribute = [];
 
     this._binName = undefined;
     this._binNumber = 0;
@@ -31,6 +35,8 @@ var StateSet = function () {
     this._updateCallbackList = [];
 
     this.uniforms = {};
+
+    this._hasUniform = false;
 
     this._drawID = -1; // used by the RenderLeaf to decide if it should apply the stateSet
 };
@@ -56,7 +62,7 @@ StateSet.AttributePair.prototype = {
 };
 
 
-StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( StateSet, MACROUTILS.objectInherit( Object.prototype, {
 
     setDrawID: function ( id ) {
         this._drawID = id;
@@ -66,6 +72,7 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         return this._drawID;
     },
 
+
     getAttributePair: function ( attribute, value ) {
         return new StateSet.AttributePair( attribute, value );
     },
@@ -74,6 +81,7 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
         var name = uniform.getName();
         this.uniforms[ name ] = this.getAttributePair( uniform, mode );
+        this._hasUniform = true;
     },
 
     addParent: function ( node ) {
@@ -87,11 +95,16 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     },
 
     removeUniform: function ( uniform ) {
-        delete this.uniforms[ uniform.getName() ];
+        this.removeUniformByName( uniform.getName() );
     },
 
     removeUniformByName: function ( uniformName ) {
         delete this.uniforms[ uniformName ];
+        this._hasUniform = Object.keys( this.uniforms ).length ? true : false;
+    },
+
+    hasUniform: function () {
+        return this._hasUniform;
     },
 
     getUniform: function ( uniform ) {
@@ -104,57 +117,61 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         return this.uniforms;
     },
 
-    setTextureAttributeAndModes: function ( unit, attribute, originalMode ) {
-        var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
-        this._setTextureAttribute( unit, this.getAttributePair( attribute, mode ) );
+    setTextureAttributeAndModes: function ( unit, attribute, mode ) {
+        this._setTextureAttribute( unit, this.getAttributePair( attribute, mode !== undefined ? mode : StateAttribute.ON ) );
     },
 
     getNumTextureAttributeLists: function () {
-        return this.textureAttributeMapList.length;
+        return this._textureAttributeArrayList.length;
     },
 
-    getTextureAttribute: function ( unit, attribute ) {
-        if ( this.textureAttributeMapList[ unit ] === undefined ) return undefined;
+    getTextureAttribute: function ( unit, typeMember ) {
 
-        var textureMap = this.textureAttributeMapList[ unit ];
-        if ( textureMap[ attribute ] === undefined ) return undefined;
+        if ( this._textureAttributeArrayList[ unit ] === undefined ) return undefined;
 
-        return textureMap[ attribute ].getAttribute();
+        var index = MACROUTILS.getTextureIdFromTypeMember( typeMember );
+        if ( index === undefined ) return undefined;
+
+        var textureArray = this._textureAttributeArrayList[ unit ];
+        if ( textureArray[ index ] ) return textureArray[ index ].getAttribute();
+
+        return undefined;
     },
 
-    removeTextureAttribute: function ( unit, attributeName ) {
-        if ( this.textureAttributeMapList[ unit ] === undefined ) return;
+    removeTextureAttribute: function ( unit, typeMember ) {
+        if ( this._textureAttributeArrayList[ unit ] === undefined ) return;
 
-        var textureAttributeMap = this.textureAttributeMapList[ unit ];
-        if ( textureAttributeMap[ attributeName ] === undefined ) return;
+        var index = MACROUTILS.getTextureIdFromTypeMember( typeMember );
+        if ( index === undefined ) return;
 
+        var textureArray = this._textureAttributeArrayList[ unit ];
+        if ( textureArray[ index ] === undefined ) return;
 
-        delete textureAttributeMap[ attributeName ];
+        textureArray[ index ] = undefined;
+        this._computeValidTextureUnit();
     },
 
-    getAttribute: function ( attributeType ) {
-        if ( this.attributeMap[ attributeType ] === undefined ) {
-            return undefined;
-        }
-        return this.attributeMap[ attributeType ].getAttribute();
+    getAttribute: function ( typeMember ) {
+
+        var index = MACROUTILS.getIdFromTypeMember( typeMember );
+        if ( index === undefined || !this._attributeArray[ index ] ) return undefined;
+
+        return this._attributeArray[ index ].getAttribute();
     },
 
-    setAttributeAndModes: function ( attribute, originalMode ) {
-        var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
-        this._setAttribute( this.getAttributePair( attribute, mode ) );
+    setAttributeAndModes: function ( attribute, mode ) {
+        this._setAttribute( this.getAttributePair( attribute, mode !== undefined ? mode : StateAttribute.ON ) );
     },
 
-    setAttribute: function ( attribute, originalMode ) {
-        var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
-        this._setAttribute( this.getAttributePair( attribute, mode ) );
+    setAttribute: function ( attribute, mode ) {
+        this.setAttributeAndModes( attribute, mode );
     },
 
     // TODO: check if it's an attribute type or a attribute to remove it
-    removeAttribute: function ( attributeName ) {
-
-        if ( this.attributeMap[ attributeName ] !== undefined ) {
-            delete this.attributeMap[ attributeName ];
-        }
+    removeAttribute: function ( typeMember ) {
+        var index = MACROUTILS.getIdFromTypeMember( typeMember );
+        this._attributeArray[ index ] = undefined;
+        this._computeValidAttribute();
     },
 
     setRenderingHint: function ( hint ) {
@@ -213,7 +230,15 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._binName = binName;
     },
     getAttributeMap: function () {
-        return this.attributeMap;
+        // not efficieant at all but not really critique
+        var obj = {};
+        for ( var i = 0, l = this._attributeArray.length; i < l; i++ ) {
+            var attributePair = this._attributeArray[ i ];
+            if ( !attributePair ) continue;
+            var attribute = attributePair.getAttribute();
+            obj[ attribute.getTypeMember() ] = attributePair;
+        }
+        return obj;
     },
     getBinNumber: function () {
         return this._binNumber;
@@ -228,14 +253,16 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._binName = binName;
     },
     getAttributeList: function () {
+        var attributeArray = this._attributeArray;
         var list = [];
-        for ( var keyAttribute in this.attributeMap ) {
-            list.push( this.attributeMap[ keyAttribute ] );
+        for ( var i = 0, l = attributeArray.length; i < l; i++ ) {
+            if ( attributeArray[ i ] )
+                list.push( attributeArray[ i ] );
         }
         return list;
     },
-    setShaderGeneratorName: function ( generatorName, mask ) {
-        this._shaderGeneratorPair = this.getAttributePair( generatorName, mask );
+    setShaderGeneratorName: function ( generatorName, mode ) {
+        this._shaderGeneratorPair = this.getAttributePair( generatorName, mode !== undefined ? mode : StateAttribute.ON );
     },
     getShaderGeneratorPair: function () {
         return this._shaderGeneratorPair;
@@ -244,41 +271,72 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         return this._shaderGeneratorPair ? this._shaderGeneratorPair.getShaderGeneratorName() : undefined;
     },
     releaseGLObjects: function () {
-        for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ ) {
-            this.getTextureAttribute( i, 'Texture' ).releaseGLObjects();
+        for ( var i = 0, j = this._textureAttributeArrayList.length; i < j; i++ ) {
+            var attribute = this.getTextureAttribute( i, 'Texture' );
+            if ( attribute ) attribute.releaseGLObjects();
         }
         var list = this.getAttributeList();
-        for ( i = 0, j = list.length; i < j; i++ ) {
+        for ( var k = 0, l = list.length; k < l; k++ ) {
             // Remove only if we have releaseGLObject method.
-            if ( list[ i ]._object.releaseGLObjects ) {
-                list[ i ]._object.releaseGLObjects();
+            if ( list[ k ]._object.releaseGLObjects ) {
+                list[ k ]._object.releaseGLObjects();
             }
         }
-    },
-    _getUniformMap: function () {
-        return this.uniforms;
     },
 
     // for internal use, you should not call it directly
     _setTextureAttribute: function ( unit, attributePair ) {
 
-        if ( this.textureAttributeMapList[ unit ] === undefined ) {
-            this.textureAttributeMapList[ unit ] = {};
+        var textureAttributeArrayList = this._textureAttributeArrayList;
+        if ( textureAttributeArrayList[ unit ] === undefined ) {
+            textureAttributeArrayList[ unit ] = [];
         }
 
-        var name = attributePair.getAttribute().getTypeMember();
-        var textureUnitAttributeMap = this.textureAttributeMapList[ unit ];
+        var index = MACROUTILS.getOrCreateTextureStateAttributeTypeMemberIndex( attributePair.getAttribute() );
+        textureAttributeArrayList[ unit ][ index ] = attributePair;
 
-        textureUnitAttributeMap[ name ] = attributePair;
+        this._computeValidTextureUnit();
+    },
 
+    _computeValidTextureUnit: function () {
+        this._activeTextureAttributeUnit.length = 0;
+        this._activeTextureAttribute.length = 0;
+        var textureAttributeArrayList = this._textureAttributeArrayList;
+        for ( var i = 0, l = textureAttributeArrayList.length; i < l; i++ ) {
+            var attributeList = textureAttributeArrayList[ i ];
+            if ( !attributeList || !attributeList.length ) continue;
+            var hasValidAttribute = false;
+            for ( var j = 0, k = attributeList.length; j < k; j++ ) {
+
+                if ( attributeList[ j ] ) {
+
+                    hasValidAttribute = true;
+
+                    if ( this._activeTextureAttribute.indexOf( j ) === -1 ) {
+                        this._activeTextureAttribute.push( j );
+                    }
+
+                }
+            }
+
+            if ( hasValidAttribute ) this._activeTextureAttributeUnit.push( i );
+        }
+    },
+
+    _computeValidAttribute: function () {
+        this._activeAttribute.length = 0;
+        var attributeArray = this._attributeArray;
+        for ( var i = 0, l = attributeArray.length; i < l; i++ ) {
+            if ( attributeArray[ i ] ) this._activeAttribute.push( i );
+        }
     },
 
     // for internal use, you should not call it directly
     _setAttribute: function ( attributePair ) {
 
-        var name = attributePair.getAttribute().getTypeMember();
-        this.attributeMap[ name ] = attributePair;
-
+        var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex( attributePair.getAttribute() );
+        this._attributeArray[ index ] = attributePair;
+        this._computeValidAttribute();
     }
 
 } ), 'osg', 'StateSet' );

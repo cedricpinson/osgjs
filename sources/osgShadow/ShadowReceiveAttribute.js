@@ -3,8 +3,6 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
-var Notify = require( 'osg/notify' );
-
 
 /**
  * ShadowReceiveAttribute encapsulate Shadow Main State object
@@ -41,7 +39,7 @@ var ShadowReceiveAttribute = function ( lightNum, disable ) {
 };
 
 ShadowReceiveAttribute.uniforms = {};
-ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( ShadowReceiveAttribute, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'ShadowReceive',
 
@@ -186,19 +184,14 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         return this._enable;
     },
 
-    // Deprecated methods, should be removed in the future
-    isEnable: function () {
-        Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
-        return this.isEnabled();
+    getHash: function () {
+        return this._computeHash();
     },
 
-    getHash: function () {
+    _computeHash: function () {
         return this.getTypeMember() + '_' + this.getKernelSizePCF();
-
     }
 
 } ), 'osgShadow', 'ShadowReceiveAttribute' );
-
-MACROUTILS.setTypeID( ShadowReceiveAttribute );
 
 module.exports = ShadowReceiveAttribute;

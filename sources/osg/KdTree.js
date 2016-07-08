@@ -475,7 +475,7 @@ var KdTree = function () {
     this._numPrimitiveIndices = 0;
 };
 
-KdTree.prototype = MACROUTILS.objectLibraryClass( {
+MACROUTILS.createPrototypeObject( KdTree, {
     getVertices: function () {
         return this._vertices;
     },

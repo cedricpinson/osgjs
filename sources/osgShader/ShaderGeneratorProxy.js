@@ -7,7 +7,7 @@ var DisplayGeometryVisitor = require( 'osgUtil/DisplayGeometryVisitor' );
 var ShaderGeneratorProxy = function () {
 
     // object of shader generators
-    this._generators = new window.Map();
+    this._generators = {};
     this.addShaderGenerator( 'default', new ShaderGenerator() );
     this.addShaderGenerator( 'ShadowCast', new ShadowCastShaderGenerator() );
     this.addShaderGenerator( 'debugNormal', new DisplayNormalVisitor.ShaderGeneratorCompilerOffsetNormal() );
@@ -22,16 +22,15 @@ ShaderGeneratorProxy.prototype = {
 
     getShaderGenerator: function ( name ) {
 
-        if ( !name )
-            return this._generators.get( 'default' );
+        if ( !name ) return this._generators.default;
 
-        return this._generators.get( name );
+        return this._generators[ name ];
     },
 
     // user-space facility to provide its own
     addShaderGenerator: function ( name, sg ) {
 
-        this._generators.set( name, sg );
+        this._generators[ name ] = sg;
 
     }
 

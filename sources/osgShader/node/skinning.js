@@ -7,7 +7,7 @@ var Skinning = function () {
     Node.call( this );
 };
 
-Skinning.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( Skinning, MACROUTILS.objectInherit( Node.prototype, {
     type: 'Skinning',
     validInputs: [ 'weights', 'bonesIndex', 'matrixPalette' ],
     validOutputs: [ 'mat4' ],
@@ -20,7 +20,7 @@ Skinning.prototype = MACROUTILS.objectInherit( Node.prototype, {
         // For now matrixPalette is used as a global (uBones) because an array means a dynamic function signature in the glsl...
         return ShaderUtils.callFunction( 'skeletalTransform', this._outputs.mat4, [ this._inputs.weights, this._inputs.bonesIndex ] );
     }
-} );
+} ), 'osgShader', 'Skinning' );
 
 module.exports = {
     Skinning: Skinning

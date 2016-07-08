@@ -19,7 +19,7 @@ var IntersectionVisitor = function () {
     this.reset();
 };
 
-IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( IntersectionVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     reset: function () {
         IntersectionVisitor._reservedMatrixStack.reset();
     },
@@ -193,7 +193,7 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
             this.popViewMatrix();
         this._intersector.setCurrentTransformation( this.getTransformation() );
     }
-} );
+} ), 'osgUtil', 'IntersectionVisitor' );
 
 IntersectionVisitor._reservedMatrixStack = new MatrixMemoryPool();
 

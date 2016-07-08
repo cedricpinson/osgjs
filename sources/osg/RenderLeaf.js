@@ -2,8 +2,8 @@
 var StateGraph = require( 'osg/StateGraph' );
 
 var CacheUniformApply = function ( state, program ) {
-    this.modelUniform = program._uniformsCache[ state.modelMatrix.getName() ];
-    this.viewUniform = program._uniformsCache[ state.viewMatrix.getName() ];
+    this.modelUniform = program._uniformsCache[ state._modelMatrix.getName() ];
+    this.viewUniform = program._uniformsCache[ state._viewMatrix.getName() ];
 
     this.apply = undefined;
     this.generateUniformsApplyMethods();
@@ -21,7 +21,7 @@ CacheUniformApply.prototype = {
 
         if ( this.modelUniform !== undefined ) {
             functionStr.push( 'if ( matrixModelViewChanged ) {' );
-            functionStr.push( '    var modelMatrix = state.modelMatrix;' );
+            functionStr.push( '    var modelMatrix = state._modelMatrix;' );
             functionStr.push( '    modelMatrix.setMatrix4( model );' );
             functionStr.push( '    modelMatrix.apply( gl, this.modelUniform);' );
             functionStr.push( '};' );
@@ -29,7 +29,7 @@ CacheUniformApply.prototype = {
 
         if ( this.viewUniform !== undefined ) {
             functionStr.push( 'if ( matrixModelViewChanged ) {' );
-            functionStr.push( '    var viewMatrix = state.viewMatrix;' );
+            functionStr.push( '    var viewMatrix = state._viewMatrix;' );
             functionStr.push( '    viewMatrix.setMatrix4( view );' );
             functionStr.push( '    viewMatrix.apply( gl, this.viewUniform);' );
             functionStr.push( '};' );
@@ -88,7 +88,6 @@ RenderLeaf.prototype = {
     drawGeometry: ( function () {
 
         return function ( state ) {
-
 
             var program = state.getLastProgramApplied();
             var programInstanceID = program.getInstanceID();

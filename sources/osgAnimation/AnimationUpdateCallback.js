@@ -33,7 +33,7 @@ AnimationUpdateCallback.checkPathIsAnimated = function ( path ) {
 };
 
 /** @lends AnimationUpdateCallback.prototype */
-AnimationUpdateCallback.prototype = MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( AnimationUpdateCallback, MACROUTILS.objectInherit( Object.prototype, {
 
     linkChannel: function () {},
     linkAnimation: function ( anim ) {
@@ -53,6 +53,6 @@ AnimationUpdateCallback.prototype = MACROUTILS.objectInherit( Object.prototype, 
         }
         return nbLinks;
     }
-} );
+} ), 'osgAnimation', 'AnimationUpdateCallback' );
 
 module.exports = AnimationUpdateCallback;

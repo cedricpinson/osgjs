@@ -17,7 +17,7 @@ var Variable = function ( type, prefix ) {
     this._value = undefined;
 };
 
-Variable.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( Variable, MACROUTILS.objectInherit( Node.prototype, {
 
     getType: function () {
         return this._type;
@@ -57,26 +57,27 @@ Variable.prototype = MACROUTILS.objectInherit( Node.prototype, {
         this._value = undefined;
         this._text = undefined;
     }
-} );
+} ), 'osgShader', 'Variable' );
 
 // Constant Variable
 // help glsl compiler and make sure no one writes in it :)
 var Constant = function ( type, prefix ) {
     Variable.call( this, type, prefix );
 };
-Constant.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+
+MACROUTILS.createPrototypeObject( Constant, MACROUTILS.objectInherit( Variable.prototype, {
 
     declare: function () {
         return sprintf( 'const %s %s = %s;', [ this._type, this.getVariable(), this._value ] );
     }
-} );
+} ), 'osgShader', 'Constant' );
 
 var Uniform = function ( type, prefix, size ) {
     Variable.call( this, type, prefix );
     this._size = size;
 };
 
-Uniform.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+MACROUTILS.createPrototypeObject( Uniform, MACROUTILS.objectInherit( Variable.prototype, {
     declare: function () {
         return undefined;
     },
@@ -89,14 +90,14 @@ Uniform.prototype = MACROUTILS.objectInherit( Variable.prototype, {
         }
     }
 
-} );
+} ), 'osgShader', 'Uniform' );
 
 // Vertex Attribute Variables
 var Attribute = function ( type, prefix ) {
     Variable.call( this, type, prefix );
 };
 
-Attribute.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+MACROUTILS.createPrototypeObject( Attribute, MACROUTILS.objectInherit( Variable.prototype, {
     declare: function () {
         return undefined;
     },
@@ -105,14 +106,14 @@ Attribute.prototype = MACROUTILS.objectInherit( Variable.prototype, {
         return sprintf( 'attribute %s %s;', [ this._type, this.getVariable() ] );
     }
 
-} );
+} ), 'osgShader', 'Attribute' );
 
 
 var Varying = function ( type, prefix ) {
     Variable.call( this, type, prefix );
 };
 
-Varying.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+MACROUTILS.createPrototypeObject( Varying, MACROUTILS.objectInherit( Variable.prototype, {
     declare: function () {
         return undefined;
     },
@@ -120,13 +121,14 @@ Varying.prototype = MACROUTILS.objectInherit( Variable.prototype, {
     globalDeclaration: function () {
         return sprintf( 'varying %s %s;', [ this._type, this.getVariable() ] );
     }
-} );
+} ), 'osgShader', 'Varying' );
+
 
 var Sampler = function ( type, prefix ) {
     Variable.call( this, type, prefix );
 };
 
-Sampler.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+MACROUTILS.createPrototypeObject( Sampler, MACROUTILS.objectInherit( Variable.prototype, {
     declare: function () {
         return undefined;
     },
@@ -135,7 +137,7 @@ Sampler.prototype = MACROUTILS.objectInherit( Variable.prototype, {
         return sprintf( 'uniform %s %s;', [ this._type, this.getVariable() ] );
     }
 
-} );
+} ), 'osgShader', 'Sampler' );
 
 // Graph Root Node Abstract Class
 // Derive from that for new outputs
@@ -144,7 +146,7 @@ var Output = function ( type, wholeName ) {
     Variable.call( this, type, wholeName );
 };
 
-Output.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+MACROUTILS.createPrototypeObject( Output, MACROUTILS.objectInherit( Variable.prototype, {
     _unique: true,
     isUnique: function () {
         return this._unique;
@@ -155,27 +157,30 @@ Output.prototype = MACROUTILS.objectInherit( Variable.prototype, {
     getVariable: function () {
         return this._prefix;
     }
-} );
+} ), 'osgShader', 'Output' );
 
 // Graph Root Nodes
 var glFragColor = function () {
     Output.call( this, 'vec4', 'gl_FragColor' );
     this._name = 'glFragColor';
 };
-glFragColor.prototype = MACROUTILS.objectInherit( Output.prototype, {} );
+
+MACROUTILS.createPrototypeObject( glFragColor, MACROUTILS.objectInherit( Output.prototype, {} ), 'osgShader', 'glFragColor' );
 
 var glPosition = function () {
     Output.call( this, 'vec4', 'gl_Position' );
     this._name = 'glPosition';
 };
-glPosition.prototype = MACROUTILS.objectInherit( Output.prototype, {} );
+
+MACROUTILS.createPrototypeObject( glPosition, MACROUTILS.objectInherit( Output.prototype, {} ), 'osgShader', 'glPosition' );
 
 
 var glPointSize = function () {
     Output.call( this, 'float', 'gl_PointSize' );
     this._name = 'glPointSize';
 };
-glPointSize.prototype = MACROUTILS.objectInherit( Output.prototype, {} );
+
+MACROUTILS.createPrototypeObject( glPointSize, MACROUTILS.objectInherit( Output.prototype, {} ), 'osgShader', 'glPointSize' );
 
 module.exports = {
     Output: Output,

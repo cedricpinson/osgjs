@@ -54,7 +54,7 @@ var RigGeometry = function () {
 
 };
 
-RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
+MACROUTILS.createPrototypeNode( RigGeometry, MACROUTILS.objectInherit( Geometry.prototype, {
 
     getStateSetAnimation: function () {
         return this._stateSetAnimation;
@@ -437,7 +437,5 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
     }
 
 } ), 'osgAnimation', 'RigGeometry' );
-
-MACROUTILS.setTypeID( RigGeometry );
 
 module.exports = RigGeometry;

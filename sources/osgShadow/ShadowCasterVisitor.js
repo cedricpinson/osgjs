@@ -7,8 +7,6 @@ var LightSource = require( 'osg/LightSource' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 
-
-
 /*
  * Remove nodes that shouldn't not be culled when casting
  * like lights, camera with render texture targets,
@@ -23,7 +21,7 @@ var ShadowCasterVisitor = function ( mask ) {
     this._nodeList = [];
 };
 
-ShadowCasterVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( ShadowCasterVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     reset: function () {
         this._nodeList = [];
     },
@@ -114,7 +112,5 @@ ShadowCasterVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.object
 
 } ), 'osgShadow', 'ShadowCasterVisitor' );
 
-
-MACROUTILS.setTypeID( ShadowCasterVisitor );
 
 module.exports = ShadowCasterVisitor;
