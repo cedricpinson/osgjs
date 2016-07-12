@@ -7,6 +7,7 @@ var kernelSizeList = [ '1Band(1texFetch)', '4Band(4texFetch)', '9Band(9texFetch)
 /**
  *  ShadowSettings provides the parameters that the ShadowTechnique should use as a guide for setting up shadowing
  *  @class ShadowSettings
+ *  @memberof osgShadow
  */
 var ShadowSettings = function ( options ) {
 

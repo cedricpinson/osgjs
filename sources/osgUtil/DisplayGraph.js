@@ -67,6 +67,10 @@ SimpleTooltips.prototype = {
     }
 };
 
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var DisplayGraph = function () {
 
     init$();

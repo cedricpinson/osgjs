@@ -190,7 +190,10 @@ TextureObjectSet.prototype = {
     }
 };
 
-
+/**
+ * @class
+ * @memberof osg
+ */
 var TextureManager = function () {
     this._textureSetMap = {};
 };

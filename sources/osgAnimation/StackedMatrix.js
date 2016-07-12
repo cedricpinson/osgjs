@@ -4,7 +4,10 @@ var Object = require( 'osg/Object' );
 var Matrix = require( 'osg/Matrix' );
 var Target = require( 'osgAnimation/Target' );
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var StackedMatrix = function ( name, matrix ) {
     Object.call( this );
     this._target = Target.createMatrixTarget( matrix || Matrix.identity );

@@ -20,6 +20,10 @@ var DefaultsAcceptAttributeTypes = [
     'Billboard'
 ];
 
+/**
+ * @class
+ * @memberof osgShader
+ */
 var ShaderGenerator = function () {
     this._cache = new window.Map();
 

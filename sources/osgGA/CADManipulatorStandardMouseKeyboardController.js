@@ -1,6 +1,10 @@
 'use strict';
 var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
 
+/**
+ * @class
+ * @memberof osgGA
+ */
 var CADManipulatorStandardMouseKeyboardController = function ( manipulator ) {
     this._manipulator = manipulator;
     this._timer = false;

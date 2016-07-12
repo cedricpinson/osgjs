@@ -11,6 +11,7 @@ var Vec4 = require( 'osg/Vec4' );
 /**
  *  ShadowedScene provides a mechanism for decorating a scene that the needs to have shadows cast upon it.
  *  @class ShadowedScene
+ *  @memberof osgShadow
  *  @{@link [http://trac.openscenegraph.org/projects/osg//wiki/Support/ProgrammingGuide/osgShadow]}
  *  @{@link [http://developer.download.nvidia.com/presentations/2008/GDC/GDC08_SoftShadowMapping.pdf]};
  */

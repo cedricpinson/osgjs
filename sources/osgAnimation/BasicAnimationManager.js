@@ -51,6 +51,7 @@ ResultType[ Channel.ChannelType.Matrix ] = Matrix;
 /**
  *  BasicAnimationManager
  *  @class BasicAnimationManager
+ *  @memberof osgAnimation
  */
 var BasicAnimationManager = function () {
     BaseObject.call( this );

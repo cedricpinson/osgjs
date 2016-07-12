@@ -6,6 +6,7 @@ var PrimitiveSet = require( 'osg/PrimitiveSet' );
 /**
  * DrawElements manage rendering of indexed primitives
  * @class DrawElements
+ * @memberof osg
  */
 var DrawElements = function ( mode, indices ) {
     this.mode = PrimitiveSet.POINTS;

@@ -8,7 +8,8 @@ var Uniform = require( 'osg/Uniform' );
 /**
  * SkinningAttribute encapsulate Animation State
  * @class SkinningAttribute
- * @inherits StateAttribute
+ * @memberof osgAnimation
+ * @extends StateAttribute
  */
 var SkinningAttribute = function ( disable, boneUniformSize ) {
     StateAttribute.call( this );

@@ -1,7 +1,10 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
 
-
+/**
+ * @class
+ * @memberof osgGA
+ */
 var OrbitManipulatorHammerController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();

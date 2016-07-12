@@ -3,7 +3,10 @@ var Vec3 = require( 'osg/Vec3' );
 var Matrix = require( 'osg/Matrix' );
 var TriangleSphereIntersector = require( 'osgUtil/TriangleSphereIntersector' );
 
-
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var SphereIntersector = function () {
     this._center = Vec3.create();
     this._iCenter = Vec3.create();

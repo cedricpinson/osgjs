@@ -2,7 +2,11 @@
 var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
-
+/**
+ * @class 
+ * @memberof osg
+ * @extends Object
+ */
 
 var ImageObject = function ( image ) {
     Object.call( this );

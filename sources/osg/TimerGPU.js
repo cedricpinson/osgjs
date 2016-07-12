@@ -7,6 +7,10 @@ var Notify = require( 'osg/Notify' );
 // for consistent results
 // use double buffer queries for that.
 // see http://www.reedbeta.com/blog/2011/10/12/gpu-profiling-101/
+/**
+ * @class
+ * @memberof osg
+ */
 var TimerGPU = function ( gl ) {
 
     this._enabled = false;

@@ -9,7 +9,11 @@ var ArrayType = config.ArrayType;
 var Msqrt = Math.sqrt;
 var Mcos = Math.cos;
 var Msin = Math.sin;
-
+/**
+ * Quaternion operations
+ * @class
+ * @memberof osg
+ */
 var Quat = {
 
     create: function () {

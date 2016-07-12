@@ -9,7 +9,10 @@ var operations = require( 'osgShader/node/operations' );
 var textures = require( 'osgShader/node/textures' );
 var morph = require( 'osgShader/node/morph' );
 var billboard = require( 'osgShader/node/billboard' );
-
+/**
+ * @class 
+ * @memberof osgShader
+ */
 var Factory = function () {
 
     this._nodes = new window.Map();

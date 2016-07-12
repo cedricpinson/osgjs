@@ -14,7 +14,10 @@ var Matrix = require( 'osg/Matrix' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Projection = require( 'osg/Projection' );
 
-
+/** 
+ * @class
+ * @memberof osgDB
+ */
 var ReaderParser = {};
 
 ReaderParser.ObjectWrapper = {};

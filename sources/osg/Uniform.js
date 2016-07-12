@@ -5,6 +5,7 @@ var Notify = require( 'osg/Notify' );
 /**
  * Uniform manage variable used in glsl shader.
  * @class Uniform
+ * @memberof osg
  */
 var Uniform = function ( name ) {
     this._data = undefined;

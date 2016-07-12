@@ -63,7 +63,10 @@ var makeRotateFromEuler = function ( x, y, z, order, quat ) {
     return quat;
 };
 
-
+/**
+ * @class
+ * @memberof osgGA
+ */
 var FirstPersonManipulatorDeviceOrientationController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();

@@ -8,6 +8,8 @@ var TransformEnums = require( 'osg/TransformEnums' );
 /**
  *  MatrixTransform is a Transform Node that can be customized with user matrix
  *  @class MatrixTransform
+ *  @memberof osg
+ *  @extends Transform
  */
 var MatrixTransform = function () {
     Transform.call( this );

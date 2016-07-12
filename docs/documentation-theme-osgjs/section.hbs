@@ -1,0 +1,177 @@
+<section class='py2 clearfix'>
+  {{#if_eq kind "namespace"}}
+    <a id='{{permalink}}' class='anchor'></a>
+    <h1>{{name_}}</h1>
+    {{{md description}}}
+    {{#each members.static ~}}<div class='py1'>{{> section}}</div>{{/each}}
+  {{ else }}
+    <a id='{{permalink}}' class='anchor'></a>
+    {{#if_not_function}}
+    <h2 class='mt0 class'>
+      {{name_}}<span class='gray'>{{{format_params}}}</span>
+    </h2>
+    {{/if_not_function}}
+    {{#if augments}}
+      <p>
+        Extends
+        {{#augments}}
+          {{{autolink name}}}
+        {{/augments}}
+      </p>
+    {{/if}}
+    {{#if context.github}}
+      <p><a href='{{{context.github}}}'><code>{{{context.path}}}</code></a></p>
+    {{/if}}
+    {{#if version }}<div>Version: {{version}}</div>{{/if}}
+    {{#if license }}<div>License: {{license}}</div>{{/if}}
+    {{#if author }}<div>Author: {{author}}</div>{{/if}}
+    {{#if copyright }}<div>Copyright: {{copyright}}</div>{{/if}}
+    {{#if since }}<div>Since: {{since}}</div>{{/if}}
+    {{{md description}}}
+    {{#if params}}
+      {{#if_eq kind "class"}}
+      <h4>Constructor arguments</h4>
+      {{else}}
+      <h4>Arguments</h4>
+      {{/if_eq}}
+      <div class="clearfix flex white bg-nav">
+        <div class="col col-3">Param</div>
+        <div class="col col-2">Type</div>
+        <div class="col col-7">Details</div>
+      </div>
+      {{#params}}
+        <div class="clearfix flex {{{even_row @index}}} p1">
+          <div class="col col-3">{{name}}</div>
+          <div class="col col-2">{{{format_type type}}}</div>
+          <div class="col col-7">{{{md description}}}</div>
+        </div>
+      {{/params}}
+
+      <ul class='suppress-p-margin'>
+        {{#params}}
+          
+          {{#if properties}}
+            <ul>
+              {{#properties}}
+                <li>{{{format_type type}}} {{name}}
+                  {{#default}}
+                    (default <code>{{.}}</code>)
+                  {{/default}}
+                  {{{md description}}}</li>
+              {{/properties}}
+            </ul>
+          {{/if}}
+        {{/params}}
+      </ul>
+    {{/if}}
+    {{#if properties}}
+      <h4>Properties</h4>
+
+
+      {{#if properties}}
+        <div class="clearfix flex white bg-nav">
+          <div class="col col-3">Param</div>
+          <div class="col col-2">Type</div>
+          <div class="col col-7">Details</div>
+        </div>
+        {{#properties}}
+          <div class="clearfix flex {{{even_row @index}}} p1">
+            <div class="col col-3">
+              {{name}}
+            </div>
+            <div class="col col-2">{{{format_type type}}}</div>
+            <div class="col col-7">
+              {{{md description}}}
+
+              {{#if properties}}
+                <ul>
+                  {{#properties}}
+                    <li><code>{{name}}</code> {{{format_type type}}}
+                      {{#default}}
+                        (default <code>{{.}}</code>)
+                      {{/default}}
+                      {{{md description}}}</li>
+                  {{/properties}}
+                </ul>
+              {{/if}}
+
+            </div>
+          </div>
+        {{/properties}}
+      {{/if}}
+
+
+
+    {{/if}}
+    {{#if returns}}
+      {{#returns}}
+        <h4>Returns</h4>
+        <code>{{{format_type type}}}</code>
+        {{#if description}} {{/if}}
+        <div class='force-inline'>
+          {{{md description}}}
+        </div>
+      {{/returns}}
+    {{/if}}
+    {{#if throws}}
+      <h4>Throws</h4>
+      <ul>
+        {{#throws}}
+          <li>{{{format_type type}}}: <div class='force-inline'>{{{md description}}}</div></li>
+        {{/throws}}
+      </ul>
+    {{/if}}
+    {{#if examples}}
+      <h4>Examples</h4>
+    {{#each examples ~}}
+      {{#if caption}}<p>{{md caption}}</p>{{/if}}
+      <pre class='overflow-auto hljs'>{{{highlight description}}}</pre>
+    {{/each}}
+    {{/if}}
+      {{#if members.static}}
+        <h4>Methods</h4>
+        <!-- <h4>Static members</h4> -->
+        {{#each members.static}}
+          <div class='collapsible py1'>
+            <div class="clearfix header">
+              <code class="blue">
+                {{name}}<span class='gray'>{{{format_params}}}</span>
+              </code>
+              <div class="right">
+                <i class="fa fa-chevron-right open" aria-hidden="true"></i>
+                <i class="fa fa-chevron-down close" aria-hidden="true"></i>
+              </div>
+            </div>
+            <div class='collapser px2 mt1'>
+  {{> section}}
+            </div>
+          </div>
+        {{/each}}
+      {{/if}}
+      {{#if members.instance}}
+        <h4>Instance members</h4>
+        {{#each members.instance}}
+          <div class='collapsible' id='{{permalink}}'>
+            <a href='#{{permalink}}'>
+              <code>
+                #{{name}}<span class='gray'>{{{format_params}}}</span>
+              </code>
+              <div class='force-inline'>
+                {{{md description}}}
+              </div>
+            </a>
+            <div class='collapser border px2'>
+  {{> section}}
+            </div>
+          </div>
+        {{/each}}
+      {{/if}}
+      {{#if events}}
+        {{#each events}}
+          <div>
+    {{> section}}
+          </div>
+        {{/each}}
+      {{/if}}
+{{/if_eq}}
+</section>

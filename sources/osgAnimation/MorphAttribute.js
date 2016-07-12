@@ -8,7 +8,8 @@ var Uniform = require( 'osg/Uniform' );
 /**
  * MorphAttribute encapsulate Animation State
  * @class MorphAttribute
- * @inherits StateAttribute
+ * @memberof osgAnimation
+ * @extends StateAttribute
  */
 var MorphAttribute = function ( nbTarget, disable ) {
     StateAttribute.call( this );

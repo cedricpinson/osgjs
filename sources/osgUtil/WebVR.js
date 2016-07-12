@@ -132,6 +132,10 @@ var createCameraRtt = function ( texture, projection ) {
     return camera;
 };
 
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var WebVR = {};
 
 WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldFactorOverride ) {

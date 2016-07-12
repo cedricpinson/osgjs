@@ -2,8 +2,13 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 
-
-// Used to notify the Compiler to create a Depth Casting optimized shader
+/**
+ * Used to notify the Compiler to create a Depth Casting optimized shader
+ * @class 
+ * @memberof @osgShadow
+ * @param {[type]}
+ * @param {[type]}
+ */
 var ShadowCastAttribute = function ( disable, shadowReceiveAttribute ) {
     StateAttribute.call( this );
     this._enable = !disable;

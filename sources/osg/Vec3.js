@@ -5,7 +5,11 @@ var config = require( 'config' );
 var ArrayType = config.ArrayType;
 
 
-/** @class Vec3 Operations */
+/** 
+ * Vec3 Operations
+ * @class
+ * @memberof osg
+ */
 var Vec3 = {
 
     create: function () {

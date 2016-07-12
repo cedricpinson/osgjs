@@ -8,7 +8,8 @@ var Texture = require( 'osg/Texture' );
 /**
  * TextureCubeMap
  * @class TextureCubeMap
- * @inherits Texture
+ * @memberof osg
+ * @extends Texture
  */
 var TextureCubeMap = function () {
 

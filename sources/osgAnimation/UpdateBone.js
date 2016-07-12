@@ -7,8 +7,8 @@ var NodeVisitor = require( 'osg/NodeVisitor' );
 
 
 /**
- *  UpdateBone
- *  @class UpdateBone
+ *  @class
+ *  @memberof osgAnimation
  */
 var UpdateBone = function () {
     UpdateMatrixTransform.call( this );

@@ -12,8 +12,8 @@ var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRContr
 
 
 /**
- *  OrbitManipulator
- *  @class
+ * @class
+ * @memberof osgGA
  */
 var OrbitManipulator = function ( boundStrategy ) {
     Manipulator.call( this, boundStrategy );

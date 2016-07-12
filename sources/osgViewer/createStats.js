@@ -3,7 +3,10 @@
 var BrowserStats = window.BrowserStats;
 var glStats = window.glStats;
 var rStats = window.rStats;
-
+/**
+ * @class
+ * @memberof osgViewer
+ */
 var CanvasStats = function () {
 
     this.bS = new BrowserStats();

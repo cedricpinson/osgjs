@@ -58,7 +58,10 @@ var createInstanceAnimation = function ( animation ) {
     };
 };
 
-
+/** 
+ * @class 
+ * @memberof osgAnimation
+ */
 var Animation = function () {};
 
 Animation.createAnimation = createAnimation;

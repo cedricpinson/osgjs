@@ -5,7 +5,10 @@ var Matrix = require( 'osg/Matrix' );
 var Vec3 = require( 'osg/Vec3' );
 var Target = require( 'osgAnimation/Target' );
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var StackedScale = function ( name, scale ) {
     Object.call( this );
     this._target = Target.createVec3Target( scale || Vec3.one );

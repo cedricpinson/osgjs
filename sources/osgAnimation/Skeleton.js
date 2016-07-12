@@ -28,7 +28,10 @@ ResetRestPoseVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype
 } );
 
 var resetter = new ResetRestPoseVisitor();
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var Skeleton = function () {
     MatrixTransform.call( this );
 };

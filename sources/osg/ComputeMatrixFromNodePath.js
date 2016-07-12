@@ -4,6 +4,10 @@ var TransformEnums = require( 'osg/TransformEnums' );
 
 
 // TODO: GC PERF: add a result Matrix Parameter.
+/**
+ * @class ComputeMatrixFromNodePath 
+ * @memberof osg
+ */
 var computeLocalToWorld = function ( nodePath, ignoreCameras, userMatrix ) {
 
     var ignoreCamera = ignoreCameras;

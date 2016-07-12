@@ -3,6 +3,11 @@ var Vec3 = require( 'osg/Vec3' );
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 var Notify = require( 'osg/Notify' );
 
+
+/**
+ * @class
+ * @memberof osg
+ */
 var KdTreeRayIntersector = function () {
 
     if ( arguments && arguments.length ) {

@@ -1,6 +1,10 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
 
+/**
+ * @class
+ * @memberof osgGA
+ */
 var CADManipulatorHammerController = function ( manipulator ) {
     this._manipulator = manipulator;
     this._timer = false;

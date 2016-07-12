@@ -10,7 +10,11 @@ var Vec4 = require( 'osg/Vec4' );
 var osgShader = require( 'osgShader/osgShader' );
 var DisplayGraph = require( 'osgUtil/DisplayGraph' );
 
-
+/**
+ * @class
+ * @memberof osgViewer
+ * @param {[type]}
+ */
 var Renderer = function ( camera ) {
     Object.call( this );
 

@@ -8,6 +8,11 @@ var NodeVisitor = require( 'osg/NodeVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 
 
+/**
+ * @class
+ * @memberof osg
+ * @param {traversalMode}
+ */
 var ComputeBoundsVisitor = function ( traversalMode ) {
     NodeVisitor.call( this, traversalMode );
 

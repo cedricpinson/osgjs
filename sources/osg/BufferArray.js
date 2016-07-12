@@ -23,6 +23,8 @@ var getAttributeType = function ( array ) {
  * element array buffers to Uint16Array if not said explicitly with
  * preserveArrayType variable in constructor.
  * @class BufferArray
+ * @memberof osg
+ * @extends GLObject
  */
 
 var BufferArray = function ( target, elements, itemSize, preserveArrayType ) {

@@ -1,5 +1,8 @@
 'use strict';
-
+/**
+ * @class
+ * @memberof osgGA
+ */
 var FirstPersonManipulatorWebVRController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();

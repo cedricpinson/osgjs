@@ -1,0 +1,244 @@
+@import url(fonts/source-sans-pro/source-sans-pro.css);
+@import url(fonts/source-code-pro/source-code-pro.css);
+
+body {
+  background-color: #FFFFFF;
+}
+
+.documentation a {
+  color: #009ebb;
+}
+
+.documentation .suppress-p-margin p {
+  margin:0;
+}
+
+.force-inline, .force-inline p {
+  display: inline;
+  color: #222;
+}
+
+.container-small {
+  max-width: 58rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.max-height-100 {
+  max-height: 100%;
+}
+
+.fade {
+  opacity:0.50;
+}
+
+.button-indent {
+  padding: .25rem 1.5rem;
+  font-size: 90%;
+}
+
+.section-indent {
+  border-left: 2px solid #eee;
+}
+
+.bg-cloudy {
+  background: #fafafa;
+}
+
+.force-inline * {
+  display:inline;
+}
+
+section:target h3 {
+  font-weight:700;
+}
+
+.documentation,
+.documentation h1,
+.documentation h2,
+.documentation h3,
+.documentation h4,
+.documentation h5,
+.documentation h6 {
+    font-family: 'Source Sans Pro', Helvetica, sans-serif;
+}
+
+.documentation pre,
+.documentation code,
+.documentation samp {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 90%;
+}
+
+.documentation td,
+.documentation th {
+    padding: .25rem .25rem;
+}
+
+h1:hover .anchorjs-link,
+h2:hover .anchorjs-link,
+h3:hover .anchorjs-link,
+h4:hover .anchorjs-link {
+  opacity: 1;
+}
+
+.collapsible {
+  border-bottom: 1px solid rgba(0,0,0,0.4);
+}
+
+.collapsible .header {
+  cursor: pointer;
+}
+
+.collapsible .close {
+  display: none;
+}
+
+.collapsible .collapser {
+  display:none;
+  background-color: #f7f7f7;
+}
+
+.collapsible:target .collapser {
+  display: block;
+}
+
+.fix-3 {
+  width: 25%;
+  max-width: 244px;
+}
+
+@media (min-width: 52em) {
+  .fix-margin-3 {
+    /*margin-left: 244px;*/
+    margin-left: 25%;
+  }
+}
+
+.bg-nav {
+  border-bottom: 2px solid #31A3DD;
+  background-color: #3a4243;
+  color: #FFFFFF;
+}
+
+.osgjs {
+  color: #009ebb; 
+}
+
+.bg-list {
+  background-color: rgb(172, 224, 255);
+}
+
+.pdef {
+  margin-top:56px;
+}
+
+.scrollbar {
+  overflow-y: scroll;
+  height: 100%;
+}
+
+.scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+ 
+.scrollbar::-webkit-scrollbar-track {
+    background: #ccc;
+}
+ 
+.scrollbar::-webkit-scrollbar-thumb {
+    background: #555;
+}
+
+#nav {
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+#nav a {
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+#nav a:hover {
+  background-color: rgba( 49, 163, 221, 0.3 );
+}
+
+a.anchor {
+    display: block;
+    position: relative;
+    top: -100px;
+    visibility: hidden;
+}
+
+.type-hint {
+  display:inline-block;
+  background: gray;
+
+  font-size: 0.7em;
+  font-weight: 600;
+  color: #fff;
+  text-align:center;
+  min-width:60px;
+  margin:1px 5px;
+  border-radius: 2.5px;
+  padding: 0 0.6em;
+}
+
+.type-hint a {
+  color: #fff;
+}
+
+.type-hint + .type-hint {
+  margin-top:5px;
+}
+
+.type-hint-expression {
+  background:purple;
+}
+
+.type-hint-date {
+  background:pink;
+}
+
+.type-hint-string {
+  background:#3a87ad;
+}
+
+.type-hint-function {
+  background:green;
+}
+
+.type-hint-object {
+  background:#999;
+}
+
+.type-hint-array {
+  background:#F90;;
+}
+
+.type-hint-boolean {
+  background:rgb(18, 131, 39);
+}
+
+.type-hint-number {
+  background:rgb(189, 63, 66);
+}
+
+.type-hint-regexp {
+  background: rgb(90, 84, 189);
+}
+
+.type-hint-domelement {
+  background: rgb(95, 158, 160);
+}
+
+p code {
+  color: #c7254e;
+  background-color: #f9f2f4;
+}
+
+a.namespace {
+  color: #000;
+}

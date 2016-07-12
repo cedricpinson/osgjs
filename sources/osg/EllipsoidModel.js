@@ -3,7 +3,10 @@ var Notify = require( 'osg/Notify' );
 var Matrix = require( 'osg/Matrix' );
 var Vec3 = require( 'osg/Vec3' );
 
-
+/**
+ * @class 
+ * @memberof osg
+ */
 var EllipsoidModel = function () {
     this._radiusEquator = EllipsoidModel.WGS_84_RADIUS_EQUATOR;
     this._radiusPolar = EllipsoidModel.WGS_84_RADIUS_POLAR;

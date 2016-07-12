@@ -23,7 +23,7 @@ var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
 var UpdateMorph = require( 'osgAnimation/UpdateMorph' );
 var UpdateSkeleton = require( 'osgAnimation/UpdateSkeleton' );
 
-
+/** @namespace osgAnimation */
 var osgAnimation = {};
 
 MACROUTILS.objectMix( osgAnimation, Easing );

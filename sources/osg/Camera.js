@@ -10,8 +10,9 @@ var Vec4 = require( 'osg/Vec4' );
 
 /**
  * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
- * @class Camera
- * @inherits Transform CullSettings
+ * @class
+ * @memberof osg
+ * @extends Transform CullSettings
  */
 var Camera = function () {
     Transform.call( this );
@@ -146,7 +147,17 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             this.projectionMatrix = matrix;
         },
 
-        /** Set to an orthographic projection. See OpenGL glOrtho for documentation further details.*/
+        /**
+         * Set to an orthographic projection. See OpenGL glOrtho for documentation further details.
+         * @param {[type]}
+         * @param {[type]}
+         * @param {[type]}
+         * @param {[type]}
+         * @param {[type]}
+         * @param {[type]}
+         * @method
+         * @memberof osg.Camera
+         */
         setProjectionMatrixAsOrtho: function ( left, right,
             bottom, top,
             zNear, zFar ) {

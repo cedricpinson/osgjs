@@ -2,7 +2,11 @@
 var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 
-
+/**
+ * @class 
+ * @memberof osg
+ * @extends NodeVisitor
+ */
 var UpdateVisitor = function () {
     NodeVisitor.call( this );
     this.visitorType = NodeVisitor.UPDATE_VISITOR;

@@ -29,6 +29,8 @@ var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 /**
  * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
  * @class CullVisitor
+ * @memberof osg
+ * @extends CullStack NodeVisitor
  */
 var CullVisitor = function () {
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_ACTIVE_CHILDREN );
@@ -75,7 +77,7 @@ var CullVisitor = function () {
 
 };
 
-/** @lends CullVisitor.prototype */
+
 CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     distance: function ( coord, matrix ) {
         return -( coord[ 0 ] * matrix[ 2 ] + coord[ 1 ] * matrix[ 6 ] + coord[ 2 ] * matrix[ 10 ] + matrix[ 14 ] );
@@ -213,9 +215,13 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         }
     },
 
-    /** Pop the top state set and hence associated state group.
+    /**
+     * Pop the top state set and hence associated state group.
      * Move the current state group to the parent of the popped
      * state group.
+     * @return {[type]}
+     * @method
+     * @memberof osg.CullVisitor
      */
     popStateSet: function () {
         var currentStateGraph = this._currentStateGraph;

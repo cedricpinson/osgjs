@@ -14,7 +14,10 @@ var Vec4 = require( 'osg/Vec4' );
 var Viewport = require( 'osg/Viewport' );
 var Composer = require( 'osgUtil/Composer' );
 
-
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var WebVRCustom = {};
 
 // no smart resize, we just recreate everything

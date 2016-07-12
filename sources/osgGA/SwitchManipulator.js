@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- *  OrbitManipulator
- *  @class
+ * @class
+ * @memberof osgGA
  */
 var SwitchManipulator = function () {
     this._manipulatorList = [];

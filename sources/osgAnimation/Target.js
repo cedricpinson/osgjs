@@ -4,7 +4,10 @@ var Quat = require( 'osg/Quat' );
 var Vec3 = require( 'osg/Vec3' );
 var channelType = require( 'osgAnimation/channelType' );
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var target = {};
 target.InvalidTargetID = -1;
 

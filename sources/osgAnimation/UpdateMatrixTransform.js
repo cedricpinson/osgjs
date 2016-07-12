@@ -5,7 +5,8 @@ var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
 
 
 /**
- *  UpdateMatrixTransform
+ *  @class
+ *  @memberof osgAnimation
  */
 var UpdateMatrixTransform = function () {
     AnimationUpdateCallback.call( this );

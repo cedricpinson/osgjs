@@ -7,7 +7,10 @@ var DrawElements = require( 'osg/DrawElements' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
 
-
+/**
+ * @class GizmoGeometry
+ * @memberof osgUtil
+ */
 var glPrecision = [ '#ifdef GL_ES',
     'precision highp float;',
     '#endif'

@@ -3,7 +3,10 @@ var Vec3 = require( 'osg/Vec3' );
 var Quat = require( 'osg/Quat' );
 var Channel = require( 'osgAnimation/Channel' );
 
-
+/**
+ *  @class Interpolator
+ *  @memberof osgAnimation
+ */
 var Vec3CopyKeyFrame = function ( i, keys, result ) {
     result[ 0 ] = keys[ i++ ];
     result[ 1 ] = keys[ i++ ];

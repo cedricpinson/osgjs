@@ -2,9 +2,12 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 
+
 /**
  *  Manage Blending mode
- *  @class BlendFunc
+ *  @class
+ *  @memberof osg
+ *  @extends StateAttribute
  */
 var BlendFunc = function ( sourceRGB, destinationRGB, sourceAlpha, destinationAlpha ) {
     StateAttribute.call( this );
@@ -53,17 +56,15 @@ BlendFunc.ONE_MINUS_CONSTANT_ALPHA = 0x8004;
 BlendFunc.BLEND_COLOR = 0x8005;
 
 
-/** @lends BlendFunc.prototype */
 BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
-    /**
-  StateAttribute type of BlendFunc
-  @type String
-   */
+
     attributeType: 'BlendFunc',
     /**
-    Create an instance of this StateAttribute
-    */
-    cloneType: function () /**BlendFunc*/ {
+     * Create an instance of this StateAttribute
+     * @return {BlendFunc} 
+     * @memberof osg.BlendFunc
+     */
+    cloneType: function () {
         return new BlendFunc();
     },
     setSource: function ( f ) {
@@ -133,9 +134,10 @@ BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     },
 
     /**
-      Apply the mode, must be called in the draw traversal
-      @param state
-  */
+     * Apply the mode, must be called in the draw traversal
+     * @param state
+     * @memberof osg.BlendFunc
+     */
     apply: function ( state ) {
         var gl = state.getGraphicContext();
         if ( this._sourceFactor === BlendFunc.DISABLE || this._destinationFactor === BlendFunc.DISABLE ) {

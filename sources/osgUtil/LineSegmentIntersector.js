@@ -3,7 +3,10 @@ var Vec3 = require( 'osg/Vec3' );
 var Matrix = require( 'osg/Matrix' );
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 
-
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var LineSegmentIntersector = function () {
     this._start = Vec3.create();
     this._end = Vec3.create();

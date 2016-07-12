@@ -12,7 +12,9 @@ var Plane = require( 'osg/Plane' );
 var MACROUTILS = require( 'osg/Utils' );
 
 /**
- * [ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum]
+ * ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum
+ * @class 
+ * @memberof @osgShadow
  */
 var ComputeMultiFrustumBoundsVisitor = function () {
 

@@ -4,8 +4,12 @@ var Matrix = require( 'osg/Matrix' );
 var Vec4 = require( 'osg/Vec4' );
 var Vec3 = require( 'osg/Vec3' );
 
-/** Concrete class for implementing polytope intersections with the scene graph.
- * To be used in conjunction with IntersectionVisitor. */
+/**
+ * Concrete class for implementing polytope intersections with the scene graph.
+ * To be used in conjunction with IntersectionVisito
+ * @class
+ * @memberof osgUtil
+ */
 var PolytopeIntersector = function () {
     this._intersections = [];
     this._index = 0;

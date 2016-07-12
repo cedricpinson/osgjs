@@ -2,7 +2,10 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Compiler = require( 'osgShader/Compiler' );
 
-
+/**
+ * @class 
+ * @memberof @osgShadow
+ */
 var CompilerShadowCast = function () {
     Compiler.apply( this, arguments );
     this._isVertexColored = false;

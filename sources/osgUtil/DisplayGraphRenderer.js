@@ -2,6 +2,10 @@
 var DisplayGraphNode = require( 'osgUtil/DisplayGraphNode' );
 var RenderBin = require( 'osg/RenderBin' );
 
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var DisplayGraphRenderer = function ( selectables ) {
 
     this._selectables = selectables;

@@ -9,6 +9,7 @@ var Timer = require( 'osg/Timer' );
 /**
  * Program encapsulate an vertex and fragment shader
  * @class Program
+ * @memberof osg
  */
 var Program = function ( vShader, fShader ) {
     GLObject.call( this );

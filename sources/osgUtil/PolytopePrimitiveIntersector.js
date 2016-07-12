@@ -30,6 +30,11 @@ var PlanesLine = function ( planeMask, pos, dir ) {
     this._pos = pos;
     this._dir = dir;
 };
+
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var PolytopePrimitiveIntersector = function () {
     this._intersections = [];
     this._nodePath = [];

@@ -12,7 +12,13 @@ var Notify = require( 'osg/Notify' );
 // use the same kind of opengl lights
 // see http://www.glprogramming.com/red/chapter05.html
 
-
+/**
+ * @class
+ * @memberof osg
+ * @param {integer} [lightNum] number of lights
+ * @param {bool} [disable] sets on/off lighting
+ * @extends StateAttribute
+ */
 var Light = function ( lightNum, disable ) {
     StateAttribute.call( this );
 

@@ -5,8 +5,10 @@ var TransformEnums = require( 'osg/TransformEnums' );
 var Vec3 = require( 'osg/Vec3' );
 
 /**
- *  LightSource is a positioned node to use with StateAttribute Light
- *  @class LightSource
+ * LightSource is a positioned node to use with StateAttribute Light
+ * @class LightSource
+ * @memberof osg
+ * @extends Node
  */
 var LightSource = function () {
     Node.call( this );
@@ -14,7 +16,6 @@ var LightSource = function () {
     this._referenceFrame = TransformEnums.RELATIVE_RF;
 };
 
-/** @lends LightSource.prototype */
 LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
     getLight: function () {
         return this._light;

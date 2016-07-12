@@ -5,6 +5,10 @@ var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
 
 
 // search into a subgraph all target
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var CollectAnimationUpdateCallbackVisitor = function () {
     NodeVisitor.call( this );
     this._animationUpdateCallback = {};

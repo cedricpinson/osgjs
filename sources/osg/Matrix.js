@@ -38,8 +38,11 @@ var matrixCreate = function () {
     out[ 15 ] = 1.0;
     return out;
 };
-
-/** @class Matrix Operations */
+/**
+ * Matrix Operations
+ * @class
+ * @memberof osg
+ */
 var Matrix = {
 
     create: function () {
@@ -144,6 +147,8 @@ var Matrix = {
      * @param {Number} y position
      * @param {Number} z position
      * @param {Array} matrix to write result
+     * @method
+     * @memberof osg.Matrix
      */
     makeTranslate: function ( x, y, z, matrix ) {
         Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
@@ -842,6 +847,11 @@ var Matrix = {
      *  if a result argument is given the return of the function is true or false
      *  depending if the matrix can be inverted, else if no result argument is given
      *  the return is identity if the matrix can not be inverted and the matrix overthise
+     * @param  {[type]}
+     * @param  {[type]}
+     * @return {[type]}
+     * @method
+     * @memberof osg.Matrix
      */
     inverse4x4: function ( matrix, result ) {
         var tmp0 = matrix[ 10 ] * matrix[ 15 ];

@@ -4,7 +4,10 @@ var Quat = require( 'osg/Quat' );
 var Target = require( 'osgAnimation/Target' );
 var channelType = require( 'osgAnimation/channelType' );
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var Channel = {};
 
 // channel {

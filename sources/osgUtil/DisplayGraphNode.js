@@ -3,6 +3,10 @@ var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var DisplayGraphNode = function ( selectables ) {
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
 

@@ -5,7 +5,13 @@ var Vec4 = require( 'osg/Vec4' );
 var Vec3 = require( 'osg/Vec3' );
 
 
-/** @class Plane Operations */
+/** 
+ * @class  Plane
+ * @memberof osg
+ * @param  {[type]}
+ * @param  {[type]}
+ * @return {[type]}
+ */
 var Plane = MACROUTILS.objectInherit( Vec4, {
     // Many case (frustum, convexity)
     // needs to know where from a plane it stands,

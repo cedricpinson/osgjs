@@ -6,6 +6,8 @@ var StateAttribute = require( 'osg/StateAttribute' );
 /**
  *  Manage CullFace attribute
  *  @class CullFace
+ *  @memberof osg
+ *  @extends StateAttribute
  */
 var CullFace = function ( mode ) {
     StateAttribute.call( this );

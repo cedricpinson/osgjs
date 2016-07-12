@@ -3,7 +3,11 @@ var config = require( 'config' );
 
 var ArrayType = config.ArrayType;
 
-/** @class Vec4 Operations */
+/** 
+ * Vec4 Operations
+ * @class
+ * @memberof osg
+ */
 var Vec4 = {
 
     create: function () {

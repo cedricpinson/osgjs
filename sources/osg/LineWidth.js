@@ -2,6 +2,12 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 
+/**
+ * Only working in linux/MacOSX
+ * @class LineWidth
+ * @memberof osg
+ * @extends StateAttribute
+ */
 var LineWidth = function ( lineWidth ) {
     StateAttribute.call( this );
     this.lineWidth = 1.0;

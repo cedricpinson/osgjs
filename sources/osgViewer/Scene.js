@@ -3,7 +3,10 @@ var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
 var DatabasePager = require( 'osgDB/DatabasePager' );
 
-
+/**
+ * @class
+ * @memberof osgViewer
+ */
 var Scene = function () {
     Object.call( this );
     this._databasePager = new DatabasePager();

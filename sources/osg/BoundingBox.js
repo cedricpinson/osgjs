@@ -3,7 +3,13 @@ var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Vec3 = require( 'osg/Vec3' );
 
-
+/**
+ * General purpose axis-aligned bounding box class for enclosing objects/vertices.
+ * Bounds leaf objects in a scene such as osg::Drawable objects. Used for frustum
+ * culling etc.
+ *  @class
+ *  @memberof osg
+ */
 var BoundingBox = function () {
     this._min = Vec3.create();
     this._max = Vec3.create();

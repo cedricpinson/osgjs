@@ -18,10 +18,12 @@ var Scene = require( 'osgViewer/Scene' );
 var DisplayGraph = require( 'osgUtil/DisplayGraph' );
 var Notify = require( 'osg/Notify' );
 
-
-// View is normally inherited from osg/View. In osgjs we dont need it yet
-// this split, so everything is in osgViewer/View
-
+/**
+ * View is normally inherited from osg/View. In osgjs we dont need it yet
+ * this split, so everything is in osgViewer/View
+ * @class
+ * @memberof osgViewer
+ */
 var View = function () {
 
     this._camera = new Camera();

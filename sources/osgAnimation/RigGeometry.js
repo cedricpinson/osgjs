@@ -24,7 +24,10 @@ var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 //            }
 // }
 
-
+/**
+ *  @class
+ *  @memberof osgAnimation
+ */
 var RigGeometry = function () {
 
     Geometry.call( this );

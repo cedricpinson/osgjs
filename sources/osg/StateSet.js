@@ -14,6 +14,9 @@ var MACROUTILS = require( 'osg/Utils' );
  * <tt>Drawable</tt>s and <tt>Node</tt>s can reference the same \c StateSet).
  * Indeed, this practice is recommended whenever possible,
  * as this minimizes expensive state changes in the graphics pipeline.
+ * @class StateSet
+ * @memberof osg
+ * @extends Object
  */
 var StateSet = function () {
     Object.call( this );

@@ -2,6 +2,10 @@
 var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var ShadowCompiler = require( 'osgShadow/ShadowCastCompiler' );
 
+/**
+ * @class 
+ * @memberof @osgShadow
+ */
 var ShaderGeneratorShadowCast = function () {
 
     ShaderGenerator.apply( this, arguments );

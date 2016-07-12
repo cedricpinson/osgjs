@@ -6,7 +6,7 @@ var DatabasePager = require( 'osgDB/DatabasePager' );
 var osgWrappers = require( 'osgWrappers/serializers/osg' );
 var osgAnimationWrappers = require( 'osgWrappers/serializers/osgAnimation' );
 var osgTextWrappers = require( 'osgWrappers/serializers/osgText' );
-
+/** @namespace osgDB */
 var osgDB = {};
 osgDB.Input = Input;
 MACROUTILS.objectMix( osgDB, ReaderParser );

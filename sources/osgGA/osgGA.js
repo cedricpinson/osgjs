@@ -19,7 +19,7 @@ var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRContr
 var SwitchManipulator = require( 'osgGA/SwitchManipulator' );
 var OrbitManipulatorEnums = require( 'osgGA/OrbitManipulatorEnums' );
 
-
+/** @namespace osgGA */
 var osgGA = {};
 
 Hammer.NO_MOUSEEVENTS = true; // disable hammer js mouse events

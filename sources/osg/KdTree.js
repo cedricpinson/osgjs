@@ -41,6 +41,13 @@ var KdTreeSphereIntersector = require( 'osg/KdTreeSphereIntersector' );
 // - first and second respectively represents the left and right sub children
 // We know that a node is a leaf if first is negative, in that case the range will be defined by
 // [ -first - 1, -first-1 + second ]
+
+/**
+ * @class 
+ * @memberof osg
+ */
+
+
 var KdNode = function ( first, second ) {
     this._bb = new BoundingBox();
     this._first = first;

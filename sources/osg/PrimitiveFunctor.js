@@ -19,6 +19,7 @@ var PrimitiveSet = require( 'osg/PrimitiveSet' );
  * Important Note: You should take into account that you are accesing the actual vertices of the primitive
  * you might want to do a copy of these values in your callback to avoid to modify the primitive geometry
  *  @class PrimitiveFunctor
+ *  @memberof osg
  */
 
 var PrimitiveFunctor = function ( geom, cb, vertices ) {

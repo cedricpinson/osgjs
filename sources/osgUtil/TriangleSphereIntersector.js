@@ -12,6 +12,10 @@ var TriangleIntersection = function ( normal, i1, i2, i3 ) {
     this.i3 = i3;
 };
 
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var TriangleSphereIntersector = function () {
     TriangleIntersector.apply( this, arguments );
 

@@ -1,7 +1,10 @@
 'use strict';
 var Vec2 = require( 'osg/Vec2' );
 
-
+/**
+ * @class
+ * @memberof osgGA
+ */
 var OrbitManipulatorGamePadController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();

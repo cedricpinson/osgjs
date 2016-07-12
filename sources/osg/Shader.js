@@ -8,6 +8,8 @@ var GLObject = require( 'osg/GLObject' );
 /**
  * Shader manage shader for vertex and fragment, you need both to create a glsl program.
  * @class Shader
+ * @memberof osg
+ * @extends GLObject
  */
 var Shader = function ( type, text ) {
     GLObject.call( this );

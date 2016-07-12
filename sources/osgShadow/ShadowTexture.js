@@ -13,7 +13,8 @@ var Vec4 = require( 'osg/Vec4' );
  * trigger hash change when changing texture precision from float to byt
  * shadowSettings.js header for param explanations
  * @class ShadowTexture
- * @inherits StateAttribute
+ * @extends StateAttribute
+ * @memberof osgShadow
  */
 var ShadowTexture = function () {
     Texture.call( this );

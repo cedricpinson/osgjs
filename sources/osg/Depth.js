@@ -2,6 +2,12 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 
+
+/**
+ * @class 
+ * @memberof osg
+ */
+
 var Depth = function ( func, near, far, writeMask ) {
     StateAttribute.call( this );
 

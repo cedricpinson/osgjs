@@ -2,7 +2,15 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 
-
+/**
+ * @class
+ * @memberof osg
+ * @param {red}
+ * @param {green}
+ * @param {blue}
+ * @param {alpha}
+ * @extends StateAttribute
+ */
 var ColorMask = function ( red, green, blue, alpha ) {
 
     StateAttribute.call( this );

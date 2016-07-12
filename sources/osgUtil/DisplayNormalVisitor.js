@@ -98,7 +98,10 @@ ShaderGeneratorCompilerOffsetTangent.prototype = ShaderGenerator.prototype;
 ////////////////////////
 // DISPLAY NORMAL VISITOR
 ////////////////////////
-
+/**
+ * @class
+ * @memberof osgUtil
+ */
 var DisplayNormalVisitor = function () {
     NodeVisitor.call( this );
 

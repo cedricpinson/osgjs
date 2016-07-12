@@ -304,15 +304,19 @@ var gruntTasks = {};
 // ## Documentation
 //
 ( function () {
+    var pkg = JSON.parse( fs.readFileSync( 'package.json' ) );
     gruntTasks.documentation = {
         'default': {
             files: [ {
-                expand: true,
-                cwd: 'sources',
-                src: [ '**/*.js' ]
+                'expand': true,
+                'cwd': 'sources',
+                'src': [ '**/*.js' ]
             } ],
             options: {
-                destination: 'docs'
+                destination: 'docs',
+                theme: 'docs/documentation-theme-osgjs',
+                name: pkg.name,
+                version: pkg.version,
             }
         }
     };
