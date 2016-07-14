@@ -101,8 +101,6 @@
             // create a new shader generator with our own compiler
             var shaderGenerator = new osgShader.ShaderGenerator();
             shaderGenerator.setShaderCompiler( CustomCompiler );
-            // make the ShaderGenerator accept new Attributes
-            shaderGenerator.getAcceptAttributeTypes().add( 'Ramp' ).add( 'Negatif' );
 
             // get or create instance of ShaderGeneratorProxy
             var shaderGeneratorProxy = this._viewer.getState().getShaderGeneratorProxy();

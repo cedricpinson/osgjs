@@ -358,7 +358,6 @@
             var shaderGenerator = new osgShader.ShaderGenerator();
             shaderGenerator.setShaderCompiler( CustomCompiler );
             // make the ShaderGenerator accept new Attributes
-            shaderGenerator.getAcceptAttributeTypes().add( 'Temporal' );
 
             // get or create instance of ShaderGeneratorProxy
             var shaderGeneratorProxy = this._viewer.getState().getShaderGeneratorProxy();
