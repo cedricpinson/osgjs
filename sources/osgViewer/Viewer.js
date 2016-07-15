@@ -485,7 +485,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         var widthChangeRatio = canvas.width / prevWidth;
         var heightChangeRatio = canvas.height / prevHeight;
         var aspectRatioChange = widthChangeRatio / heightChangeRatio;
-        vp.setViewport( vp.x() * widthChangeRatio, vp.y() * heightChangeRatio, vp.width() * widthChangeRatio, vp.height() * heightChangeRatio );
+        vp.setViewport( Math.round( vp.x() * widthChangeRatio ), Math.round( vp.y() * heightChangeRatio ), Math.round( vp.width() * widthChangeRatio ), Math.round( vp.height() * heightChangeRatio ) );
 
         if ( aspectRatioChange !== 1.0 ) {
             Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );
