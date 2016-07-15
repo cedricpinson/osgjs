@@ -19,43 +19,60 @@ var NodeVisitor = function ( traversalMode ) {
 NodeVisitor.TRAVERSE_PARENTS = 1;
 NodeVisitor.TRAVERSE_ALL_CHILDREN = 2;
 NodeVisitor.TRAVERSE_ACTIVE_CHILDREN = 3;
+
 NodeVisitor.NODE_VISITOR = 0;
 NodeVisitor.UPDATE_VISITOR = 1;
 NodeVisitor.CULL_VISITOR = 2;
 
-
-NodeVisitor._traversalFunctions = {};
-NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_PARENTS ] = function ( node ) {
+// =================== Traversal functions ===============
+var traverseParents = function traverseParents( node ) {
     node.ascend( this );
 };
-NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function ( node ) {
-    node.traverse( this );
-};
-NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
+
+var traverseChildren = function traverseAllChildren( node ) {
     node.traverse( this );
 };
 
+// must be sync with TRAVERSE_ENUMS
+NodeVisitor._traversalFunctions = [
+    undefined,
+    traverseParents,
+    traverseChildren,
+    traverseChildren
+];
 
-NodeVisitor._pushOntoNodePath = {};
-NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_PARENTS ] = function ( node ) {
+// =================== PushOntoNodePath functions ===============
+var pushOntoNodePathParents = function ( node ) {
     this.nodePath.unshift( node );
 };
-NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function ( node ) {
+
+var pushOntoNodePathChildren = function ( node ) {
     this.nodePath.push( node );
 };
-NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
-    this.nodePath.push( node );
-};
-NodeVisitor._popFromNodePath = {};
-NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_PARENTS ] = function () {
+
+NodeVisitor._pushOntoNodePath = [
+    undefined,
+    pushOntoNodePathParents,
+    pushOntoNodePathChildren,
+    pushOntoNodePathChildren
+];
+
+// =================== PopOntoNodePath functions ===============
+var popFromNodePathParents = function () {
     return this.nodePath.shift();
 };
-NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function () {
+
+var popFromNodePathChildren = function () {
     this.nodePath.pop();
 };
-NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function () {
-    this.nodePath.pop();
-};
+
+NodeVisitor._popFromNodePath = [
+    undefined,
+    popFromNodePathParents,
+    popFromNodePathChildren,
+    popFromNodePathChildren
+];
+
 
 NodeVisitor.prototype = {
 

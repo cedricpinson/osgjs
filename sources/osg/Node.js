@@ -223,15 +223,17 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
     },
 
     traverse: function ( visitor ) {
-        for ( var i = 0, l = this.children.length; i < l; i++ ) {
-            var child = this.children[ i ];
+        var children = this.children;
+        for ( var i = 0, l = children.length; i < l; i++ ) {
+            var child = children[ i ];
             child.accept( visitor );
         }
     },
 
     ascend: function ( visitor ) {
-        for ( var i = 0, l = this.parents.length; i < l; i++ ) {
-            var parent = this.parents[ i ];
+        var parents = this.parents;
+        for ( var i = 0, l = parents.length; i < l; i++ ) {
+            var parent = parents[ i ];
             parent.accept( visitor );
         }
     },
