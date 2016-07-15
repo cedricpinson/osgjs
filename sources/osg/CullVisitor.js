@@ -611,7 +611,7 @@ CullVisitor.prototype[ Geometry.typeID ] = ( function () {
 
     var tempVec = Vec3.create();
     var loggedOnce = false;
-    return function ( node ) {
+    return function geometryApply( node ) {
 
         this._numGeometry++;
 

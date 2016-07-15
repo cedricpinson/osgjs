@@ -27,10 +27,11 @@ UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
             var updateCallbackList = stateSet.getUpdateCallbackList();
 
             var numStateSetUpdateCallback = updateCallbackList.length;
-            if ( numStateSetUpdateCallback )
+            if ( numStateSetUpdateCallback ) {
                 this._numUpdateCallback += numStateSetUpdateCallback;
-            for ( var i = 0, l = numStateSetUpdateCallback; i < l; i++ )
-                updateCallbackList[ i ].update( stateSet, this );
+                for ( var i = 0, l = numStateSetUpdateCallback; i < l; i++ )
+                    updateCallbackList[ i ].update( stateSet, this );
+            }
         }
 
         // handle callback in nodes

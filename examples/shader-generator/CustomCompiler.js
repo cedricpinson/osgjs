@@ -11,6 +11,8 @@
         osgShader.Compiler.apply( this, arguments );
     };
 
+    CustomCompiler.validAttributeType = osgShader.Compiler.validAttributeType.slice();
+    CustomCompiler.validAttributeType.push( 'Negatif', 'Ramp' );
 
     CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
 
