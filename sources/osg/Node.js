@@ -323,7 +323,7 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         var collected = new CollectParentPaths();
         collected.setNodeMaskOverride( ~0x0 ); // traverse everything
 
-        return function ( halt, matrixCreate ) {
+        return function computeLocalToWorldList( halt, matrixCreate ) {
             collected.reset();
             collected.halt = halt;
 

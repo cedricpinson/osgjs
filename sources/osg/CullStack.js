@@ -201,6 +201,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
                     return false; // father bounding sphere totally inside
 
                 var matrix = this._reservedMatrixStack.get();
+                Matrix.makeIdentity( matrix );
 
                 // TODO: Perf just get World Matrix at each node transform
                 // store it in a World Transform Node Path (only world matrix change)

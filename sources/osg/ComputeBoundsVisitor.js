@@ -44,6 +44,8 @@ ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objec
 
         if ( stackLength )
             Matrix.copy( this._matrixStack[ stackLength - 1 ], matrix );
+        else
+            Matrix.makeIdentity( matrix );
 
         transform.computeLocalToWorldMatrix( matrix, this );
 
