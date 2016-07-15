@@ -2,7 +2,7 @@
 title: OSG.JS - Javascript Implementation of OpenSceneGraph
 template: index.html
 github: http://github.com/cedricpinson/osgjs
-download: https://github.com/cedricpinson/osgjs/archive/develop.zip
+download: https://github.com/cedricpinson/osgjs/releases/latest
 ---
 
 # OSG.JS
