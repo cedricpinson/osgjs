@@ -87,7 +87,7 @@ module.exports = {
         }
                  ]
     },
-    devtool: 'eval',
+    devtool: 'sourcemaps',
     plugins: [
         new webpack.BannerPlugin( [
             'OSGJS',
