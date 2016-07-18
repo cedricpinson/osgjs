@@ -18,6 +18,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var StateSet = function () {
     Object.call( this );
 
+    this._parents = [];
     this.attributeMap = new Map();
 
     this.textureAttributeMapList = [];
@@ -57,40 +58,51 @@ StateSet.AttributePair.prototype = {
 
 
 StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
     getAttributePair: function ( attribute, value ) {
         return new StateSet.AttributePair( attribute, value );
     },
-    addUniform: function ( uniform, mode ) {
-        if ( mode === undefined ) {
-            mode = StateAttribute.ON;
-        }
 
+    addUniform: function ( uniform, originalMode ) {
+        var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
         var name = uniform.getName();
         this.uniforms[ name ] = this.getAttributePair( uniform, mode );
         this.uniforms.dirty();
     },
+
+    addParent: function ( node ) {
+        this._parents.push( node );
+    },
+
+    removeParent: function ( node ) {
+        var idx = this._parents.indexOf( node );
+        if ( idx === -1 ) return;
+        this._parents.splice( idx, 1 );
+    },
+
     removeUniform: function ( uniform ) {
         this.uniforms.remove( uniform.getName() );
     },
+
     removeUniformByName: function ( uniformName ) {
         this.uniforms.remove( uniformName );
     },
+
     getUniform: function ( uniform ) {
         var uniformMap = this.uniforms;
         if ( uniformMap[ uniform ] ) return uniformMap[ uniform ].getAttribute();
-
         return undefined;
     },
+
     getUniformList: function () {
         return this.uniforms;
     },
 
-    setTextureAttributeAndModes: function ( unit, attribute, mode ) {
-        if ( mode === undefined ) {
-            mode = StateAttribute.ON;
-        }
+    setTextureAttributeAndModes: function ( unit, attribute, originalMode ) {
+        var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
         this._setTextureAttribute( unit, this.getAttributePair( attribute, mode ) );
     },
+
     setTextureAttributeAndMode: function ( unit, attribute, mode ) {
         Notify.log( 'StateSet.setTextureAttributeAndMode is deprecated, insteady use setTextureAttributeAndModes' );
         this.setTextureAttributeAndModes( unit, attribute, mode );
@@ -99,6 +111,7 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     getNumTextureAttributeLists: function () {
         return this.textureAttributeMapList.length;
     },
+
     getTextureAttribute: function ( unit, attribute ) {
         if ( this.textureAttributeMapList[ unit ] === undefined ) return undefined;
 
@@ -126,10 +139,8 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         return this.attributeMap[ attributeType ].getAttribute();
     },
 
-    setAttributeAndModes: function ( attribute, mode ) {
-        if ( mode === undefined ) {
-            mode = StateAttribute.ON;
-        }
+    setAttributeAndModes: function ( attribute, originalMode ) {
+        var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
         this._setAttribute( this.getAttributePair( attribute, mode ) );
     },
 
@@ -138,10 +149,8 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this.setAttributeAndModes( attribute, mode );
     },
 
-    setAttribute: function ( attribute, mode ) {
-        if ( mode === undefined ) {
-            mode = StateAttribute.ON;
-        }
+    setAttribute: function ( attribute, originalMode ) {
+        var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
         this._setAttribute( this.getAttributePair( attribute, mode ) );
     },
 
@@ -167,14 +176,40 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     getUpdateCallbackList: function () {
         return this._updateCallbackList;
     },
+
     removeUpdateCallback: function ( cb ) {
-        var arrayIdx = this._updateCallbackList.indexOf( cb );
-        if ( arrayIdx !== -1 )
-            this._updateCallbackList.splice( arrayIdx, 1 );
+        var idx = this._updateCallbackList.indexOf( cb );
+        if ( idx === -1 ) return;
+        this._updateCallbackList.splice( idx, 1 );
+
+        if ( this._updateCallbackList.length === 0 ) {
+            var parents = this._parents;
+            for ( var i = 0, l = parents.length; i < l; i++ ) {
+                var parent = parents[ i ];
+                parent.setNumChildrenRequiringUpdateTraversal( parent.getNumChildrenRequiringUpdateTraversal() - 1 );
+            }
+        }
     },
+
+    requiresUpdateTraversal: function () {
+        return !!this._updateCallbackList.length;
+    },
+
     addUpdateCallback: function ( cb ) {
+
+        var dontNoticeParents = Boolean( this._updateCallbackList.length );
         this._updateCallbackList.push( cb );
+
+        // parent alreay know we have update callback
+        if ( dontNoticeParents ) return;
+
+        var parents = this._parents;
+        for ( var i = 0, l = parents.length; i < l; i++ ) {
+            var parent = parents[ i ];
+            parent.setNumChildrenRequiringUpdateTraversal( parent.getNumChildrenRequiringUpdateTraversal() + 1 );
+        }
     },
+
     hasUpdateCallback: function ( cb ) {
         return this._updateCallbackList.indexOf( cb ) !== -1;
     },

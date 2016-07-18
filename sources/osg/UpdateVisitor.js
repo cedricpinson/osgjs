@@ -23,7 +23,7 @@ UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         // handle callback in stateset
         var stateSet = node.getStateSet();
-        if ( stateSet ) {
+        if ( stateSet && stateSet.requiresUpdateTraversal() ) {
             var updateCallbackList = stateSet.getUpdateCallbackList();
 
             var numStateSetUpdateCallback = updateCallbackList.length;
@@ -37,15 +37,15 @@ UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         // handle callback in nodes
         var ncs = node.getUpdateCallbackList();
         var numUpdateCallback = ncs.length;
-        if ( numUpdateCallback )
-            for ( var j = 0, m = numUpdateCallback; j < m; j++ ) {
-                this._numUpdateCallback++;
-                if ( !ncs[ j ].update( node, this ) ) {
-                    return;
-                }
+        for ( var j = 0; j < numUpdateCallback; j++ ) {
+            this._numUpdateCallback++;
+            if ( !ncs[ j ].update( node, this ) ) {
+                return;
             }
+        }
 
-        this.traverse( node );
+        if ( node.getNumChildrenRequiringUpdateTraversal() > 0 )
+            this.traverse( node );
     }
 } );
 

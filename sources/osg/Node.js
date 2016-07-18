@@ -5,6 +5,7 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var BoundingSphere = require( 'osg/BoundingSphere' );
 var StateSet = require( 'osg/StateSet' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
+var Notify = require( 'osg/Notify' );
 var Matrix = require( 'osg/Matrix' );
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
@@ -19,7 +20,7 @@ var Node = function () {
     Object.call( this );
 
     this.children = [];
-    this.parents = [];
+    this._parents = [];
     /*jshint bitwise: false */
     this.nodeMask = ~0;
     /*jshint bitwise: true */
@@ -35,6 +36,8 @@ var Node = function () {
     this._cullingActive = true;
     this._numChildrenWithCullingDisabled = 0;
 
+    this._numChildrenRequiringUpdateTraversal = 0;
+
     // it's a tmp object for internal use, do not use
     this._tmpBox = new BoundingBox();
 };
@@ -44,19 +47,20 @@ var nodeGetMat = Node._reservedMatrixStack.get.bind( Node._reservedMatrixStack )
 
 /** @lends Node.prototype */
 Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
     /**
       Return StateSet and create it if it does not exist yet
       @type StateSet
    */
     getOrCreateStateSet: function () {
-        if ( this.stateset === undefined ) {
-            this.stateset = new StateSet();
-        }
+        if ( !this.stateset ) this.setStateSet( new StateSet() );
         return this.stateset;
     },
+
     getStateSet: function () {
         return this.stateset;
     },
+
     accept: function ( nv ) {
         if ( nv.validNodeMask( this ) ) {
             nv.pushOntoNodePath( this );
@@ -64,24 +68,97 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
             nv.popFromNodePath();
         }
     },
+
     dirtyBound: function () {
         if ( this._boundingSphereComputed === true || this._boundingBoxComputed === true ) {
             this._boundingSphereComputed = false;
             this._boundingBoxComputed = false;
 
-            for ( var i = 0, l = this.parents.length; i < l; i++ ) {
-                this.parents[ i ].dirtyBound();
+            for ( var i = 0, l = this._parents.length; i < l; i++ ) {
+                this._parents[ i ].dirtyBound();
             }
         }
     },
+
     setNodeMask: function ( mask ) {
         this.nodeMask = mask;
     },
+
     getNodeMask: function () {
         return this.nodeMask;
     },
-    setStateSet: function ( s ) {
-        this.stateset = s;
+
+    setStateSet: function ( stateSet ) {
+
+        if ( this.stateset === stateSet ) return;
+
+        var deltaUpdate = 0;
+
+        if ( this.stateset ) {
+            deltaUpdate--;
+            this.stateset.removeParent( this );
+        }
+
+        if ( stateSet ) {
+            stateSet.addParent( this );
+            if ( stateSet.requiresUpdateTraversal() ) ++deltaUpdate;
+        }
+
+        if ( deltaUpdate !== 0 )
+            this.setNumChildrenRequiringUpdateTraversal( this.getNumChildrenRequiringUpdateTraversal() + deltaUpdate );
+
+        this.stateset = stateSet;
+    },
+
+    _updateNumChildrenRequeringUpdateTraversal: function ( delta ) {
+
+        if ( this._numChildrenRequiringUpdateTraversal === 0 && this._parents.length ) {
+            // the number of callbacks has changed, need to pass this
+            // on to parents so they know whether app traversal is
+            // required on this subgraph.
+            for ( var i = 0, l = this._parents.length; i < l; i++ ) {
+                var parent = this._parents[ i ];
+                var num = parent.getNumChildrenRequiringUpdateTraversal();
+                parent.setNumChildrenRequiringUpdateTraversal( num + delta );
+            }
+        }
+    },
+
+    setNumChildrenRequiringUpdateTraversal: function ( num ) {
+
+        // if no changes just return.
+        if ( this._numChildrenRequiringUpdateTraversal === num ) return;
+
+        // note, if _updateCallback is set then the
+        // parents won't be affected by any changes to
+        // _numChildrenRequiringUpdateTraversal so no need to inform them.
+        if ( !this._updateCallbacks.length && this._parents.length ) {
+
+            // need to pass on changes to parents.
+            var delta = 0;
+            if ( this._numChildrenRequiringUpdateTraversal > 0 ) --delta;
+            if ( num > 0 ) ++delta;
+
+            if ( delta !== 0 ) {
+                // the number of callbacks has changed, need to pass this
+                // on to parents so they know whether app traversal is
+                // required on this subgraph.
+                var parents = this._parents;
+                for ( var i = 0, l = parents.length; i < l; i++ ) {
+                    var parent = parents[ i ];
+                    var parentNum = parent.getNumChildrenRequiringUpdateTraversal();
+                    parent.setNumChildrenRequiringUpdateTraversal( parentNum + delta );
+                }
+            }
+        }
+
+        // finally update this objects value.
+        this._numChildrenRequiringUpdateTraversal = num;
+
+    },
+
+    getNumChildrenRequiringUpdateTraversal: function () {
+        return this._numChildrenRequiringUpdateTraversal;
     },
 
     /**
@@ -107,11 +184,19 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
       @param Oject callback
    */
     setUpdateCallback: function ( cb ) {
+        Notify.warn( 'deprecated use instead addUpdateCallback/removeUpdateCallback' );
+        if ( cb === this._updateCallbacks[ 0 ] || !cb ) return;
+
+        var hasExistingCallback = Boolean( this._updateCallbacks.length );
         if ( !this._updateCallbacks.length )
             this.addUpdateCallback( cb );
         else
             this._updateCallbacks[ 0 ] = cb;
+
+        if ( !hasExistingCallback )
+            this._updateNumChildrenRequeringUpdateTraversal( 1 );
     },
+
     /** Get update node callback, called during update traversal.
       @type Oject
    */
@@ -120,12 +205,23 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
     },
 
     addUpdateCallback: function ( cb ) {
+        var hasExistingCallback = Boolean( this._updateCallbacks.length );
         this._updateCallbacks.push( cb );
+
+        // send the signal on first add
+        if ( !hasExistingCallback )
+            this._updateNumChildrenRequeringUpdateTraversal( 1 );
     },
+
     removeUpdateCallback: function ( cb ) {
         var arrayIdx = this._updateCallbacks.indexOf( cb );
-        if ( arrayIdx !== -1 )
-            this._updateCallbacks.splice( arrayIdx, 1 );
+        if ( arrayIdx === -1 ) return;
+        this._updateCallbacks.splice( arrayIdx, 1 );
+
+        // send the signal when no more callback
+        if ( !this._updateCallbacks.length )
+            this._updateNumChildrenRequeringUpdateTraversal( -1 );
+
     },
     getUpdateCallbackList: function () {
         return this._updateCallbacks;
@@ -168,12 +264,27 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         }
         return false;
     },
+
     addChild: function ( child ) {
-        var c = this.children.push( child );
+
+        if ( this.children.indexOf( child ) !== -1 ) return undefined;
+
+        this.children.push( child );
         child.addParent( this );
         this.dirtyBound();
-        return c;
+
+        // could now require app traversal thanks to the new subgraph,
+        // so need to check and update if required.
+        if ( child.getNumChildrenRequiringUpdateTraversal() > 0 ||
+            child.getUpdateCallbackList().length ) {
+            this.setNumChildrenRequiringUpdateTraversal(
+                this.getNumChildrenRequiringUpdateTraversal() + 1
+            );
+        }
+
+        return child;
     },
+
     getChildren: function () {
         return this.children;
     },
@@ -184,32 +295,42 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         return this.children[ num ];
     },
     getParents: function () {
-        return this.parents;
+        return this._parents;
     },
+
     addParent: function ( parent ) {
-        this.parents.push( parent );
+        this._parents.push( parent );
     },
+
     removeParent: function ( parent ) {
-        for ( var i = 0, l = this.parents.length, parents = this.parents; i < l; i++ ) {
-            if ( parents[ i ] === parent ) {
-                parents.splice( i, 1 );
-                return;
-            }
-        }
+        var idx = this._parents.indexOf( parent );
+        if ( idx === -1 ) return;
+        this._parents.splice( idx, 1 );
     },
+
     removeChildren: function () {
         var children = this.children;
-        if ( children.length !== 0 ) {
-            for ( var i = 0, l = children.length; i < l; i++ ) {
-                children[ i ].removeParent( this );
-            }
-            children.length = 0;
-            this.dirtyBound();
+        var nbChildren = children.length;
+        if ( !nbChildren ) return;
+
+        var updateCallbackRemoved = 0;
+
+        for ( var i = 0; i < nbChildren; i++ ) {
+            var child = children[ i ];
+            child.removeParent( this );
+            if ( child.getNumChildrenRequiringUpdateTraversal() > 0 || child.getUpdateCallbackList().length ) ++updateCallbackRemoved;
         }
+
+        children.length = 0;
+        if ( updateCallbackRemoved )
+            this.setNumChildrenRequiringUpdateTraversal( this.getNumChildrenRequiringUpdateTraversal() - updateCallbackRemoved );
+
+        this.dirtyBound();
     },
 
     // preserve order
     removeChild: function ( child ) {
+
         var children = this.children;
         for ( var i = 0, l = children.length; i < l; i++ ) {
             if ( children[ i ] === child ) {
@@ -217,9 +338,14 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
                 children.splice( i, 1 );
                 i--;
                 l--;
-                this.dirtyBound();
+
+                if ( child.getNumChildrenRequiringUpdateTraversal() > 0 || child.getUpdateCallbackList().length )
+                    this.setNumChildrenRequiringUpdateTraversal( this.getNumChildrenRequiringUpdateTraversal() - 1 );
+
+                return;
             }
         }
+
     },
 
     traverse: function ( visitor ) {
@@ -231,7 +357,7 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
     },
 
     ascend: function ( visitor ) {
-        var parents = this.parents;
+        var parents = this._parents;
         for ( var i = 0, l = parents.length; i < l; i++ ) {
             var parent = parents[ i ];
             parent.accept( visitor );
@@ -312,7 +438,7 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
                 this.nodePaths.length = 0;
             },
             apply: function ( node ) {
-                if ( node.parents.length === 0 || node === this.halt || node.referenceFrame === TransformEnums.ABSOLUTE_RF ) {
+                if ( node._parents.length === 0 || node === this.halt || node.referenceFrame === TransformEnums.ABSOLUTE_RF ) {
                     // copy
                     this.nodePaths.push( this.nodePath.slice( 0 ) );
                 } else {
@@ -368,13 +494,13 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 
     setCullingActive: function ( value ) {
         if ( this._cullingActive === value ) return;
-        if ( this._numChildrenWithCullingDisabled === 0 && this.parents.length > 0 ) {
+        if ( this._numChildrenWithCullingDisabled === 0 && this._parents.length > 0 ) {
             var delta = 0;
             if ( !this._cullingActive ) --delta;
             if ( !value ) ++delta;
             if ( delta !== 0 ) {
-                for ( var i = 0, k = this.parents.length; i < k; i++ ) {
-                    this.parents[ i ].setNumChildrenWithCullingDisabled( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
+                for ( var i = 0, k = this._parents.length; i < k; i++ ) {
+                    this._parents[ i ].setNumChildrenWithCullingDisabled( this._parents[ i ].getNumChildrenWithCullingDisabled() + delta );
                 }
             }
         }
@@ -391,13 +517,13 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 
     setNumChildrenWithCullingDisabled: function ( num ) {
         if ( this._numChildrenWithCullingDisabled === num ) return;
-        if ( this._cullingActive && this.parents.length > 0 ) {
+        if ( this._cullingActive && this._parents.length > 0 ) {
             var delta = 0;
             if ( this._numChildrenWithCullingDisabled > 0 ) --delta;
             if ( num > 0 ) ++delta;
             if ( delta !== 0 ) {
-                for ( var i = 0, k = this.parents.length; i < k; i++ ) {
-                    this.parents[ i ].setNumChildrenWithCullingDisabled( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
+                for ( var i = 0, k = this._parents.length; i < k; i++ ) {
+                    this._parents[ i ].setNumChildrenWithCullingDisabled( this._parents[ i ].getNumChildrenWithCullingDisabled() + delta );
                 }
             }
         }

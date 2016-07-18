@@ -12,7 +12,7 @@ module.exports = function () {
 
         var plod = new PagedLOD();
         assert.isOk( plod.children.length === 0, 'number of children must be 0' );
-        assert.isOk( plod.parents.length === 0, 'number of parents must be 0' );
+        assert.isOk( plod.getParents().length === 0, 'number of parents must be 0' );
         var n = new Node();
         plod.addChild( n, 0, 200 );
         assert.isOk( plod.children.length === 1, 'number of children must be 1' );
