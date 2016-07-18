@@ -2,6 +2,7 @@
 var Notify = require( 'osg/Notify' );
 var Matrix = require( 'osg/Matrix' );
 var Options = require( 'osg/Options' );
+var P = require( 'bluebird' );
 var Timer = require( 'osg/Timer' );
 var UpdateVisitor = require( 'osg/UpdateVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
@@ -428,7 +429,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
     setPresentVR: function ( bool ) {
         if ( !this._hmd ) {
             Notify.warn( 'no hmd device provided to the viewer!' );
-            return;
+            return P.reject();
         }
 
         // reset position/orientation of hmd device
@@ -436,16 +437,16 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
             this._hmd.resetPose();
 
         if ( !this._hmd.capabilities.canPresent )
-            return;
+            return P.reject();
 
         if ( bool ) {
             var layers = [ {
                 source: this.getGraphicContext().canvas
             } ];
-            this._hmd.requestPresent( layers );
+            return this._hmd.requestPresent( layers );
 
         } else {
-            this._hmd.exitPresent();
+            return this._hmd.exitPresent();
         }
     },
 
