@@ -43,53 +43,55 @@
 
             var viewer = this._viewer;
 
-            viewer.setPresentVR( !this._vrState );
+            viewer.setPresentVR( !this._vrState ).then(
+                function () {
+                    // Enable VR
+                    if ( !this._vrState ) {
 
-            // Enable VR
-            if ( !this._vrState ) {
+                        // Detach the model from scene and cache it
+                        this.getRootNode().removeChild( this._modelNode );
 
-                // Detach the model from scene and cache it
-                this.getRootNode().removeChild( this._modelNode );
+                        // If no vrNode (first time vr is toggled), create one
+                        // The modelNode will be attached to it
+                        if ( !this._vrNode ) {
+                            if ( navigator.getVRDisplays ) {
 
-                // If no vrNode (first time vr is toggled), create one
-                // The modelNode will be attached to it
-                if ( !this._vrNode ) {
-                    if ( navigator.getVRDisplays ) {
+                                viewer.getEventProxy().WebVR.setEnable( true );
+                                this._vrNode = osgUtil.WebVR.createScene( viewer, this._modelNode, viewer._eventProxy.WebVR.getHmd() );
 
-                        viewer.getEventProxy().WebVR.setEnable( true );
-                        this._vrNode = osgUtil.WebVR.createScene( viewer, this._modelNode, viewer._eventProxy.WebVR.getHmd() );
+                            } else {
 
+                                viewer.getEventProxy().DeviceOrientation.setEnable( true );
+                                this._vrNode = osgUtil.WebVRCustom.createScene( viewer, this._modelNode, {
+                                    isCardboard: true,
+                                    vResolution: this._canvas.height,
+                                    hResolution: this._canvas.width
+                                } );
+
+                            }
+                        }
+
+                        // Attach the vrNode to scene instead of the model
+                        this.getRootNode().addChild( this._vrNode );
+
+                        $( '#button-enter-fullscreen' ).hide();
+                        $( '#button-exit-fullscreen' ).show();
                     } else {
 
-                        viewer.getEventProxy().DeviceOrientation.setEnable( true );
-                        this._vrNode = osgUtil.WebVRCustom.createScene( viewer, this._modelNode, {
-                            isCardboard: true,
-                            vResolution: this._canvas.height,
-                            hResolution: this._canvas.width
-                        } );
+                        // Disable VR
+                        viewer._eventProxy.WebVR.setEnable( false );
+                        viewer._eventProxy.DeviceOrientation.setEnable( false );
+                        // Detach the vrNode and reattach the modelNode
+                        this.getRootNode().removeChild( this._vrNode );
+                        this.getRootNode().addChild( this._modelNode );
 
+                        $( '#button-enter-fullscreen' ).show();
+                        $( '#button-exit-fullscreen' ).hide();
                     }
-                }
 
-                // Attach the vrNode to scene instead of the model
-                this.getRootNode().addChild( this._vrNode );
+                    this._vrState = !this._vrState;
 
-                $( '#button-enter-fullscreen' ).hide();
-                $( '#button-exit-fullscreen' ).show();
-            } else {
-
-                // Disable VR
-                viewer._eventProxy.WebVR.setEnable( false );
-                viewer._eventProxy.DeviceOrientation.setEnable( false );
-                // Detach the vrNode and reattach the modelNode
-                this.getRootNode().removeChild( this._vrNode );
-                this.getRootNode().addChild( this._modelNode );
-
-                $( '#button-enter-fullscreen' ).show();
-                $( '#button-exit-fullscreen' ).hide();
-            }
-
-            this._vrState = !this._vrState;
+                }.bind( this ) );
         },
 
         requestFullScreenVR: function () {
