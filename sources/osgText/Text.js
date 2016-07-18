@@ -44,8 +44,8 @@ var Text = function ( text ) {
     this._context.baseLine = 'middle';
     this._textY = undefined;
     // Size of the textured quad in meters.
-    this._charactherSize = 1;
-    this._charactherSizeMode = Text.OBJECT_COORDS;
+    this._characterSize = 1;
+    this._characterSizeMode = Text.OBJECT_COORDS;
     // Font resolution
     this._fontSize = 32;
     this._geometry = undefined;
@@ -107,8 +107,8 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
         // Right now we set the pivot point to center, to assure the bounding box is correct when rendering billboards.
         // TODO: Possibility to set different pivot point so we can have missing alignments.
         var aspectRatio = this._canvas.width / this._canvas.height;
-        var quadWidth = this._charactherSize * aspectRatio;
-        this._geometry = Shape.createTexturedQuadGeometry( -quadWidth / 2, -this._charactherSize / 2, 0, quadWidth, 0, 0, 0, this._charactherSize, 0 );
+        var quadWidth = this._characterSize * aspectRatio;
+        this._geometry = Shape.createTexturedQuadGeometry( -quadWidth / 2, -this._characterSize / 2, 0, quadWidth, 0, 0, 0, this._characterSize, 0 );
         // create a texture to attach the canvas2D
         var texture = new Texture();
         texture.setTextureSize( this._canvas.width, this._canvas.height );
@@ -153,27 +153,27 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
     },
 
     setCharacterSize: function ( size ) {
-        this._charactherSize = size;
-        if ( this._charactherSizeMode !== Text.OBJECT_COORDS ) {
-            Matrix.makeScale( this._charactherSize, this._charactherSize, this._charactherSize, this._matrixTransform.getMatrix() );
-            if ( this._charactherSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
-                this.setMaximumScale( this._charactherSize );
+        this._characterSize = size;
+        if ( this._characterSizeMode !== Text.OBJECT_COORDS ) {
+            Matrix.makeScale( this._characterSize, this._characterSize, this._characterSize, this._matrixTransform.getMatrix() );
+            if ( this._characterSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
+                this.setMaximumScale( this._characterSize );
         }
         this._dirty = true;
     },
 
     getCharacterSize: function () {
-        return this._charactherSize;
+        return this._characterSize;
     },
 
     setCharacterSizeMode: function ( mode ) {
-        this._charactherSizeMode = mode;
-        if ( this._charactherSizeMode !== Text.OBJECT_COORDS ) {
-            Matrix.makeScale( this._charactherSize, this._charactherSize, this._charactherSize, this._matrixTransform.getMatrix() );
+        this._characterSizeMode = mode;
+        if ( this._characterSizeMode !== Text.OBJECT_COORDS ) {
+            Matrix.makeScale( this._characterSize, this._characterSize, this._characterSize, this._matrixTransform.getMatrix() );
             this.setAutoScaleToScreen( true );
             this.setMaximumScale( Number.MAX_VALUE );
-            if ( this._charactherSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
-                this.setMaximumScale( this._charactherSize );
+            if ( this._characterSizeMode === Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT )
+                this.setMaximumScale( this._characterSize );
         } else {
             this._matrixTransform.setMatrix( Matrix.create() );
             this.setAutoScaleToScreen( false );
@@ -182,7 +182,7 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
     },
 
     getCharacterSizeMode: function () {
-        return this._charactherSizeMode;
+        return this._characterSizeMode;
     },
 
     setFontResolution: function ( resolution ) {
