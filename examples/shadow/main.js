@@ -193,7 +193,8 @@
             var h = 80;
             //osg.Matrix.makeTranslate(x ,y,h, node.getMatrix());
 
-            var matrixList = node.parents[ 0 ].getWorldMatrices();
+            var parents = node.getParents();
+            var matrixList = parents[ 0 ].getWorldMatrices();
             var worldMatrix = matrixList[ 0 ];
 
             var worldCameraPosition = osg.Matrix.transformVec3( worldMatrix, [ x, y, 80 ], [] );
@@ -588,7 +589,8 @@
             var h = 80;
             osg.Matrix.makeTranslate( x, y, h, node.getMatrix() );
 
-            var matrixList = node.parents[ 0 ].getWorldMatrices();
+            var parents = node.getParents();
+            var matrixList = parents[ 0 ].getWorldMatrices();
             var worldMatrix = matrixList[ 0 ];
 
             var worldCameraPosition = osg.Matrix.transformVec3( worldMatrix, [ x, y, 80 ], [] );

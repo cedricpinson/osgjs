@@ -535,10 +535,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     getTransformType: function ( node ) {
         var n = node;
-        while ( n.parents.length > 0 ) {
+        while ( n.getParents().length > 0 ) {
             if ( n.referenceFrame !== undefined && n.referenceFrame === TransformEnums.ABSOLUTE_RF )
                 return TransformEnums.ABSOLUTE_RF;
-            n = n.parents[ 0 ];
+            n = n.getParents()[ 0 ];
         }
         return TransformEnums.RELATIVE_RF;
     },

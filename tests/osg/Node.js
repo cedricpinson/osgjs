@@ -9,7 +9,7 @@ module.exports = function () {
 
         var n = new Node();
         assert.isOk( n.children.length === 0, 'number of children must be 0' );
-        assert.isOk( n.parents.length === 0, 'number of parents must be 0' );
+        assert.isOk( n.getParents().length === 0, 'number of parents must be 0' );
         assert.isOk( n.nodeMask === ~0, 'nodemask must be ~0' );
         assert.isOk( n._boundingSphere !== undefined, 'boundingSphere must not be undefined' );
         assert.isOk( n._boundingSphereComputed === false, 'boundingSphereComputed must be false' );
@@ -19,7 +19,7 @@ module.exports = function () {
         var n1 = new Node();
         n.addChild( n1 );
         assert.isOk( n.children.length === 1, 'n must have 1 child' );
-        assert.isOk( n1.parents.length === 1, 'n1 must have 1 parent' );
+        assert.isOk( n1.getParents().length === 1, 'n1 must have 1 parent' );
         assert.isOk( n._boundingSphereComputed === false, 'boundingSphereComputed must be false after adding child' );
         n.getBound();
         assert.isOk( n._boundingSphereComputed === true, 'boundingSphereComputed must be true after calling getBound' );
@@ -36,5 +36,47 @@ module.exports = function () {
         assert.isOk( n.isCullingActive() === false, 'culling should be disabled because n has a child with the culling disabled' );
         n1.setCullingActive( true );
         assert.isOk( n.isCullingActive() === true, 'culling should be enabled because all of the children have their culling active' );
+    } );
+
+
+    test( 'Node.getNumChildrenRequiringUpdateTraversal', function () {
+
+        var DummyUpdateCallback = function () {};
+        DummyUpdateCallback.prototype = {
+            update: function () {
+                return true;
+            }
+        };
+
+        var fakeCallback = new DummyUpdateCallback();
+
+        var root = new Node();
+        var n1 = new Node();
+        var n2 = new Node();
+        root.addChild( n1 );
+        root.addChild( n2 );
+
+        assert.equal( root.getNumChildrenRequiringUpdateTraversal(), 0, 'Check not need to traverse if no callback' );
+
+
+        n2.addUpdateCallback( fakeCallback );
+        assert.equal( root.getNumChildrenRequiringUpdateTraversal(), 1, 'Check need to traverse because of callback on n2' );
+
+        n2.removeUpdateCallback( fakeCallback );
+        assert.equal( root.getNumChildrenRequiringUpdateTraversal(), 0, 'Check no need to traverse because of callback removed on n2' );
+
+        var stateSet = n1.getOrCreateStateSet();
+        stateSet.addUpdateCallback( fakeCallback );
+        assert.equal( root.getNumChildrenRequiringUpdateTraversal(), 1, 'Check need to traverse because of callback on stateset' );
+
+        n2.addUpdateCallback( fakeCallback );
+        n1.addUpdateCallback( fakeCallback );
+        assert.equal( root.getNumChildrenRequiringUpdateTraversal(), 2, 'Check need to traverse because of callback on stateset, n2 and n1' );
+
+        stateSet.removeUpdateCallback( fakeCallback );
+        n2.removeUpdateCallback( fakeCallback );
+        n1.removeUpdateCallback( fakeCallback );
+        assert.equal( root.getNumChildrenRequiringUpdateTraversal(), 0, 'Check no need to traverse because no callback anymore' );
+
     } );
 };

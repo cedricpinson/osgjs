@@ -14,7 +14,7 @@ module.exports = function () {
 
         var pShadow = new ShadowedScene();
         assert.isOk( pShadow.children.length === 0, 'number of children must be 0' );
-        assert.isOk( pShadow.parents.length === 0, 'number of parents must be 0' );
+        assert.isOk( pShadow.getParents().length === 0, 'number of parents must be 0' );
         var n = new Node();
         pShadow.addChild( n, 0, 200 );
         assert.isOk( pShadow.children.length === 1, 'number of children must be 1' );
