@@ -108,8 +108,10 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         // this part of code should be called for each view
         // right now, we dont support multi view
-        this._stateGraph.clean();
-        this._renderStage.reset();
+        if ( !window.useCullCache ) {
+            this._stateGraph.clean();
+            this._renderStage.reset();
+        }
 
         this._cullVisitor.reset();
         this._cullVisitor.setStateGraph( this._stateGraph );
@@ -132,23 +134,25 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         // update bound
         camera.getBound();
 
-        var light = view.getLight();
-        var View = require( 'osgViewer/View' );
+        if ( !window.useCullCache ) {
+            var light = view.getLight();
+            var View = require( 'osgViewer/View' );
 
-        if ( light ) {
+            if ( light ) {
 
-            switch ( view.getLightingMode() ) {
+                switch ( view.getLightingMode() ) {
 
-            case View.LightingMode.HEADLIGHT:
-                this._cullVisitor.addPositionedAttribute( null, light );
-                break;
+                case View.LightingMode.HEADLIGHT:
+                    this._cullVisitor.addPositionedAttribute( null, light );
+                    break;
 
-            case View.LightingMode.SKY_LIGHT:
-                this._cullVisitor.addPositionedAttribute( camera.getViewMatrix(), light );
-                break;
+                case View.LightingMode.SKY_LIGHT:
+                    this._cullVisitor.addPositionedAttribute( camera.getViewMatrix(), light );
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+                }
             }
         }
 

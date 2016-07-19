@@ -73,6 +73,35 @@ var CullVisitor = function () {
     this._numLightSource = 0;
     this._numGeometry = 0;
 
+    this._cacheNode = [];
+    this._cacheNodeIndex = 0;
+
+    var apply = CullVisitor.prototype.apply;
+
+    var applyLoad = function traverseAllChildrenLoadCache ( node ) {
+        if ( !this._cacheNode.length ) console.log( 'load cache' );
+        console.log( node.getInstanceID() );
+        this._cacheNode.push( node );
+        apply.call( this, node );
+    };
+
+    var applyCache = function traverseAllChildrenCache () {
+        if ( !this._cacheNodeIndex ) console.log( 'start cache' );
+        var node = this._cacheNode[ this._cacheNodeIndex ];
+        this._cacheNodeIndex++;
+        console.log( node.getInstanceID() );
+        apply.call( this, node );
+    };
+
+    this.applyLoad = applyLoad;
+    this.applyCache = applyCache;
+
+    this._transformNodePath = [];
+    this._parentMatrixIndexes = [];
+    this._currentMatrixIndexes = [];
+    this._currentProjectionIndexes = [];
+    this._parentProjectionIndexes = [];
+    this._fillCache = true;
 };
 
 /** @lends CullVisitor.prototype */
@@ -98,7 +127,63 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         this._numGeometry = 0;
     },
 
+    processCache: function () {
+
+        for ( var i = 0, l = this._transformNodePath.length; i < l; i++ ) {
+            var node = this._transformNodePath[ i ];
+            var parentMatrix, currentMatrix, idx;
+
+            // projection specialisation for camera
+            // modelview is implemented like a transform so no need to add code for that
+            if ( node instanceof Camera ) {
+                var parentProjection, currentProjection;
+
+                idx = this._parentProjectionIndexes[ i ];
+                if ( idx === -1 )
+                    parentProjection = this._projectionMatrixStack[ 0 ];
+                else
+                    parentProjection = this._reservedMatrixStack._stack[ idx ];
+
+
+                idx = this._parentMatrixIndexes[ i ];
+                if ( idx === -1 )
+                    parentMatrix = this._modelViewMatrixStack[ 0 ];
+                else
+                    parentMatrix = this._reservedMatrixStack._stack[ idx ];
+
+                currentProjection = this._reservedMatrixStack._stack[ this._currentProjectionIndexes[ i ] ];
+                currentMatrix = this._reservedMatrixStack._stack[ this._currentMatrixIndexes[ i ] ];
+
+                if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
+                    Matrix.mult( parentProjection, node.getProjectionMatrix(), currentProjection );
+                    Matrix.mult( parentMatrix, node.getViewMatrix(), currentMatrix );
+                } else {
+                    Matrix.copy( node.getProjectionMatrix(), currentProjection );
+                    Matrix.copy( node.getViewMatrix(), currentMatrix );
+                }
+
+            } else {
+
+                idx = this._parentMatrixIndexes[ i ];
+                if ( idx === -1 )
+                    parentMatrix = this._modelViewMatrixStack[ 0 ];
+                else
+                    parentMatrix = this._reservedMatrixStack._stack[ idx ];
+
+                currentMatrix = this._reservedMatrixStack._stack[ this._currentMatrixIndexes[ i ] ];
+                Matrix.copy( parentMatrix, currentMatrix );
+                node.computeLocalToWorldMatrix( currentMatrix );
+            }
+        }
+
+    },
+
     handleCullCallbacksAndTraverse: function ( node ) {
+        if ( this._useCache ) {
+            this.processCache();
+            return;
+        }
+
         var ccb = node.getCullCallback();
         if ( ccb && !ccb.cull( node, this ) )
             return;
@@ -164,15 +249,24 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
     },
 
     reset: function () {
+        if ( window.useCullCache ) {
+            this._useCache = true;
+        }
+
         CullStack.prototype.reset.call( this );
+
+        this.resetCullSettingsStack();
+        this._reserveCullSettingsStackCurrent = 0;
+
+        if ( this._useCache ) {
+            return;
+        }
+
         // Reset the stack before reseting the current leaf index.
         // Reseting elements and refilling them later is faster than create new elements
         // That's the reason to have a leafStack, see http://jsperf.com/refill/2
         this.resetRenderLeafStack();
         this._reserveLeafStackCurrent = 0;
-
-        this.resetCullSettingsStack();
-        this._reserveCullSettingsStackCurrent = 0;
 
         // renderstage / renderbin pools
         var resetStages = window.Object.keys( this._reserveRenderStageStacks );
@@ -184,6 +278,12 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
 
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
+
+        this._transformNodePath.length = 0;
+        this._parentMatrixIndexes.length = 0;
+        this._currentMatrixIndexes.length = 0;
+        this._currentProjectionIndexes.length = 0;
+        this._parentProjectionIndexes.length = 0;
     },
 
     getCurrentRenderBin: function () {
@@ -361,11 +461,14 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
 
     pushLeaf: function ( node, depth ) {
         var leafs = this._currentStateGraph.leafs;
+        // var leafs2 = this._currentStateGraph.leafs2;
         if ( leafs.length === 0 ) {
+            // leafs2 = this._currentStateGraph.leafs2 = [];
             this._currentRenderBin.addStateGraph( this._currentStateGraph );
         }
 
         var leaf = this.createOrReuseRenderLeaf();
+        // var leaf2 = this.createOrReuseRenderLeaf();
 
         leaf.init( this._currentStateGraph,
             node,
@@ -375,7 +478,12 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
             this.getCurrentModelWorldMatrix(),
             depth );
 
+        // leaf2.init( this._currentStateGraph,
+        //             node,
+        //             this._transformNodePath.slice() );
+
         leafs.push( leaf );
+        // leafs2.push( leaf2 );
 
     }
 
@@ -394,12 +502,13 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
     var modelview = this._reservedMatrixStack.get();
     var projection = this._reservedMatrixStack.get();
 
+    var lastProjectionMatrix, lastViewMatrix;
     if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
 
-        var lastProjectionMatrix = this.getCurrentProjectionMatrix();
+        lastProjectionMatrix = this.getCurrentProjectionMatrix();
         Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
 
-        var lastViewMatrix = this.getCurrentModelViewMatrix();
+        lastViewMatrix = this.getCurrentModelViewMatrix();
         Matrix.mult( lastViewMatrix, camera.getViewMatrix(), modelview );
 
     } else {
@@ -408,6 +517,16 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
         Matrix.copy( camera.getViewMatrix(), modelview );
         Matrix.copy( camera.getProjectionMatrix(), projection );
 
+    }
+
+    if ( this._fillCache ) {
+        this._parentProjectionIndexes.push( this._reservedMatrixStack._stack.indexOf( lastProjectionMatrix ) );
+        this._currentProjectionIndexes.push( this._reservedMatrixStack._stack.indexOf( projection ) );
+
+        this._parentMatrixIndexes.push( this._reservedMatrixStack._stack.indexOf( lastViewMatrix ) );
+        this._currentMatrixIndexes.push( this._reservedMatrixStack._stack.indexOf( modelview ) );
+
+        this._transformNodePath.push( camera );
     }
 
 
@@ -501,21 +620,27 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
 
 };
 
-
 CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
     this._numMatrixTransform++;
 
     // Camera and lights must enlarge node parent bounding boxes for this not to cull
-    if ( this.isCulled( node, this.nodePath ) ) {
-        return;
-    }
+    if ( this.isCulled( node, this.nodePath ) ) return;
+
     // push the culling mode.
     this.pushCurrentMask();
 
     var matrix = this._reservedMatrixStack.get();
+
     var lastMatrixStack = this.getCurrentModelViewMatrix();
     Matrix.copy( lastMatrixStack, matrix );
     node.computeLocalToWorldMatrix( matrix );
+
+    if ( this._fillCache ) {
+        this._parentMatrixIndexes.push( this._reservedMatrixStack._stack.indexOf( lastMatrixStack ) );
+        this._currentMatrixIndexes.push( this._reservedMatrixStack._stack.indexOf( matrix ) );
+        this._transformNodePath.push( node );
+    }
+
     this.pushModelViewMatrix( matrix );
 
 
