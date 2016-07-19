@@ -11,10 +11,12 @@ var IntersectionVisitor = function () {
     // We could need to use a stack of intersectors in case we want
     // to use several intersectors. Right now we use only one.
     this._intersector = undefined;
-    this._projectionStack = [];
-    this._modelStack = [];
-    this._viewStack = [];
-    this._windowStack = [];
+    this._projectionStack = [ Matrix.identity ];
+    this._modelStack = [ Matrix.identity ];
+    this._viewStack = [ Matrix.identity ];
+    this._windowStack = [ Matrix.identity ];
+
+    this.reset();
 };
 
 IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
@@ -131,7 +133,7 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
             // absolute
             projection = camera.getProjectionMatrix();
             view = camera.getViewMatrix();
-            model = IntersectionVisitor._reservedMatrixStack.get();
+            model = Matrix.makeIdentity( IntersectionVisitor._reservedMatrixStack.get() );
         }
 
         this.pushProjectionMatrix( projection );
@@ -169,7 +171,8 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         if ( !this.enter( node ) ) return;
         // Accumulate Transform
         if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
-            this.pushViewMatrix( IntersectionVisitor._reservedMatrixStack.get() );
+            var matrix = IntersectionVisitor._reservedMatrixStack.get();
+            this.pushViewMatrix( Matrix.makeIdentity( matrix ) );
             this.pushModelMatrix( node.getMatrix() );
         } else if ( this._modelStack.length > 0 ) {
             var m = Matrix.copy( this.getModelMatrix(), IntersectionVisitor._reservedMatrixStack.get() );

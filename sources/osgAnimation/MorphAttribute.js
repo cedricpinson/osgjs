@@ -85,7 +85,7 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         if ( !this._enable ) return;
 
         var uniformMap = this.getOrCreateUniforms();
-        uniformMap.uTargetWeights.setInternalArray( this._targetWeights );
+        uniformMap.uTargetWeights.setFloat4( this._targetWeights );
 
     }
 

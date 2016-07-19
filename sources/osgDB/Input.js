@@ -502,9 +502,11 @@ Input.prototype = {
             } else if ( jsonObj.Array.Uint8Array ) {
                 vb = jsonObj.Array.Uint8Array;
                 type = 'Uint8Array';
-            } else {
+            }
+
+            if ( vb === undefined ) {
                 Notify.warn( 'Typed Array ' + window.Object.keys( jsonObj.Array )[ 0 ] );
-                type = 'Float32Array';
+                return P.reject();
             }
 
             if ( vb.File ) {

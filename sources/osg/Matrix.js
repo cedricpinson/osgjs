@@ -5,6 +5,9 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var Plane = require( 'osg/Plane' );
 var Quat = require( 'osg/Quat' );
 var Vec3 = require( 'osg/Vec3' );
+var config = require( 'config' );
+
+var ArrayType = config.ArrayType;
 
 
 var Mabs = Math.abs;
@@ -16,8 +19,23 @@ var NMIN_VALUE = Number.MIN_VALUE;
 // Matrix.create = function... ;
 // Matrix.func2 = function... ;
 var matrixCreate = function () {
-    var out = new Float32Array( 16 );
-    out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
+    var out = new ArrayType( 16 );
+    out[ 0 ] = 1.0;
+    out[ 1 ] = 0.0;
+    out[ 2 ] = 0.0;
+    out[ 3 ] = 0.0;
+    out[ 4 ] = 0.0;
+    out[ 5 ] = 1.0;
+    out[ 6 ] = 0.0;
+    out[ 7 ] = 0.0;
+    out[ 8 ] = 0.0;
+    out[ 9 ] = 0.0;
+    out[ 10 ] = 1.0;
+    out[ 11 ] = 0.0;
+    out[ 12 ] = 0.0;
+    out[ 13 ] = 0.0;
+    out[ 14 ] = 0.0;
+    out[ 15 ] = 1.0;
     return out;
 };
 
@@ -25,13 +43,28 @@ var matrixCreate = function () {
 var Matrix = {
 
     create: function () {
-        var out = new Float32Array( 16 );
-        out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
+        var out = new ArrayType( 16 );
+        out[ 0 ] = 1.0;
+        out[ 1 ] = 0.0;
+        out[ 2 ] = 0.0;
+        out[ 3 ] = 0.0;
+        out[ 4 ] = 0.0;
+        out[ 5 ] = 1.0;
+        out[ 6 ] = 0.0;
+        out[ 7 ] = 0.0;
+        out[ 8 ] = 0.0;
+        out[ 9 ] = 0.0;
+        out[ 10 ] = 1.0;
+        out[ 11 ] = 0.0;
+        out[ 12 ] = 0.0;
+        out[ 13 ] = 0.0;
+        out[ 14 ] = 0.0;
+        out[ 15 ] = 1.0;
         return out;
     },
 
     createAndSet: function ( x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15 ) {
-        var out = Matrix.create();
+        var out = new ArrayType( 16 );
         out[ 0 ] = x0;
         out[ 1 ] = x1;
         out[ 2 ] = x2;
@@ -504,8 +537,6 @@ var Matrix = {
             for ( i = 1; i < 4; i++ ) {
                 if ( ( tq[ i ] > tq[ j ] ) ) {
                     j = i;
-                } else {
-                    j = j;
                 }
             }
 

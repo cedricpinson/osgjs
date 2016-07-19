@@ -88,12 +88,9 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
     center: function ( result ) {
         var min = this._min;
         var max = this._max;
-        if ( result === undefined ) {
-            // TODO: deprecated warning?
-            Notify.warn( 'deprecated use center( result ) instead !' );
-            result = Vec3.create();
-        }
-        Vec3.set( ( min[ 0 ] + max[ 0 ] ) * 0.5, ( min[ 1 ] + max[ 1 ] ) * 0.5, ( min[ 2 ] + max[ 2 ] ) * 0.5, result );
+        result[ 0 ] = ( min[ 0 ] + max[ 0 ] ) * 0.5;
+        result[ 1 ] = ( min[ 1 ] + max[ 1 ] ) * 0.5;
+        result[ 2 ] = ( min[ 2 ] + max[ 2 ] ) * 0.5;
         return result;
     },
 

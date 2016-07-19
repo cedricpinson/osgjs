@@ -2,6 +2,7 @@
 var Notify = require( 'osg/Notify' );
 var Matrix = require( 'osg/Matrix' );
 var Options = require( 'osg/Options' );
+var P = require( 'bluebird' );
 var Timer = require( 'osg/Timer' );
 var UpdateVisitor = require( 'osg/UpdateVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
@@ -19,10 +20,10 @@ var OptionsURL = ( function () {
     ( function ( options ) {
         var vars = [],
             hash;
-        var indexOptions = window.location.href.indexOf( '?' );
-        if ( indexOptions < 0 ) return;
+        if ( !window.location.search ) return;
 
-        var hashes = window.location.href.slice( indexOptions + 1 ).split( '&' );
+        // slice(1) to remove leading '?'
+        var hashes = window.location.search.slice( 1 ).split( '&' );
         for ( var i = 0; i < hashes.length; i++ ) {
             hash = hashes[ i ].split( '=' );
             var element = hash[ 0 ];
@@ -428,7 +429,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
     setPresentVR: function ( bool ) {
         if ( !this._hmd ) {
             Notify.warn( 'no hmd device provided to the viewer!' );
-            return;
+            return P.reject();
         }
 
         // reset position/orientation of hmd device
@@ -436,16 +437,16 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
             this._hmd.resetPose();
 
         if ( !this._hmd.capabilities.canPresent )
-            return;
+            return P.reject();
 
         if ( bool ) {
             var layers = [ {
                 source: this.getGraphicContext().canvas
             } ];
-            this._hmd.requestPresent( layers );
+            return this._hmd.requestPresent( layers );
 
         } else {
-            this._hmd.exitPresent();
+            return this._hmd.exitPresent();
         }
     },
 
@@ -485,7 +486,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         var widthChangeRatio = canvas.width / prevWidth;
         var heightChangeRatio = canvas.height / prevHeight;
         var aspectRatioChange = widthChangeRatio / heightChangeRatio;
-        vp.setViewport( vp.x() * widthChangeRatio, vp.y() * heightChangeRatio, vp.width() * widthChangeRatio, vp.height() * heightChangeRatio );
+        vp.setViewport( Math.round( vp.x() * widthChangeRatio ), Math.round( vp.y() * heightChangeRatio ), Math.round( vp.width() * widthChangeRatio ), Math.round( vp.height() * heightChangeRatio ) );
 
         if ( aspectRatioChange !== 1.0 ) {
             Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );

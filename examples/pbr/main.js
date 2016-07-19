@@ -568,7 +568,7 @@
             if ( node ) {
                 node.setNodeMask( ~0x0 );
                 node.dirtyBound();
-                this._viewer.getManipulator().computeHomePosition( true );
+                this._viewer.getManipulator().computeHomePosition();
             }
         },
 
@@ -1037,7 +1037,7 @@
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
 
 
-                this._viewer.getManipulator().computeHomePosition( true );
+                this._viewer.getManipulator().computeHomePosition();
                 this.updateCameraPreset();
 
 
@@ -1136,7 +1136,7 @@
                 // this.addModel( model );
 
                 viewer.setupManipulator();
-                viewer.getManipulator().computeHomePosition( true );
+                viewer.getManipulator().computeHomePosition();
 
                 viewer.run();
 
@@ -1193,7 +1193,7 @@
                 controller.onChange( this.updateAlbedo.bind( this ) );
 
 
-                controller = gui.add( this._config, 'model', modelList ).listen();
+                controller = gui.add( this._config, 'model', modelList ); //.listen();
                 controller.onChange( this.updateModel.bind( this ) );
 
                 if ( !hasTextureLod )

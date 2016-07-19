@@ -1,5 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
+var mockup = require( 'tests/mockup/mockup' );
 var BoundingBox = require( 'osg/BoundingBox' );
 var Light = require( 'osg/Light' );
 var ShadowMap = require( 'osgShadow/ShadowMap' );
@@ -56,8 +57,8 @@ module.exports = function () {
 
         assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for spot light  inside scene Bbox' );
         assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for spot light inside scene Bbox' );
-        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for spot light  inside scene Bbox' );
-        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for spot light inside scene Bbox' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ] ), 'correct near shadow  for spot light  inside scene Bbox' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ] ), 'correct near/far shadow  for spot light inside scene Bbox' );
 
         //SPOT OUTSIDE BOUNDINGBOX
 
@@ -80,8 +81,8 @@ module.exports = function () {
 
         assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for spot light outside scene Bbox' );
         assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for spot light outside scene Bbox' );
-        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for spot light outside scene Bbox' );
-        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for spot light outside scene Bbox' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ] ), 'correct near shadow  for spot light outside scene Bbox' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ] ), 'correct near/far shadow  for spot light outside scene Bbox' );
 
         ///////////////////////////////////////////////////////////
         /// TEST Directional
@@ -109,8 +110,8 @@ module.exports = function () {
 
         assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for directional light looking down' );
         assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for directional light case 1' );
-        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for directional light case looking down' );
-        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for directional light looking down' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ] ), 'correct near shadow  for directional light case looking down' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ] ), 'correct near/far shadow  for directional light looking down' );
 
         // DIRECTIONAL LOOKING UP
 
@@ -132,8 +133,8 @@ module.exports = function () {
 
         assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for directional light  looking up' );
         assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for directional light looking up' );
-        assert.isOk( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ], 'correct near shadow  for directional light  looking up' );
-        assert.isOk( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ], 'correct near/far shadow  for directional light looking up' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ] ), 'correct near shadow  for directional light  looking up' );
+        assert.isOk( mockup.checkNear( shadowMap._depthRange[ 1 ] === resultNearFar[ 1 ] ), 'correct near/far shadow  for directional light looking up' );
 
     } );
 

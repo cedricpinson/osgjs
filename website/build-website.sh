@@ -3,7 +3,7 @@ build_dir="$(realpath ${path}/../builds/web)"
 
 mkdir -p "${build_dir}"
 rm -rf "${build_dir}/*"
-git clone ../ --branch develop --single-branch "${build_dir}/osg-clone"
+git clone ../ --branch master --single-branch "${build_dir}/osg-clone"
 cd "${build_dir}/osg-clone"
 
 npm install

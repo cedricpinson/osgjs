@@ -10,6 +10,41 @@ var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 
+
+var checkUniformCache = [
+    undefined,
+    function uniformCheck1( uniformArray, cacheArray ) {
+        if ( uniformArray[ 0 ] === cacheArray[ 0 ] ) return true;
+        cacheArray[ 0 ] = uniformArray[ 0 ];
+        return false;
+    },
+
+    function uniformCheck2( uniformArray, cacheArray ) {
+        if ( uniformArray[ 0 ] === cacheArray[ 0 ] && uniformArray[ 1 ] === cacheArray[ 1 ] ) return true;
+        cacheArray[ 0 ] = uniformArray[ 0 ];
+        cacheArray[ 1 ] = uniformArray[ 1 ];
+        return false;
+    },
+
+    function uniformCheck3( uniformArray, cacheArray ) {
+        if ( uniformArray[ 0 ] === cacheArray[ 0 ] && uniformArray[ 1 ] === cacheArray[ 1 ] && uniformArray[ 2 ] === cacheArray[ 2 ] ) return true;
+        cacheArray[ 0 ] = uniformArray[ 0 ];
+        cacheArray[ 1 ] = uniformArray[ 1 ];
+        cacheArray[ 2 ] = uniformArray[ 2 ];
+        return false;
+    },
+
+    function uniformCheck4( uniformArray, cacheArray ) {
+        if ( uniformArray[ 0 ] === cacheArray[ 0 ] && uniformArray[ 1 ] === cacheArray[ 1 ] && uniformArray[ 2 ] === cacheArray[ 2 ] && uniformArray[ 3 ] === cacheArray[ 3 ] ) return true;
+        cacheArray[ 0 ] = uniformArray[ 0 ];
+        cacheArray[ 1 ] = uniformArray[ 1 ];
+        cacheArray[ 2 ] = uniformArray[ 2 ];
+        cacheArray[ 3 ] = uniformArray[ 3 ];
+        return false;
+    }
+];
+
+
 var State = function ( shaderGeneratorProxy ) {
     Object.call( this );
 
@@ -69,6 +104,10 @@ var State = function ( shaderGeneratorProxy ) {
     this.applyAttribute( new Program() );
 
     this._numPushStateSet = 0;
+    this._numApply = 0;
+
+    this._programUniformCache = [];
+    this._cacheUniformId = 0;
 };
 
 State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
@@ -195,6 +234,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     resetStats: function () {
+        this._numApply = 0;
         this._numPushStateSet = 0;
     },
 
@@ -220,7 +260,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var gc = this.getGraphicContext();
             if ( mul ) {
 
-                mu.setInternalArray( matrix );
+                mu.setMatrix4( matrix );
                 mu.apply( gc, mul );
             }
 
@@ -259,7 +299,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                     Matrix.inverse( normal, normal );
                     Matrix.transpose( normal, normal );
 
-                    mu.setInternalArray( normal );
+                    mu.setMatrix4( normal );
                     mu.apply( gc, mul );
                 }
             }
@@ -300,7 +340,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var mul = program.getUniformsCache().ModelViewMatrix;
             if ( mul ) {
 
-                mu.setInternalArray( matrix );
+                mu.setMatrix4( matrix );
                 mu.apply( this.getGraphicContext(), mul );
             }
 
@@ -348,7 +388,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                         Matrix.transpose( normal, normal );
                     }
 
-                    mu.setInternalArray( normal );
+                    mu.setMatrix4( normal );
                     mu.apply( this.getGraphicContext(), mul );
                 }
             }
@@ -369,7 +409,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var mul = program.getUniformsCache()[ mu.getName() ];
         if ( mul ) {
 
-            mu.setInternalArray( matrix );
+            mu.setMatrix4( matrix );
             mu.apply( this.getGraphicContext(), mul );
 
         }
@@ -1157,48 +1197,118 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     },
 
+    _copyUniformEntry: function ( uniform ) {
+
+        var internalArray = uniform.getInternalArray();
+        var cacheData;
+        if ( internalArray.length < 16 )
+            cacheData = new internalArray.constructor( internalArray.length );
+
+        return cacheData;
+    },
+
+    _initUniformCache: function ( program ) {
+
+        var activeUniformMap = program.getActiveUniforms();
+        var activeUniformKeys = activeUniformMap.getKeys();
+
+        var foreignUniformKeys = program.getForeignUniforms();
+        var uniformMapStack = this.uniforms;
+
+        var cacheForeignUniforms = [];
+        var cacheActiveUniforms = [];
+
+        var i, l, cache, name, cacheData, uniform;
+
+        program._cacheUniformId = this._cacheUniformId++;
+        this._programUniformCache[ program._cacheUniformId ] = {};
+
+        if ( foreignUniformKeys.length ) {
+            cache = cacheForeignUniforms;
+            for ( i = 0, l = foreignUniformKeys.length; i < l; i++ ) {
+                name = foreignUniformKeys[ i ];
+                var uniStack = uniformMapStack[ name ];
+                if ( uniStack ) {
+                    uniform = uniStack.globalDefault;
+                    cacheData = this._copyUniformEntry( uniform );
+                    cache.push( cacheData );
+                }
+
+            }
+        }
+
+        if ( activeUniformKeys.length ) {
+            cache = cacheActiveUniforms;
+            for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
+                name = activeUniformKeys[ i ];
+                uniform = activeUniformMap[ name ];
+                cacheData = this._copyUniformEntry( uniform );
+                cache.push( cacheData );
+            }
+        }
+
+        this._programUniformCache[ program._cacheUniformId ].foreign = cacheForeignUniforms;
+        this._programUniformCache[ program._cacheUniformId ].active = cacheActiveUniforms;
+
+    },
+
+    _checkCacheAndApplyUniform: function ( uniform, cacheArray, i, programUniformMap, name ) {
+        var isCached;
+        var internalArray = uniform.getInternalArray();
+        var uniformArrayLength = internalArray.length;
+        if ( uniformArrayLength <= 4 ) {
+            var uniformCache = cacheArray[ i ];
+            isCached = checkUniformCache[ uniformArrayLength ]( internalArray, uniformCache );
+        } else {
+            isCached = false;
+        }
+
+        if ( !isCached ) {
+            var location = programUniformMap[ name ];
+            uniform.apply( this._graphicContext, location );
+        }
+    },
+
+    // note that about TextureAttribute that need uniform on unit we would need to improve
+    // the current uniformList ...
+
+    // when we apply the shader for the first time, we want to compute the active uniforms for this shader and the list of uniforms not extracted from attributes called foreignUniforms
     _applyGeneratedProgramUniforms: function ( program ) {
-
-        // note that about TextureAttribute that need uniform on unit we would need to improve
-        // the current uniformList ...
-
-        // when we apply the shader for the first time, we want to compute the active uniforms for this shader and the list of uniforms not extracted from attributes called foreignUniforms
-
-        // typically the following code will be executed once on the first execution of generated program
 
         var foreignUniformKeys = program.getForeignUniforms();
         if ( !foreignUniformKeys ) {
             this._cacheUniformsForGeneratedProgram( program );
             foreignUniformKeys = program.getForeignUniforms();
-        }
 
+            this._initUniformCache( program );
+        }
 
         var programUniformMap = program.getUniformsCache();
         var activeUniformMap = program.getActiveUniforms();
 
+        var cacheUniformsActive = this._programUniformCache[ program._cacheUniformId ].active;
+        var cacheUniformsForeign = this._programUniformCache[ program._cacheUniformId ].foreign;
 
         // apply active uniforms
         // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
-        var i, l, name, location;
+        var i, l, name, uniform;
         var activeUniformKeys = activeUniformMap.getKeys();
 
+        this.nbApplyUniform += activeUniformKeys.length;
         for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
 
             name = activeUniformKeys[ i ];
-            location = programUniformMap[ name ];
-            activeUniformMap[ name ].apply( this._graphicContext, location );
+            uniform = activeUniformMap[ name ];
 
+            this._checkCacheAndApplyUniform( uniform, cacheUniformsActive, i, programUniformMap, name );
         }
 
         var uniformMapStack = this.uniforms;
 
         // apply now foreign uniforms, it's uniforms needed by the program but not contains in attributes used to generate this program
         for ( i = 0, l = foreignUniformKeys.length; i < l; i++ ) {
-
             name = foreignUniformKeys[ i ];
             var uniformStack = uniformMapStack[ name ];
-            location = programUniformMap[ name ];
-            var uniform;
             if ( uniformStack !== undefined ) {
                 if ( uniformStack.values().length === 0 ) {
                     uniform = uniformStack.globalDefault;
@@ -1206,9 +1316,9 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 } else {
                     uniform = uniformStack.back().object;
                 }
-
-                uniform.apply( this._graphicContext, location );
             }
+
+            this._checkCacheAndApplyUniform( uniform, cacheUniformsForeign, i, programUniformMap, name );
 
         }
     }

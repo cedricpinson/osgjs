@@ -397,11 +397,19 @@ var gruntTasks = {};
                     cwd: './',
                     src: 'examples/vendors/bluebird-2.10.2.js',
                     dest: 'examples/vendors/bluebird.js'
-                },
+                }
             ]
         }
     };
 
+} )();
+
+( function () {
+    gruntTasks.release = {
+        options: {
+            npm: false
+        }
+    };
 } )();
 
 ( function () {

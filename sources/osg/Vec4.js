@@ -1,14 +1,22 @@
 'use strict';
+var config = require( 'config' );
+
+var ArrayType = config.ArrayType;
 
 /** @class Vec4 Operations */
 var Vec4 = {
 
     create: function () {
-        return new Float32Array( 4 );
+        var out = new ArrayType( 4 );
+        out[ 0 ] = 0.0;
+        out[ 1 ] = 0.0;
+        out[ 2 ] = 0.0;
+        out[ 3 ] = 0.0;
+        return out;
     },
 
     createAndSet: function ( x, y, z, w ) {
-        var out = Vec4.create();
+        var out = new ArrayType( 4 );
         out[ 0 ] = x;
         out[ 1 ] = y;
         out[ 2 ] = z;
