@@ -8,8 +8,9 @@ var MatrixTransform = require( 'osg/MatrixTransform' );
 var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var BlendFunc = require( 'osg/BlendFunc' );
-
-
+var Quat = require( 'osg/Quat' );
+var NodeVisitor = require( 'osg/NodeVisitor' );
+var Node = require( 'osg/Node' );
 /**
  *  @class Text: Text 2D using a Canvas2D as a texture for a textured quad.
  *  Notes: The OSGjs Text has been implemented like OSG osgText::Text as much as possible. However there are some
@@ -58,6 +59,9 @@ var Text = function ( text ) {
     // Lazy initialization
     this.drawText();
     this._dirty = false;
+
+    // We need to keep track of modelView Matrix
+    this._previousModelView = Matrix.create();
 };
 
 // CharacterSizeMode
@@ -242,15 +246,89 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
         return this._alignment;
     },
 
+    accept: ( function () {
 
-    traverse: function ( visitor ) {
-        if ( this._dirty ) {
-            this.drawText();
-            this._dirty = false;
-        }
-        AutoTransform.prototype.traverse.call( this, visitor );
-    },
+        return function ( visitor ) {
+            if ( this._dirty ) {
+                this.drawText();
+                this._dirty = false;
+            }
+            if ( visitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
 
+                var width = visitor.getViewport().width();
+                var height = visitor.getViewport().height();
+                var projMat = visitor.getCurrentProjectionMatrix();
+                var modelViewMat = visitor.getCurrentModelViewMatrix();
+                var position = this._position;
+                var doUpdate = this._firstTimeToInitEyePoint;
+
+                if ( !this._firstTimeToInitEyePoint ) {
+                    if ( !Matrix.equal( modelViewMat, this._previousModelView ) ) {
+                        doUpdate = true;
+                    } else if ( width !== this._previousWidth || height !== this._previousHeight ) {
+                        doUpdate = true;
+                    } else if ( !Matrix.equal( projMat, this._previousProjection ) ) {
+                        doUpdate = true;
+                    } else if ( !Vec3.equal( position, this._previousPosition ) ) {
+                        doUpdate = true;
+                    }
+                }
+                this._firstTimeToInitEyePoint = false;
+                if ( doUpdate ) {
+                    if ( this._autoScaleToScreen ) {
+                        var viewport = visitor.getViewport();
+                        var psvector = this.computePixelSizeVector( viewport, projMat, modelViewMat );
+                        var v = Vec4.createAndSet( this._position[ 0 ], this._position[ 1 ], this._position[ 2 ], 1.0 );
+                        var pixelSize = Vec4.dot( v, psvector );
+                        pixelSize = 0.48 / pixelSize;
+                        var size = 1.0 / pixelSize;
+                        if ( this._autoScaleTransitionWidthRatio > 0.0 ) {
+                            var c, b, a;
+                            if ( this._minimumScale > 0.0 ) {
+                                var j = this._minimumScale;
+                                var i = ( this._maximumScale < Number.MAX_VALUE ) ?
+                                    this._minimumScale + ( this._maximumScale - this._minimumScale ) * this._autoScaleTransitionWidthRatio :
+                                    this._minimumScale * ( 1.0 + this._autoScaleTransitionWidthRatio );
+                                c = 1.0 / ( 4.0 * ( i - j ) );
+                                b = 1.0 - 2.0 * c * i;
+                                a = j + b * b / ( 4.0 * c );
+                                var k = -b / ( 2.0 * c );
+                                if ( size < k ) size = this._minimumScale;
+                                else if ( size < i ) size = a + b * size + c * ( size * size );
+                            }
+                            if ( this._maximumScale < Number.MAX_VALUE ) {
+                                var n = this._maximumScale;
+                                var m = ( this._minimumScale > 0.0 ) ?
+                                    this._maximumScale + ( this._minimumScale - this._maximumScale ) * this._autoScaleTransitionWidthRatio :
+                                    this._maximumScale * ( 1.0 - this._autoScaleTransitionWidthRatio );
+                                c = 1.0 / ( 4.0 * ( m - n ) );
+                                b = 1.0 - 2.0 * c * m;
+                                a = n + b * b / ( 4.0 * c );
+                                var p = -b / ( 2.0 * c );
+
+                                if ( size > p ) size = this._maximumScale;
+                                else if ( size > m ) size = a + b * size + c * ( size * size );
+                            }
+                        }
+                        this.setScale( size );
+                    }
+                    if ( this._autoRotateToScreen ) {
+                        var rotation = Quat.create();
+                        var modelView = visitor.getCurrentModelViewMatrix();
+                        Matrix.getRotate( modelView, rotation );
+                        this.setRotation( Quat.inverse( rotation, rotation ) );
+                    }
+                    this._previousWidth = width;
+                    this._previousHeight = height;
+                    Vec3.copy( position, this._previousPosition );
+                    Matrix.copy( projMat, this._previousProjection );
+                    Matrix.copy( modelViewMat, this._previousModelView );
+                }
+            }
+
+            Node.prototype.accept.call( this, visitor );
+        };
+    } )(),
     _setAlignmentValues: function ( alignment ) {
         // Convert the OSG Api to js API
         switch ( alignment ) {
