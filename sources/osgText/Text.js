@@ -57,6 +57,7 @@ var Text = function ( text ) {
     // NPOT textures
     this._forcePowerOfTwo = false;
     // Lazy initialization
+    this._texture = new Texture();
     this.drawText();
     this._dirty = false;
 
@@ -114,14 +115,13 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
         var quadWidth = this._charactherSize * aspectRatio;
         this._geometry = Shape.createTexturedQuadGeometry( -quadWidth / 2, -this._charactherSize / 2, 0, quadWidth, 0, 0, 0, this._charactherSize, 0 );
         // create a texture to attach the canvas2D
-        var texture = new Texture();
-        texture.setTextureSize( this._canvas.width, this._canvas.height );
-        texture.setMinFilter( 'LINEAR' );
-        texture.setMagFilter( 'LINEAR' );
-        texture.setImage( this._canvas );
+        this._texture.setTextureSize( this._canvas.width, this._canvas.height );
+        this._texture.setMinFilter( 'LINEAR' );
+        this._texture.setMagFilter( 'LINEAR' );
+        this._texture.setImage( this._canvas );
         // Transparency stuff
         var stateset = this._geometry.getOrCreateStateSet();
-        stateset.setTextureAttributeAndModes( 0, texture );
+        stateset.setTextureAttributeAndModes( 0, this._texture );
         stateset.setRenderingHint( 'TRANSPARENT_BIN' );
         stateset.setAttributeAndModes( new BlendFunc( BlendFunc.ONE, BlendFunc.ONE_MINUS_SRC_ALPHA ) );
         this._matrixTransform.addChild( this._geometry );
