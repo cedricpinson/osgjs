@@ -43,7 +43,10 @@ var Node = function () {
 };
 
 Node._reservedMatrixStack = new MatrixMemoryPool();
-var nodeGetMat = Node._reservedMatrixStack.get.bind( Node._reservedMatrixStack );
+var nodeGetMat = function () {
+    var mat = Node._reservedMatrixStack.get.bind( Node._reservedMatrixStack );
+    return Matrix.makeIdentity( mat );
+};
 
 /** @lends Node.prototype */
 Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
