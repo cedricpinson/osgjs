@@ -24,6 +24,7 @@ var FirstPersonManipulatorStandardMouseKeyboardController = require( 'osgGA/Firs
  */
 var FirstPersonManipulator = function ( boundStrategy ) {
     Manipulator.call( this, boundStrategy );
+    this._movingAction = false;
     this.init();
 };
 
@@ -78,6 +79,10 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             }
         } );
 
+    },
+
+    setInAction( active ) {
+        this._movingAction = active;
     },
 
     setDelay: function ( dt ) {
@@ -190,6 +195,16 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         var vec = Vec2.create();
 
         return function ( dt ) {
+
+            if ( this._movingAction ) {
+
+                // prevent interpolator reaching Done state
+                // while user still pressing key
+                this._forward.zeroCurrent();
+                this._side.zeroCurrent();
+
+            }
+
             this._forward.update( dt );
             this._side.update( dt );
 
