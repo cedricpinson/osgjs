@@ -35,7 +35,7 @@ LineSegmentIntersector.prototype = {
         // Not working if culling disabled ??
         return !node.isCullingActive() || this.intersects( node.getBound() );
     },
-    // Intersection Segment/Sphere 
+    // Intersection Segment/Sphere
     intersects: ( function () {
         var sm = Vec3.create();
         var se = Vec3.create();
@@ -94,7 +94,7 @@ LineSegmentIntersector.prototype = {
                 var originVerts = vList.Vertex.getElements();
 
                 // temporarily hook vertex buffer for the tri intersections
-                // don't call setElements as it dirty some stuffs because of gl buffer 
+                // don't call setElements as it dirty some stuffs because of gl buffer
                 vList.Vertex._elements = node.computeTransformedVertices();
                 ti.apply( node );
                 vList.Vertex._elements = originVerts;
@@ -102,9 +102,11 @@ LineSegmentIntersector.prototype = {
                 ti.apply( node );
             }
 
-            var l = ti._intersections.length;
+            var trianglesIntersections = ti._intersections;
+            var intersections = this._intersections;
+            var l = trianglesIntersections.length;
             for ( var i = 0; i < l; i++ ) {
-                this._intersections.push( ti._intersections[ i ] );
+                intersections.push( trianglesIntersections[ i ] );
             }
 
             return l > 0;

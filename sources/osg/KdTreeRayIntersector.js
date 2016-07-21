@@ -91,18 +91,23 @@ KdTreeRayIntersector.prototype = {
             } else {
                 var s = node._nodeRayStart;
                 var e = node._nodeRayEnd;
+                var kNodes = this._kdNodes;
+
+                var kNode;
                 Vec3.copy( ls, s );
                 Vec3.copy( le, e );
                 if ( first > 0 ) {
-                    if ( this.intersectAndClip( s, e, this._kdNodes[ first ]._bb ) ) {
-                        this.intersect( this._kdNodes[ first ], s, e );
+                    kNode = kNodes[ first ];
+                    if ( this.intersectAndClip( s, e, kNode._bb ) ) {
+                        this.intersect( kNode, s, e );
                     }
                 }
                 if ( second > 0 ) {
                     Vec3.copy( ls, s );
                     Vec3.copy( le, e );
-                    if ( this.intersectAndClip( s, e, this._kdNodes[ second ]._bb ) ) {
-                        this.intersect( this._kdNodes[ second ], s, e );
+                    kNode = kNodes[ second ];
+                    if ( this.intersectAndClip( s, e, kNode._bb ) ) {
+                        this.intersect( kNode, s, e );
                     }
                 }
             }

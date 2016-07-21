@@ -40,13 +40,17 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
         }
         var max = this._max;
         var min = this._min;
-        min[ 0 ] = Math.min( min[ 0 ], bs._center[ 0 ] - bs._radius );
-        min[ 1 ] = Math.min( min[ 1 ], bs._center[ 1 ] - bs._radius );
-        min[ 2 ] = Math.min( min[ 2 ], bs._center[ 2 ] - bs._radius );
+        var radius = bs._radius;
+        var x = bs._center[ 0 ];
+        var y = bs._center[ 1 ];
+        var z = bs._center[ 2 ];
+        min[ 0 ] = Math.min( min[ 0 ], x - radius );
+        min[ 1 ] = Math.min( min[ 1 ], y - radius );
+        min[ 2 ] = Math.min( min[ 2 ], z - radius );
 
-        max[ 0 ] = Math.max( max[ 0 ], bs._center[ 0 ] + bs._radius );
-        max[ 1 ] = Math.max( max[ 1 ], bs._center[ 1 ] + bs._radius );
-        max[ 2 ] = Math.max( max[ 2 ], bs._center[ 2 ] + bs._radius );
+        max[ 0 ] = Math.max( max[ 0 ], x + radius );
+        max[ 1 ] = Math.max( max[ 1 ], y + radius );
+        max[ 2 ] = Math.max( max[ 2 ], z + radius );
     },
 
     expandBySphere: function ( bs ) {
