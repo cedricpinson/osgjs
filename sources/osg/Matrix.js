@@ -171,37 +171,78 @@ var Matrix = {
     preMult: function ( a, b ) {
         var atmp0, atmp1, atmp2, atmp3;
 
-        atmp0 = ( b[ 0 ] * a[ 0 ] ) + ( b[ 1 ] * a[ 4 ] ) + ( b[ 2 ] * a[ 8 ] ) + ( b[ 3 ] * a[ 12 ] );
-        atmp1 = ( b[ 4 ] * a[ 0 ] ) + ( b[ 5 ] * a[ 4 ] ) + ( b[ 6 ] * a[ 8 ] ) + ( b[ 7 ] * a[ 12 ] );
-        atmp2 = ( b[ 8 ] * a[ 0 ] ) + ( b[ 9 ] * a[ 4 ] ) + ( b[ 10 ] * a[ 8 ] ) + ( b[ 11 ] * a[ 12 ] );
-        atmp3 = ( b[ 12 ] * a[ 0 ] ) + ( b[ 13 ] * a[ 4 ] ) + ( b[ 14 ] * a[ 8 ] ) + ( b[ 15 ] * a[ 12 ] );
+        var a0 = a[ 0 ];
+        var a1 = a[ 1 ];
+        var a2 = a[ 2 ];
+        var a3 = a[ 3 ];
+
+        var a4 = a[ 4 ];
+        var a5 = a[ 5 ];
+        var a6 = a[ 6 ];
+        var a7 = a[ 7 ];
+
+        var a8 = a[ 8 ];
+        var a9 = a[ 9 ];
+        var a10 = a[ 10 ];
+        var a11 = a[ 11 ];
+
+        var a12 = a[ 12 ];
+        var a13 = a[ 13 ];
+        var a14 = a[ 14 ];
+        var a15 = a[ 15 ];
+
+        var b0 = b[ 0 ];
+        var b1 = b[ 1 ];
+        var b2 = b[ 2 ];
+        var b3 = b[ 3 ];
+
+        var b4 = b[ 4 ];
+        var b5 = b[ 5 ];
+        var b6 = b[ 6 ];
+        var b7 = b[ 7 ];
+
+        var b8 = b[ 8 ];
+        var b9 = b[ 9 ];
+        var b10 = b[ 10 ];
+        var b11 = b[ 11 ];
+
+        var b12 = b[ 12 ];
+        var b13 = b[ 13 ];
+        var b14 = b[ 14 ];
+        var b15 = b[ 15 ];
+
+        atmp0 = ( b0 * a0 ) + ( b1 * a4 ) + ( b2 * a8 ) + ( b3 * a12 );
+        atmp1 = ( b4 * a0 ) + ( b5 * a4 ) + ( b6 * a8 ) + ( b7 * a12 );
+        atmp2 = ( b8 * a0 ) + ( b9 * a4 ) + ( b10 * a8 ) + ( b11 * a12 );
+        atmp3 = ( b12 * a0 ) + ( b13 * a4 ) + ( b14 * a8 ) + ( b15 * a12 );
+
         a[ 0 ] = atmp0;
         a[ 4 ] = atmp1;
         a[ 8 ] = atmp2;
         a[ 12 ] = atmp3;
 
-        atmp0 = ( b[ 0 ] * a[ 1 ] ) + ( b[ 1 ] * a[ 5 ] ) + ( b[ 2 ] * a[ 9 ] ) + ( b[ 3 ] * a[ 13 ] );
-        atmp1 = ( b[ 4 ] * a[ 1 ] ) + ( b[ 5 ] * a[ 5 ] ) + ( b[ 6 ] * a[ 9 ] ) + ( b[ 7 ] * a[ 13 ] );
-        atmp2 = ( b[ 8 ] * a[ 1 ] ) + ( b[ 9 ] * a[ 5 ] ) + ( b[ 10 ] * a[ 9 ] ) + ( b[ 11 ] * a[ 13 ] );
-        atmp3 = ( b[ 12 ] * a[ 1 ] ) + ( b[ 13 ] * a[ 5 ] ) + ( b[ 14 ] * a[ 9 ] ) + ( b[ 15 ] * a[ 13 ] );
+        atmp0 = ( b0 * a1 ) + ( b1 * a5 ) + ( b2 * a9 ) + ( b3 * a13 );
+        atmp1 = ( b4 * a1 ) + ( b5 * a5 ) + ( b6 * a9 ) + ( b7 * a13 );
+        atmp2 = ( b8 * a1 ) + ( b9 * a5 ) + ( b10 * a9 ) + ( b11 * a13 );
+        atmp3 = ( b12 * a1 ) + ( b13 * a5 ) + ( b14 * a9 ) + ( b15 * a13 );
         a[ 1 ] = atmp0;
         a[ 5 ] = atmp1;
         a[ 9 ] = atmp2;
         a[ 13 ] = atmp3;
 
-        atmp0 = ( b[ 0 ] * a[ 2 ] ) + ( b[ 1 ] * a[ 6 ] ) + ( b[ 2 ] * a[ 10 ] ) + ( b[ 3 ] * a[ 14 ] );
-        atmp1 = ( b[ 4 ] * a[ 2 ] ) + ( b[ 5 ] * a[ 6 ] ) + ( b[ 6 ] * a[ 10 ] ) + ( b[ 7 ] * a[ 14 ] );
-        atmp2 = ( b[ 8 ] * a[ 2 ] ) + ( b[ 9 ] * a[ 6 ] ) + ( b[ 10 ] * a[ 10 ] ) + ( b[ 11 ] * a[ 14 ] );
-        atmp3 = ( b[ 12 ] * a[ 2 ] ) + ( b[ 13 ] * a[ 6 ] ) + ( b[ 14 ] * a[ 10 ] ) + ( b[ 15 ] * a[ 14 ] );
+        atmp0 = ( b0 * a2 ) + ( b1 * a6 ) + ( b2 * a10 ) + ( b3 * a14 );
+        atmp1 = ( b4 * a2 ) + ( b5 * a6 ) + ( b6 * a10 ) + ( b7 * a14 );
+        atmp2 = ( b8 * a2 ) + ( b9 * a6 ) + ( b10 * a10 ) + ( b11 * a14 );
+        atmp3 = ( b12 * a2 ) + ( b13 * a6 ) + ( b14 * a10 ) + ( b15 * a14 );
         a[ 2 ] = atmp0;
         a[ 6 ] = atmp1;
         a[ 10 ] = atmp2;
         a[ 14 ] = atmp3;
 
-        atmp0 = ( b[ 0 ] * a[ 3 ] ) + ( b[ 1 ] * a[ 7 ] ) + ( b[ 2 ] * a[ 11 ] ) + ( b[ 3 ] * a[ 15 ] );
-        atmp1 = ( b[ 4 ] * a[ 3 ] ) + ( b[ 5 ] * a[ 7 ] ) + ( b[ 6 ] * a[ 11 ] ) + ( b[ 7 ] * a[ 15 ] );
-        atmp2 = ( b[ 8 ] * a[ 3 ] ) + ( b[ 9 ] * a[ 7 ] ) + ( b[ 10 ] * a[ 11 ] ) + ( b[ 11 ] * a[ 15 ] );
-        atmp3 = ( b[ 12 ] * a[ 3 ] ) + ( b[ 13 ] * a[ 7 ] ) + ( b[ 14 ] * a[ 11 ] ) + ( b[ 15 ] * a[ 15 ] );
+        atmp0 = ( b0 * a3 ) + ( b1 * a7 ) + ( b2 * a11 ) + ( b3 * a15 );
+        atmp1 = ( b4 * a3 ) + ( b5 * a7 ) + ( b6 * a11 ) + ( b7 * a15 );
+        atmp2 = ( b8 * a3 ) + ( b9 * a7 ) + ( b10 * a11 ) + ( b11 * a15 );
+        atmp3 = ( b12 * a3 ) + ( b13 * a7 ) + ( b14 * a11 ) + ( b15 * a15 );
         a[ 3 ] = atmp0;
         a[ 7 ] = atmp1;
         a[ 11 ] = atmp2;
@@ -209,6 +250,7 @@ var Matrix = {
 
         return a;
     },
+
 
     // do a * b and store the result in b
     // Be aware of the change w.r.t OSG as b holds the result!
