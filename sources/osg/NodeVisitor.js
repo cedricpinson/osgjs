@@ -13,6 +13,10 @@ var NodeVisitor = function ( traversalMode ) {
     this.visitorType = NodeVisitor.NODE_VISITOR;
     this._databaseRequestHandler = undefined;
     this._frameStamp = undefined;
+
+    this.traverse = NodeVisitor._traversalFunctions[ this.traversalMode ];
+    this.pushOntoNodePath = NodeVisitor._pushOntoNodePath[ this.traversalMode ];
+    this.popFromNodePath = NodeVisitor._popFromNodePath[ this.traversalMode ];
 };
 
 //NodeVisitor.TRAVERSE_NONE = 0;
