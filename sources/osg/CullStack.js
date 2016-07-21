@@ -38,7 +38,8 @@ var CullStack = function () {
     this._cameraModelViewIndexStack = [];
 
     // contains the id has a key to computed Inverse Matrix
-    this._cameraMatrixInverse = {};
+    this._cameraMatrixInverse = [];
+    this._cameraMatrixInverseRoot = undefined;
 
 };
 
@@ -61,7 +62,8 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
         this._cameraModelViewIndexStack.length = 0;
         this._cameraIndexStack.length = 0;
-        this._cameraMatrixInverse = {};
+        this._cameraMatrixInverse.length = 0;
+        this._cameraMatrixInverseRoot = undefined;
     },
 
     getProjectionMatrixStack: function () {
@@ -87,7 +89,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
         // if no index the camera inverse is the root with an fake id
         if ( !this._cameraIndexStack.length )
-            return this._cameraMatrixInverse[ -1 ];
+            return this._cameraMatrixInverseRoot;
 
         var idx = this._cameraIndexStack[ this._cameraIndexStack.length - 1 ];
 
@@ -251,14 +253,13 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
             // CullVisitor but only its matrixes, so to handle this we compute the inverse camera
             // when the nodepath has a lenght of 0
             // To avoid to compute too much inverse matrix, we keep a cache of them during the
-            // traverse and store the result under the instanceID key, except for the root we use
-            // the special id '-1'
+            // traverse and store the result under the instanceID key, except for the root
             var np = this.getNodePath();
             var length = np.length;
             if ( !length ) { // root
                 var matInverse = this._reservedMatrixStack.get();
                 Matrix.inverse( matrix, matInverse );
-                this._cameraMatrixInverse[ -1 ] = matInverse;
+                this._cameraMatrixInverseRoot = matInverse;
             } else {
                 var index = length - 1;
                 if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
