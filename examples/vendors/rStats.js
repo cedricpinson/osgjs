@@ -22,9 +22,17 @@
 
     }
 
+    if( !window.performance.mark ) {
+        window.performance.mark = function(){}
+    }
+
+    if( !window.performance.measure ) {
+        window.performance.measure = function(){}
+    }
+
 } )();
 
-function rStats ( settings ) {
+window.rStats = function rStats ( settings ) {
 
     function iterateKeys ( array, callback ) {
         var keys = Object.keys( array );
@@ -46,8 +54,13 @@ function rStats ( settings ) {
     var _settings = settings || {};
     var _colours = _settings.colours || [ '#850700', '#c74900', '#fcb300', '#284280', '#4c7c0c' ];
 
-    importCSS( 'http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' );
-    importCSS( ( _settings.CSSPath ? _settings.CSSPath : '' ) + 'rStats.css' );
+    var _cssFont = 'https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300';
+    var _cssRStats = ( _settings.CSSPath ? _settings.CSSPath : '' ) + 'rStats.css';
+
+    var _css = _settings.css || [ _cssFont, _cssRStats ];
+    _css.forEach(function (uri) {
+        importCSS( uri );
+    });
 
     if ( !_settings.values ) _settings.values = {};
 
@@ -178,7 +191,8 @@ function rStats ( settings ) {
             _spanValue = document.createElement( 'div' ),
             _spanValueText = document.createTextNode( '' ),
             _def = _settings ? _settings.values[ _id.toLowerCase() ] : null,
-            _graph = new Graph( _dom, _id, _def );
+            _graph = new Graph( _dom, _id, _def ),
+            _started = false;
 
         _dom.className = 'rs-counter-base';
 
@@ -211,10 +225,18 @@ function rStats ( settings ) {
 
         function _start () {
             _time = performance.now();
+            if( _settings.userTimingAPI ) performance.mark( _id + '-start' );
+            _started = true;
         }
 
         function _end () {
             _value = performance.now() - _time;
+            if( _settings.userTimingAPI ) {
+                performance.mark( _id + '-end' );
+                if( _started ) {
+                    performance.measure( _id, _id + '-start', _id + '-end' );
+                }
+            }
             _average( _value );
         }
 
@@ -424,4 +446,8 @@ function rStats ( settings ) {
         };
     };
 
+}
+
+if (typeof module === 'object') {
+  module.exports = window.rStats;
 }

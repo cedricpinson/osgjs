@@ -1,4 +1,4 @@
-var glStats = function () {
+window.glStats = function () {
 
     var _rS = null;
 
@@ -99,7 +99,7 @@ var glStats = function () {
 
 };
 
-var threeStats = function ( renderer ) {
+window.threeStats = function ( renderer ) {
 
     var _rS = null;
 
@@ -110,7 +110,7 @@ var threeStats = function ( renderer ) {
         'renderer.info.memory.textures': {
             caption: 'Textures'
         },
-        'renderer.info.memory.programs': {
+        'renderer.info.programs': {
             caption: 'Programs'
         },
         'renderer.info.render.calls': {
@@ -129,10 +129,10 @@ var threeStats = function ( renderer ) {
     };
 
     var _groups = [ {
-        caption: 'Three.js - memory',
-        values: [ 'renderer.info.memory.geometries', 'renderer.info.memory.programs', 'renderer.info.memory.textures' ]
+        caption: 'Three.js - Memory',
+        values: [ 'renderer.info.memory.geometries', 'renderer.info.programs', 'renderer.info.memory.textures' ]
     }, {
-        caption: 'Three.js - render',
+        caption: 'Three.js - Render',
         values: [ 'renderer.info.render.calls', 'renderer.info.render.faces', 'renderer.info.render.points', 'renderer.info.render.vertices' ]
     } ];
 
@@ -141,7 +141,7 @@ var threeStats = function ( renderer ) {
     function _update () {
 
         _rS( 'renderer.info.memory.geometries' ).set( renderer.info.memory.geometries );
-        _rS( 'renderer.info.memory.programs' ).set( renderer.info.memory.programs );
+        _rS( 'renderer.info.programs' ).set( renderer.info.programs.length );
         _rS( 'renderer.info.memory.textures' ).set( renderer.info.memory.textures );
         _rS( 'renderer.info.render.calls' ).set( renderer.info.render.calls );
         _rS( 'renderer.info.render.faces' ).set( renderer.info.render.faces );
@@ -174,21 +174,22 @@ var threeStats = function ( renderer ) {
  *   From https://github.com/paulirish/memory-stats.js
  */
 
-var BrowserStats = function () {
+window.BrowserStats = function () {
 
     var _rS = null;
 
     var _usedJSHeapSize = 0,
         _totalJSHeapSize = 0;
 
-    if ( window.performance && !performance.memory ) {
-        performance.memory = {
-            usedJSHeapSize: 0,
-            totalJSHeapSize: 0
-        };
-    }
+    var memory = {
+        usedJSHeapSize: 0,
+        totalJSHeapSize: 0
+    };
 
-    if ( performance.memory.totalJSHeapSize === 0 ) {
+    if ( window.performance && performance.memory )
+        memory = performance.memory;
+
+    if ( memory.totalJSHeapSize === 0 ) {
         console.warn( 'totalJSHeapSize === 0... performance.memory is only available in Chrome .' );
     }
 
@@ -225,8 +226,8 @@ var BrowserStats = function () {
     }
 
     function _update () {
-        _usedJSHeapSize = _size( performance.memory.usedJSHeapSize );
-        _totalJSHeapSize = _size( performance.memory.totalJSHeapSize );
+        _usedJSHeapSize = _size( memory.usedJSHeapSize );
+        _totalJSHeapSize = _size( memory.totalJSHeapSize );
 
         _rS( 'memory' ).set( _usedJSHeapSize );
         _rS( 'total' ).set( _totalJSHeapSize );
@@ -253,3 +254,11 @@ var BrowserStats = function () {
     };
 
 };
+
+if (typeof module === 'object') {
+  module.exports = {
+    glStats: window.glStats,
+    threeStats: window.threeStats,
+    BrowserStats: window.BrowserStats
+  };
+}

@@ -83,23 +83,22 @@ ShadowedScene.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             this._shadowTechniques[ i ].dirty();
     },
 
-    nodeTraverse: function ( /*nv*/) {
-        Node.prototype.traverse.apply( this, arguments );
+    nodeTraverse: function ( nv ) {
+        Node.prototype.traverse.call( this, nv );
     },
+
     traverse: function ( nv ) {
 
-
-        if ( nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
-
-            // update the scene
-            this.nodeTraverse( nv );
-
-        } else if ( nv.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
-
-            // cull Shadowed Scene
-            this.cullShadowReceivingScene( nv );
+        // update the scene
+        if ( nv.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
 
             var i, st, lt = this._shadowTechniques.length;
+
+            // cull Shadowed Scene
+            if ( lt ) nv.pushStateSet( this._receivingStateset );
+            this.nodeTraverse( nv );
+            if ( lt ) nv.popStateSet();
+
             // cull Casters
             for ( i = 0; i < lt; i++ ) {
                 st = this._shadowTechniques[ i ];
@@ -123,20 +122,6 @@ ShadowedScene.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         } else {
             this.nodeTraverse( nv );
         }
-    },
-
-    /*receiving shadows, cull normally, but with receiving shader/state set/texture*/
-    cullShadowReceivingScene: function ( cullVisitor ) {
-
-        // What to do here... we want to draw all scene object, not only receivers ?
-        // so no mask for now
-        //var traversalMask = cullVisitor.getTraversalMask();
-        //cullVisitor.setTraversalMask( this.getReceivesShadowTraversalMask() );
-
-        cullVisitor.pushStateSet( this._receivingStateset );
-        this.nodeTraverse( cullVisitor );
-        cullVisitor.popStateSet();
-
     }
 
 

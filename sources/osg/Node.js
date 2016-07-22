@@ -76,9 +76,9 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         if ( this._boundingSphereComputed === true || this._boundingBoxComputed === true ) {
             this._boundingSphereComputed = false;
             this._boundingBoxComputed = false;
-
-            for ( var i = 0, l = this._parents.length; i < l; i++ ) {
-                this._parents[ i ].dirtyBound();
+            var parents = this._parents;
+            for ( var i = 0, l = parents.length; i < l; i++ ) {
+                parents[ i ].dirtyBound();
             }
         }
     },
@@ -402,7 +402,8 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 
     computeBoundingSphere: function ( bSphere ) {
 
-        var l = this.children.length;
+        var children = this.children;
+        var l = children.length;
 
         bSphere.init();
         if ( l === 0 ) return bSphere;
@@ -411,8 +412,8 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         var bb = this._tmpBox;
         bb.init();
         for ( i = 0; i < l; i++ ) {
-            cc = this.children[ i ];
-            if ( cc.referenceFrame === undefined || cc.referenceFrame === TransformEnums.RELATIVE_RF ) {
+            cc = children[ i ];
+            if ( cc.referenceFrame !== TransformEnums.ABSOLUTE_RF ) {
                 bb.expandByBoundingSphere( cc.getBound() );
             }
         }
@@ -420,8 +421,8 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 
         bSphere.set( bb.center( bSphere.center() ), 0.0 );
         for ( i = 0; i < l; i++ ) {
-            cc = this.children[ i ];
-            if ( cc.referenceFrame === undefined || cc.referenceFrame === TransformEnums.RELATIVE_RF ) {
+            cc = children[ i ];
+            if ( cc.referenceFrame !== TransformEnums.ABSOLUTE_RF ) {
                 bSphere.expandRadiusBySphere( cc.getBound() );
             }
         }

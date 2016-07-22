@@ -37,8 +37,6 @@ CameraCullCallback.prototype = {
         // see ShadowTechnique CameraCullCallback
         this._shadowTechnique.getShadowedScene().nodeTraverse( nv );
 
-
-
         var cs = nv.getCurrentCullingSet();
         if ( nv.getComputeNearFar() === true && nv.getComputedFar() >= nv.getComputedNear() ) {
             var m = nv.getCurrentProjectionMatrix();
