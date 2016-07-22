@@ -208,17 +208,17 @@ WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride, 
     var rootViewMatrix = viewer.getCamera().getViewMatrix();
 
     var root = rootOverride || new Node();
-    root.setUpdateCallback( new UpdateRecreateOnResize( viewer, rttScene, HMDconfig, root, canvas ) );
+    root.addUpdateCallback( new UpdateRecreateOnResize( viewer, rttScene, HMDconfig, root, canvas ) );
 
     var rttTextureLeft = createTextureRtt( rttSize );
     var rttCamLeft = createCameraRtt( rttTextureLeft, webVRMatrices.projectionLeft );
     var orthoCameraLeft = createOrthoRtt( true, viewportSize, canvasSize, HMD.isCardboard, rttTextureLeft, webVRUniforms );
-    rttCamLeft.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewLeft ) );
+    rttCamLeft.addUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewLeft ) );
 
     var rttTextureRight = createTextureRtt( rttSize );
     var rttCamRight = createCameraRtt( rttTextureRight, webVRMatrices.projectionRight );
     var orthoCameraRight = createOrthoRtt( false, viewportSize, canvasSize, HMD.isCardboard, rttTextureRight, webVRUniforms );
-    rttCamRight.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewRight ) );
+    rttCamRight.addUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewRight ) );
 
     rttCamLeft.addChild( rttScene );
     rttCamRight.addChild( rttScene );

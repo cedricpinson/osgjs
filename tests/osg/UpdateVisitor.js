@@ -56,9 +56,9 @@ module.exports = function () {
             }
         };
 
-        root.setUpdateCallback( new Froot() );
-        b.setUpdateCallback( new Fb() );
-        c.setUpdateCallback( new Fc() );
+        root.addUpdateCallback( new Froot() );
+        b.addUpdateCallback( new Fb() );
+        c.addUpdateCallback( new Fc() );
 
         uv.apply( root );
 

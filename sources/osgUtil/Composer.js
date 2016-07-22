@@ -68,7 +68,7 @@ var Composer = function () {
             return true;
         }
     };
-    this.setUpdateCallback( new UpdateCallback() );
+    this.addUpdateCallback( new UpdateCallback() );
     // disable unecessarry drawing/states/check
     this.getOrCreateStateSet().setAttributeAndModes( new Depth( 'DISABLE' ) );
     this.getOrCreateStateSet().setAttributeAndModes( new CullFace( 'BACK' ) );

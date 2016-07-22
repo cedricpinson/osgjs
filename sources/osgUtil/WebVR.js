@@ -163,8 +163,8 @@ WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldF
 
     // The viewMatrix of each eye is updated with the current viewer's camera viewMatrix
     var rootViewMatrix = viewer.getCamera().getViewMatrix();
-    camRttLeft.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, viewLeft ) );
-    camRttRight.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, viewRight ) );
+    camRttLeft.addUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, viewLeft ) );
+    camRttRight.addUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, viewRight ) );
 
     // Render both textures on the canvas, using the viewer's camera viewport to render on the fullscreen canvas
     var camCanvas = createCameraCanvas( leftEyeTexture, rightEyeTexture, viewer.getCamera().getViewport() );

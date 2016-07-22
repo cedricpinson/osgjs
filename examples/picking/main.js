@@ -121,7 +121,7 @@
             };
         };
 
-        root.setUpdateCallback( new UpdateCallback() );
+        root.addUpdateCallback( new UpdateCallback() );
 
         return root;
     };

@@ -31,7 +31,7 @@ var RigGeometry = function () {
 
     this._shape = null; // by default no kdtree/shape for rig
 
-    this.setUpdateCallback( new UpdateRigGeometry() );
+    this.addUpdateCallback( new UpdateRigGeometry() );
 
     // handle matrixFromSkeletonToGeometry and invMatrixFromSkeletonToGeometry computation
     this._root = undefined;

@@ -36,7 +36,7 @@ var Skeleton = function () {
 Skeleton.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     setDefaultUpdateCallback: function () {
-        this.setUpdateCallback( new UpdateSkeleton() );
+        this.addUpdateCallback( new UpdateSkeleton() );
     },
 
     setRestPose: function () {

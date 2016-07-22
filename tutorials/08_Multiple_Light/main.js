@@ -80,7 +80,7 @@ window.addEventListener( 'load', function () {
 
     var mainNode = new osg.Node();
     // branch the callback
-    mainNode.setUpdateCallback( new LightUpdateCallback() );
+    mainNode.addUpdateCallback( new LightUpdateCallback() );
 
     // just handy variables to keep tersm to light
     // you could also give it as paramters to the updatecallback

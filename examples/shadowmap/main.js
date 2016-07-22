@@ -1204,7 +1204,7 @@
             osg.Vec3.sub( position, target, dir );
             osg.Vec3.normalize( dir, dir );
             //light.setDirection( dir );
-            lightSource.setUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode, position, dir ) );
+            lightSource.addUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode, position, dir ) );
 
             // need to set lightSource rather than light pos
             // as there is no link in Light to get current Matrix.

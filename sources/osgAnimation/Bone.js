@@ -76,7 +76,7 @@ Bone.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
     },
 
     setDefaultUpdateCallback: function ( name ) {
-        this.setUpdateCallback( new UpdateBone( ( name !== undefined ) ? name : this.getName() ) );
+        this.addUpdateCallback( new UpdateBone( ( name !== undefined ) ? name : this.getName() ) );
     }
 } ), 'osgAnimation', 'Bone' );
 MACROUTILS.setTypeID( Bone );
