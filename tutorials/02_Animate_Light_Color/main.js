@@ -36,7 +36,7 @@ window.addEventListener( 'load', function () {
     // the light itself
     var lightSource = new osg.LightSource();
     var lightNew = new osg.Light();
-    lightSource.setUpdateCallback( new LightUpdateCallback() );
+    lightSource.addUpdateCallback( new LightUpdateCallback() );
     lightSource.setLight( lightNew );
 
     var mainNode = new osg.Node();

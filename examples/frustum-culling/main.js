@@ -255,7 +255,7 @@
                         groundSubNode.setCullingActive( true );
 
                         callbackUpdateCull = new FrustumCullingDebugCallback();
-                        groundSubNode.setUpdateCallback( callbackUpdateCull );
+                        groundSubNode.addUpdateCallback( callbackUpdateCull );
                         groundSubNode.setCullCallback( callbackUpdateCull );
 
                         this.setMaterialAndAlpha( groundSubNode, 0.0 );
@@ -281,7 +281,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
 */
 
                             callbackUpdateCull = new FrustumCullingDebugCallback();
-                            bs.setUpdateCallback( callbackUpdateCull );
+                            bs.addUpdateCallback( callbackUpdateCull );
                             bs.setCullCallback( callbackUpdateCull );
 
                             var transformSphere = new osg.MatrixTransform();
@@ -306,7 +306,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                     bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.StateAttribute.ON | osg.StateAttribute.PROTECTED | osg.StateAttribute.OVERRIDE );
 
                     callbackUpdateCull = new FrustumCullingDebugCallback();
-                    bs.setUpdateCallback( callbackUpdateCull );
+                    bs.addUpdateCallback( callbackUpdateCull );
                     bs.setCullCallback( callbackUpdateCull );
 
 
@@ -466,7 +466,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             updateCountNode.setName( 'updateCountNode' );
 
             var callbackUpdateCount = new CountCallback( {}, this._config );
-            updateCountNode.setUpdateCallback( callbackUpdateCount );
+            updateCountNode.addUpdateCallback( callbackUpdateCount );
 
 
             updateCountNode.addChild( this._model );

@@ -70,7 +70,7 @@
 
         var light = new osg.MatrixTransform();
         light.lightShadow = new osg.Light();
-        light.setUpdateCallback( new LightUpdateCallback( shadowNode.getMatrix() ) );
+        light.addUpdateCallback( new LightUpdateCallback( shadowNode.getMatrix() ) );
         light.getOrCreateStateSet().setAttributeAndModes( light.lightShadow );
 
         shadowNode.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE );
@@ -265,7 +265,7 @@
         q.getOrCreateStateSet().addUniform( projectionShadow );
 
         q.getOrCreateStateSet().addUniform( modelViewShadow );
-        light.setUpdateCallback( new LightUpdateCallbackProjectedTexture( {
+        light.addUpdateCallback( new LightUpdateCallbackProjectedTexture( {
             'projectionShadow': projectionShadow,
             'modelViewShadow': modelViewShadow,
             'camera': rtt,
@@ -695,7 +695,7 @@
         scene.setStateSet( stateSet );
 
 
-        light.setUpdateCallback( new LightUpdateCallbackShadowMap( {
+        light.addUpdateCallback( new LightUpdateCallbackShadowMap( {
             'projectionShadow': projectionShadow,
             'modelViewShadow': modelViewShadow,
             'camera': rtt,

@@ -207,7 +207,7 @@
             };
         };
 
-        cam.setUpdateCallback( new UpdateCallback() );
+        cam.addUpdateCallback( new UpdateCallback() );
 
         scene.addChild( cam );
 

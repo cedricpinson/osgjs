@@ -499,7 +499,7 @@
                     return true;
                 };
             };
-            cam.setUpdateCallback( new UpdateCallback() );
+            cam.addUpdateCallback( new UpdateCallback() );
 
             scene.addChild( cam );
             return scene;
@@ -1335,7 +1335,7 @@
                 }
             };
         };
-        this.setUpdateCallback( new UpdateCallback() );
+        this.addUpdateCallback( new UpdateCallback() );
 
     };
 

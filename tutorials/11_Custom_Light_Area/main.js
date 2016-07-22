@@ -132,7 +132,7 @@ function createScene() {
     };
 
     // branch the callback
-    root.setUpdateCallback( new LightUpdateCallback() );
+    root.addUpdateCallback( new LightUpdateCallback() );
 
     return root;
 }

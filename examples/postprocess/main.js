@@ -27,7 +27,7 @@
                 node.traverse( nv );
             };
         };
-        rootModel.setUpdateCallback( new UpdateCallback() );
+        rootModel.addUpdateCallback( new UpdateCallback() );
 
         // create the camera that render the scene
         var camera = new osg.Camera();

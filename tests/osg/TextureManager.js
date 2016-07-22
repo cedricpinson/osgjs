@@ -67,7 +67,7 @@ module.exports = function () {
         var batch0 = [];
         // Create a bunch of texture objects
         ( function () {
-            for ( var i = 0, l = 40000; i < l; i++ ) {
+            for ( var i = 0, l = 40; i < l; i++ ) {
                 var to = tm.generateTextureObject( gl, {},
                     Texture.TEXTURE_2D,
                     Texture.RGBA,
@@ -82,7 +82,7 @@ module.exports = function () {
             tm.releaseTextureObject( to );
         } );
 
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 40000, 'check orphan 1024x1024 after release' );
+        assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 40, 'check orphan 1024x1024 after release' );
         assert.equal( tm._textureSetMap[ '3553640810241024' ].getUsedTextureObjects().length, 0, 'check used 1024x1024 empty after release' );
 
         // flush TO's in 0.001 seconds
