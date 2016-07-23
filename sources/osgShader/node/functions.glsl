@@ -67,9 +67,9 @@ vec4 encodeRGBM(const in vec3 col, const in float range) {
 
 vec3 decodeRGBM(const in vec4 col, const in float range) {
     vec3 result;
-    if(range <= 0.0) {
+    if ( range <= 0.0 )
         result = col.rgb;
-    } else {
+    else
         result = range * col.rgb * col.a;
     return result;
 }
