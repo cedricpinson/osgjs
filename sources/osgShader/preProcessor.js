@@ -2,7 +2,7 @@
 
 // remove fat code (undefined)
 // TODO: comments, unused functions)
-var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
+var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
     var inputsDefines = definesInput && definesInput.slice( 0 );
     //    var inputsExtension = extensionsInput && extensionsInput.slice( 0 );
@@ -137,7 +137,7 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                             case 'require':
                             case 'warn':
 
-                                // TODO: handle neable using webglCAPS                            
+                                // TODO: handle neable using webglCAPS
                                 inputsDefines.push( extension );
                                 // keep it in source otw breaks shader
                                 // continue
@@ -185,7 +185,7 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                         }
 
                         // keep them in source always
-                        // macros/values etc                        
+                        // macros/values etc
                         strippedContent += ( pruneComment ) ? line : lines[ i ] + '\n';
                         continue;
 
@@ -207,7 +207,7 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
                         }
                         // keep them in source always
-                        // macros/values etc                        
+                        // macros/values etc
                         strippedContent += ( ( pruneComment ) ? line : lines[ i ] ) + '\n';
                         continue;
 
@@ -229,7 +229,7 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
                     // no previous include
                     droppingDefineStack[ droppingDefineStackIndex ] = false;
-                    // didIncludeDefineStack[ droppingDefineStackIndex ] no need we're going out next 
+                    // didIncludeDefineStack[ droppingDefineStackIndex ] no need we're going out next
                     parentDroppingStack[ droppingDefineStackIndex ] = parentDroppingStack[ droppingDefineStackIndex - 1 ];
                     continue;
 
@@ -237,7 +237,7 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
 
                 //////////
-                // #ifdef _EVSM                    
+                // #ifdef _EVSM
                 results = line.match( ifdefReg );
                 if ( results !== null && results.length >= 2 ) {
 
@@ -288,7 +288,7 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                 }
 
                 //////////
-                // check for endif 
+                // check for endif
                 results = line.search( endifReg );
                 if ( results !== -1 ) {
 
@@ -338,15 +338,12 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                                     result = result || inputsDefines.indexOf( definesGroup[ 2 ] ) === -1;
 
                             } else {
-
-                                // defined(dfsdf) 
+                                // defined(dfsdf)
                                 if ( operator === '&&' )
                                     result = result && inputsDefines.indexOf( definesGroup[ 2 ] ) !== -1;
                                 else
                                     result = result || inputsDefines.indexOf( definesGroup[ 2 ] ) !== -1;
-
                             }
-
                         }
                     }
 
@@ -358,8 +355,6 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
                     continue;
                 }
-
-
 
 
                 if ( line.substr( 1, 2 ) === 'if' ) {
@@ -387,7 +382,7 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
                             } else {
 
-                                // defined(dfsdf) 
+                                // defined(dfsdf)
                                 if ( operator === '&&' )
                                     result = result && inputsDefines.indexOf( definesGroup[ 2 ] ) !== -1;
                                 else
@@ -440,4 +435,4 @@ var PreProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
 };
 
-module.exports = PreProcessor;
+module.exports = preProcessor;

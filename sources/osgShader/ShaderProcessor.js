@@ -3,9 +3,8 @@ var Notify = require( 'osg/Notify' );
 var shaderLib = require( 'osgShader/shaderLib' );
 var shadowShaderLib = require( 'osgShadow/shaderLib' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
-var Optimizer = require( 'osgShader/Optimizer' );
-var PreProcessor = require( 'osgShader/PreProcessor' );
-
+var optimizer = require( 'osgShader/optimizer' );
+var preProcessor = require( 'osgShader/preProcessor' );
 
 //     Shader as vert/frag/glsl files Using requirejs text plugin
 //     Preprocess features like:    //
@@ -161,11 +160,14 @@ ShaderProcessor.prototype = {
     //  resolving include dependencies
     //  adding defines
     //  adding line instrumenting.
-    processShader: function ( shader, defines, extensions /*, type*/ ) {
+    processShader: function ( shader, argDefines, argExtensions /*, type*/ ) {
 
         var includeList = [];
         var preShader = shader;
         var sourceID = 0;
+        var defines = argDefines;
+        var extensions = argExtensions;
+
         if ( this._debugLines ) {
             preShader = this.instrumentShaderlines( preShader, sourceID );
             sourceID++;
@@ -232,16 +234,20 @@ ShaderProcessor.prototype = {
             return this._defineR.test( defineString ) && defineString.replace( /\s+/g, ' ' ).split( ' ' )[ 1 ];
         }.bind( this ) );
 
+        var osgShader = require( 'osgShader/osgShader' );
+        if ( osgShader.enableShaderOptimizer ) {
+            Notify.info( 'shader before optimization\n' + postShader );
+            console.time( 'shaderPreprocess' );
+            var preprocessedShader = preProcessor( postShader, defines, extensions );
+            postShader = preprocessedShader;
+            console.timeEnd( 'shaderPreprocess' );
 
-        console.time( 'shaderPreprocess' );
-        var preprocessedShader = PreProcessor( postShader, defines, extensions );
-        postShader = preprocessedShader;
-        console.timeEnd( 'shaderPreprocess' );
-
-        console.time( 'shaderOptimize' );
-        var optShader = Optimizer( postShader, defines, extensions );
-        postShader = optShader;
-        console.timeEnd( 'shaderOptimize' );
+            console.time( 'shaderOptimize' );
+            var optShader = optimizer( postShader, defines, extensions );
+            postShader = optShader;
+            console.timeEnd( 'shaderOptimize' );
+            Notify.info( 'shader after optimization\n' + postShader );
+        }
 
         return postShader;
     }

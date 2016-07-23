@@ -4,7 +4,7 @@ var shake = require( 'glsl-token-function-shaker' );
 var stringify = require( 'glsl-token-string' );
 var tokenize = require( 'glsl-tokenizer' );
 
-var ShaderOptimizer = function ( sourceCode /*, defines, extensions*/ ) {
+var shaderOptimizer = function ( sourceCode /*, defines, extensions*/ ) {
 
     var tokens = tokenize( sourceCode );
 
@@ -17,4 +17,4 @@ var ShaderOptimizer = function ( sourceCode /*, defines, extensions*/ ) {
     return output;
 };
 
-module.exports = ShaderOptimizer;
+module.exports = shaderOptimizer;
