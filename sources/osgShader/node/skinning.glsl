@@ -1,12 +1,13 @@
 //////////////////////////////
 // OPTIMIZED VERSION (NO IF)
 //////////////////////////////
+const mat4 identityMatrix = mat4( 1.0 );
 mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
     mat4 outMat_1;
     mat4 tmpMat_2;
     highp ivec4 tmpvar_3;
     tmpvar_3 = (3 * ivec4(bonesIdx));
-    tmpMat_2 = mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    tmpMat_2 = mat4( 1.0 );
     vec4 tmpvar_4;
     tmpvar_4 = -(abs(weightsVec));
     tmpMat_2[0] = uBones[tmpvar_3.x];
@@ -14,7 +15,7 @@ mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
     tmpMat_2[2] = uBones[(tmpvar_3.x + 2)];
     outMat_1 = ((float(
     ((tmpvar_4.x + tmpvar_4.y) >= -((tmpvar_4.z + tmpvar_4.w)))
-    ) * mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)) + (weightsVec.x * tmpMat_2));
+    ) * identityMatrix ) + (weightsVec.x * tmpMat_2));
     tmpMat_2[0] = uBones[tmpvar_3.y];
     tmpMat_2[1] = uBones[(tmpvar_3.y + 1)];
     tmpMat_2[2] = uBones[(tmpvar_3.y + 2)];

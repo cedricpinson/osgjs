@@ -61,12 +61,12 @@ PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
             this._outputs.color, [ this._inputs.normal,
                 this._inputs.eyeVector,
 
-                getVec3( this._inputs.materialambient ),
+                //getVec3( this._inputs.materialambient ),
                 getVec3( this._inputs.materialdiffuse ),
                 getVec3( this._inputs.materialspecular ),
                 this._inputs.materialshininess,
 
-                getVec3( this._inputs.lightambient ),
+                //getVec3( this._inputs.lightambient ),
                 getVec3( this._inputs.lightdiffuse ),
                 getVec3( this._inputs.lightspecular ),
 
@@ -130,12 +130,12 @@ SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
             this._outputs.color, [ this._inputs.normal,
                 this._inputs.eyeVector,
 
-                getVec3( this._inputs.materialambient ),
+                //getVec3( this._inputs.materialambient ),
                 getVec3( this._inputs.materialdiffuse ),
                 getVec3( this._inputs.materialspecular ),
                 this._inputs.materialshininess,
 
-                getVec3( this._inputs.lightambient ),
+                //getVec3( this._inputs.lightambient ),
                 getVec3( this._inputs.lightdiffuse ),
                 getVec3( this._inputs.lightspecular ),
 
@@ -195,12 +195,12 @@ SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
             this._outputs.color, [ this._inputs.normal,
                 this._inputs.eyeVector,
 
-                getVec3( this._inputs.materialambient ),
+                //getVec3( this._inputs.materialambient ),
                 getVec3( this._inputs.materialdiffuse ),
                 getVec3( this._inputs.materialspecular ),
                 this._inputs.materialshininess,
 
-                getVec3( this._inputs.lightambient ),
+                //getVec3( this._inputs.lightambient ),
                 getVec3( this._inputs.lightdiffuse ),
                 getVec3( this._inputs.lightspecular ),
 

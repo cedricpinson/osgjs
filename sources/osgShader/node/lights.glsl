@@ -45,12 +45,12 @@ vec3 computeSpotLightShading(
                              const in vec3 normal,
                              const in vec3 eyeVector,
 
-                             const in vec3 materialAmbient,
+                             //const in vec3 materialAmbient,
                              const in vec3 materialDiffuse,
                              const in vec3 materialSpecular,
                              const in float materialShininess,
 
-                             const in vec3 lightAmbient,
+                             //const in vec3 lightAmbient,
                              const in vec3 lightDiffuse,
                              const in vec3 lightSpecular,
 
@@ -117,12 +117,12 @@ vec3 computePointLightShading(
                               const in vec3 normal,
                               const in vec3 eyeVector,
 
-                              const in vec3 materialAmbient,
+                              //const in vec3 materialAmbient,
                               const in vec3 materialDiffuse,
                               const in vec3 materialSpecular,
                               const in float materialShininess,
 
-                              const in vec3 lightAmbient,
+                              //const in vec3 lightAmbient,
                               const in vec3 lightDiffuse,
                               const in vec3 lightSpecular,
 
@@ -167,12 +167,12 @@ vec3 computeSunLightShading(
                             const in vec3 normal,
                             const in vec3 eyeVector,
 
-                            const in vec3 materialAmbient,
+                            //const in vec3 materialAmbient,
                             const in vec3 materialDiffuse,
                             const in vec3 materialSpecular,
                             const in float materialShininess,
 
-                            const in vec3 lightAmbient,
+                            //const in vec3 lightAmbient,
                             const in vec3 lightDiffuse,
                             const in vec3 lightSpecular,
 
@@ -221,7 +221,7 @@ vec3 computeHemiLightShading(
     out float NdotL,
     out bool lighted)
 {
-    lighted = false;
+    lighted = false; // Lighted always false?
 
     eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
     NdotL = dot(eyeLightDir, normal);
