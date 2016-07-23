@@ -32,9 +32,9 @@ vec4 sRGBToLinear(const in vec4 c) {
 }
 
 //http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html
+#define MAX_RANGE 8.0
 vec3 RGBMToRGB( const in vec4 rgba ) {
-    const float maxRange = 8.0;
-    return rgba.rgb * maxRange * rgba.a;
+    return rgba.rgb * MAX_RANGE * rgba.a;
 }
 
 const mat3 LUVInverse = mat3( 6.0013,    -2.700,   -1.7995,
@@ -53,18 +53,23 @@ vec3 LUVToRGB( const in vec4 vLogLuv ) {
 
 // http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html
 vec4 encodeRGBM(const in vec3 col, const in float range) {
-    if(range <= 0.0)
-        return vec4(col, 1.0);
     vec4 rgbm;
-    vec3 color = col / range;
-    rgbm.a = clamp( max( max( color.r, color.g ), max( color.b, 1e-6 ) ), 0.0, 1.0 );
-    rgbm.a = ceil( rgbm.a * 255.0 ) / 255.0;
-    rgbm.rgb = color / rgbm.a;
+    if( range <= 0.0 ) {
+        rgbm = vec4(col, 1.0);
+    } else {
+        vec3 color = col / range;
+        rgbm.a = clamp( max( max( color.r, color.g ), max( color.b, 1e-6 ) ), 0.0, 1.0 );
+        rgbm.a = ceil( rgbm.a * 255.0 ) / 255.0;
+        rgbm.rgb = color / rgbm.a;
+    }
     return rgbm;
 }
 
 vec3 decodeRGBM(const in vec4 col, const in float range) {
-    if(range <= 0.0)
-        return col.rgb;
-    return range * col.rgb * col.a;
+    vec3 result;
+    if(range <= 0.0) {
+        result = col.rgb;
+    } else {
+        result = range * col.rgb * col.a;
+    return result;
 }
