@@ -5,7 +5,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var Uniform = require( 'osg/Uniform' );
 var factory = require( 'osgShader/nodeFactory' );
 
-var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
+var Compiler = function ( attributes, textureAttributes, shaderProcessor, hash ) {
     this._attributes = attributes;
     this._textureAttributes = textureAttributes;
 
@@ -17,6 +17,9 @@ var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
     this._varyings = {};
     this._vertexShader = [];
     this._fragmentShader = [];
+
+    // helps id Shaders
+    this._hash = hash ? hash.replace( /\(|\)/g, '' ) : '';
 
     // global stuffs
     this._shaderProcessor = shaderProcessor;
@@ -1640,6 +1643,8 @@ Compiler.prototype = {
         var shaderStr = shaderStack.join( '\n' );
 
         // Process defines, add precision, resolve include pragma
+        var shaderName = this.getShaderName();
+        if ( shaderName && shaderName !== '' ) defines.push( '\n#define SHADER_NAME ' + shaderName + '\n' );
         var shader = this._shaderProcessor.processShader( shaderStr, defines, extensions, type );
 
         /*develblock:start*/
@@ -1672,10 +1677,6 @@ Compiler.prototype = {
 
         // Call to specialised inhenrited shader Compiler
         var roots = this.createVertexShaderGraph();
-        var vname = this.getVertexShaderName();
-        if ( vname )
-            roots.push( this.getNode( 'Define', 'SHADER_NAME' ).setValue( vname ) );
-
         // call the graph compiler itself
         var shader = this.createShaderFromGraphs( roots, 'vertex' );
 
@@ -1725,10 +1726,6 @@ Compiler.prototype = {
 
         // Call to specialised inhenrited shader Compiler
         var roots = this.createFragmentShaderGraph();
-        var fname = this.getFragmentShaderName();
-        if ( fname )
-            roots.push( this.getNode( 'Define', 'SHADER_NAME' ).setValue( fname ) );
-
         var shader = this.createShaderFromGraphs( roots, 'fragment' );
         Notify.debug( shader );
 
@@ -1846,8 +1843,11 @@ Compiler.prototype = {
 
         return roots;
     },
+    getShaderName: function () {
+        return this._fragmentShaderMode ? this.getFragmentShaderName() : this.getVertexShaderName();
+    },
     getFragmentShaderName: function () {
-        return this._material ? 'CompilerOSGJS' : 'NoMaterialCompilerOSGJS';
+        return ( this._material ? 'CompilerOSGJS' : 'NoMaterialCompilerOSGJS' ) + '_' + this._hash;
     },
     getVertexShaderName: function () {
         return this.getFragmentShaderName();

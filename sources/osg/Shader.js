@@ -9,7 +9,7 @@ var GLObject = require( 'osg/GLObject' );
  * Shader manage shader for vertex and fragment, you need both to create a glsl program.
  * @class Shader
  */
-var Shader = function ( type, text ) {
+var Shader = function ( type, text, name ) {
     GLObject.call( this );
     var t = type;
     if ( typeof ( type ) === 'string' ) {
@@ -17,20 +17,17 @@ var Shader = function ( type, text ) {
     }
     this.type = t;
     this.setText( text );
+    this.setName( name );
 };
 
 Shader.VERTEX_SHADER = 0x8B31;
 Shader.FRAGMENT_SHADER = 0x8B30;
 
 // Debug Pink shader for when shader fails
-Shader.VS_DBG = 'attribute vec3 Vertex;uniform mat4 ModelViewMatrix;uniform mat4 ProjectionMatrix;void main(void) {  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);}';
+Shader.VS_DBG = 'attribute vec3 Vertex;uniform mat4 ModelViewMatrix;uniform mat4 ProjectionMatrix;void main(void) {  gl_Position = ProjectionMatrix * (ModelViewMatrix * vec4(Vertex, 1.0));}';
 Shader.FS_DBG = 'precision lowp float; void main(void) { gl_FragColor = vec4(1.0, 0.6, 0.6, 1.0);}';
 
-var debugName = '\n#define SHADER_NAME FailSafe\n';
-Shader.VS_DBG += debugName;
-Shader.FS_DBG += debugName;
-
-
+var debugName = 'DBG';
 // static cache of glShaders flagged for deletion, which will actually
 // be deleted in the correct GL context.
 Shader._sDeletedGLShaderCache = new window.Map();
@@ -78,10 +75,35 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
     getText: function () {
         return this.text;
     },
+    setName: function ( name ) {
+        this._name = name;
+    },
+    getName: function () {
+        return this._name;
+    },
+    getDefineShaderName: function () {
+        if ( !this._name ) return '';
+        return '\n#define SHADER_NAME ' + this._name + '\n';
+    },
+
+    getType: function () {
+        return this.type;
+    },
+    isFragmentShader() {
+        return this.type === Shader.FRAGMENT_SHADER;
+    },
+    isVertexShader() {
+        return this.type === Shader.VERTEX_SHADER;
+    },
     // this is where it creates a fail safe shader that should work everywhere
     failSafe: function ( gl ) {
         this.shader = gl.createShader( this.type );
-        gl.shaderSource( this.shader, this.type === Shader.VERTEX_SHADER ? Shader.VS_DBG : Shader.FS_DBG );
+        // you want to know what failed
+        this._name = debugName + '_' + this._name;
+
+        // you have a shader editor... then debug directly by enabling ifdef!
+        var newSource = '#define _DEBUG_SHADER\n#ifdef _DEBUG_SHADER\n' + ( this.isVertexShader() ? Shader.VS_DBG : Shader.FS_DBG ) + '\n#else // _DEBUG_SHADER\n' + this.getText() + '\n#endif //DEBUG_SHADER\n' + this.getDefineShaderName();
+        gl.shaderSource( this.shader, newSource );
         gl.compileShader( this.shader );
     },
     // webgl shader compiler error to source contextualization
@@ -140,6 +162,7 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
     compile: function ( gl ) {
         if ( !this._gl ) this.setGraphicContext( gl );
         this.shader = gl.createShader( this.type );
+        if ( this.text.indexOf( '#define SHADER_NAME ' ) === -1 ) this.text += this.getDefineShaderName();
         gl.shaderSource( this.shader, this.text );
         MACROUTILS.timeStamp( 'osgjs.metrics:compileShader' );
         gl.compileShader( this.shader );

@@ -39,7 +39,7 @@ ShaderProcessor.prototype = {
     _includeCondR: /#pragma include (["^+"]?["\ "[a-zA-Z_0-9](.*)"]*?)/g,
     _defineR: /\#define\s+([a-zA-Z_0-9]+)/,
     _precisionR: /precision\s+(high|low|medium)p\s+float/,
-
+    _defineShaderNameReg: /#define\sSHADER_NAME\s(\S+)/im,
 
     // {
     //     'functions.glsl': textShaderFunctions,
@@ -97,7 +97,7 @@ ShaderProcessor.prototype = {
 
     getShader: function ( shaderName, defines, extensions, type ) {
         var shader = this.getShaderTextPure( shaderName );
-        return this.processShader( shader, defines, extensions, type );
+        return this.processShader( shader, defines, extensions, shaderName, type );
     },
 
     // recursively  handle #include external glsl
@@ -160,7 +160,7 @@ ShaderProcessor.prototype = {
     //  resolving include dependencies
     //  adding defines
     //  adding line instrumenting.
-    processShader: function ( shader, argDefines, argExtensions /*, type*/ ) {
+    processShader: function ( shader, argDefines, argExtensions, shaderName /*, type*/ ) {
 
         var includeList = [];
         var preShader = shader;
@@ -228,24 +228,32 @@ ShaderProcessor.prototype = {
             defines = [];
         }
 
-        if ( this._precisionFloat ) defines.push( '#define GL_FRAGMENT_PRECISION_HIGH' );
         defines = defines.map( function ( defineString ) {
             // find '#define', remove duplicate whitespace, split on space and return the define Text
             return this._defineR.test( defineString ) && defineString.replace( /\s+/g, ' ' ).split( ' ' )[ 1 ];
         }.bind( this ) );
 
-        var osgShader = require( 'osgShader/osgShader' );
-        if ( osgShader.enableShaderOptimizer ) {
+        this._osgShader = this._osgShader || require( 'osgShader/osgShader' );
+        if ( this._osgShader.enableShaderOptimizer ) {
+
+            var doTimeCompilation = this._osgShader.enableShaderCompilationTiming;
+
+            Notify.info( 'shader optimization: ' + shaderName );
             Notify.info( 'shader before optimization\n' + postShader );
-            console.time( 'shaderPreprocess' );
+
+            if ( doTimeCompilation ) console.time( 'shaderPreprocess: ' + shaderName );
+
             var preprocessedShader = preProcessor( postShader, defines, extensions );
             postShader = preprocessedShader;
-            console.timeEnd( 'shaderPreprocess' );
 
-            console.time( 'shaderOptimize' );
+            if ( doTimeCompilation ) console.timeEnd( 'shaderPreprocess: ' + shaderName );
+
+            if ( doTimeCompilation ) console.time( 'shaderOptimize: ' + shaderName );
+
             var optShader = optimizer( postShader, defines, extensions );
             postShader = optShader;
-            console.timeEnd( 'shaderOptimize' );
+
+            if ( doTimeCompilation ) console.timeEnd( 'shaderOptimize: ' + shaderName );
             Notify.info( 'shader after optimization\n' + postShader );
         }
 

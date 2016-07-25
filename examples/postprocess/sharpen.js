@@ -78,6 +78,7 @@
                 'inputTexture': inputTexture
             }
         );
+        sharpenFilter.setFragmentName( 'sharpenFilter' );
 
         var effect = {
 

@@ -162,6 +162,7 @@
                 'middleGrey': middleGrey,
                 'whitePoint': whitePoint
             } );
+        toneMappingFilter.setFragmentName( 'toneMappingFilter' );
 
         var luminanceComputeFilter = new osgUtil.Composer.Filter.Custom(
             [
@@ -199,6 +200,7 @@
                 'input_texture': currentSceneTexture
             }
         );
+        luminanceComputeFilter.setFragmentName( 'luminanceComputeFilter' );
 
         function setSceneTexture( sceneFile ) {
 

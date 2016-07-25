@@ -57,6 +57,7 @@
                 input_texture: inputTexture,
                 factor: factor
             } );
+        chromaticAbberationFilter.setFragmentName( 'chromaticAbberationFilter' );
 
         var effect = {
 

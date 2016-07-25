@@ -1,11 +1,128 @@
 'use strict';
 
-// remove fat code (undefined)
-// TODO: comments, unused functions)
-var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
+// Regex once and for all
+// to avoid multiple compilation
+// of the same regex 
 
-    var inputsDefines = definesInput && definesInput.slice( 0 );
-    //    var inputsExtension = extensionsInput && extensionsInput.slice( 0 );
+// multiple Conditions: defined(_MYDEF) && 5 == MY_DEF && !defined(_ALL_DEF_H)
+var exprReg = /((!defined|defined)\s?\({1}\s?(\w+)\s?\){1})|((!=)|(==)|(&&)|(\|\|))|(\w+)+/gi;
+//var ifReg = /#if defined(.+)/gi;
+//var elifReg = /#elif defined(.+)/gi;
+
+// change of context
+var defineReg = /#define\s(\w+)$|#define\s(\w+)\s(\S+)|#define\s(\w+)\(\w+\)(.+)/i;
+var undefReg = /#undef (.+)/i;
+
+// clean ears;
+var ccComent = /\/\/(.+)/i;
+//
+var extensionReg = /#extension\s(\w+)\s:\s(\w+)/i;
+
+// regex to extract error message and line from webgl compiler reporting
+// one condition
+var ifdefReg = /#ifdef\s(.+)/i;
+var elseReg = /#else/i;
+var endifReg = /#endif/i;
+var ifndefReg = /#ifndef\s(.+)/i;
+
+//  defined (_FLOATTEX) && defined(_PCF)
+//  defined(_NONE) ||  defined(_PCF)
+//  _NONE === 'aha'
+// doesn't order of operation nor parhentisis
+// need a real expr evaluatro
+// a parser on its own... https://github.com/silentmatt/js-expression-eval/
+var evalExpr = function ( regex, variables, variablesValues, line ) {
+
+    var operator = '&&';
+    var test = '==';
+    var result = true;
+
+    var exprGroup, indexOfDefine, indexOfDefineNewVar;
+    var lastVar, newVar;
+    var testVar;
+    while ( ( exprGroup = regex.exec( line ) ) !== null ) {
+
+        if ( exprGroup.length > 2 ) {
+
+            if ( exprGroup[ 9 ] !== undefined ) {
+
+                if ( !lastVar ) {
+                    lastVar = exprGroup[ 0 ].trim();
+                } else {
+
+                    indexOfDefine = variables.indexOf( lastVar );
+                    newVar = exprGroup[ 0 ].trim();
+                    indexOfDefineNewVar = variables.indexOf( newVar );
+
+                    // either it's a previously defined VAR or a math expression
+                    if ( indexOfDefine !== -1 ) lastVar = variablesValues[ lastVar ];
+                    if ( indexOfDefineNewVar !== -1 ) newVar = variablesValues[ newVar ];
+
+                    if ( test === '==' )
+                        testVar = lastVar === newVar;
+                    else if ( test === '!=' )
+                        testVar = lastVar !== newVar;
+
+                    test = lastVar = newVar = undefined;
+
+
+                    if ( operator === '&&' )
+                        result = result && testVar;
+                    else
+                        result = result || testVar;
+
+
+                }
+
+
+            } else if ( exprGroup[ 4 ] !== undefined ) {
+
+                if ( exprGroup[ 8 ] !== undefined || exprGroup[ 7 ] !== undefined )
+                    operator = exprGroup[ 0 ].trim();
+                else if ( exprGroup[ 6 ] !== undefined || exprGroup[ 5 ] !== undefined )
+                    test = exprGroup[ 0 ].trim();
+
+
+            } else if ( exprGroup[ 2 ] !== undefined && exprGroup[ 3 ] !== undefined ) {
+
+                if ( exprGroup[ 2 ].trim()[ 0 ] === '!' ) {
+
+                    indexOfDefine = variables.indexOf( exprGroup[ 3 ] );
+
+                    // !defined(dfsdf)
+                    if ( operator === '&&' )
+                        result = result && indexOfDefine === -1;
+                    else
+                        result = result || indexOfDefine === -1;
+
+                } else {
+
+                    indexOfDefine = variables.indexOf( exprGroup[ 3 ] );
+
+                    // defined(dfsdf)
+                    if ( operator === '&&' )
+                        result = result && indexOfDefine !== -1;
+                    else
+                        result = result || indexOfDefine !== -1;
+                }
+            }
+        }
+    }
+    return result;
+};
+
+
+var ignoredDefines = [ 'GL_FRAGMENT_PRECISION_HIGH', 'DEBUG' ];
+
+// remove unProcessed Code.
+var preProcessor = function ( source, definesInput ) {
+
+    var inputsDefines = definesInput ? definesInput.slice( 0 ) : [];
+    // GL_ES
+    // __PREPROCESSOR_: allow special debug preprocessor operation
+    // like string comparison (shader_name === )
+    // add __VERSION_ __LINE_ ? 
+    inputsDefines.push( '__PREPROCESSOR_', 'GL_ES' );
 
     // what we'll do
     var pruneComment = false;
@@ -20,26 +137,6 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
     var linesLength = lines.length;
     if ( linesLength === 0 ) return source;
 
-    // regex to extract error message and line from webgl compiler reporting
-    // one condition
-    var ifdefReg = /#ifdef\s(.+)/i;
-    var elseReg = /#else/i;
-    var endifReg = /#endif/i;
-    var ifndefReg = /#ifndef\s(.+)/i;
-
-    // multipleCondition
-    var definedReg = /(?:\s)(!defined|defined)\s?\(\s?(\w+)\)?\s?|(&&)|(\|\|)/gi;
-    //var ifReg = /#if defined(.+)/gi;
-    //var elifReg = /#elif defined(.+)/gi;
-
-    // change of context
-    var defineReg = /#define\s(\w+)$|#define\s(\w+)\s(\S+)|#define\s(\w+)\(\w+\)(.+)/i;
-    var undefReg = /#undef (.+)/i;
-
-    // clean ears;
-    var ccComent = /\/\/(.+)/i;
-    //
-    var extensionReg = /#extension\s(\w+)\s:\s(\w+)/i;
     // state var
     var foundIfDef, index, results;
 
@@ -47,6 +144,8 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
     var preProcessorCmd = false;
     // do we drop or include current code
     var droppingDefineStack = [ false ];
+    // do we ignore as not preprocess that 
+    var ignoreDefineStack = [ false ];
     // did we already include code from this branching struct
     var didIncludeDefineStack = [ false ];
     // where are we in branching struct stack deepness
@@ -98,7 +197,7 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
             continue;
         }
 
-
+        var ignoreAndKeep = ignoreDefineStack[ droppingDefineStackIndex ];
         if ( pruneDefines ) {
 
             preProcessorCmd = line[ 0 ] === '#';
@@ -118,7 +217,8 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                 // to get tthe correct else/elif/endif deepness...
                 // so do as normal, just prevent any code changing things
                 // (like undef/defines....)
-                if ( !parentDroppingStack[ droppingDefineStackIndex ] ) {
+
+                if ( ignoreAndKeep || !parentDroppingStack[ droppingDefineStackIndex ] ) {
 
                     //////////
                     // #extensionReg
@@ -166,10 +266,9 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                             defineRes = results[ 2 ].trim();
                             defineVal = results[ 3 ].trim();
 
-                            if ( defineRes !== 'SHADER_NAME' ) {
-                                definesReplaceMap[ defineRes ] = defineVal;
-                                definesReplaceKeys = window.Object.keys( definesReplaceMap );
-                            }
+                            definesReplaceMap[ defineRes ] = defineVal;
+                            definesReplaceKeys = window.Object.keys( definesReplaceMap );
+
 
                         } else if ( results[ 3 ] !== undefined ) {
 
@@ -231,6 +330,7 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                     droppingDefineStack[ droppingDefineStackIndex ] = false;
                     // didIncludeDefineStack[ droppingDefineStackIndex ] no need we're going out next
                     parentDroppingStack[ droppingDefineStackIndex ] = parentDroppingStack[ droppingDefineStackIndex - 1 ];
+                    if ( ignoreAndKeep ) strippedContent += ( ( pruneComment ) ? line : lines[ i ] ) + '\n';
                     continue;
 
                 }
@@ -242,22 +342,28 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                 if ( results !== null && results.length >= 2 ) {
 
                     foundIfDef = results[ 1 ];
+
+                    var indexIgnore = ignoreAndKeep ? 0 : ignoredDefines.indexOf( foundIfDef );
+                    //we don't want to erase/preprocess that
+                    ignoreDefineStack.push( indexIgnore !== -1 );
+
                     index = inputsDefines.indexOf( foundIfDef );
+                    droppingDefineStackIndex++;
                     if ( index !== -1 ) {
 
-                        droppingDefineStackIndex++;
                         droppingDefineStack.push( false );
                         didIncludeDefineStack.push( true );
                         parentDroppingStack.push( parentDroppingStack[ droppingDefineStackIndex - 1 ] );
 
                     } else {
 
-                        droppingDefineStackIndex++;
                         droppingDefineStack.push( true );
                         didIncludeDefineStack.push( false );
                         parentDroppingStack.push( true );
 
                     }
+
+                    if ( ignoreDefineStack[ droppingDefineStackIndex ] ) strippedContent += ( ( pruneComment ) ? line : lines[ i ] ) + '\n';
                     continue;
                 }
 
@@ -268,21 +374,23 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
 
                     foundIfDef = results[ 1 ];
                     index = inputsDefines.indexOf( foundIfDef );
+
+                    ignoreDefineStack.push( ignoreAndKeep );
+                    droppingDefineStackIndex++;
+
                     if ( index !== -1 ) {
 
-                        droppingDefineStackIndex++;
                         droppingDefineStack.push( true );
                         didIncludeDefineStack.push( false );
                         parentDroppingStack.push( true );
 
                     } else {
 
-                        droppingDefineStackIndex++;
                         droppingDefineStack.push( false );
                         didIncludeDefineStack.push( true );
                         parentDroppingStack.push( parentDroppingStack[ droppingDefineStackIndex - 1 ] );
                     }
-
+                    if ( ignoreDefineStack[ droppingDefineStackIndex ] ) strippedContent += ( ( pruneComment ) ? line : lines[ i ] ) + '\n';
                     continue;
 
                 }
@@ -292,23 +400,23 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                 results = line.search( endifReg );
                 if ( results !== -1 ) {
 
+                    ignoreDefineStack.pop();
                     droppingDefineStack.pop();
                     didIncludeDefineStack.pop();
                     parentDroppingStack.pop();
                     droppingDefineStackIndex--;
 
+                    if ( ignoreAndKeep ) strippedContent += ( ( pruneComment ) ? line : lines[ i ] ) + '\n';
                     continue; // remove endif
 
                 }
 
 
                 /// complexity arise: multiple condition possible
-                var definesGroup;
-                var operator;
-                var result = true;
+                var result;
 
                 // check of elif
-                if ( line.substr( 1, 4 ) === 'elif' ) {
+                if ( line.substr( 1, 5 ) === 'elif' ) {
 
                     // was keeping before, it's a early out
                     if ( didIncludeDefineStack[ droppingDefineStackIndex ] ) {
@@ -317,83 +425,24 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                         continue;
                     }
 
-                    result = true;
-                    operator = '&&';
-                    while ( ( definesGroup = definedReg.exec( line ) ) !== null ) {
-                        if ( definesGroup.length > 2 ) {
-
-                            if ( definesGroup[ 1 ] === undefined ) {
-
-                                // yeah. don't ask for the undefined. just follow along.
-                                // "in theory it should be , in practice however..."
-
-                                operator = definesGroup[ 0 ].trim();
-
-                            } else if ( definesGroup[ 1 ].trim()[ 0 ] === '!' ) {
-
-                                // !defined(dfsdf)
-                                if ( operator === '&&' )
-                                    result = result && inputsDefines.indexOf( definesGroup[ 2 ] ) === -1;
-                                else
-                                    result = result || inputsDefines.indexOf( definesGroup[ 2 ] ) === -1;
-
-                            } else {
-                                // defined(dfsdf)
-                                if ( operator === '&&' )
-                                    result = result && inputsDefines.indexOf( definesGroup[ 2 ] ) !== -1;
-                                else
-                                    result = result || inputsDefines.indexOf( definesGroup[ 2 ] ) !== -1;
-                            }
-                        }
-                    }
-
+                    result = evalExpr( exprReg, inputsDefines, definesReplaceMap, line.substr( 4 ) );
                     if ( result ) {
                         droppingDefineStack[ droppingDefineStackIndex ] = false;
                         didIncludeDefineStack[ droppingDefineStackIndex ] = true;
                         parentDroppingStack[ droppingDefineStackIndex ] = parentDroppingStack[ droppingDefineStackIndex - 1 ];
                     }
 
+                    if ( ignoreAndKeep ) strippedContent += ( ( pruneComment ) ? line : lines[ i ] ) + '\n';
                     continue;
                 }
 
 
                 if ( line.substr( 1, 2 ) === 'if' ) {
 
-                    // #if defined (_FLOATTEX) && defined(_PCF)
-                    // #if defined(_NONE) ||  defined(_PCF)
-                    result = true;
-                    operator = '&&';
-                    while ( ( definesGroup = definedReg.exec( line ) ) !== null ) {
-
-                        if ( definesGroup.length > 2 ) {
-
-                            if ( definesGroup[ 1 ] === undefined ) {
-                                // yeah. twiceis ok.
-                                // third's the charm
-                                operator = definesGroup[ 0 ].trim();
-
-                            } else if ( definesGroup[ 1 ].trim()[ 0 ] === '!' ) {
-
-                                // !defined(dfsdf)
-                                if ( operator === '&&' )
-                                    result = result && inputsDefines.indexOf( definesGroup[ 2 ] ) === -1;
-                                else
-                                    result = result || inputsDefines.indexOf( definesGroup[ 2 ] ) === -1;
-
-                            } else {
-
-                                // defined(dfsdf)
-                                if ( operator === '&&' )
-                                    result = result && inputsDefines.indexOf( definesGroup[ 2 ] ) !== -1;
-                                else
-                                    result = result || inputsDefines.indexOf( definesGroup[ 2 ] ) !== -1;
-
-                            }
-
-                        }
-                    }
+                    result = evalExpr( exprReg, inputsDefines, definesReplaceMap, line.substr( 3 ) );
 
                     droppingDefineStackIndex++;
+                    ignoreDefineStack.push( ignoreAndKeep );
                     droppingDefineStack.push( !result );
                     didIncludeDefineStack.push( result );
                     if ( !result ) {
@@ -401,6 +450,7 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
                     } else {
                         parentDroppingStack.push( parentDroppingStack[ droppingDefineStackIndex - 1 ] );
                     }
+                    if ( ignoreDefineStack[ droppingDefineStackIndex ] ) strippedContent += ( ( pruneComment ) ? line : lines[ i ] ) + '\n';
                     continue;
 
                 }
@@ -408,7 +458,8 @@ var preProcessor = function ( source, definesInput /*, extensionsInput */ ) {
             } // #
         } //prunedef
 
-        if ( !droppingDefineStack[ droppingDefineStackIndex ] && !parentDroppingStack[ droppingDefineStackIndex ] ) {
+
+        if ( ignoreAndKeep || ( !droppingDefineStack[ droppingDefineStackIndex ] && !parentDroppingStack[ droppingDefineStackIndex ] ) ) {
 
             //we  "keep comment" means we keep syntax format
             var toAdd = ( pruneComment ) ? line : lines[ i ];

@@ -1,10 +1,9 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Program = require( 'osg/Program' );
-var Shader = require( 'osg/Shader' );
 var Map = require( 'osg/Map' );
 var Compiler = require( 'osgShader/Compiler' );
 var ShaderProcessor = require( 'osgShader/ShaderProcessor' );
+var ShaderProgramBuilder = require( 'osgShader/ShaderProgramBuilder' );
 
 // this is the list of attributes type we support by default to generate shader
 // if you need to adjust for your need provide or modify this list
@@ -215,10 +214,13 @@ ShaderGenerator.prototype = {
                 return cache;
             }
 
+            this._osgShader = this._osgShader || require( 'osgShader/osgShader' );
+            var doTimeCompilation = this._osgShader.enableShaderCompilationTiming;
+            if ( doTimeCompilation ) console.time( 'ShaderCompiler' );
 
             // use ShaderCompiler, it can be overrided by a custom one
             var ShaderCompiler = this._ShaderCompiler;
-            var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor );
+            var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor, hash );
 
             /* develblock:start */
             // Logs hash, attributes and compiler
@@ -231,16 +233,20 @@ ShaderGenerator.prototype = {
             }, false, true );
             /* develblock:end */
 
-            var vertexshader = shaderGen.createVertexShader();
-            var fragmentshader = shaderGen.createFragmentShader();
+            var vertexShader = shaderGen.createVertexShader();
+            var fragmentShader = shaderGen.createFragmentShader();
+            var nameFragment = shaderGen.getFragmentShaderName();
+            var nameVertex = shaderGen.getVertexShaderName();
 
-            var program = new Program(
-                new Shader( Shader.VERTEX_SHADER, vertexshader ),
-                new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
+            var program = ShaderProgramBuilder.createProgram( vertexShader, fragmentShader, nameVertex, nameFragment );
 
             program.hash = hash;
             program.setActiveUniforms( this.getActiveUniforms( state, attributes, textureAttributes ) );
             program.generated = true;
+
+            if ( doTimeCompilation ) console.timeEnd( 'ShaderCompiler' );
+
+
 
             this._cache.set( hash, program );
             return program;

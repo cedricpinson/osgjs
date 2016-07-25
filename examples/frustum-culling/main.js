@@ -5,6 +5,7 @@
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
+    var osgShader = OSG.osgShader;
     var $ = window.$;
     var viewer;
 
@@ -423,8 +424,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                 ''
             ].join( '\n' );
 
-            var program = new osg.Program(
-                new osg.Shader( 'VERTEX_SHADER', vertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
+            var program = osgShader.ShaderProgramBuilder.createProgram( vertexShader, fgt, 'basicOneTexture' );
 
             stateset = this._ComposerdebugNode.getOrCreateStateSet();
             if ( !optionsDebug.fullscreen )
