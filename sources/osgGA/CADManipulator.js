@@ -141,7 +141,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._orientation = Quat.create();
         this._pivotPoint = Vec3.create();
 
-        this._eye = Vec3.create();
+        this._eye = undefined;
 
         this._right = Vec3.createAndSet( 1.0, 0.0, 0.0 );
 
@@ -217,6 +217,11 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                 this._homeCenter = Vec3.create();
                 Vec3.copy( bs.center(), this._homeCenter );
             }
+
+            if ( this._eye === undefined ) {
+                this._eye = Vec3.create();
+            }
+
             Vec3.copy( this._homeEye, this._eye );
             Vec3.copy( this._homeCenter, this._target );
             Vec3.copy( this._homeUp, this._upz );
@@ -328,7 +333,9 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
 
     getEyePosition: function ( eye ) {
-        this.computeEyePosition( this._target, this._distance, eye );
+        if ( this._eye === undefined )
+            this.computeEyePosition( this._target, this._distance, eye );
+        else Vec3.copy( this._eye, eye );
     },
 
     computeEyePosition: ( function () {
