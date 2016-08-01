@@ -117,6 +117,27 @@ View.prototype = {
         };
     } )(),
 
+    getCanvasWidth: function () {
+        return this._canvasWidth;
+    },
+
+    getCanvasHeight: function () {
+        return this._canvasHeight;
+    },
+
+    getCanvasClientWidth: function () {
+        return Math.ceil( this._canvasWidth / this._devicePixelRatio );
+    },
+
+    getCanvasClientHeight: function () {
+        return Math.ceil( this._canvasHeight / this._devicePixelRatio );
+    },
+
+    getCanvasPixelRatio: function () {
+        // in case of VR headset, it's probably not relevant anymore
+        return this._devicePixelRatio;
+    },
+
     setUpView: function ( canvas, options ) {
 
 
@@ -134,10 +155,9 @@ View.prototype = {
 
         this.computeCanvasSize( canvas );
 
-        var ratio = canvas.clientWidth / canvas.clientHeight;
-
         var width = canvas.width;
         var height = canvas.height;
+        var ratio = width / height;
 
         this._camera.setViewport( new Viewport( 0, 0, width, height ) );
 
