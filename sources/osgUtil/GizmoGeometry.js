@@ -4,9 +4,7 @@ var Geometry = require( 'osg/Geometry' );
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
-var Program = require( 'osg/Program' );
-var Shader = require( 'osg/Shader' );
-
+var ShaderProgramBuilder = require( 'osgShader/ShaderProgramBuilder' );
 
 var glPrecision = [ '#ifdef GL_ES',
     'precision highp float;',
@@ -17,31 +15,28 @@ var program;
 var getOrCreateShader = function () {
     if ( program )
         return program;
-    var shaderName = '#define SHADER_NAME GizmoLine3D';
-    var vertexshader = [
+    var shaderName = 'GizmoLine3D';
+    var vertexShader = [
         glPrecision,
         'attribute vec3 Vertex;',
         'uniform mat4 ModelViewMatrix;',
         'uniform mat4 ProjectionMatrix;',
-        shaderName,
         '',
         'void main(void) {',
         '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
         '}'
     ].join( '\n' );
 
-    var fragmentshader = [
+    var fragmentShader = [
         glPrecision,
         'uniform vec4 uColor;',
-        shaderName,
         '',
         'void main(void) {',
         '  gl_FragColor = uColor;',
         '}'
     ].join( '\n' );
 
-    program = new Program( new Shader( Shader.VERTEX_SHADER, vertexshader ),
-        new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
+    program = ShaderProgramBuilder.createProgram( vertexShader, fragmentShader, shaderName );
     return program;
 };
 
@@ -49,28 +44,25 @@ var program2D;
 var getOrCreateShader2D = function () {
     if ( program2D )
         return program2D;
-    var shaderName = '#define SHADER_NAME GizmoLine2D';
-    var vertexshader = [
+    var shaderName = 'GizmoLine2D';
+    var vertexShader = [
         glPrecision,
         'attribute vec2 Vertex;',
-        shaderName,
         '',
         'void main(void) {',
         '  gl_Position = vec4(Vertex, 0.0, 1.0);',
         '}'
     ].join( '\n' );
 
-    var fragmentshader = [
+    var fragmentShader = [
         glPrecision,
-        shaderName,
         '',
         'void main(void) {',
         '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);',
         '}'
     ].join( '\n' );
 
-    program2D = new Program( new Shader( Shader.VERTEX_SHADER, vertexshader ),
-        new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
+    program2D = ShaderProgramBuilder.createProgram( vertexShader, fragmentShader, shaderName );
     return program2D;
 };
 
@@ -78,14 +70,13 @@ var programQC;
 var getOrCreateShaderQuadCircle = function () {
     if ( programQC )
         return programQC;
-    var shaderName = '#define SHADER_NAME GizmoQuadCircle';
-    var vertexshader = [
+    var shaderName = 'GizmoQuadCircle';
+    var vertexShader = [
         glPrecision,
         'attribute vec3 Vertex;',
         'uniform mat4 ModelViewMatrix;',
         'uniform mat4 ProjectionMatrix;',
         'varying vec3 vVertex;',
-        shaderName,
         '',
         'void main(void) {',
         '  vVertex = Vertex;',
@@ -93,14 +84,13 @@ var getOrCreateShaderQuadCircle = function () {
         '}'
     ].join( '\n' );
 
-    var fragmentshader = [
+    var fragmentShader = [
         glPrecision,
         'uniform float uAngle;',
         'uniform vec3 uBase;',
         'varying vec3 vVertex;',
         'const float PI = 3.14159265358979323846264;',
         'const float PI2 = PI * 2.0;',
-        shaderName,
         '',
         'void main(void) {',
         '  if(length(vVertex) > 0.5)',
@@ -121,8 +111,8 @@ var getOrCreateShaderQuadCircle = function () {
         '}'
     ].join( '\n' );
 
-    programQC = new Program( new Shader( Shader.VERTEX_SHADER, vertexshader ),
-        new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
+    programQC = ShaderProgramBuilder.createProgram( vertexShader, fragmentShader, shaderName );
+
     return programQC;
 };
 

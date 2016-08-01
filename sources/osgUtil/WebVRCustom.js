@@ -3,8 +3,7 @@ var Camera = require( 'osg/Camera' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Matrix = require( 'osg/Matrix' );
 var Node = require( 'osg/Node' );
-var Program = require( 'osg/Program' );
-var Shader = require( 'osg/Shader' );
+var ShaderProgramBuilder = require( 'osgShader/ShaderProgramBuilder' );
 var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
@@ -128,9 +127,7 @@ var getWebVRShader = function () {
         ''
     ].join( '\n' );
 
-    return new Program(
-        new Shader( Shader.VERTEX_SHADER, Composer.Filter.defaultVertexShader ),
-        new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
+    return ShaderProgramBuilder.createProgram( Composer.Filter.defaultVertexShader, fragmentshader, Composer.Filter.defaultVertexShaderName, 'webVRShader' );
 };
 
 var createTextureRtt = function ( rttSize ) {

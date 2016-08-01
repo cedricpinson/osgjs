@@ -2,7 +2,9 @@
 var Notify = require( 'osg/Notify' );
 var shaderLib = require( 'osgShader/shaderLib' );
 var shadowShaderLib = require( 'osgShadow/shaderLib' );
-
+var WebGLCaps = require( 'osg/WebGLCaps' );
+var optimizer = require( 'osgShader/optimizer' );
+var preProcessor = require( 'osgShader/preProcessor' );
 
 //     Shader as vert/frag/glsl files Using requirejs text plugin
 //     Preprocess features like:    //
@@ -19,6 +21,10 @@ var ShaderProcessor = function ( createInstance ) {
         ShaderProcessor.instance = this;
     }
 
+    this._precisionFloat = WebGLCaps.instance().getWebGLParameter( 'MAX_SHADER_PRECISION_FLOAT' );
+    this._precisionInt = WebGLCaps.instance().getWebGLParameter( 'MAX_SHADER_PRECISION_INT' );
+    this._webgl2 = WebGLCaps.instance().isWebGL2();
+
     this.addShaders( shaderLib );
     this.addShaders( shadowShaderLib );
     return this;
@@ -33,7 +39,7 @@ ShaderProcessor.prototype = {
     _includeCondR: /#pragma include (["^+"]?["\ "[a-zA-Z_0-9](.*)"]*?)/g,
     _defineR: /\#define\s+([a-zA-Z_0-9]+)/,
     _precisionR: /precision\s+(high|low|medium)p\s+float/,
-
+    _defineShaderNameReg: /#define\sSHADER_NAME\s(\S+)/im,
 
     // {
     //     'functions.glsl': textShaderFunctions,
@@ -91,7 +97,7 @@ ShaderProcessor.prototype = {
 
     getShader: function ( shaderName, defines, extensions, type ) {
         var shader = this.getShaderTextPure( shaderName );
-        return this.processShader( shader, defines, extensions, type );
+        return this.processShader( shader, defines, extensions, shaderName, type );
     },
 
     // recursively  handle #include external glsl
@@ -154,11 +160,14 @@ ShaderProcessor.prototype = {
     //  resolving include dependencies
     //  adding defines
     //  adding line instrumenting.
-    processShader: function ( shader, defines, extensions /*, type*/ ) {
+    processShader: function ( shader, argDefines, argExtensions, shaderName /*, type*/ ) {
 
         var includeList = [];
         var preShader = shader;
         var sourceID = 0;
+        var defines = argDefines;
+        var extensions = argExtensions;
+
         if ( this._debugLines ) {
             preShader = this.instrumentShaderlines( preShader, sourceID );
             sourceID++;
@@ -178,8 +187,11 @@ ShaderProcessor.prototype = {
 
         var postShader = this.preprocess( preShader, sourceID, includeList, defines );
 
+
         var prePrend = '';
-        prePrend += '#version 100\n'; // webgl1  (webgl2 #version 130 ?)
+        //if (this._webgl2) prePrend += '#version 300\n'; else // webgl1  (webgl2 #version 300 ?)
+        prePrend += '#version 100\n'; // webgl1
+
 
         // then
         // it's extensions first
@@ -210,6 +222,40 @@ ShaderProcessor.prototype = {
             prePrend += defines.join( '\n' ) + '\n';
         }
         postShader = prePrend + postShader;
+
+
+        if ( defines === undefined ) {
+            defines = [];
+        }
+
+        defines = defines.map( function ( defineString ) {
+            // find '#define', remove duplicate whitespace, split on space and return the define Text
+            return this._defineR.test( defineString ) && defineString.replace( /\s+/g, ' ' ).split( ' ' )[ 1 ];
+        }.bind( this ) );
+
+        this._osgShader = this._osgShader || require( 'osgShader/osgShader' );
+        if ( this._osgShader.enableShaderOptimizer ) {
+
+            var doTimeCompilation = this._osgShader.enableShaderCompilationTiming;
+
+            Notify.info( 'shader optimization: ' + shaderName );
+            Notify.info( 'shader before optimization\n' + postShader );
+
+            if ( doTimeCompilation ) console.time( 'shaderPreprocess: ' + shaderName );
+
+            var preprocessedShader = preProcessor( postShader, defines, extensions );
+            postShader = preprocessedShader;
+
+            if ( doTimeCompilation ) console.timeEnd( 'shaderPreprocess: ' + shaderName );
+
+            if ( doTimeCompilation ) console.time( 'shaderOptimize: ' + shaderName );
+
+            var optShader = optimizer( postShader, defines, extensions );
+            postShader = optShader;
+
+            if ( doTimeCompilation ) console.timeEnd( 'shaderOptimize: ' + shaderName );
+            Notify.info( 'shader after optimization\n' + postShader );
+        }
 
         return postShader;
     }

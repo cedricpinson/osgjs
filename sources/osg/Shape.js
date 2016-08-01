@@ -6,8 +6,7 @@ var Geometry = require( 'osg/Geometry' );
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
-var Program = require( 'osg/Program' );
-var Shader = require( 'osg/Shader' );
+var ShaderProgramBuilder = require( 'osgShader/ShaderProgramBuilder' );
 var MACROUTILS = require( 'osg/Utils' );
 
 
@@ -490,8 +489,8 @@ var createAxisGeometry = function ( size ) {
                     '}'
                 ].join( '\n' );
 
-                var program = new Program( new Shader( 'VERTEX_SHADER', vertexshader ),
-                    new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+                var program = ShaderProgramBuilder.createProgram( vertexshader, fragmentshader, 'AxisShader' );
+
                 createAxisGeometry.getShader.program = program;
             }
             return createAxisGeometry.getShader.program;

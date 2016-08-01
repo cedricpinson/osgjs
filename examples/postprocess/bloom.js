@@ -79,6 +79,7 @@
                 'threshold': threshold,
             }
         );
+        brightFilter.setFragmentName( 'brightFilter' );
 
         var additiveFilter = new osgUtil.Composer.Filter.Custom(
             [
@@ -102,7 +103,9 @@
                 'Texture1': bloomTexture,
                 'factor': factor,
             }
+
         );
+        additiveFilter.setFragmentName( 'additiveFilter' );
 
         /* General idea for the bloom's algorithm:
             - Apply a brightpass to the scene texture to keep only the bright areas

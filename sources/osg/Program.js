@@ -6,15 +6,23 @@ var StateAttribute = require( 'osg/StateAttribute' );
 var CustomMap = require( 'osg/Map' );
 var Timer = require( 'osg/Timer' );
 
+
+/*develblock:start*/
+var defineShaderNameReg = /#define\sSHADER_NAME\s(\S+)/im;
+var unnamedProgrammNumber = 0;
+/*develblock:end*/
+
 /**
  * Program encapsulate an vertex and fragment shader
  * @class Program
  */
-var Program = function ( vShader, fShader ) {
+var Program = function ( vShader, fShader, name, doTiming ) {
     GLObject.call( this );
     StateAttribute.call( this );
     this._program = null;
 
+    this._doTiming = doTiming;
+    this._name = name;
     // used to know if it's a default program
     // a default program does nothing but avoid to do some
     // useless logic
@@ -88,6 +96,7 @@ Program.flushAllDeletedGLPrograms = function ( gl ) {
     }
 };
 
+
 /** @lends Program.prototype */
 Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
@@ -117,7 +126,12 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     getProgram: function () {
         return this._program;
     },
-
+    getName() {
+        return this._name;
+    },
+    setName( v ) {
+        this._name = v;
+    },
     setActiveUniforms: function ( activeUniforms ) {
         this._activeUniforms = activeUniforms;
     },
@@ -181,14 +195,55 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
             var compileClean;
 
+            var doTimeCompilation = this._doTiming;
+            /*develblock:start*/
+            // logs
+            if ( doTimeCompilation ) {
+                if ( !this._name ) {
+
+                    var name;
+
+                    var results = this._fragment.getText().match( defineShaderNameReg );
+                    if ( results !== null && results.length !== 1 ) {
+                        name = results[ 1 ];
+                    }
+                    if ( !name ) {
+                        results = this._vertex.getText().match( defineShaderNameReg );
+                        if ( results !== null && results.length !== 1 ) {
+                            name = results[ 1 ];
+                        }
+                    }
+                    if ( !name ) {
+                        name = 'Program_' + unnamedProgrammNumber++;
+                    }
+                    this._name = name;
+                }
+                Notify.log( 'ShaderProgram:' + this._name, false, true );
+            }
+            /*develblock:end*/
+
+
             if ( !this._vertex.shader ) {
+
+
+                if ( doTimeCompilation ) console.time( 'vertex shader ' + this._name + ' driver Compile' );
+
                 compileClean = this._vertex.compile( gl );
+
+                if ( doTimeCompilation ) console.timeEnd( 'vertex shader ' + this._name + ' driver Compile' );
+
             }
 
             if ( !this._fragment.shader ) {
-                compileClean = this._fragment.compile( gl );
-            }
 
+                if ( doTimeCompilation ) console.time( 'fragment shader ' + this._name + ' driver Compile' );
+
+                compileClean = this._fragment.compile( gl );
+
+                if ( doTimeCompilation ) console.timeEnd( 'fragment shader ' + this._name + ' driver Compile' );
+
+            }
+            if ( doTimeCompilation ) console.time( 'program shader ' + this._name + ' driver linking' );
             if ( compileClean ) {
 
                 this._program = gl.createProgram();
@@ -203,11 +258,11 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
                     Notify.error( errLink );
                     Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this._vertex.text + '\n fragment shader:\n' + this._fragment.text, true, false );
+
                     // rawgl trick is for webgl inspector
                     var debugShader = ( gl.rawgl !== undefined ? gl.rawgl : gl );
                     if ( debugShader !== undefined && debugShader.getExtension !== undefined ) debugShader = debugShader.getExtension( 'WEBGL_debug_shaders' );
                     if ( debugShader && errLink === 'Failed to create D3D shaders.\n' ) {
-
                         Notify.error( debugShader.getTranslatedShaderSource( this._vertex.shader ), true, false );
                         Notify.error( debugShader.getTranslatedShaderSource( this._fragment.shader ), true, false );
                     }
@@ -243,6 +298,8 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 Notify.warn( 'FailSafe shader Activated ' );
                 this._program = this._failSafeCache;
             }
+
+            if ( doTimeCompilation ) console.timeEnd( 'program shader ' + this._name + ' driver linking' );
 
             this._uniformsCache = new CustomMap();
             this._attributesCache = new CustomMap();

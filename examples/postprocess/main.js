@@ -4,6 +4,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
+    var osgShader = OSG.osgShader;
 
     function commonScene( rttSize ) {
 
@@ -90,9 +91,7 @@
             ''
         ].join( '\n' );
 
-        var program = new osg.Program(
-            new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-            new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+        var program = osgShader.ShaderProgramBuilder.createProgram( vertexshader, fragmentshader, 'TextureShader' );
         return program;
     }
 

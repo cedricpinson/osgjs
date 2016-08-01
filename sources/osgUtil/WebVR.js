@@ -3,8 +3,7 @@ var Camera = require( 'osg/Camera' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Matrix = require( 'osg/Matrix' );
 var Node = require( 'osg/Node' );
-var Program = require( 'osg/Program' );
-var Shader = require( 'osg/Shader' );
+var ShaderProgramBuilder = require( 'osgShader/ShaderProgramBuilder' );
 var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
@@ -91,10 +90,9 @@ var getAssembleShader = function () {
         '}',
     ].join( '\n' );
 
-    return new Program(
-        new Shader( Shader.VERTEX_SHADER, Composer.Filter.defaultVertexShader ),
-        new Shader( Shader.FRAGMENT_SHADER, fragmentShader )
-    );
+
+    return ShaderProgramBuilder.createProgram( Composer.Filter.defaultVertexShader, fragmentShader, Composer.Filter.defaultVertexShaderName, 'VRassembleShader' );
+
 };
 
 // This camera will render both textures on the canvas in a single pass

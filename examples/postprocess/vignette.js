@@ -40,6 +40,7 @@
                 'lensRadius': lensRadius,
             }
         );
+        vignetteFilter.setFragmentName( 'vignetteFilter' );
 
         var effect = {
 

@@ -14,7 +14,6 @@ var View = require( 'osgViewer/View' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
 var WebGLDebugUtils = require( 'osgViewer/webgl-debug' );
 
-
 var OptionsURL = ( function () {
     var options = {};
     ( function ( options ) {
@@ -158,6 +157,16 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         // if url options override url options
         options.extend( OptionsURL );
 
+        var osgShader;
+        if ( options.getBoolean( 'enableShaderOptimizer' ) === true ) {
+            osgShader = require( 'osgShader/osgShader' );
+            osgShader.enableShaderOptimizer = true;
+        }
+
+        if ( options.getBoolean( 'enableShaderCompilationTiming' ) === true ) {
+            osgShader = osgShader || require( 'osgShader/osgShader' );
+            osgShader.enableShaderCompilationTiming = true;
+        }
 
         // Check if Frustum culling is enabled to calculate the clip planes
         if ( options.getBoolean( 'enableFrustumCulling' ) === true )
@@ -199,7 +208,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
     setContextLostCallback: function ( cb ) {
         this._contextLostCallback = cb;
         // just in case callback registration
-        // happens after the context lost 
+        // happens after the context lost
         if ( this._contextLost ) {
             cb();
         }
