@@ -140,16 +140,34 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
     compile: function ( gl ) {
         if ( !this._gl ) this.setGraphicContext( gl );
         this.shader = gl.createShader( this.type );
-        gl.shaderSource( this.shader, this.text );
+
+        var shaderText = this.text;
+        if ( Shader.enableGLSLOptimizer && Shader.glslOptimizer ) {
+            var shaderTypeString = this.type === Shader.VERTEX_SHADER ? 'vertex' : 'fragment';
+            Notify.infoFold( shaderTypeString + ' shader before optimization', shaderText );
+            // 1: opengl
+            // 2: opengl es 2.0
+            // 3: opengl es 3.0
+            var optimized = Shader.glslOptimizer( shaderText, '2', this.type === Shader.VERTEX_SHADER );
+            if ( optimized.indexOf( 'Error:' ) !== -1 ) {
+                Notify.error( optimized );
+            } else if ( optimized.length <= 1 ) {
+                Notify.warnFold( 'glsl optimizer returned an empty shader, the original will be used', shaderText );
+            } else {
+                Notify.infoFold( shaderTypeString + ' shader after optimization', optimized );
+                shaderText = optimized;
+            }
+        }
+
+        gl.shaderSource( this.shader, shaderText );
         MACROUTILS.timeStamp( 'osgjs.metrics:compileShader' );
         gl.compileShader( this.shader );
         if ( !gl.getShaderParameter( this.shader, gl.COMPILE_STATUS ) && !gl.isContextLost() ) {
 
             var err = gl.getShaderInfoLog( this.shader );
-            this.processErrors( err, this.text );
+            this.processErrors( err, shaderText );
 
-
-            var tmpText = '\n' + this.text;
+            var tmpText = '\n' + shaderText;
             var splittedText = tmpText.split( '\n' );
             var newText = '\n';
             for ( var i = 0, l = splittedText.length; i < l; ++i ) {

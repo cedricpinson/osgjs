@@ -90,12 +90,57 @@ var OptionsURL = ( function () {
 } )();
 
 
+var getGLSLOptimizer = function () {
+    if ( !window.$ ) return P.reject( 'jquery not found to load GLSL optimizer' );
+
+    var deferOptimizeGLSL = P.defer();
+    window.deferOptimizeGLSL = deferOptimizeGLSL;
+
+    var mod = [
+        '        var Module = {',
+        '            preRun: [],',
+        '            postRun: [ function () {',
+        '                var func = Module.cwrap( "optimize_glsl", "string", [ "string", "number", "number" ] );',
+        '                window.deferOptimizeGLSL.resolve( func );',
+        '            } ],',
+        '            print: function ( text ) {',
+        '                Notify.debug( text );',
+        '            },',
+        '            printErr: function ( text ) {',
+        '                Notify.info( text );',
+        '            },',
+        '            setStatus: function ( text ) {',
+        '                Notify.debug( text );',
+        '            },',
+        '            totalDependencies: 0,',
+        '            monitorRunDependencies: function ( left ) {',
+        '                this.totalDependencies = Math.max( this.totalDependencies, left );',
+        '                Module.setStatus( left ? "GLSL optimizer preparing... (" + ( this.totalDependencies - left ) + "/" + this.totalDependencies + ")" : "All downloads complete." );',
+        '            },',
+        '            memoryInitializerPrefixURL: "https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/"',
+        '        };'
+    ].join( '\n' );
+
+    var $ = window.$;
+    Notify.log( 'try to load glsl optimizer' );
+    var url = 'https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/glsl-optimizer.js';
+    $.get( url )
+        .done( function ( script ) {
+            eval( mod + script );
+        } )
+        .fail( function () {
+            deferOptimizeGLSL.reject();
+        } );
+    return deferOptimizeGLSL.promise;
+};
+
 var Viewer = function ( canvas, userOptions, error ) {
     View.call( this );
 
     this._startTick = Timer.instance().tick();
     this._stats = undefined;
     this._done = false;
+    this._runPromise = P.resolve();
 
     var options = this.initOptions( userOptions );
     var gl = this.initWebGLContext( canvas, options, error );
@@ -109,7 +154,7 @@ var Viewer = function ( canvas, userOptions, error ) {
 
     this.initDeviceEvents( options, canvas );
     this.initStats( options, canvas );
-
+    this.initRun( options );
     this._updateVisitor = new UpdateVisitor();
 
     this.setUpView( gl.canvas, options );
@@ -158,7 +203,6 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         // if url options override url options
         options.extend( OptionsURL );
 
-
         // Check if Frustum culling is enabled to calculate the clip planes
         if ( options.getBoolean( 'enableFrustumCulling' ) === true )
             this.getCamera().getRenderer().getCullVisitor().setEnableFrustumCulling( true );
@@ -196,10 +240,31 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         return gl;
     },
 
+    initRun: function ( options ) {
+
+        if ( options.getBoolean( 'GLSLOptimizer' ) === true ) {
+
+            var Shader = require( 'osg/Shader' );
+            Shader.enableGLSLOptimizer = true;
+
+            this._runPromise = getGLSLOptimizer();
+            this._runPromise.then( function ( glslOptimizer ) {
+                Shader.glslOptimizer = glslOptimizer;
+                if ( Shader.glslOptimizer )
+                    Notify.log( 'uses glsl optimizer, use ?log=info to see shader output' );
+                else
+                    Notify.error( 'failed to load glsl optimizer' );
+            } ).catch( function ( error ) {
+                Notify.error( error );
+            } );
+        }
+
+    },
+
     setContextLostCallback: function ( cb ) {
         this._contextLostCallback = cb;
         // just in case callback registration
-        // happens after the context lost 
+        // happens after the context lost
         if ( this._contextLost ) {
             cb();
         }
@@ -406,7 +471,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         return this._done;
     },
 
-    run: function () {
+    _runImplementation: function () {
         var self = this;
         var render = function () {
             if ( !self.done() ) {
@@ -415,6 +480,17 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
             }
         };
         render();
+    },
+
+    run: function () {
+
+        var self = this;
+        this._runPromise.then( function () {
+            self._runImplementation();
+        } ).catch( function () {
+            self._runImplementation();
+        } );
+
     },
 
     setVRDisplay: function ( hmd ) {
