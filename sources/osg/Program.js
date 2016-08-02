@@ -201,15 +201,15 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 if ( !gl.getProgramParameter( this._program, gl.LINK_STATUS ) && !gl.isContextLost() ) {
                     var errLink = gl.getProgramInfoLog( this._program );
 
-                    Notify.error( errLink );
-                    Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this._vertex.text + '\n fragment shader:\n' + this._fragment.text, true, false );
+                    Notify.errorFold( errLink, 'can\'t link program\nvertex shader:\n' + this._vertex.text + '\n fragment shader:\n' + this._fragment.text );
+
                     // rawgl trick is for webgl inspector
                     var debugShader = ( gl.rawgl !== undefined ? gl.rawgl : gl );
                     if ( debugShader !== undefined && debugShader.getExtension !== undefined ) debugShader = debugShader.getExtension( 'WEBGL_debug_shaders' );
                     if ( debugShader && errLink === 'Failed to create D3D shaders.\n' ) {
 
-                        Notify.error( debugShader.getTranslatedShaderSource( this._vertex.shader ), true, false );
-                        Notify.error( debugShader.getTranslatedShaderSource( this._fragment.shader ), true, false );
+                        Notify.error( debugShader.getTranslatedShaderSource( this._vertex.shader ) );
+                        Notify.error( debugShader.getTranslatedShaderSource( this._fragment.shader ) );
                     }
 
                     compileClean = false;

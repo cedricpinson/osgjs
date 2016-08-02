@@ -96,7 +96,7 @@ ShaderProcessor.prototype = {
 
     // recursively  handle #include external glsl
     // files (for now in the same folder.)
-    preprocess: function ( content, sourceID, includeList, inputsDefines ) {
+    preprocess: function ( content, sourceID, includeList, inputsDefines /*, type */ ) {
         var self = this;
         return content.replace( this._includeCondR, function ( _, name ) {
             var includeOpt = name.split( ' ' );
@@ -154,7 +154,7 @@ ShaderProcessor.prototype = {
     //  resolving include dependencies
     //  adding defines
     //  adding line instrumenting.
-    processShader: function ( shader, defines, extensions /*, type*/ ) {
+    processShader: function ( shader, defines, extensions, type ) {
 
         var includeList = [];
         var preShader = shader;
@@ -176,7 +176,7 @@ ShaderProcessor.prototype = {
             } );
         }
 
-        var postShader = this.preprocess( preShader, sourceID, includeList, defines );
+        var postShader = this.preprocess( preShader, sourceID, includeList, defines, type );
 
         var prePrend = '';
         prePrend += '#version 100\n'; // webgl1  (webgl2 #version 130 ?)

@@ -201,7 +201,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
             var length = this.getStateSetStackSize();
             if ( pos >= length ) {
-                Notify.warn( 'Warning State:removeStateSet ', pos, ' out of range' );
+                Notify.warn( 'Warning State:removeStateSet ' + pos + ' out of range' );
                 return;
             }
 

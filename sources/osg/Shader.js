@@ -35,7 +35,7 @@ Shader.FS_DBG += debugName;
 // be deleted in the correct GL context.
 Shader._sDeletedGLShaderCache = new window.Map();
 
-// static method to delete Program 
+// static method to delete Program
 Shader.deleteGLShader = function ( gl, shader ) {
     if ( !Shader._sDeletedGLShaderCache.has( gl ) )
         Shader._sDeletedGLShaderCache.set( gl, [] );
@@ -113,26 +113,26 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
 
             if ( line > linesLength ) continue;
             // webgl error report.
-            Notify.error( 'ERROR ' + m[ 2 ] + ' in line ' + line, false, true );
+            Notify.error( 'ERROR ' + m[ 2 ] + ' in line ' + line );
 
             var minLine = Math.max( 0, line - 7 );
             var maxLine = Math.max( 0, line - 2 );
             // for context
             // log surrounding line priori to error with bof check
             for ( i = minLine; i <= maxLine; i++ ) {
-                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ), false, true );
+                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ) );
             }
 
             // Warn adds a lovely /!\ icon in front of the culprit line
             maxLine = Math.max( 0, line - 1 );
-            Notify.error( lines[ maxLine ].replace( /^[ \t]+/g, '' ), false, true );
+            Notify.error( lines[ maxLine ].replace( /^[ \t]+/g, '' ) );
 
             minLine = Math.min( linesLength, line );
             maxLine = Math.min( linesLength, line + 5 );
             // for context
             // surrounding line posterior to error (with eof check)
             for ( i = minLine; i < maxLine; i++ ) {
-                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ), false, true );
+                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ) );
             }
         }
     },
@@ -140,23 +140,41 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
     compile: function ( gl ) {
         if ( !this._gl ) this.setGraphicContext( gl );
         this.shader = gl.createShader( this.type );
-        gl.shaderSource( this.shader, this.text );
+
+        var shaderText = this.text;
+        if ( Shader.enableGLSLOptimizer && Shader.glslOptimizer ) {
+            var shaderTypeString = this.type === Shader.VERTEX_SHADER ? 'vertex' : 'fragment';
+            Notify.infoFold( shaderTypeString + ' shader before optimization', shaderText );
+            // 1: opengl
+            // 2: opengl es 2.0
+            // 3: opengl es 3.0
+            var optimized = Shader.glslOptimizer( shaderText, '2', this.type === Shader.VERTEX_SHADER );
+            if ( optimized.indexOf( 'Error:' ) !== -1 ) {
+                Notify.error( optimized );
+            } else if ( optimized.length <= 1 ) {
+                Notify.warnFold( 'glsl optimizer returned an empty shader, the original will be used', shaderText );
+            } else {
+                Notify.infoFold( shaderTypeString + ' shader after optimization', optimized );
+                shaderText = optimized;
+            }
+        }
+
+        gl.shaderSource( this.shader, shaderText );
         MACROUTILS.timeStamp( 'osgjs.metrics:compileShader' );
         gl.compileShader( this.shader );
         if ( !gl.getShaderParameter( this.shader, gl.COMPILE_STATUS ) && !gl.isContextLost() ) {
 
             var err = gl.getShaderInfoLog( this.shader );
-            this.processErrors( err, this.text );
+            this.processErrors( err, shaderText );
 
-
-            var tmpText = '\n' + this.text;
+            var tmpText = '\n' + shaderText;
             var splittedText = tmpText.split( '\n' );
             var newText = '\n';
             for ( var i = 0, l = splittedText.length; i < l; ++i ) {
                 newText += i + ' ' + splittedText[ i ] + '\n';
             }
             // still logging whole source but folded
-            Notify.debug( 'can\'t compile shader:\n' + newText, true );
+            Notify.debugFold( 'can\'t compile shader', newText );
 
             return false;
         }

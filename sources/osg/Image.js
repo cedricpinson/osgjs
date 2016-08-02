@@ -213,7 +213,7 @@ ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
         // It's not something we recognise
         /*develblock:start*/
-        Notify.warn( 'Warning can\'t detect image object ', false, true );
+        Notify.warn( 'Warning can\'t detect image object ' );
         /*develblock:end*/
         return false;
     },
