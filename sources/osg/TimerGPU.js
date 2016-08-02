@@ -29,9 +29,7 @@ var TimerGPU = function ( gl ) {
         // no timestamp means not start/end absolute time
         // which means each start must be followed by a end
         // BEFORE any other start (of other queryID)
-        if ( !this._hasTimeStamp ) {
-            Notify.warn( 'Warning: do not use interleaved GPU query' );
-        }
+        if ( !this._hasTimeStamp ) Notify.debug( 'Warning: do not use interleaved GPU query' );
 
         this._gl = gl;
         this._glTimer = ext;
@@ -58,6 +56,7 @@ var TimerGPU = function ( gl ) {
     // cumulative average on N frame
     // reset & restart every N frames
     this._frameAverageCount = 30;
+    return this;
 };
 
 TimerGPU.instance = function ( gl ) {
@@ -171,8 +170,6 @@ TimerGPU.prototype = {
         if ( !this._enabled ) {
             return;
         }
-
-
 
         var query = this._runningQueries[ queryID ];
 

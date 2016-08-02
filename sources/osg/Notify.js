@@ -4,50 +4,11 @@ var Notify = {};
 
 Notify.DEBUG = 0;
 Notify.INFO = 1;
-Notify.NOTICE = 2;
+Notify.NOTICE = Notify.LOG = 2;
 Notify.WARN = 3;
 Notify.ERROR = 4;
 
 Notify.console = window.console;
-
-// #FIXME getStackTrace was initially in webgl-utils (as a global function) but only used in this file
-/** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
- */
-function getStackTrace( err ) {
-    if ( Notify.console && Notify.console.trace ) {
-        if ( Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
-        Notify.console.trace();
-        if ( Notify.console.groupEnd ) Notify.console.groupEnd();
-        return '';
-    }
-    var callstack = [];
-    try {
-        if ( arguments.length === 1 ) {
-            throw err;
-        } else {
-            throw new Error();
-        }
-    } catch ( error ) {
-        if ( error.stack ) { //Firefox and Chrome
-            callstack = ( error.stack + '\n' ).replace( /^\S[^\(]+?[\n$]/gm, '' ).
-            replace( /^\s+(at eval )?at\s+/gm, '' ).
-            replace( /^([^\(]+?)([\n$])/gm, '{anonymous}()@$1$2' ).
-            replace( /^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}()@$1' ).split( '\n' );
-            // Remove call to this function
-            callstack.shift();
-
-        }
-    }
-    // Remove empty entries
-    for ( var i = 0; i < callstack.length; ++i ) {
-        if ( callstack[ i ] === '' ) {
-            callstack.splice( i, 1 );
-            --i;
-        }
-    }
-
-    return callstack;
-}
 
 /** logging with readability in mind.
  * @param { str } actual log text
@@ -55,73 +16,111 @@ function getStackTrace( err ) {
  * @param { noTrace  } where that log came from ?
  * @param { level  } what severity is that log (gives text color too )
  */
-function logSub( str, level, fold, noTrace ) {
+function logSub( str, level ) {
 
-    if ( Notify.console !== undefined ) {
+    if ( !Notify.console ) return;
 
-        if ( fold && Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
-        if ( noTrace ) {
-            Notify.console[ level ]( str );
-        } else {
-            Notify.console[ level ]( str, getStackTrace() );
-        }
-        if ( fold && Notify.console.groupEnd ) Notify.console.groupEnd();
+    Notify.console[ level ]( str );
+    if ( Notify.traceLogCall && level !== 'error' ) console.trace();
 
-    }
 }
 
-Notify.setNotifyLevel = function ( level ) {
+function logSubFold( title, str, level ) {
 
+    if ( !Notify.console ) return;
 
-    var log = function ( str, fold, noTrace ) {
-        logSub( str, 'log', fold, noTrace );
-    };
+    if ( Notify.console.groupCollapsed ) Notify.console.groupCollapsed( title );
+    Notify.console[ level ]( str );
+    if ( Notify.traceLogCall && level !== 'error' ) console.trace();
 
-    var info = function ( str, fold, noTrace ) {
-        logSub( str, 'info', fold, noTrace );
-    };
+    if ( Notify.console.groupEnd ) Notify.console.groupEnd();
 
-    var warn = function ( str, fold, noTrace ) {
-        logSub( str, 'warn', fold, noTrace );
-    };
+}
 
-    var error = function ( str, fold ) {
-        logSub( str, 'error', fold, true ); // error does trace auto
-    };
+var log = function ( str ) {
+    logSub( str, 'log' );
+};
+var logFold = function ( title, str ) {
+    logSubFold( title, str, 'log' );
+};
 
-    var debug = function ( str, fold, noTrace ) {
-        logSub( str, 'debug', fold, noTrace );
-    };
+var info = function ( str ) {
+    logSub( str, 'info' );
+};
+var infoFold = function ( title, str ) {
+    logSubFold( title, str, 'info' );
+};
 
-    var assert = function ( test, str ) {
-        if ( this.console !== undefined && !test ) {
-            this.console.assert( test, str );
-        }
-    };
+var warn = function ( str ) {
+    logSub( str, 'warn' );
+};
+var warnFold = function ( title, str ) {
+    logSubFold( title, str, 'warn' );
+};
+
+var error = function ( str ) {
+    logSub( str, 'error' );
+};
+var errorFold = function ( title, str ) {
+    logSubFold( title, str, 'error' );
+};
+
+var debug = function ( str ) {
+    logSub( str, 'debug' );
+};
+var debugFold = function ( title, str ) {
+    logSubFold( title, str, 'debug' );
+};
+
+var assert = function ( test, str ) {
+    if ( this.console !== undefined && !test ) {
+        this.console.assert( test, str );
+    }
+};
+Notify.assert = assert;
+
+Notify.setNotifyLevel = function ( logLevel ) {
 
     var dummy = function () {};
 
-    Notify.assert = assert;
     Notify.debug = dummy;
-    Notify.info = dummy;
-    Notify.log = Notify.notice = dummy;
-    Notify.warn = dummy;
-    Notify.error = dummy;
+    Notify.debugFold = dummy;
 
-    if ( level <= Notify.DEBUG ) {
+    Notify.info = dummy;
+    Notify.infoFold = dummy;
+
+    Notify.log = Notify.notice = dummy;
+    Notify.logFold = Notify.noticeFold = dummy;
+
+    Notify.warn = dummy;
+    Notify.warnFold = dummy;
+
+    Notify.error = dummy;
+    Notify.errorFold = dummy;
+
+    if ( logLevel <= Notify.DEBUG ) {
         Notify.debug = debug;
+        Notify.debugFold = debugFold;
     }
-    if ( level <= Notify.INFO ) {
+
+    if ( logLevel <= Notify.INFO ) {
         Notify.info = info;
+        Notify.infoFold = infoFold;
     }
-    if ( level <= Notify.NOTICE ) {
+
+    if ( logLevel <= Notify.NOTICE ) {
         Notify.log = Notify.notice = log;
+        Notify.logFold = Notify.noticeFold = logFold;
     }
-    if ( level <= Notify.WARN ) {
+
+    if ( logLevel <= Notify.WARN ) {
         Notify.warn = warn;
+        Notify.warnFold = warnFold;
     }
-    if ( level <= Notify.ERROR ) {
+
+    if ( logLevel <= Notify.ERROR ) {
         Notify.error = error;
+        Notify.errorFold = errorFold;
     }
 };
 

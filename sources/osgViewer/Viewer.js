@@ -107,7 +107,7 @@ var getGLSLOptimizer = function () {
         '                Notify.debug( text );',
         '            },',
         '            printErr: function ( text ) {',
-        '                Notify.info( text );',
+        '                Notify.debug( text );',
         '            },',
         '            setStatus: function ( text ) {',
         '                Notify.debug( text );',
@@ -126,7 +126,9 @@ var getGLSLOptimizer = function () {
     var url = 'https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/glsl-optimizer.js';
     $.get( url )
         .done( function ( script ) {
+            /*jshint evil: true */
             eval( mod + script );
+            /*jshint evil: false */
         } )
         .fail( function () {
             deferOptimizeGLSL.reject();
@@ -202,6 +204,9 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
         // if url options override url options
         options.extend( OptionsURL );
+
+        // Activate global trace on log call
+        if ( options.getBoolean( 'traceLogCall' ) === true ) Notify.traceLogCall = true;
 
         // Check if Frustum culling is enabled to calculate the clip planes
         if ( options.getBoolean( 'enableFrustumCulling' ) === true )

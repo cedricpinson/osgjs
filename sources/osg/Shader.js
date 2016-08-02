@@ -35,7 +35,7 @@ Shader.FS_DBG += debugName;
 // be deleted in the correct GL context.
 Shader._sDeletedGLShaderCache = new window.Map();
 
-// static method to delete Program 
+// static method to delete Program
 Shader.deleteGLShader = function ( gl, shader ) {
     if ( !Shader._sDeletedGLShaderCache.has( gl ) )
         Shader._sDeletedGLShaderCache.set( gl, [] );
@@ -113,26 +113,26 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
 
             if ( line > linesLength ) continue;
             // webgl error report.
-            Notify.error( 'ERROR ' + m[ 2 ] + ' in line ' + line, false, true );
+            Notify.error( 'ERROR ' + m[ 2 ] + ' in line ' + line );
 
             var minLine = Math.max( 0, line - 7 );
             var maxLine = Math.max( 0, line - 2 );
             // for context
             // log surrounding line priori to error with bof check
             for ( i = minLine; i <= maxLine; i++ ) {
-                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ), false, true );
+                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ) );
             }
 
             // Warn adds a lovely /!\ icon in front of the culprit line
             maxLine = Math.max( 0, line - 1 );
-            Notify.error( lines[ maxLine ].replace( /^[ \t]+/g, '' ), false, true );
+            Notify.error( lines[ maxLine ].replace( /^[ \t]+/g, '' ) );
 
             minLine = Math.min( linesLength, line );
             maxLine = Math.min( linesLength, line + 5 );
             // for context
             // surrounding line posterior to error (with eof check)
             for ( i = minLine; i < maxLine; i++ ) {
-                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ), false, true );
+                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ) );
             }
         }
     },
@@ -174,7 +174,7 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
                 newText += i + ' ' + splittedText[ i ] + '\n';
             }
             // still logging whole source but folded
-            Notify.debug( 'can\'t compile shader:\n' + newText, true );
+            Notify.debugFold( 'can\'t compile shader', newText );
 
             return false;
         }

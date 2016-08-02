@@ -96,7 +96,7 @@ ShaderProcessor.prototype = {
 
     // recursively  handle #include external glsl
     // files (for now in the same folder.)
-    preprocess: function ( content, sourceID, includeList, inputsDefines, type ) {
+    preprocess: function ( content, sourceID, includeList, inputsDefines /*, type */ ) {
         var self = this;
         return content.replace( this._includeCondR, function ( _, name ) {
             var includeOpt = name.split( ' ' );

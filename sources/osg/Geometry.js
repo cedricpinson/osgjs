@@ -88,7 +88,7 @@ var Geometry = function () {
  * not change vertexes attributes without calling dirty after.
  */
 Geometry.enableVAO = Boolean( window.Proxy );
-if ( Geometry.enableVAO ) Notify.log( 'enable VAO' );
+if ( Geometry.enableVAO ) Notify.info( 'enable VAO' );
 
 
 /** @lends Geometry.prototype */
