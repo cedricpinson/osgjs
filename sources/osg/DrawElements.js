@@ -26,6 +26,7 @@ var DrawElements = function ( mode, indices ) {
 
 DrawElements.UNSIGNED_BYTE = 0x1401;
 DrawElements.UNSIGNED_SHORT = 0x1403;
+DrawElements.UNSIGNED_INT = 0x1405;
 
 /** @lends DrawElements.prototype */
 DrawElements.prototype = {
@@ -46,7 +47,11 @@ DrawElements.prototype = {
         this.indices = indices;
         var elts = indices.getElements();
         this.count = elts.length;
-        this.uType = elts.BYTES_PER_ELEMENT === 1 ? DrawElements.UNSIGNED_BYTE : DrawElements.UNSIGNED_SHORT;
+
+        var nbBytes = elts.BYTES_PER_ELEMENT;
+        if ( nbBytes === 1 ) this.uType = DrawElements.UNSIGNED_BYTE;
+        else if ( nbBytes === 2 ) this.uType = DrawElements.UNSIGNED_SHORT;
+        else if ( nbBytes === 4 ) this.uType = DrawElements.UNSIGNED_INT;
     },
     getIndices: function () {
         return this.indices;
