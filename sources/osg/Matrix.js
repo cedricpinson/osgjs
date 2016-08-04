@@ -923,6 +923,7 @@ var Matrix = {
         var d1 = ( matrix[ 0 ] * t0 + matrix[ 4 ] * t1 + matrix[ 8 ] * t2 + matrix[ 12 ] * t3 );
         if ( Math.abs( d1 ) < Number.EPSILON ) {
             Notify.info( 'Warning can\'t inverse matrix ' + matrix );
+            Notify.infoMatrix( matrix );
             return false;
         }
         var d = 1.0 / d1;
@@ -1034,7 +1035,7 @@ var Matrix = {
             var det = ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
             if ( Math.abs( det ) < Number.EPSILON ) {
                 Notify.info( 'Warning can\'t inverse matrix ' );
-                Notify.printMatrix( matrix );
+                Notify.infoMatrix( matrix );
                 return false;
             }
 
@@ -1080,6 +1081,7 @@ var Matrix = {
                 det = ( d - ( tx * px + ty * py + tz * pz ) );
                 if ( Math.abs( det ) < Number.EPSILON ) {
                     Notify.info( 'Warning can\'t inverse matrix ' + matrix );
+                    Notify.infoMatrix( matrix );
                     return false;
                 }
                 var oneOverS = 1.0 / det;
