@@ -98,7 +98,7 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         var deltaUpdate = 0;
 
         if ( this.stateset ) {
-            deltaUpdate--;
+            if ( this.stateset.requiresUpdateTraversal() ) deltaUpdate--;
             this.stateset.removeParent( this );
         }
 
@@ -335,19 +335,14 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
     removeChild: function ( child ) {
 
         var children = this.children;
-        for ( var i = 0, l = children.length; i < l; i++ ) {
-            if ( children[ i ] === child ) {
-                child.removeParent( this );
-                children.splice( i, 1 );
-                i--;
-                l--;
+        var id = children.indexOf( child );
+        if ( id === -1 ) return;
 
-                if ( child.getNumChildrenRequiringUpdateTraversal() > 0 || child.getUpdateCallbackList().length )
-                    this.setNumChildrenRequiringUpdateTraversal( this.getNumChildrenRequiringUpdateTraversal() - 1 );
+        child.removeParent( this );
+        children.splice( id, 1 );
 
-                return;
-            }
-        }
+        if ( child.getNumChildrenRequiringUpdateTraversal() > 0 || child.getUpdateCallbackList().length )
+            this.setNumChildrenRequiringUpdateTraversal( this.getNumChildrenRequiringUpdateTraversal() - 1 );
 
     },
 
