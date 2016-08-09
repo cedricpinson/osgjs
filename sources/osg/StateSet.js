@@ -34,6 +34,7 @@ var StateSet = function () {
 
     this.uniforms = new Map();
 
+    this._drawID = -1; // used by the RenderLeaf to decide if it should apply the stateSet
 };
 
 StateSet.AttributePair = function ( attr, value ) {
@@ -58,6 +59,14 @@ StateSet.AttributePair.prototype = {
 
 
 StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
+    setDrawID: function ( id ) {
+        this._drawID = id;
+    },
+
+    getDrawID: function () {
+        return this._drawID;
+    },
 
     getAttributePair: function ( attribute, value ) {
         return new StateSet.AttributePair( attribute, value );

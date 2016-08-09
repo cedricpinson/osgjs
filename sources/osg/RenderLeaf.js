@@ -108,7 +108,8 @@ RenderLeaf.prototype = {
     } )(),
 
     render: ( function () {
-        var previousHash;
+        var idLastDraw = 0;
+        var lastStateSetStackSize = -1;
 
         return function ( state, previousLeaf ) {
 
@@ -174,13 +175,11 @@ RenderLeaf.prototype = {
                     StateGraph.moveStateGraph( state, prevRenderGraphParent, curRenderGraphParent );
 
                     state.applyStateSet( curRenderGraphStateSet );
-                    previousHash = state.getStateSetStackHash();
 
                 } else if ( curRenderGraph !== prevRenderGraph ) {
 
                     // Case B
                     state.applyStateSet( curRenderGraphStateSet );
-                    previousHash = state.getStateSetStackHash();
 
                 } else {
 
@@ -189,10 +188,8 @@ RenderLeaf.prototype = {
                     // in osg we call apply but actually we dont need
                     // except if the stateSetStack changed.
                     // for example if insert/remove StateSet has been used
-                    var hash = state.getStateSetStackHash();
-                    if ( previousHash !== hash ) {
+                    if ( state._stateSetStackChanged( idLastDraw, lastStateSetStackSize ) ) {
                         state.applyStateSet( curRenderGraphStateSet );
-                        previousHash = hash;
                     }
                 }
 
@@ -200,9 +197,11 @@ RenderLeaf.prototype = {
 
                 StateGraph.moveStateGraph( state, undefined, curRenderGraphParent );
                 state.applyStateSet( curRenderGraphStateSet );
-                previousHash = state.getStateSetStackHash();
 
             }
+
+            state._setStateSetsDrawID( ++idLastDraw );
+            lastStateSetStackSize = state.getStateSetStackSize();
 
             this.drawGeometry( state );
 
