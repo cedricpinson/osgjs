@@ -51,11 +51,13 @@ function unFlattenMatrix( m, rowMajor ) {
 }
 
 function logMatrix( m, rowMajor ) {
-    logSub( 'table', unFlattenMatrix( m, rowMajor ) );
+    if ( Notify.console.table )
+        logSub( 'table', unFlattenMatrix( m, rowMajor ) );
 }
 
 function logMatrixFold( title, m, rowMajor ) {
-    logSubFold( 'table', title, unFlattenMatrix( m, rowMajor ) );
+    if ( Notify.console.table )
+        logSubFold( 'table', title, unFlattenMatrix( m, rowMajor ) );
 }
 
 var levelEntries = [ 'log', 'info', 'warn', 'error', 'debug' ];
