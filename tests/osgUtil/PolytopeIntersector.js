@@ -6,6 +6,7 @@ var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
 var Camera = require( 'osg/Camera' );
 var Viewport = require( 'osg/Viewport' );
 var Matrix = require( 'osg/Matrix' );
+var Vec3 = require( 'osg/Vec3' );
 var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawElements = require( 'osg/DrawElements' );
@@ -147,11 +148,27 @@ module.exports = function () {
         camera.accept( iv );
         assert.isOk( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
         assert.isOk( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-        assert.isOk( pi._intersections[ 0 ]._numPoints === 4, 'numPoints should be 4 and result is ' + pi._intersections[ 0 ]._numPoints );
-        assert.equalVector( pi._intersections[ 0 ]._points[ 0 ], [ 0.096225, 0.096225, 0 ] );
-        assert.equalVector( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
-        assert.equalVector( pi._intersections[ 0 ]._points[ 2 ], [ -0.096225, 0.096225, 0 ] );
-        assert.equalVector( pi._intersections[ 0 ]._points[ 3 ], [ 0.096225, 0.096225, 0 ] );
+
+        // unify points because of the precision issues between browser / node tests
+        var uniquePoints = [];
+        for ( var i = 0; i < pi._intersections[ 0 ]._numPoints; i++ ) {
+            var p = pi._intersections[ 0 ]._points[ i ];
+            var alreadyInserted = false;
+
+            for ( var j = 0; j < uniquePoints.length; j++ ) {
+                if ( Vec3.equal( uniquePoints[ j ], p ) ) {
+                        alreadyInserted = true;
+                        break;
+                }
+            }
+            if ( !alreadyInserted )
+                uniquePoints.push( p );
+        }
+
+        assert.isOk( uniquePoints.length === 2, 'numPoints should be 2 and result is ' + uniquePoints.length );
+        assert.equalVector( uniquePoints[ 0 ], [ 0.096225, 0.096225, 0 ] );
+        assert.equalVector( uniquePoints[ 1 ], [ -0.096225, 0.096225, 0 ] );
+
         // Test dimension mask
         pi.reset();
         pi.setDimensionMask( PolytopeIntersector.DimZero );
