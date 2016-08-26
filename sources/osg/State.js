@@ -421,14 +421,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         this.popStateSet();
     },
 
-    getStateSetStackHash: function () {
-        var values = this.stateSets.values();
-        var sum = 0;
-        for ( var i = 0, l = values.length; i < l; i++ )
-            sum += values[ i ].getInstanceID();
-        return sum;
-    },
-
     popAllStateSets: function () {
         while ( this.stateSets.values().length ) {
             this.popStateSet();
@@ -1321,6 +1313,28 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             this._checkCacheAndApplyUniform( uniform, cacheUniformsForeign, i, programUniformMap, name );
 
         }
+    },
+
+    // Use to detect changes in RenderLeaf between call to avoid to applyStateSet
+    _setStateSetsDrawID: function ( id ) {
+        var values = this.stateSets.values();
+        for ( var i = 0, nbStateSets = values.length; i < nbStateSets; i++ ) {
+            values[ i ].setDrawID( id );
+        }
+    },
+
+    _stateSetStackChanged: function ( id, nbLast ) {
+        var values = this.stateSets.values();
+        var nbStateSets = values.length;
+        if ( nbLast !== nbStateSets )
+            return false;
+
+        for ( var i = 0; i < nbStateSets; i++ ) {
+            if ( id !== values[ i ].getDrawID() )
+                return false;
+        }
+
+        return true;
     }
 
 
