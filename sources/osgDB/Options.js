@@ -22,6 +22,10 @@ var defaultOptions = {
     // the function will be execute in the context of Input, see Input:readBinaryArrayURL
     readBinaryArrayURL: undefined,
 
+    // rewrite a binary array URL, useful if you need to prefix or suffix the URLs
+    // with some domain or specific paramters like credentials
+    rewriteBinaryArrayURL: undefined,
+
     imageLoadingUsePromise: true, // use promise to load image instead of returning Image
     imageOnload: undefined, // use callback when loading an image
     imageCrossOrigin: undefined // use callback when loading an image
