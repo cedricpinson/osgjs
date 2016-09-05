@@ -64,6 +64,11 @@ OrbitManipulator.Interpolator.prototype = {
     getCurrent: function () {
         return this._current;
     },
+    zeroCurrent: function () {
+        for ( var i = 0, l = this._current.length; i < l; i++ ) {
+            this._current[ i ] = 0.0;
+        }
+    },
     setTarget: function () {
         for ( var i = 0, l = this._target.length; i < l; i++ ) {
             if ( this._reset ) {

@@ -23,9 +23,11 @@ FirstPersonManipulatorStandardMouseKeyboardController.prototype = {
 
     pushButton: function () {
         this._buttonup = false;
+        this._manipulator.setInAction( true );
     },
     releaseButton: function () {
         this._buttonup = true;
+        this._manipulator.setInAction( false );
     },
 
     mousedown: function ( ev ) {
@@ -63,21 +65,25 @@ FirstPersonManipulatorStandardMouseKeyboardController.prototype = {
         } else if ( event.keyCode === 87 || event.keyCode === 90 || event.keyCode === 38 ) { // w/z/up
             manipulator.getForwardInterpolator().setDelay( this._delay );
             manipulator.getForwardInterpolator().setTarget( 1 );
+            this.pushButton();
             event.preventDefault();
             return false;
         } else if ( event.keyCode === 83 || event.keyCode === 40 ) { // S/down
             manipulator.getForwardInterpolator().setDelay( this._delay );
             manipulator.getForwardInterpolator().setTarget( -1 );
+            this.pushButton();
             event.preventDefault();
             return false;
         } else if ( event.keyCode === 68 || event.keyCode === 39 ) { // D/right
             manipulator.getSideInterpolator().setDelay( this._delay );
             manipulator.getSideInterpolator().setTarget( 1 );
+            this.pushButton();
             event.preventDefault();
             return false;
         } else if ( event.keyCode === 65 || event.keyCode === 81 || event.keyCode === 37 ) { // a/q/left
             manipulator.getSideInterpolator().setDelay( this._delay );
             manipulator.getSideInterpolator().setTarget( -1 );
+            this.pushButton();
             event.preventDefault();
             return false;
         }
@@ -90,11 +96,13 @@ FirstPersonManipulatorStandardMouseKeyboardController.prototype = {
             event.keyCode === 83 || event.keyCode === 40 ) { // S/down
             manipulator.getForwardInterpolator().setDelay( this._delay );
             manipulator.getForwardInterpolator().setTarget( 0 );
+            this.releaseButton();
             return false;
         } else if ( event.keyCode === 68 || event.keyCode === 39 || // D/right
             event.keyCode === 65 || event.keyCode === 81 || event.keyCode === 37 ) { // a/q/left
             manipulator.getSideInterpolator().setDelay( this._delay );
             manipulator.getSideInterpolator().setTarget( 0 );
+            this.releaseButton();
             return false;
         }
         return undefined;
