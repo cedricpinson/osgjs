@@ -868,7 +868,8 @@ Compiler.prototype = {
             DIRECTION: 'SunLight',
             SPOT: 'SpotLight',
             POINT: 'PointLight',
-            HEMI: 'HemiLight'
+            HEMI: 'HemiLight',
+            ENV: 'EnvLight'
         };
 
 
@@ -879,8 +880,9 @@ Compiler.prototype = {
 
             var light = this._lights[ i ];
 
-            var lightedOutput = this.createVariable( 'vec3' );
             var nodeName = enumToNodeName[ light.getLightType() ];
+
+            var lightedOutput = this.createVariable( 'vec3' );
 
             // create uniforms from stateAttribute and mix them with materials
             // to pass the result as input for light node
