@@ -187,7 +187,7 @@ vec3 computeSunLightShading(
 
     lighted = false;
     eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
-    // compute NdL   // compute NdL
+    // compute NdL
     NdotL = dot(eyeLightDir, normal);
     if (NdotL > 0.0)
         {
@@ -238,4 +238,26 @@ vec3 computeHemiLightShading(
     vec3 specularContrib = lightDiffuse * materialSpecular * weight * att * (skySpec + skyGround) / divisor;
 
     return diffuseContrib + specularContrib;
+}
+
+vec3 computeEnvLightShading(
+
+                            const in vec3 normal,
+                            const in vec3 eyeVector,
+
+                            const in vec4 lightPosition,
+
+                            const in mat4 lightMatrix,
+
+                            out vec3 eyeLightDir,
+                            out float NdotL,
+                            out bool lighted)
+{
+
+    lighted = false;
+    eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
+    // compute NdL
+    NdotL = dot(eyeLightDir, normal);
+    lighted = NdotL > 0.0;
+    return vec3(1.0);
 }
