@@ -1,5 +1,6 @@
 ( function () {
     'use strict';
+
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -54,8 +55,6 @@
             'shadowStatic': false,
             'disableShadows': false,
             'basicScene': false,
-            'shadowPass (ms)': 0.001,
-            'mainPass (ms)': 0.001,
 
             logCamLight: function () {
                 var example = this[ 'exampleObj' ];
@@ -346,13 +345,7 @@
             controller = gui.add( this._config, 'textureSize', textureSizes );
             controller.onChange( this.updateShadow.bind( this ) );
 
-            // shaders has to have under max varying decl
-            // max = this._maxVaryings -1
-            // usual shader is already 4 vertexColor, FragNormal, FragEye, FragTexcoord.
-            // each shadow is 1 more vec4 per shadow
-            var maxLights = ~~( ( this._maxVaryings - 1 ) - 4 );
-
-            controller = gui.add( this._config, 'lightNum', 1, maxLights ).step( 1 );
+            controller = gui.add( this._config, 'lightNum', 1, this._maxLights ).step( 1 );
             controller.onChange( this.updateShadow.bind( this ) );
 
             controller = gui.add( this._config, 'lightType', [ 'Spot',
@@ -563,7 +556,7 @@
         },
 
         updateLightsEnable: function () {
-            var l, numLights = ~~( this._config[ 'lightNum' ] );
+            var l, numLights = this._config.lightNum;
 
             while ( this._maxVaryings < ( numLights + 4 ) ) {
                 numLights--;
@@ -692,7 +685,7 @@
         updateShadowMapSize: function () {
 
             var shadowMap;
-            var mapsize = ~~( this._config[ 'textureSize' ] );
+            var mapsize = this._config.textureSize;
             if ( this._previousTextureSize !== mapsize ) {
 
                 var l = this._lights.length;
@@ -719,7 +712,7 @@
         },
         updateShadowTechniqueMode: function () {
 
-            var l, numLights = ~~( this._config[ 'lightNum' ] );
+            var l, numLights = this._config.lightNum;
             var shadowMap;
 
             if ( this._previousTech !== this._config[ 'shadow' ] ) {
@@ -784,7 +777,7 @@
             }
             if ( this._updateRTT || ( this._previousRTT === false && this._config[ 'debugRTT' ] ) ) {
 
-                var l, numLights = ~~( this._config[ 'lightNum' ] );
+                var l, numLights = this._config.lightNum;
 
                 // make sure we have latest one
                 this._RTT = [];
@@ -807,8 +800,6 @@
          * with a single callback for all ui user changes
          */
         updateShadow: function () {
-
-            this.resetPerfTimer();
 
             if ( this._config[ 'disableShadows' ] !== this._previousDisable ) {
                 if ( this._config[ 'disableShadows' ] ) {
@@ -1217,73 +1208,16 @@
             shadowMap.setShadowSettings( shadowSettings );
             this._shadowTechnique.push( shadowMap );
 
+            var shadowCam = shadowMap.getCamera();
+            var timerGPU = osg.TimerGPU.instance();
+            shadowCam.setInitialDrawCallback( timerGPU.start.bind( timerGPU, 'glshadows' + num ) );
+            shadowCam.setFinalDrawCallback( timerGPU.end.bind( timerGPU, 'glshadows' + num ) );
+
             // init is done by shadowscene, at first render
             //shadowMap.init();
 
         },
-        cameraPerfStart: function () {
-            this._timerGPU.start( 'mainPass (ms)' );
-        },
-        cameraPerfEnd: function () {
-            this._timerGPU.end( 'mainPass (ms)' );
-        },
 
-        perfLog: function ( average, queryID ) {
-            // average is in nanosecond (ns)
-            // but displayed in (ms)
-            this._config[ queryID ] = average / 10e6;
-        },
-        resetPerfTimer: function () {
-            if ( this._timerGPU.isEnabled() ) {
-                // any change, any,
-                // and we reset timers average
-                if ( this._timerGPU.supportInterleaveQuery() ) {
-                    this._timerGPU.reset( 'shadowPass (ms)' );
-                }
-                this._timerGPU.reset( 'mainPass (ms)' );
-                this._config[ 'shadowPass (ms)' ] = 0.0;
-            }
-        },
-        initPerfTiming: function () {
-
-
-            this._timerGPU = osg.TimerGPU.instance( this._glContext );
-
-            if ( !this._timerGPU.isEnabled() ) return;
-
-            this._timerGPU.setCallback(
-                this.perfLog.bind( this )
-            );
-
-
-            // perf on 1st shadow map
-            if ( this._lights.length > 0 ) {
-
-                var st = this._shadowTechnique[ 0 ];
-
-                if ( this._timerGPU.supportInterleaveQuery() ) {
-
-                    st.getCamera().setInitialDrawCallback( function () {
-                        this._timerGPU.start( 'shadowPass (ms)' );
-                    }.bind( this ) );
-
-                    if ( this._timerGPU.supportInterleaveQuery() ) {
-                        st.getCamera().setFinalDrawCallback( function () {
-                            this._timerGPU.end( 'shadowPass (ms)' );
-                        }.bind( this ) );
-                    }
-
-                }
-
-            }
-
-            this._viewer.getCamera().setInitialDrawCallback( this.cameraPerfStart.bind( this ) );
-            this._viewer.getCamera().setFinalDrawCallback( this.cameraPerfEnd.bind( this ) );
-
-            this._gui.add( this._config, 'shadowPass (ms)' ).listen();
-            this._gui.add( this._config, 'mainPass (ms)' ).listen();
-
-        },
         /*
          * main sample scene shadow code using OSG interface
          */
@@ -1322,7 +1256,7 @@
             // need camera position in world too
             this._config[ 'camera' ] = this._viewer.getCamera();
 
-            var numLights = ~~( this._config[ 'lightNum' ] );
+            var numLights = this._config.lightNum;
             var lightScale = 1.0 / numLights - 1e-4;
 
 
@@ -1350,17 +1284,56 @@
             return group;
         },
 
+        getOptionsStats: function () {
+            var values = {
+                gltotalframe: {
+                    caption: 'Total frame',
+                    average: true
+                }
+            };
+
+            var groupValues = [ 'gltotalframe' ];
+
+            for ( var i = 0; i < this._maxLights; ++i ) {
+                var shname = 'glshadows' + i;
+                values[ shname ] = {
+                    caption: 'Shadow ' + i,
+                    average: true
+                };
+                groupValues.push( shname );
+            }
+
+            var groups = [ {
+                caption: 'GL Frame',
+                values: groupValues
+            } ];
+
+            return {
+                values: values,
+                groups: groups
+            };
+        },
+
         /*
          * standard run scene, but for float tex support and shader loading
          */
         run: function ( canvas ) {
 
+            var caps = osg.WebGLCaps.instance();
+            this._maxVaryings = caps.getWebGLParameter( 'MAX_VARYING_VECTORS' );
+            this._maxTextureSize = caps.getWebGLParameter( 'MAX_TEXTURE_SIZE' );
+            this._maxTextureUnit = caps.getWebGLParameter( 'MAX_TEXTURE_IMAGE_UNITS' );
+            // shaders has to have under max varying decl max = this._maxVaryings -1
+            // usual shader is already 4 vertexColor, FragNormal, FragEye, FragTexcoord. each shadow is 1 more vec4 per shadow
+            this._maxLights = Math.min( this._maxTextureUnit - 1, this._maxVaryings - 5 );
 
-            var viewer;
-            viewer = new osgViewer.Viewer( canvas, this._osgOptions );
+            var opt = {
+                rstats: this.getOptionsStats()
+            };
+
+            var viewer = new osgViewer.Viewer( canvas, opt );
             this._canvas = canvas;
             this._viewer = viewer;
-
 
             viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
             viewer.init();
@@ -1368,9 +1341,6 @@
             viewer.getCamera().setComputeNearFar( true );
 
             this._glContext = viewer.getGraphicContext();
-
-            this._maxVaryings = osg.WebGLCaps.instance().getWebGLParameter( 'MAX_VARYING_VECTORS' );
-            this._maxTextureSize = osg.WebGLCaps.instance().getWebGLParameter( 'MAX_TEXTURE_SIZE' );
 
             this._floatLinearTextureSupport = osg.WebGLCaps.instance().hasLinearFloatRTT();
             this._floatTextureSupport = osg.WebGLCaps.instance().hasFloatRTT();
@@ -1393,8 +1363,15 @@
                 graphDebug.createGraph( scene );
             }
 
+
+            var timerGPU = osg.TimerGPU.instance();
+            if ( timerGPU.isEnabled() ) {
+                var cam = this._viewer.getCamera();
+                cam.setInitialDrawCallback( timerGPU.start.bind( timerGPU, 'gltotalframe' ) );
+                cam.setFinalDrawCallback( timerGPU.end.bind( timerGPU, 'gltotalframe' ) );
+            }
+
             this.initDatGUI();
-            this.initPerfTiming();
 
         }
     };

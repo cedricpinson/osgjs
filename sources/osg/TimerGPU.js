@@ -1,12 +1,18 @@
 'use strict';
+
 var Notify = require( 'osg/Notify' );
 
-// use EXT_disjoint_timer_query
-// to time webgl calls GPU side
-// average over multiple frames
-// for consistent results
-// use double buffer queries for that.
-// see http://www.reedbeta.com/blog/2011/10/12/gpu-profiling-101/
+/*
+use EXT_disjoint_timer_queryto time webgl calls GPU side average over multiple frames
+
+If timestamp feature is not supported, we virtualize the query by splitting and adding 
+dummy queries, that way it should handle both nested and interleaved queries.
+
+Also, if you time the same queryID multiple time in the same frame, it will sum the different 
+queries, that way you can track a particular of gl command for examples
+
+*/
+
 var TimerGPU = function ( gl ) {
 
     this._enabled = false;
@@ -37,27 +43,18 @@ var TimerGPU = function ( gl ) {
 
     }
 
-    // those we seek results of
-    // (all query per frame)
-    // double Buffered
-    this._pollingStartQueries = {};
-    this._pollingEndQueries = {};
-    // query list currently recording
-    // between a start and a end query
-    this._runningQueries = {};
-    // number of query asked (current index query per queryID)
-    this._timingCountQuery = {};
-    // number of query answered with results
-    this._resultCountQuery = {};
-    // cumulative average
-    this._averageTimerQuery = {};
-    // query waiting async results from GPU
-    this._waitingQueries = {};
-    // cumulative average on N frame
-    // reset & restart every N frames
-    this._frameAverageCount = 30;
-    return this;
+    this._frameAverageCount = 10;
+
+    this._glQueries = [];
+    this._queriesByID = {};
+    this._userQueries = []; // for timestamp, it's the same as _glQueries
+
+    // stuffs used to virtualize query (no timestamp)
+    this._queryCount = 0;
+    this._nbOpened = 0;
 };
+
+TimerGPU.FRAME_COUNT = 0;
 
 TimerGPU.instance = function ( gl ) {
 
@@ -82,17 +79,20 @@ TimerGPU.prototype = {
         this._frameAverageCount = val;
     },
 
-    // when timing same thing
-    // but under new conditions
-    reset: function ( queryID ) {
+    clearQueries: function () {
+        var glQueries = this._glQueries;
+        for ( var i = 0, nbQueries = glQueries.length; i < nbQueries; ++i ) {
+            var query = glQueries[ i ];
+            this._glTimer.deleteQueryEXT( query._pollingStartQuery );
+            if ( query._pollingEndQuery ) this._glTimer.deleteQueryEXT( query );
+        }
 
-        this._timingCountQuery[ queryID ] = 0;
-        this._averageTimerQuery[ queryID ] = 0.0;
-        this._resultCountQuery[ queryID ] = 0;
-
+        this._userQueries.length = 0;
+        this._glQueries.length = 0;
+        this._queriesByID = {};
     },
 
-    supportInterleaveQuery: function () {
+    supportTimeStamp: function () {
         return this._hasTimeStamp;
     },
 
@@ -114,8 +114,101 @@ TimerGPU.prototype = {
         this._callback = cb;
     },
 
-    // start recording time
-    // if query already exist, don't recreate
+    createUserQuery: function ( queryID ) {
+        var query;
+        if ( this._hasTimeStamp ) {
+            query = this.createGLQuery();
+        } else {
+            query = {
+                _startIndex: 0,
+                _endIndex: 0
+            };
+        }
+
+        query._id = queryID;
+        query._frame = TimerGPU.FRAME_COUNT;
+        query._isOpened = true;
+        query._siblings = []; // if the query is called multiple time in the same frame
+
+        return query;
+    },
+
+    createGLQuery: function () {
+        var query = {};
+        query._isWaiting = false; // wait typically 1 or 2 frames
+        query._pollingStartQuery = undefined; // gl query object
+        query._pollingEndQuery = undefined; // gl query object (timestamp only)
+        query._averageTimer = 0.0; // cumulative average time
+        query._resultCount = 0; // cumulative average count
+
+        if ( this._hasTimeStamp ) query._pollingEndQuery = this._glTimer.createQueryEXT();
+        query._pollingStartQuery = this._glTimer.createQueryEXT();
+
+        this._glQueries.push( query );
+
+        return query;
+    },
+
+    getOrCreateLastGLQuery: function () {
+        var query = this._glQueries[ this._queryCount - 1 ];
+        if ( query ) return query;
+
+        query = this._glQueries[ this._queryCount - 1 ] = this.createGLQuery();
+
+        return query;
+    },
+
+    beginCurrentQuery: function () {
+        if ( this._nbOpened === 0 ) return;
+
+        this._queryCount++;
+
+        var query = this.getOrCreateLastGLQuery();
+        if ( !query._isWaiting ) {
+            this._glTimer.beginQueryEXT( this._glTimer.TIME_ELAPSED_EXT, query._pollingStartQuery );
+        }
+    },
+
+    endCurrentQuery: function () {
+        if ( this._nbOpened === 0 ) return;
+
+        if ( !this.getOrCreateLastGLQuery()._isWaiting ) {
+            this._glTimer.endQueryEXT( this._glTimer.TIME_ELAPSED_EXT );
+        }
+    },
+
+    getAvailableQueryByID: function ( queryID ) {
+        var query = this._queriesByID[ queryID ];
+        if ( !query ) {
+            query = this._queriesByID[ queryID ] = this.createUserQuery( queryID );
+            this._userQueries.push( query );
+            return query;
+        }
+
+        if ( query._frame === TimerGPU.FRAME_COUNT ) {
+
+            if ( query._isOpened ) return query;
+
+            var siblings = query._siblings;
+            for ( var i = 0, nbSiblings = siblings.length; i < nbSiblings; ++i ) {
+                var qsib = siblings[ i ];
+                if ( qsib._frame !== TimerGPU.FRAME_COUNT || qsib._isOpened ) {
+                    qsib._frame = TimerGPU.FRAME_COUNT;
+                    return qsib;
+                }
+            }
+
+            var newQuery = this.createUserQuery();
+            siblings.push( newQuery );
+            return newQuery;
+        }
+
+        query._frame = TimerGPU.FRAME_COUNT;
+
+        return query;
+    },
+
+    // start recording time if query already exist, don't recreate
     start: function ( queryID ) {
 
         // If timing currently disabled or glTimer does not exist, exit early.
@@ -123,190 +216,167 @@ TimerGPU.prototype = {
             return undefined;
         }
 
-
-        if ( !this._timingCountQuery[ queryID ] ) {
-
-            this._resultCountQuery[ queryID ] = 0;
-            this._timingCountQuery[ queryID ] = 0;
-            this._averageTimerQuery[ queryID ] = 0.0;
-            this._pollingStartQueries[ queryID ] = {};
-            this._pollingEndQueries[ queryID ] = {};
-            this._waitingQueries[ queryID ] = [];
-
-        } else {
-
-            // poll glTimer for data for last frames queries
-            this.pollQueriesData( queryID );
-        }
-
-        var pollIndex = this._timingCountQuery[ queryID ];
-
-        var startQuery = this._glTimer.createQueryEXT();
-        this._pollingStartQueries[ queryID ][ pollIndex ] = startQuery;
+        var query = this.getAvailableQueryByID( queryID );
+        query._isOpened = true;
 
         if ( this._hasTimeStamp ) {
 
-            var endQuery = this._glTimer.createQueryEXT();
-            this._pollingEndQueries[ queryID ][ pollIndex ] = endQuery;
-
-            this._glTimer.queryCounterEXT( startQuery, this._glTimer.TIMESTAMP_EXT );
+            if ( !query._isWaiting ) this._glTimer.queryCounterEXT( query._pollingStartQuery, this._glTimer.TIMESTAMP_EXT );
 
         } else {
 
-            this._glTimer.beginQueryEXT( this._glTimer.TIME_ELAPSED_EXT, startQuery );
+            this.endCurrentQuery();
+
+            this._nbOpened++;
+            query._startIndex = this._queryCount;
+
+            this.beginCurrentQuery();
+
         }
 
-        this._runningQueries[ queryID ] = startQuery;
-
-        return startQuery;
-
     },
-    /*
-     * stop query recording   (if running)
-     * polls for results
-     */
+
+    // stop query recording (if running) polls for results
     end: function ( queryID ) {
 
         if ( !this._enabled ) {
             return;
         }
 
-        var query = this._runningQueries[ queryID ];
+        var query = this.getAvailableQueryByID( queryID );
+        query._isOpened = false;
 
-        // End currently running query
-        if ( query ) {
+        if ( this._hasTimeStamp ) {
 
-            var pollIndex = this._timingCountQuery[ queryID ];
+            if ( !query._isWaiting ) this._glTimer.queryCounterEXT( query._pollingEndQuery, this._glTimer.TIMESTAMP_EXT );
 
-            if ( this._hasTimeStamp ) {
+        } else {
 
-                var endQuery = this._pollingEndQueries[ queryID ][ pollIndex ];
-                this._glTimer.queryCounterEXT( endQuery, this._glTimer.TIMESTAMP_EXT );
+            this.endCurrentQuery();
 
-            } else {
+            query._endIndex = this._queryCount;
+            this._nbOpened--;
 
-                this._glTimer.endQueryEXT( this._glTimer.TIME_ELAPSED_EXT );
-
-            }
-            this._runningQueries[ queryID ] = undefined;
-
-            // number of finished queries per ID increments.
-            this._timingCountQuery[ queryID ]++;
-
-            this._waitingQueries[ queryID ].push( pollIndex );
+            this.beginCurrentQuery();
 
         }
 
     },
 
+    computeQueryAverageTime: function ( query ) {
+        var average = 0;
+        var glQueries = this._glQueries;
 
-    // results are async
-    pollQueryData: function ( queryID, pollIndex ) {
+        for ( var i = query._startIndex; i < query._endIndex; ++i ) {
+            var glAvg = glQueries[ i ]._averageTimer;
+            if ( glAvg < 0 ) return -1;
+            average += glAvg;
+        }
+
+        return average;
+    },
+
+    computeFullAverageTime: function ( query ) {
+        var average = this.computeQueryAverageTime( query );
+
+        if ( average < 0 ) return -1;
+
+        var siblings = query._siblings;
+        for ( var i = 0, nbSiblings = siblings.length; i < nbSiblings; ++i ) {
+            var qsib = siblings[ i ];
+            if ( qsib._frame !== TimerGPU.FRAME_COUNT - 1 )
+                continue;
+
+            var sibAvg = this.computeQueryAverageTime( qsib );
+            if ( sibAvg < 0 ) return -1;
+            average += sibAvg;
+        }
+
+        return average;
+    },
+
+    pollQueries: function () {
+
+        TimerGPU.FRAME_COUNT++;
+        this._queryCount = 0;
+        this._nbOpened = 0;
+
+        if ( !this._enabled || !this._callback ) {
+            return;
+        }
+
+        var glQueries = this._glQueries;
+        var nbGlQueries = glQueries.length;
+        var i;
+
+        // all timer are corrupted, clear the queries
+        var disjoint = this._gl.getParameter( this._glTimer.GPU_DISJOINT_EXT );
+        if ( disjoint ) {
+            for ( i = 0; i < nbGlQueries; ++i ) {
+                glQueries[ i ]._isWaiting = false;
+            }
+            return;
+        }
+
+
+        // update average time for each queries
+        for ( i = 0; i < nbGlQueries; ++i ) {
+            this.pollQuery( glQueries[ i ] );
+        }
+
+        var userQueries = this._userQueries;
+        var nbUserQueries = userQueries.length;
+
+        for ( i = 0; i < nbUserQueries; ++i ) {
+            var query = userQueries[ i ];
+            var average = this.computeFullAverageTime( query );
+            if ( average > 0 ) {
+                this._callback( average, query._id );
+            }
+        }
+    },
+
+    pollQuery: function ( query ) {
+        query._isWaiting = false;
 
         // last to be queried
-        var lastQuery = this._hasTimeStamp ? this._pollingEndQueries[ queryID ][ pollIndex ] : this._pollingStartQueries[ queryID ][ pollIndex ];
+        var lastQuery = this._hasTimeStamp ? query._pollingEndQuery : query._pollingStartQuery;
 
         // wait till results are ready
         var available = this._glTimer.getQueryObjectEXT( lastQuery, this._glTimer.QUERY_RESULT_AVAILABLE_EXT );
-
-        if ( !available ) return null;
-
-        var disjoint = this._gl.getParameter( this._glTimer.GPU_DISJOINT_EXT );
-
-        if ( disjoint ) return null;
-
+        if ( !available ) {
+            query._isWaiting = true;
+            return 0;
+        }
 
         var timeElapsed;
 
         if ( this._hasTimeStamp ) {
 
-            var startQuery = this._pollingStartQueries[ queryID ][ pollIndex ];
-
-            var startTime = this._glTimer.getQueryObjectEXT( startQuery, this._glTimer.QUERY_RESULT_EXT );
+            var startTime = this._glTimer.getQueryObjectEXT( query._pollingStartQuery, this._glTimer.QUERY_RESULT_EXT );
             var endTime = this._glTimer.getQueryObjectEXT( lastQuery, this._glTimer.QUERY_RESULT_EXT );
             timeElapsed = endTime - startTime;
-
-            //free slots
-            this._glTimer.deleteQueryEXT( lastQuery );
-            this._pollingEndQueries[ queryID ][ pollIndex ] = undefined;
-            this._glTimer.deleteQueryEXT( startQuery );
-            this._pollingStartQueries[ queryID ][ pollIndex ] = undefined;
 
         } else {
 
             timeElapsed = this._glTimer.getQueryObjectEXT( lastQuery, this._glTimer.QUERY_RESULT_EXT );
 
-            //free slots
-            this._glTimer.deleteQueryEXT( lastQuery );
-            this._pollingStartQueries[ queryID ][ pollIndex ] = undefined;
-
         }
 
-
-        if ( timeElapsed === 0 ) return undefined;
-
-
-        this._resultCountQuery[ queryID ]++;
-
-        // store results
-        var lastTime = this._averageTimerQuery[ queryID ];
-        var resultCount = this._resultCountQuery[ queryID ];
+        query._resultCount++;
 
         // restart cumulative average every frameAveragecount frames
-        if ( resultCount > this._frameAverageCount ) {
-
-            this.reset( queryID );
-            // we have one result
-            this._resultCountQuery[ queryID ]++;
-            lastTime = 0;
-
+        if ( query._resultCount > this._frameAverageCount ) {
+            query._averageTimer = 0.0;
+            query._resultCount = 1;
         }
 
+        // https://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
+        query._averageTimer = query._averageTimer + ( ( timeElapsed - query._averageTimer ) / ( query._resultCount ) );
 
-        var cumulativeAverage;
-        if ( lastTime === 0 ) {
-            cumulativeAverage = timeElapsed;
-        } else {
-            // https://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
-            cumulativeAverage = lastTime + ( ( timeElapsed - lastTime ) / ( resultCount ) );
-        }
-        this._averageTimerQuery[ queryID ] = cumulativeAverage;
-
-        return cumulativeAverage;
-
-    },
-
-    // results are async
-    pollQueriesData: function ( queryID ) {
-
-        var average;
-        var self = this;
-        var queries = this._waitingQueries[ queryID ];
-
-        queries = queries.filter( function ( pollIndex ) {
-
-            // check if result ready
-            var res = self.pollQueryData( queryID, pollIndex );
-
-            // not ready we keep it in waiting queue
-            if ( res === null ) return true;
-            // ready, but discarded
-            if ( res === undefined ) return false;
-
-            average = res;
-            // remove from waiting queue
-            return false;
-
-        } );
-        this._waitingQueries[ queryID ] = queries;
-
-        // only bother client side if we have results
-        if ( average !== undefined && this._callback ) {
-            this._callback( average, queryID );
-        }
+        return query._averageTimer;
     }
 
 };
-
 
 module.exports = TimerGPU;
