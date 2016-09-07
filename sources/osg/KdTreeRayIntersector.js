@@ -119,9 +119,6 @@ KdTreeRayIntersector.prototype = {
     // snapped to the bounding box of the nodes
     intersectAndClip: ( function () {
 
-        // needed because of precision picking
-        var tmp = new Float64Array( 3 );
-
         return function ( s, e, bb ) {
             var min = bb._min;
             var xmin = min[ 0 ];
@@ -144,14 +141,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( s[ 0 ] < xmin ) {
                     // clip s to xMin.
-                    vec3.scale( tmp, invX, xmin - s[ 0 ] );
-                    vec3.add( s, s, tmp );
+                    vec3.scaleAndAdd( s, s, invX, xmin - s[ 0 ] );
                 }
 
                 if ( e[ 0 ] > xmax ) {
                     // clip e to xMax.
-                    vec3.scale( tmp, invX, xmax - s[ 0 ] );
-                    vec3.add( e, s, tmp );
+                    vec3.scaleAndAdd( e, s, invX, xmax - s[ 0 ] );
                 }
             } else {
                 if ( s[ 0 ] < xmin ) return false;
@@ -159,14 +154,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( e[ 0 ] < xmin ) {
                     // clip s to xMin.
-                    vec3.scale( tmp, invX, xmin - s[ 0 ] );
-                    vec3.add( e, s, tmp );
+                    vec3.scaleAndAdd( e, s, invX, xmin - s[ 0 ] );
                 }
 
                 if ( s[ 0 ] > xmax ) {
                     // clip e to xMax.
-                    vec3.scale( tmp, invX, xmax - s[ 0 ] );
-                    vec3.add( s, s, tmp );
+                    vec3.scaleAndAdd( s, s, invX, xmax - s[ 0 ] );
                 }
             }
 
@@ -179,14 +172,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( s[ 1 ] < ymin ) {
                     // clip s to yMin.
-                    vec3.scale( tmp, invY, ymin - s[ 1 ] );
-                    vec3.add( s, s, tmp );
+                    vec3.scaleAndAdd( s, s, invY, ymin - s[ 1 ] );
                 }
 
                 if ( e[ 1 ] > ymax ) {
                     // clip e to yMax.
-                    vec3.scale( tmp, invY, ymax - s[ 1 ] );
-                    vec3.add( e, s, tmp );
+                    vec3.scaleAndAdd( e, s, invY, ymax - s[ 1 ] );
                 }
             } else {
                 if ( s[ 1 ] < ymin ) return false;
@@ -194,14 +185,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( e[ 1 ] < ymin ) {
                     // clip s to yMin.
-                    vec3.scale( tmp, invY, ymin - s[ 1 ] );
-                    vec3.add( e, s, tmp );
+                    vec3.scaleAndAdd( e, s, invY, ymin - s[ 1 ] );
                 }
 
                 if ( s[ 1 ] > ymax ) {
                     // clip e to yMax.
-                    vec3.scale( tmp, invY, ymax - s[ 1 ] );
-                    vec3.add( s, s, tmp );
+                    vec3.scaleAndAdd( s, s, invY, ymax - s[ 1 ] );
                 }
             }
 
@@ -213,14 +202,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( s[ 2 ] < zmin ) {
                     // clip s to zMin.
-                    vec3.scale( tmp, invZ, zmin - s[ 2 ] );
-                    vec3.add( s, s, tmp );
+                    vec3.scaleAndAdd( s, s, invZ, zmin - s[ 2 ] );
                 }
 
                 if ( e[ 2 ] > zmax ) {
                     // clip e to zMax.
-                    vec3.scale( tmp, invZ, zmax - s[ 2 ] );
-                    vec3.add( e, s, tmp );
+                    vec3.scaleAndAdd( e, s, invZ, zmax - s[ 2 ] );
                 }
             } else {
                 if ( s[ 2 ] < zmin ) return false;
@@ -228,14 +215,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( e[ 2 ] < zmin ) {
                     // clip s to zMin.
-                    vec3.scale( tmp, invZ, zmin - s[ 2 ] );
-                    vec3.add( e, s, tmp );
+                    vec3.scaleAndAdd( e, s, invZ, zmin - s[ 2 ] );
                 }
 
                 if ( s[ 2 ] > zmax ) {
                     // clip e to zMax.
-                    vec3.scale( tmp, invZ, zmax - s[ 2 ] );
-                    vec3.add( s, s, tmp );
+                    vec3.scaleAndAdd( s, s, invZ, zmax - s[ 2 ] );
                 }
             }
             return true;

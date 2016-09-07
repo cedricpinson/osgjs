@@ -180,8 +180,9 @@ PolytopePrimitiveIntersector.prototype = {
                 } else if ( !d1IsNegative && d2IsNegative ) {
                     //(v1+(v2-v1)*(d1/(d1-d2)))
                     vec3.sub( hit, v2, v1 );
-                    vec3.scale( hit, hit, d1 / ( d1 - d2 ) );
-                    vec3.add( hit, v1, hit );
+
+                    vec3.scaleAndAdd( hit, v1, hit, d1 / ( d1 - d2 ) );
+
                     this._candidates.push( hit );
                     this._candidatesMasks.push( selectorMask );
                 }
@@ -263,8 +264,9 @@ PolytopePrimitiveIntersector.prototype = {
                 } else if ( !d1IsNegative && d2IsNegative ) {
                     //(v1+(v2-v1)*(d1/(d1-d2)))
                     vec3.sub( tmpHit, v2, v1 );
-                    vec3.scale( tmpHit, tmpHit, d1 / ( d1 - d2 ) );
-                    vec3.add( tmpHit, v1, tmpHit );
+
+                    vec3.scaleAndAdd( tmpHit, v1, tmpHit, d1 / ( d1 - d2 ) );
+
                     this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 }
@@ -283,8 +285,9 @@ PolytopePrimitiveIntersector.prototype = {
                 } else if ( !d1IsNegative && d3IsNegative ) {
                     // v1+(v3-v1)*(d1/(d1-d3))
                     vec3.sub( tmpHit, v3, v1 );
-                    vec3.scale( tmpHit, tmpHit, d1 / ( d1 - d3 ) );
-                    vec3.add( tmpHit, v1, tmpHit );
+
+                    vec3.scaleAndAdd( tmpHit, v1, tmpHit, d1 / ( d1 - d3 ) );
+
                     this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 }
@@ -299,8 +302,9 @@ PolytopePrimitiveIntersector.prototype = {
                 } else if ( !d2IsNegative && d3IsNegative ) {
                     //v2+(v3-v2)*(d2/(d2-d3))
                     vec3.sub( tmpHit, v3, v2 );
-                    vec3.scale( tmpHit, tmpHit, d2 / ( d2 - d3 ) );
-                    vec3.add( tmpHit, v2, tmpHit );
+
+                    vec3.scaleAndAdd( tmpHit, v2, tmpHit, d2 / ( d2 - d3 ) );
+
                     this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 }
@@ -350,8 +354,9 @@ PolytopePrimitiveIntersector.prototype = {
                 var v = f * ( vec3.dot( lines[ i ]._dir, q ) );
                 if ( v < 0.0 || u + v > 1.0 ) continue;
                 var t = f * ( vec3.dot( e2, q ) );
-                vec3.scale( point, lines[ i ]._dir, t );
-                vec3.add( point, lines[ i ]._pos, point );
+
+                vec3.scaleAndAdd( point, lines[ i ]._pos, lines[ i ]._dir, t );
+
                 this._candidates.push( vec3.copy( vec3.create(), point ) );
                 this._candidatesMasks.push( lines[ i ]._planeMask );
             }
@@ -386,8 +391,9 @@ PolytopePrimitiveIntersector.prototype = {
                     //-plane2.distance(point1)/(searchDirection*normal2);
                     var searchDist = -this.distance( this._planes[ jt ], point1 ) / vec3.dot( searchDirection, normal2 );
                     if ( osgMath.isNaN( searchDist ) ) continue;
-                    vec3.scale( linePoint, searchDirection, searchDist );
-                    vec3.add( lineDirection, point1, lineDirection );
+
+                    vec3.scaleAndAdd( linePoint, point1, searchDirection, searchDist );
+
                     this._lines.push( new PlanesLine( selectorMask | subSelectorMask, vec3.clone( linePoint ), vec3.clone( lineDirection ) ) );
                 }
             }

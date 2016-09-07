@@ -47,8 +47,7 @@ BoundingSphere.prototype = {
                 for ( var i = 0; i < 8; i++ ) {
                     vec3.sub( v, bb.corner( i, v ), this._center ); // get the direction vector from corner
                     vec3.normalize( v, v ); // normalise it.
-                    vec3.scale( v, v, -this._radius ); // move the vector in the opposite direction distance radius.
-                    vec3.add( v, v, this._center ); // move to absolute position.
+                    vec3.scaleAndAdd( v, this._center, v, -this._radius ); // move the vector in the opposite direction distance radius.
                     newbb.expandByvec3( v ); // add it into the new bounding box.
                 }
 

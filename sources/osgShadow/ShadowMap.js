@@ -723,12 +723,9 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         var zFar = diameter + 0.0001;
 
         // compute eye Pos from a inverted lightDir Ray shot from center of bbox
-        // firs make a RAY
-        var ray = this._tmpVecBis;
-        vec3.scale( ray, eyeDir, -diameter );
-        // then move the eye to the that far pos following the ray
+        // firs make a RAY then move the eye to the that far pos following the ray
         var eyePos = this._tmpVec;
-        vec3.add( eyePos, center, ray );
+        vec3.scaleAndAdd( eyePos, center, eyeDir, -diameter );
 
         zNear = radius;
         zFar += radius;
