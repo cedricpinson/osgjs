@@ -8,7 +8,7 @@ var PrimitiveSet = require( 'osg/PrimitiveSet' );
 var StateSet = require( 'osg/StateSet' );
 var Uniform = require( 'osg/Uniform' );
 var Depth = require( 'osg/Depth' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var Compiler = require( 'osgShader/Compiler' );
 var RigGeometry = require( 'osgAnimation/RigGeometry' );
@@ -105,13 +105,13 @@ var DisplayNormalVisitor = function () {
     this._unifScale = Uniform.createFloat( 1.0, 'uScale' );
 
     var ns = this._normalStateSet = new StateSet();
-    ns.addUniform( Uniform.createFloat3( Vec3.createAndSet( 1.0, 0.0, 0.0 ), 'uColorDebug' ) );
+    ns.addUniform( Uniform.createFloat3( vec3.fromValues( 1.0, 0.0, 0.0 ), 'uColorDebug' ) );
     ns.addUniform( this._unifScale );
     ns.setAttributeAndModes( new Depth( Depth.NEVER ) );
     ns.setShaderGeneratorName( 'debugNormal' );
 
     var ts = this._tangentStateSet = new StateSet();
-    ts.addUniform( Uniform.createFloat3( Vec3.createAndSet( 0.0, 1.0, 0.0 ), 'uColorDebug' ) );
+    ts.addUniform( Uniform.createFloat3( vec3.fromValues( 0.0, 1.0, 0.0 ), 'uColorDebug' ) );
     ts.addUniform( this._unifScale );
     ts.setAttributeAndModes( new Depth( Depth.NEVER ) );
     ts.setShaderGeneratorName( 'debugTangent' );

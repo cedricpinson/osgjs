@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var TransformEnums = require( 'osg/TransformEnums' );
 
@@ -11,10 +11,10 @@ var IntersectionVisitor = function () {
     // We could need to use a stack of intersectors in case we want
     // to use several intersectors. Right now we use only one.
     this._intersector = undefined;
-    this._projectionStack = [ Matrix.identity ];
-    this._modelStack = [ Matrix.identity ];
-    this._viewStack = [ Matrix.identity ];
-    this._windowStack = [ Matrix.identity ];
+    this._projectionStack = [ mat4.IDENTITY ];
+    this._modelStack = [ mat4.IDENTITY ];
+    this._viewStack = [ mat4.IDENTITY ];
+    this._windowStack = [ mat4.IDENTITY ];
 
     this.reset();
 };
@@ -83,13 +83,13 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         // /!\ 64 bit precision because the picking is jittery otherwise
         // It's probably caused by one of the camera matrix that has too big/small values
         // but currently it's the ony fix we have
-        var mat = new Float64Array( 16 );
+        var mat = mat4.create64();
 
         return function () {
-            Matrix.copy( this.getWindowMatrix() || Matrix.identity, mat );
-            Matrix.preMult( mat, this.getProjectionMatrix() || Matrix.identity );
-            Matrix.preMult( mat, this.getViewMatrix() || Matrix.identity );
-            Matrix.preMult( mat, this.getModelMatrix() || Matrix.identity );
+            mat4.copy( mat, this.getWindowMatrix() || mat4.IDENTITY );
+            mat4.mul( mat, mat, this.getProjectionMatrix() || mat4.IDENTITY );
+            mat4.mul( mat, mat, this.getViewMatrix() || mat4.IDENTITY );
+            mat4.mul( mat, mat, this.getModelMatrix() || mat4.IDENTITY );
 
             return mat;
         };
@@ -126,14 +126,14 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         var projection, view, model;
         if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF && this.getViewMatrix() && this.getProjectionMatrix() ) {
             // relative
-            projection = Matrix.mult( this.getProjectionMatrix(), camera.getProjectionMatrix(), IntersectionVisitor._reservedMatrixStack.get() );
+            projection = mat4.mul( IntersectionVisitor._reservedMatrixStack.get(), this.getProjectionMatrix(), camera.getProjectionMatrix() );
             view = this.getViewMatrix();
-            model = Matrix.mult( this.getModelMatrix(), camera.getViewMatrix(), IntersectionVisitor._reservedMatrixStack.get() );
+            model = mat4.mul( IntersectionVisitor._reservedMatrixStack.get(), this.getModelMatrix(), camera.getViewMatrix() );
         } else {
             // absolute
             projection = camera.getProjectionMatrix();
             view = camera.getViewMatrix();
-            model = Matrix.makeIdentity( IntersectionVisitor._reservedMatrixStack.get() );
+            model = mat4.identity( IntersectionVisitor._reservedMatrixStack.get() );
         }
 
         this.pushProjectionMatrix( projection );
@@ -172,11 +172,11 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         // Accumulate Transform
         if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
             var matrix = IntersectionVisitor._reservedMatrixStack.get();
-            this.pushViewMatrix( Matrix.makeIdentity( matrix ) );
+            this.pushViewMatrix( mat4.identity( matrix ) );
             this.pushModelMatrix( node.getMatrix() );
         } else if ( this._modelStack.length > 0 ) {
-            var m = Matrix.copy( this.getModelMatrix(), IntersectionVisitor._reservedMatrixStack.get() );
-            Matrix.preMult( m, node.getMatrix() );
+            var m = mat4.copy( IntersectionVisitor._reservedMatrixStack.get(), this.getModelMatrix() );
+            mat4.mul( m, m, node.getMatrix() );
             this.pushModelMatrix( m );
         } else {
             this.pushModelMatrix( node.getMatrix() );

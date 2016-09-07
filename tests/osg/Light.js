@@ -7,9 +7,9 @@ var Shape = require( 'osg/Shape' );
 var Node = require( 'osg/Node' );
 var RenderStage = require( 'osg/RenderStage' );
 var StateGraph = require( 'osg/StateGraph' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var vec4 = require( 'osg/glMatrix' ).vec4;
 
 
 module.exports = function () {
@@ -22,23 +22,23 @@ module.exports = function () {
             l0.setLightNumber( 0 );
 
             l0.setLightAsPoint();
-            assert.equalVector( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
+            assert.equalVector( l0.getPosition(), vec4.fromValues( 0.0, 0.0, 0.0, 1.0 ) );
             assert.equal( l0.getSpotCutoff(), 180 );
             assert.equal( l0.getLightType(), Light.POINT );
 
             l0.setLightAsDirection();
-            assert.equalVector( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 ) );
+            assert.equalVector( l0.getPosition(), vec4.fromValues( 0.0, 0.0, 1.0, 0.0 ) );
             assert.equal( l0.getLightType(), Light.DIRECTION );
 
             l0.setLightAsSpot();
-            assert.equalVector( l0.getPosition(), Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 ) );
-            assert.equalVector( l0.getDirection(), Vec3.createAndSet( 0.0, 0.0, -1.0 ) );
+            assert.equalVector( l0.getPosition(), vec4.fromValues( 0.0, 0.0, 0.0, 1.0 ) );
+            assert.equalVector( l0.getDirection(), vec3.fromValues( 0.0, 0.0, -1.0 ) );
             assert.equal( l0.getSpotCutoff(), 90 );
             assert.equal( l0.getLightType(), Light.SPOT );
 
-            assert.equalVector( l0.getAmbient(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
-            assert.equalVector( l0.getDiffuse(), Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 ) );
-            assert.equalVector( l0.getSpecular(), Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ) );
+            assert.equalVector( l0.getAmbient(), vec4.fromValues( 0.2, 0.2, 0.2, 1.0 ) );
+            assert.equalVector( l0.getDiffuse(), vec4.fromValues( 0.8, 0.8, 0.8, 1.0 ) );
+            assert.equalVector( l0.getSpecular(), vec4.fromValues( 0.2, 0.2, 0.2, 1.0 ) );
 
 
             assert.equal( l0.getConstantAttenuation(), 1 );
@@ -129,8 +129,8 @@ module.exports = function () {
             var cull = viewer.getCamera().getRenderer()._cullVisitor;
             var rs = new RenderStage();
             var sg = new StateGraph();
-            cull.pushProjectionMatrix( Matrix.create() );
-            cull.pushModelViewMatrix( Matrix.create() );
+            cull.pushProjectionMatrix( mat4.create() );
+            cull.pushModelViewMatrix( mat4.create() );
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );
 

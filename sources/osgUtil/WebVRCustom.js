@@ -1,7 +1,7 @@
 'use strict';
 var Camera = require( 'osg/Camera' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Node = require( 'osg/Node' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
@@ -9,8 +9,8 @@ var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
 var Uniform = require( 'osg/Uniform' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec4 = require( 'osg/Vec4' );
+var vec2 = require( 'osg/glMatrix' ).vec2;
+var vec4 = require( 'osg/glMatrix' ).vec4;
 var Viewport = require( 'osg/Viewport' );
 var Composer = require( 'osgUtil/Composer' );
 
@@ -59,7 +59,7 @@ var UpdateOffsetCamera = function ( rootView, offsetView ) {
 UpdateOffsetCamera.prototype = {
     update: function ( node ) {
         var nodeView = node.getViewMatrix();
-        Matrix.mult( this._offsetView, this._rootView, nodeView );
+        mat4.mul( nodeView, this._offsetView, this._rootView );
         return true;
     }
 };
@@ -71,21 +71,24 @@ var setupWebVR = function ( worldFactor, HMD, webVRUniforms, webVRMatrices ) {
     var distScale = ( HMD.distortionK[ 0 ] + HMD.distortionK[ 1 ] * Math.pow( r, 2 ) + HMD.distortionK[ 2 ] * Math.pow( r, 4 ) + HMD.distortionK[ 3 ] * Math.pow( r, 6 ) );
     var fov = ( 180.0 / Math.PI ) * 2.0 * Math.atan2( HMD.vScreenSize * distScale, 2.0 * HMD.eyeToScreenDistance );
 
-    var proj = Matrix.makePerspective( fov, aspect, 0.3, 10000.0, Matrix.create() );
+    var proj = mat4.perspective( mat4.create(), Math.PI / 180 * fov, aspect, 0.3, 10000.0 );
+
     var hOffset = 4.0 * ( HMD.hScreenSize * 0.25 - HMD.interpupillaryDistance * 0.5 ) / HMD.hScreenSize;
     var lensShift = 4.0 * ( HMD.hScreenSize * 0.25 - HMD.lensSeparationDistance * 0.5 ) / HMD.hScreenSize;
 
-    webVRMatrices.projectionLeft = Matrix.preMult( Matrix.makeTranslate( hOffset, 0.0, 0.0, Matrix.create() ), proj );
-    webVRMatrices.projectionRight = Matrix.preMult( Matrix.makeTranslate( -hOffset, 0.0, 0.0, Matrix.create() ), proj );
-    webVRMatrices.viewLeft = Matrix.makeTranslate( worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
-    webVRMatrices.viewRight = Matrix.makeTranslate( -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
+    var leftMat = mat4.create();
+    var rightMat = mat4.create();
+    webVRMatrices.projectionLeft = mat4.mul( leftMat, mat4.fromTranslation( leftMat, [ hOffset, 0.0, 0.0 ] ), proj );
+    webVRMatrices.projectionRight = mat4.mul( rightMat, mat4.fromTranslation( rightMat, [ -hOffset, 0.0, 0.0 ] ), proj );
+    webVRMatrices.viewLeft = mat4.fromTranslation( mat4.create(), [ worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 ] );
+    webVRMatrices.viewRight = mat4.fromTranslation( mat4.create(), [ -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 ] );
 
-    webVRUniforms.lensCenterLeft = Vec2.createAndSet( lensShift, 0.0 );
-    webVRUniforms.lensCenterRight = Vec2.createAndSet( -lensShift, 0.0 );
+    webVRUniforms.lensCenterLeft = vec2.fromValues( lensShift, 0.0 );
+    webVRUniforms.lensCenterRight = vec2.fromValues( -lensShift, 0.0 );
     webVRUniforms.hmdWarpParam = HMD.distortionK;
     webVRUniforms.chromAbParam = HMD.chromaAbParameter;
-    webVRUniforms.scaleIn = Vec2.createAndSet( 1.0, 1.0 / aspect );
-    webVRUniforms.scale = Vec2.createAndSet( 1.0 / distScale, 1.0 * aspect / distScale );
+    webVRUniforms.scaleIn = vec2.fromValues( 1.0, 1.0 / aspect );
+    webVRUniforms.scale = vec2.fromValues( 1.0 / distScale, 1.0 * aspect / distScale );
 };
 
 var getWebVRShader = function () {
@@ -158,7 +161,7 @@ var createOrthoRtt = function ( left, viewportSize, canvasSize, cardboard, textu
         else
             orthoCamera.setViewport( new Viewport( 0.5 * cw, 0.5 * ( ch - vh ), vw, vh ) );
     }
-    Matrix.makeOrtho( -0.5, 0.5, -0.5, 0.5, -5, 5, orthoCamera.getProjectionMatrix() );
+    mat4.ortho( orthoCamera.getProjectionMatrix(), -0.5, 0.5, -0.5, 0.5, -5, 5 );
     orthoCamera.setRenderOrder( Camera.NESTED_RENDER, 0 );
     orthoCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
 
@@ -179,7 +182,7 @@ var createCameraRtt = function ( texture, projMatrix ) {
     camera.setName( 'rtt camera' );
     camera.setViewport( new Viewport( 0, 0, texture.getWidth(), texture.getHeight() ) );
     camera.setProjectionMatrix( projMatrix );
-    camera.setClearColor( Vec4.createAndSet( 0.3, 0.3, 0.3, 0.0 ) );
+    camera.setClearColor( vec4.fromValues( 0.3, 0.3, 0.3, 0.0 ) );
     camera.setRenderOrder( Camera.POST_RENDER, 0 );
     camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture );
     camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );
@@ -189,10 +192,10 @@ var createCameraRtt = function ( texture, projMatrix ) {
 
 WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride, worldFactorOverride ) {
     var HMD = WebVRCustom.getDefaultConfig( HMDconfig );
-    var rttSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
-    var viewportSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
+    var rttSize = vec2.fromValues( HMD.hResolution * 0.5, HMD.vResolution );
+    var viewportSize = vec2.fromValues( HMD.hResolution * 0.5, HMD.vResolution );
     var vp = viewer.getCamera().getViewport();
-    var canvasSize = Vec2.createAndSet( vp.width(), vp.height() );
+    var canvasSize = vec2.fromValues( vp.width(), vp.height() );
 
     var canvas = viewer.getGraphicContext().canvas;
     if ( HMD.isCardboard ) {
@@ -249,8 +252,8 @@ WebVRCustom.getDefaultConfig = function ( hmdConfig ) {
         interpupillaryDistance: 0.064,
         lensSeparationDistance: 0.0635,
         eyeToScreenDistance: 0.04,
-        distortionK: Vec4.createAndSet( 1.0, 0.22, 0.13, 0.02 ),
-        chromaAbParameter: Vec4.createAndSet( 0.996, -0.004, 1.014, 0.0 ),
+        distortionK: vec4.fromValues( 1.0, 0.22, 0.13, 0.02 ),
+        chromaAbParameter: vec4.fromValues( 0.996, -0.004, 1.014, 0.0 ),
         isCardboard: false
     };
 
@@ -265,7 +268,7 @@ WebVRCustom.getDefaultConfig = function ( hmdConfig ) {
         hmd.vScreenSize = 0.0936;
         hmd.lensSeparationDistance = 0.064;
         hmd.eyeToScreenDistance = 0.041;
-        hmd.distortionK = Vec4.createAndSet( 1.0, 0.22, 0.24, 0.0 );
+        hmd.distortionK = vec4.fromValues( 1.0, 0.22, 0.24, 0.0 );
         return hmd;
     }
 

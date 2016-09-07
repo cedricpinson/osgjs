@@ -121,9 +121,9 @@
                 request.then( function ( model ) {
 
                     var mt = new osg.MatrixTransform();
-                    osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, mt.getMatrix() );
+                    osg.mat4.fromRotation( mt.getMatrix(), -Math.PI / 2, [ 1, 0, 0 ] );
                     var bb = model.getBound();
-                    osg.Matrix.mult( osg.Matrix.makeTranslate( 0, -bb.radius() / 2, 0, osg.Matrix.create() ), mt.getMatrix(), mt.getMatrix() );
+                    osg.mat4.mul( mt.getMatrix(), osg.mat4.fromTranslation( osg.mat4.create(), [ 0, -bb.radius() / 2, 0 ] ), mt.getMatrix() );
                     mt.addChild( model );
                     this._model.addChild( model );
                     // Create a new stateset to prove that CustomCompiler is applied to child nodes.
@@ -153,7 +153,7 @@
             // use the shader generator 'custom'
             var rendering1 = new osg.MatrixTransform();
             rendering1.getOrCreateStateSet().setShaderGeneratorName( 'custom' );
-            osg.Matrix.makeTranslate( 20, 0, 0, rendering1.getMatrix() );
+            osg.mat4.fromTranslation( rendering1.getMatrix(), [ 20, 0, 0 ] );
 
             // use the shader generator 'custom'
             var rendering3 = new osg.MatrixTransform();
@@ -161,12 +161,12 @@
             this._negatifAttribute.setAttributeEnable( true );
             rendering3.getOrCreateStateSet().setAttributeAndModes( this._negatifAttribute );
             rendering3.getOrCreateStateSet().setShaderGeneratorName( 'custom' );
-            osg.Matrix.makeTranslate( 60, 0, 0, rendering3.getMatrix() );
+            osg.mat4.fromTranslation( rendering3.getMatrix(), [ 60, 0, 0 ] );
 
 
             // use the default shader generator
             var rendering2 = new osg.MatrixTransform();
-            osg.Matrix.makeTranslate( -20, 0, 0, rendering2.getMatrix() );
+            osg.mat4.fromTranslation( rendering2.getMatrix(), [ -20, 0, 0 ] );
 
 
             var model = this.getOrCreateModel();

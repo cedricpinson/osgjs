@@ -1,7 +1,7 @@
 'use strict';
 var Light = require( 'osg/Light' );
 var LightSource = require( 'osg/LightSource' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Node = require( 'osg/Node' );
 var Shape = require( 'osg/Shape' );
@@ -23,7 +23,7 @@ var addScene = function ( rootNode, count, shadows, culling ) {
 
             var groundSubNodeTrans = new MatrixTransform();
             groundSubNodeTrans.setMatrix(
-                Matrix.makeTranslate( wG * groundSize - 100, wH * groundSize - 100, -5.0, groundSubNodeTrans.getMatrix() ) );
+                mat4.fromTranslation( groundSubNodeTrans.getMatrix(), [ wG * groundSize - 100, wH * groundSize - 100, -5.0 ] ) );
             // only node are culled in CullVisitor frustum culling
             groundSubNode = new Node();
             groundSubNode.setCullingActive( culling );
@@ -49,7 +49,7 @@ var addScene = function ( rootNode, count, shadows, culling ) {
         rootNode.getOrCreateStateSet().setAttributeAndModes( lightNew );
         rootNode.addChild( lightNodeModelNodeParent );
         // setting light, each above its cube
-        lightNodeModelNodeParent.setMatrix( Matrix.makeTranslate( -10, -10, 10, Matrix.create() ) );
+        lightNodeModelNodeParent.setMatrix( mat4.fromTranslation( mat4.create(), [ -10, -10, 10 ] ) );
         var shadowedScene = new ShadowedScene();
         shadowedScene.addChild( root );
         var shadowSettings = new ShadowSettings();

@@ -2,10 +2,10 @@
 
 var MACROUTILS = require( 'osg/Utils' );
 var Transform = require( 'osg/Transform' );
-var Vec3 = require( 'osg/Vec3' );
-var Vec4 = require( 'osg/Vec4' );
-var Quat = require( 'osg/Quat' );
-var Matrix = require( 'osg/Matrix' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var vec4 = require( 'osg/glMatrix' ).vec4;
+var quat = require( 'osg/glMatrix' ).quat;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var TransformEnums = require( 'osg/TransformEnums' );
 var Node = require( 'osg/Node' );
@@ -19,24 +19,24 @@ var Node = require( 'osg/Node' );
 
 var AutoTransform = function () {
     Transform.call( this );
-    this._matrix = Matrix.create();
-    this._position = Vec3.create();
+    this._matrix = mat4.create();
+    this._position = vec3.create();
     this._matrixDirty = true;
-    this._scale = Vec3.createAndSet( 1.0, 1.0, 1.0 );
+    this._scale = vec3.fromValues( 1.0, 1.0, 1.0 );
     this._minimumScale = 0;
     this._maximumScale = Number.MAX_VALUE;
-    this._rotation = Quat.create();
-    this._pivotPoint = Vec3.create();
+    this._rotation = quat.create();
+    this._pivotPoint = vec3.create();
     this._autoScaleToScreen = false;
     this._autoRotateToScreen = false;
-    this._cachedMatrix = Matrix.create();
+    this._cachedMatrix = mat4.create();
     this._firstTimeToInitEyePoint = true;
     this._autoScaleTransitionWidthRatio = 0.25;
     this._billboardAttribute = undefined;
     this._previousWidth = 0.0;
     this._previousHeight = 0.0;
-    this._previousProjection = Matrix.create();
-    this._previousPosition = Vec3.create();
+    this._previousProjection = mat4.create();
+    this._previousPosition = vec3.create();
 };
 
 /** @lends Autotransform.prototype */
@@ -71,10 +71,10 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
     },
 
     setScale: function ( scale ) {
-        this.setScaleFromVec3( Vec3.createAndSet( scale, scale, scale ) );
+        this.setScaleFromvec3( vec3.fromValues( scale, scale, scale ) );
     },
 
-    setScaleFromVec3: function ( scaleVec ) {
+    setScaleFromvec3: function ( scaleVec ) {
         this._scale = scaleVec;
         this._matrixDirty = true;
         this.dirtyBound();
@@ -129,30 +129,34 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
     computeLocalToWorldMatrix: function ( matrix /*, nodeVisitor */ ) {
         if ( this._matrixDirty ) this.computeMatrix();
         if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-            Matrix.preMult( matrix, this._matrix );
+            mat4.mul( matrix, matrix, this._matrix );
         } else {
-            Matrix.copy( this._matrix, matrix );
+            mat4.copy( matrix, this._matrix );
         }
     },
 
     computeMatrix: ( function () {
-        var neg = Vec3.create();
+        var neg = vec3.create();
+        var tmpMat = mat4.create();
         return function () {
             if ( !this._matrixDirty ) return;
-            Matrix.makeRotateFromQuat( this._rotation, this._matrix );
-            //_cachedMatrix.postMultTranslate(_position);
-            Matrix.postMultTranslate( this._matrix, this._position );
-            Matrix.preMultScale( this._matrix, this._scale );
-            Matrix.preMultTranslate( this._matrix, Vec3.neg( this._pivotPoint, neg ) );
+            mat4.fromQuat( this._matrix, this._rotation );
+
+            mat4.fromTranslation( tmpMat, this._position );
+            mat4.mul( this._matrix, tmpMat, this._matrix );
+            mat4.scale( this._matrix, this._matrix, this._scale );
+            mat4.translate( this._matrix, this._matrix, vec3.neg( neg, this._pivotPoint ) );
             this._matrixDirty = false;
         };
 
     } )(),
 
     computeWorldToLocalMatrix: ( function () {
-        var neg = Vec3.create();
-        var rotInverse = Quat.create();
-        var scaleInverse = Vec3.create();
+        var neg = vec3.create();
+        var rotInverse = quat.create();
+        var scaleInverse = vec3.create();
+        var tmpMat = mat4.create();
+
         return function ( matrix /*, nodeVisitor */ ) {
             if ( this.scale[ 0 ] === 0.0 && this.scale[ 1 ] === 0.0 && this.scale[ 2 ] === 0.0 ) {
                 return false;
@@ -161,24 +165,37 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             scaleInverse[ 1 ] = 1.0 / this._scale[ 1 ];
             scaleInverse[ 2 ] = 1.0 / this._scale[ 2 ];
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                Matrix.postMultTranslate( matrix, Vec3.neg( this._position, neg ) );
-                if ( !Quat.zeroRotation( this._rotation ) ) {
-                    Matrix.postMultRotate( matrix, Quat.inverse( this._rotation, rotInverse ) );
+
+                mat4.fromTranslation( tmpMat, vec3.neg( neg, this._position ) );
+                mat4.mul( matrix, tmpMat, matrix );
+
+                if ( !quat.zeroRotation( this._rotation ) ) {
+                    mat4.fromQuat( tmpMat, quat.invert( rotInverse, this._rotation ) );
+                    mat4.mul( matrix, tmpMat, matrix );
                 }
-                Matrix.postMultScale( matrix, scaleInverse );
-                Matrix.postMultTranslate( matrix, this._pivotPoint );
+                mat4.fromScaling( tmpMat, scaleInverse );
+                mat4.mul( matrix, tmpMat, matrix );
+
+                mat4.fromTranslation( tmpMat, this._pivotPoint );
+                mat4.mul( matrix, tmpMat, matrix );
+
             } else { // absolute
-                Matrix.makeRotateFromQuat( Quat.inverse( this._rotation, rotInverse ), this._matrix );
-                Matrix.preMultTranslate( matrix, Vec3.neg( this._position, neg ) );
-                Matrix.postMultScale( matrix, scaleInverse );
-                Matrix.postMultTranslate( matrix, this._pivotPoint );
+                mat4.fromQuat( this._matrix, quat.invert( rotInverse, this._rotation ) );
+                mat4.translate( matrix, matrix, vec3.neg( neg, this._position ) );
+
+                mat4.fromScaling( tmpMat, scaleInverse );
+                mat4.mul( matrix, tmpMat, matrix );
+
+                mat4.fromTranslation( tmpMat, this._pivotPoint );
+                mat4.mul( matrix, tmpMat, matrix );
+
             }
             return true;
         };
     } )(),
 
     computeBound: ( function () {
-        var matrix = Matrix.create();
+        var matrix = mat4.create();
         return function ( bSphere ) {
             if ( this._autoScaleToScreen && this._firstTimeToInitEyePoint )
                 return bSphere;
@@ -186,10 +203,11 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             if ( !bSphere.valid() ) {
                 return bSphere;
             }
-            Matrix.makeIdentity( matrix );
+            mat4.identity( matrix );
             // local to local world (not Global World)
             this.computeLocalToWorldMatrix( matrix );
-            Matrix.transformBoundingSphere( matrix, bSphere, bSphere );
+            //Matrix.transformBoundingSphere( matrix, bSphere, bSphere );
+            bSphere.transformMat4( bSphere, matrix );
             return bSphere;
         };
     } )(),
@@ -208,9 +226,9 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
                 if ( !this._firstTimeToInitEyePoint ) {
                     if ( width !== this._previousWidth || height !== this._previousHeight ) {
                         doUpdate = true;
-                    } else if ( !Matrix.equal( projMat, this._previousProjection ) ) {
+                    } else if ( !mat4.exactEquals( projMat, this._previousProjection ) ) {
                         doUpdate = true;
-                    } else if ( !Vec3.equal( position, this._previousPosition ) ) {
+                    } else if ( !vec3.exactEquals( position, this._previousPosition ) ) {
                         doUpdate = true;
                     }
                 }
@@ -220,8 +238,8 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
                         var modelViewMat = visitor.getCurrentModelViewMatrix();
                         var viewport = visitor.getViewport();
                         var psvector = this.computePixelSizeVector( viewport, projMat, modelViewMat );
-                        var v = Vec4.createAndSet( this._position[ 0 ], this._position[ 1 ], this._position[ 2 ], 1.0 );
-                        var pixelSize = Vec4.dot( v, psvector );
+                        var v = vec4.fromValues( this._position[ 0 ], this._position[ 1 ], this._position[ 2 ], 1.0 );
+                        var pixelSize = vec4.dot( v, psvector );
                         pixelSize = 0.48 / pixelSize;
                         var size = 1.0 / pixelSize;
                         if ( this._autoScaleTransitionWidthRatio > 0.0 ) {
@@ -255,15 +273,15 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
                         this.setScale( size );
                     }
                     if ( this._autoRotateToScreen ) {
-                        var rotation = Quat.create();
+                        var rotation = quat.create();
                         var modelView = visitor.getCurrentModelViewMatrix();
-                        Matrix.getRotate( modelView, rotation );
-                        this.setRotation( Quat.inverse( rotation, rotation ) );
+                        mat4.getRotation( rotation, modelView );
+                        this.setRotation( quat.invert( rotation, rotation ) );
                     }
                     this._previousWidth = width;
                     this._previousHeight = height;
-                    Vec3.copy( position, this._previousPosition );
-                    Matrix.copy( projMat, this._previousProjection );
+                    vec3.copy( this._previousPosition, position );
+                    mat4.copy( this._previousProjection, projMat );
                 }
             }
 
@@ -272,8 +290,8 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
     } )(),
 
     computePixelSizeVector: ( function () {
-        var scale00 = Vec3.create();
-        var scale10 = Vec3.create();
+        var scale00 = vec3.create();
+        var scale10 = vec3.create();
         return function ( W, P, M ) {
             // Where W = viewport, P = ProjectionMatrix, M = ModelViewMatrix
             // Comment from OSG:
@@ -284,23 +302,23 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             // scaling for horizontal pixels
             var P00 = P[ 0 ] * W.width() * 0.5;
             var P20_00 = P[ 8 ] * W.width() * 0.5 + P[ 11 ] * W.width() * 0.5;
-            Vec3.set( M[ 0 ] * P00 + M[ 2 ] * P20_00,
+            vec3.set( scale00, M[ 0 ] * P00 + M[ 2 ] * P20_00,
                 M[ 4 ] * P00 + M[ 6 ] * P20_00,
-                M[ 8 ] * P00 + M[ 10 ] * P20_00, scale00 );
+                M[ 8 ] * P00 + M[ 10 ] * P20_00 );
 
             // scaling for vertical pixels
             var P10 = P[ 5 ] * W.height() * 0.5;
             var P20_10 = P[ 9 ] * W.height() * 0.5 + P[ 11 ] * W.height() * 0.5;
-            Vec3.set( M[ 1 ] * P10 + M[ 2 ] * P20_10,
+            vec3.set( scale10, M[ 1 ] * P10 + M[ 2 ] * P20_10,
                 M[ 5 ] * P10 + M[ 6 ] * P20_10,
-                M[ 9 ] * P10 + M[ 10 ] * P20_10, scale10 );
+                M[ 9 ] * P10 + M[ 10 ] * P20_10 );
 
             var P23 = P[ 11 ];
             var P33 = P[ 15 ];
-            var pixelSizeVector = Vec4.createAndSet( M[ 2 ] * P23, M[ 6 ] * P23, M[ 10 ] * P23, M[ 14 ] * P23 + M[ 15 ] * P33 );
+            var pixelSizeVector = vec4.fromValues( M[ 2 ] * P23, M[ 6 ] * P23, M[ 10 ] * P23, M[ 14 ] * P23 + M[ 15 ] * P33 );
 
-            var scaleRatio = 0.7071067811 / Math.sqrt( Vec3.length2( scale00 ) + Vec3.length2( scale10 ) );
-            Vec4.mult( pixelSizeVector, scaleRatio, pixelSizeVector );
+            var scaleRatio = 0.7071067811 / Math.sqrt( vec3.sqrLen( scale00 ) + vec3.sqrLen( scale10 ) );
+            vec4.scale( pixelSizeVector, pixelSizeVector, scaleRatio );
             return pixelSizeVector;
         };
     } )()

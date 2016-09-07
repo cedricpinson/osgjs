@@ -1,10 +1,10 @@
 'use strict';
-var Quat = require( 'osg/Quat' );
-var Vec3 = require( 'osg/Vec3' );
+var quat = require( 'osg/glMatrix' ).quat;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
-var makeRotateFromEuler = function ( x, y, z, order, quat ) {
+var makeRotateFromEuler = function ( q, x, y, z, order ) {
 
     // http://www.mathworks.com/matlabcentral/fileexchange/
     // 20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
@@ -19,48 +19,48 @@ var makeRotateFromEuler = function ( x, y, z, order, quat ) {
 
     if ( order === 'XYZ' ) {
 
-        quat[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
-        quat[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
-        quat[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
-        quat[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
+        q[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
+        q[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
+        q[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
+        q[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
 
     } else if ( order === 'YXZ' ) {
 
-        quat[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
-        quat[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
-        quat[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
-        quat[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
+        q[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
+        q[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
+        q[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
+        q[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
 
     } else if ( order === 'ZXY' ) {
 
-        quat[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
-        quat[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
-        quat[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
-        quat[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
+        q[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
+        q[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
+        q[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
+        q[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
 
     } else if ( order === 'ZYX' ) {
 
-        quat[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
-        quat[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
-        quat[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
-        quat[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
+        q[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
+        q[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
+        q[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
+        q[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
 
     } else if ( order === 'YZX' ) {
 
-        quat[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
-        quat[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
-        quat[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
-        quat[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
+        q[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
+        q[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
+        q[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
+        q[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
 
     } else if ( order === 'XZY' ) {
 
-        quat[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
-        quat[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
-        quat[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
-        quat[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
+        q[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
+        q[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
+        q[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
+        q[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
 
     }
-    return quat;
+    return q;
 };
 
 
@@ -71,8 +71,8 @@ var FirstPersonManipulatorDeviceOrientationController = function ( manipulator )
 
 FirstPersonManipulatorDeviceOrientationController.computeQuaternion = ( function () {
 
-    var screenTransform = Quat.create();
-    var worldTransform = Quat.createAndSet( -Math.sqrt( 0.5 ), 0.0, 0.0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis
+    var screenTransform = quat.create();
+    var worldTransform = quat.fromValues( -Math.sqrt( 0.5 ), 0.0, 0.0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis
 
     // but on ios alpha is relative to the first question:
     //
@@ -82,7 +82,7 @@ FirstPersonManipulatorDeviceOrientationController.computeQuaternion = ( function
     // device was pointing when device orientation was first requested. The compass
     // heading is available in the webkitCompassHeading parameter.
 
-    return function ( quat, deviceOrientation, screenOrientation ) {
+    return function ( q, deviceOrientation, screenOrientation ) {
 
         var alpha = deviceOrientation.alpha * degtorad;
         var beta = deviceOrientation.beta * degtorad;
@@ -98,28 +98,28 @@ FirstPersonManipulatorDeviceOrientationController.computeQuaternion = ( function
         // alpha is heading -> X
         // beta             -> Z Up
         // Gamma            -> Y view direction
-        makeRotateFromEuler( beta, alpha, -gamma, 'YXZ', quat );
+        makeRotateFromEuler( q, beta, alpha, -gamma, 'YXZ' );
         // equivalent to
-        // var rotateX = Matrix.makeRotate( beta, 1,0,0, Matrix.create() );
-        // var rotateY = Matrix.makeRotate( alpha, 0,1,0, Matrix.create() );
-        // var rotateZ = Matrix.makeRotate( -gamma, 0,0,1, Matrix.create() );
-        // var result = Matrix.create();
-        // Matrix.mult( rotateY, rotateX, result );
-        // Matrix.mult( result, rotateZ, result );
-        // Matrix.getRotate( result, quat );
+        // var rotateX = mat4.fromRotation( mat4.create(), beta,[ 1,0,0 ] );
+        // var rotateY = mat4.fromRotation( mat4.create(), alpha,[ 0,1,0 ] );
+        // var rotateZ = mat4.fromRotation( mat4.create(), -gamma,[ 0,0,1 ] );
+        // var result = mat4.create();
+        // mat4.mul( result, rotateY, rotateX );
+        // mat4.mul( result, result, rotateZ );
+        // mat4.getRotation( quat, result );
 
         var minusHalfAngle = -screenAngle / 2.0;
         screenTransform[ 1 ] = Math.sin( minusHalfAngle );
         screenTransform[ 3 ] = Math.cos( minusHalfAngle );
 
-        Quat.mult( quat, screenTransform, quat );
-        Quat.mult( quat, worldTransform, quat );
+        quat.mul( q, q, screenTransform );
+        quat.mul( q, q, worldTransform );
 
-        var yTemp = quat[ 1 ];
-        quat[ 1 ] = -quat[ 2 ];
-        quat[ 2 ] = yTemp;
+        var yTemp = q[ 1 ];
+        q[ 1 ] = -q[ 2 ];
+        q[ 2 ] = yTemp;
 
-        return quat;
+        return q;
     };
 
 } )();
@@ -128,8 +128,8 @@ FirstPersonManipulatorDeviceOrientationController.prototype = {
 
     init: function () {
         this._stepFactor = 1.0; // meaning radius*stepFactor to move
-        this._quat = Quat.create();
-        this._pos = Vec3.create();
+        this._quat = quat.create();
+        this._pos = vec3.create();
     },
 
     update: function ( deviceOrientation, screenOrientation ) {

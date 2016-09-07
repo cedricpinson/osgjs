@@ -172,7 +172,7 @@
         this._modelsPBR = [];
         this._modelPBRConfig = [];
 
-        this._environmentTransformUniform = osg.Uniform.createMatrix4( osg.Matrix.makeIdentity( [] ), 'uEnvironmentTransform' );
+        this._environmentTransformUniform = osg.Uniform.createMatrix4( osg.mat4.create(), 'uEnvironmentTransform' );
 
         this._cubemapUE4 = {};
 
@@ -198,8 +198,8 @@
 
 
         window.printCurrentCamera = function () {
-            var eye = osg.Vec3.create();
-            var target = osg.Vec3.create();
+            var eye = osg.vec3.create();
+            var target = osg.vec3.create();
             console.log( 'target ' + this._viewer.getManipulator().getTarget( target ).toString() );
             console.log( 'eye ' + this._viewer.getManipulator().getEyePosition( eye ).toString() );
         }.bind( this );
@@ -433,7 +433,7 @@
             if ( !this._environmentTransformMatrix )
                 return;
             var rotation = this._config.envRotation;
-            osg.Matrix.makeRotate( rotation, 0, 0, 1, this._environmentTransformMatrix );
+            osg.mat4.fromRotation( this._environmentTransformMatrix, rotation, [ 0, 0, 1 ] );
         },
 
         createEnvironmentNode: function () {
@@ -461,14 +461,14 @@
             var CullCallback = function () {
                 this.cull = function ( node, nv ) {
                     // overwrite matrix, remove translate so environment is always at camera origin
-                    osg.Matrix.setTrans( nv.getCurrentModelViewMatrix(), 0, 0, 0 );
+                    osg.mat4.setTranslation( nv.getCurrentModelViewMatrix(), [ 0, 0, 0 ] );
                     var m = nv.getCurrentModelViewMatrix();
 
                     // add a rotation, because environment has the convention y up
-                    var rotateYtoZ = osg.Matrix.makeRotate( Math.PI / 2, 1, 0, 0, osg.Matrix.create() );
+                    var rotateYtoZ = osg.mat4.fromRotation( osg.mat4.create(), Math.PI / 2, [ 1, 0, 0 ] );
 
-                    osg.Matrix.mult( m, rotateYtoZ, environmentTransform.getInternalArray() );
-                    //osg.Matrix.copy( m, environmentTransform.get() );
+                    osg.mat4.mul( environmentTransform.getInternalArray(), m, rotateYtoZ );
+                    //osg.mat4.copy( environmentTransform.get() , m );
                     return true;
                 };
             };
@@ -491,8 +491,9 @@
                 this.update = function () {
                     var rootCam = self._viewer.getCamera();
 
-                    osg.Matrix.getPerspective( rootCam.getProjectionMatrix(), info );
-                    osg.Matrix.makePerspective( info.fovy, info.aspectRatio, 1.0, 1000.0, proj );
+                    osg.mat4.getPerspective( info, rootCam.getProjectionMatrix() );
+                    osg.mat4.perspective( proj, Math.PI / 180 * info.fovy, info.aspectRatio, 1.0, 1000.0 );
+
                     cam.setProjectionMatrix( proj );
                     cam.setViewMatrix( rootCam.getViewMatrix() );
 
@@ -514,10 +515,11 @@
             request.then( function ( model ) {
 
                 var mt = new osg.MatrixTransform();
-                osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, mt.getMatrix() );
+                osg.mat4.fromRotation( mt.getMatrix(), -Math.PI / 2, [ 1, 0, 0 ] );
                 var bb = model.getBound();
-                osg.Matrix.mult( osg.Matrix.makeTranslate( 0, -bb.radius() / 2, 0, osg.Matrix.create() ), mt.getMatrix(), mt.getMatrix() );
+                osg.mat4.mul( mt.getMatrix(), osg.mat4.fromTranslation( osg.mat4.create(), [ 0, -bb.radius() / 2, 0 ] ), mt.getMatrix() );
                 mt.addChild( model );
+
                 this._modelMaterial = mt;
 
                 this._proxyModel.addChild( this._modelMaterial );
@@ -616,7 +618,7 @@
 
                 var sample = this.getModelTestInstance();
                 var x = roughness * offset;
-                osg.Matrix.makeTranslate( x, 0, 0, sample.getMatrix() );
+                osg.mat4.fromTranslation( sample.getMatrix(), [ x, 0, 0 ] );
 
                 var roughnessTexture = this.createTextureFromColor( roughness, false );
 
@@ -643,7 +645,7 @@
 
                 var sample = this.getModelTestInstance();
                 var x = metal * offset;
-                osg.Matrix.makeTranslate( x, 0, 0, sample.getMatrix() );
+                osg.mat4.fromTranslation( sample.getMatrix(), [ x, 0, 0 ] );
 
                 var metalTexture = this.createTextureFromColor( metal, false );
 
@@ -671,7 +673,7 @@
 
                 sample = this.getModelTestInstance();
 
-                osg.Matrix.makeTranslate( 0, 0, 0, sample.getMatrix() );
+                osg.mat4.fromTranslation( sample.getMatrix(), [ 0, 0, 0 ] );
 
                 roughnessTexture = this.createTextureFromColor( roughness, false );
 
@@ -694,7 +696,7 @@
 
                         var x = roughness * offset;
                         var y = metal * offset * 0.2;
-                        osg.Matrix.makeTranslate( x, -y * 1.2, 0, sample.getMatrix() );
+                        osg.mat4.fromTranslation( sample.getMatrix(), [ x, -y * 1.2, 0 ] );
 
                         roughnessTexture = this.createTextureFromColor( roughness, false );
 
@@ -729,7 +731,7 @@
             };
             this._shaders.push( config );
             group.addChild( rowRoughness );
-            osg.Matrix.makeTranslate( 0, 0, 0, rowRoughness.getMatrix() );
+            osg.mat4.fromTranslation( rowRoughness.getMatrix(), [ 0, 0, 0 ] );
 
             if ( false )
                 return group;
@@ -744,7 +746,7 @@
             };
             this._shaders.push( config );
             group.addChild( rowMetalic );
-            osg.Matrix.makeTranslate( 0, 40, 0, rowMetalic.getMatrix() );
+            osg.mat4.fromTranslation( rowMetalic.getMatrix(), [ 0, 40, 0 ] );
 
             var rowSpecular = this.createRowModelsSpecularMetal( nb, offset );
             stateSet = rowSpecular.getOrCreateStateSet();
@@ -757,7 +759,7 @@
             };
             this._shaders.push( config );
             group.addChild( rowSpecular );
-            osg.Matrix.makeTranslate( 0, 80, 0, rowSpecular.getMatrix() );
+            osg.mat4.fromTranslation( rowSpecular.getMatrix(), [ 0, 80, 0 ] );
 
 
             this.updateShaderPBR();
@@ -957,7 +959,7 @@
 
             var y = ( offsety !== undefined ) ? offsety : 0;
             var group = new osg.MatrixTransform();
-            osg.Matrix.makeTranslate( offset, y, 0, group.getMatrix() );
+            osg.mat4.fromTranslation( group.getMatrix(), [ offset, y, 0 ] );
 
             group.addChild( this._currentEnvironment.getSpherical().createDebugGeometry() );
             return group;
@@ -968,7 +970,7 @@
 
             var y = ( offsety !== undefined ) ? offsety : 0;
             var group = new osg.MatrixTransform();
-            osg.Matrix.makeTranslate( offset, y, 0, group.getMatrix() );
+            osg.mat4.fromTranslation( group.getMatrix(), [ offset, y, 0 ] );
 
             group.addChild( this._currentEnvironment.getCubemapIrradiance().createDebugGeometry() );
             return group;
@@ -978,7 +980,7 @@
 
             var y = ( offsety !== undefined ) ? offsety : 0;
             var group = new osg.MatrixTransform();
-            osg.Matrix.makeTranslate( offset, y, 0, group.getMatrix() );
+            osg.mat4.fromTranslation( group.getMatrix(), [ offset, y, 0 ] );
 
             group.addChild( this._currentEnvironment.getCubemapMipMapped().createFloatCubeMapPackedDebugGeometry() );
             return group;
@@ -1028,7 +1030,7 @@
                 //group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
                 // y up
-                osg.Matrix.makeRotate( -Math.PI / 2, -1, 0, 0, group.getMatrix() );
+                osg.mat4.fromRotation( group.getMatrix(), -Math.PI / 2, [ -1, 0, 0 ] );
 
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' ) );
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.NORMAL_TEXTURE_UNIT, 'normalMap' ) );
@@ -1140,7 +1142,8 @@
 
                 viewer.run();
 
-                osg.Matrix.makePerspective( 30, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
+                osg.mat4.perspective( viewer.getCamera().getProjectionMatrix(), Math.PI / 180 * 30, canvas.width / canvas.height, 0.1, 1000 );
+
 
                 var gui = new window.dat.GUI();
                 var controller;

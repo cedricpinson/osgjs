@@ -4,7 +4,7 @@ var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
 var osg = MACROUTILS;
@@ -86,32 +86,32 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
         var nbElements = size / 3;
         var tangents = new osg.Float32Array( nbElements * 4 );
 
-        var tmp0 = Vec3.create();
-        var tmp1 = Vec3.create();
-        var t3 = Vec3.create();
+        var tmp0 = vec3.create();
+        var tmp1 = vec3.create();
+        var t3 = vec3.create();
 
         for ( var i = 0; i < nbElements; i++ ) {
             var t = this._T.subarray( i * 3, i * 3 + 3 );
             var n = this._N.subarray( i * 3, i * 3 + 3 );
             var b = this._B.subarray( i * 3, i * 3 + 3 );
 
-            Vec3.normalize( n, n );
+            vec3.normalize( n, n );
 
             // Gram-Schmidt orthogonalize
-            // Vec3 t3 = (t - n * (n * t));
+            // vec3 t3 = (t - n * (n * t));
             // t3.normalize();
             // finalTangent = Vec4(t3, 0.0);
             // Calculate handedness
             // finalTangent[3] = (((n ^ t) * b) < 0.0) ? -1.0 : 1.0;
             // The bitangent vector B is then given by B = (N × T) · Tw
 
-            var nt = Vec3.dot( n, t );
-            Vec3.mult( n, nt, tmp1 );
-            Vec3.sub( t, tmp1, tmp0 );
-            Vec3.normalize( tmp0, t3 );
+            var nt = vec3.dot( n, t );
+            vec3.scale( tmp1, n, nt );
+            vec3.sub( tmp0, t, tmp1 );
+            vec3.normalize( t3, tmp0 );
 
-            Vec3.cross( n, t, tmp0 );
-            var sign = Vec3.dot( tmp0, b );
+            vec3.cross( tmp0, n, t );
+            var sign = vec3.dot( tmp0, b );
             sign = sign < 0.0 ? -1.0 : 0.0;
 
             // TODO perf : cache index var id = i * 4;
@@ -152,27 +152,27 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
 
         var vz, vy;
         // TODO perf : use temporary vec
-        var V = Vec3.create();
+        var V = vec3.create();
 
-        var B1 = Vec3.create();
-        var B2 = Vec3.create();
-        var B3 = Vec3.create();
+        var B1 = vec3.create();
+        var B2 = vec3.create();
+        var B3 = vec3.create();
 
-        var T1 = Vec3.create();
-        var T2 = Vec3.create();
-        var T3 = Vec3.create();
+        var T1 = vec3.create();
+        var T2 = vec3.create();
+        var T3 = vec3.create();
 
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
 
 
-        Vec3.set( P2[ 0 ] - P1[ 0 ], uv2[ 0 ] - uv1[ 0 ], uv2[ 1 ] - uv1[ 1 ], v1 );
-        Vec3.set( P3[ 0 ] - P1[ 0 ], uv3[ 0 ] - uv1[ 0 ], uv3[ 1 ] - uv1[ 1 ], v2 );
+        vec3.set( v1, P2[ 0 ] - P1[ 0 ], uv2[ 0 ] - uv1[ 0 ], uv2[ 1 ] - uv1[ 1 ] );
+        vec3.set( v2, P3[ 0 ] - P1[ 0 ], uv3[ 0 ] - uv1[ 0 ], uv3[ 1 ] - uv1[ 1 ] );
 
-        Vec3.cross( v1, v2, V );
+        vec3.cross( V, v1, v2 );
 
         if ( V[ 0 ] !== 0.0 ) {
-            Vec3.normalize( V, V );
+            vec3.normalize( V, V );
             vy = -V[ 1 ] / V[ 0 ];
             vz = -V[ 2 ] / V[ 0 ];
             T1[ 0 ] += vy;
@@ -184,13 +184,13 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
         }
 
 
-        Vec3.set( P2[ 1 ] - P1[ 1 ], uv2[ 0 ] - uv1[ 0 ], uv2[ 1 ] - uv1[ 1 ], v1 );
-        Vec3.set( P3[ 1 ] - P1[ 1 ], uv3[ 0 ] - uv1[ 0 ], uv3[ 1 ] - uv1[ 1 ], v2 );
+        vec3.set( v1, P2[ 1 ] - P1[ 1 ], uv2[ 0 ] - uv1[ 0 ], uv2[ 1 ] - uv1[ 1 ] );
+        vec3.set( v2, P3[ 1 ] - P1[ 1 ], uv3[ 0 ] - uv1[ 0 ], uv3[ 1 ] - uv1[ 1 ] );
 
-        Vec3.cross( v1, v2, V );
+        vec3.cross( V, v1, v2 );
 
         if ( V[ 0 ] !== 0.0 ) {
-            Vec3.normalize( V, V );
+            vec3.normalize( V, V );
             vy = -V[ 1 ] / V[ 0 ];
             vz = -V[ 2 ] / V[ 0 ];
             T1[ 1 ] += vy;
@@ -202,13 +202,13 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
         }
 
 
-        Vec3.set( P2[ 2 ] - P1[ 2 ], uv2[ 0 ] - uv1[ 0 ], uv2[ 1 ] - uv1[ 1 ], v1 );
-        Vec3.set( P3[ 2 ] - P1[ 2 ], uv3[ 0 ] - uv1[ 0 ], uv3[ 1 ] - uv1[ 1 ], v2 );
+        vec3.set( v1, P2[ 2 ] - P1[ 2 ], uv2[ 0 ] - uv1[ 0 ], uv2[ 1 ] - uv1[ 1 ] );
+        vec3.set( v2, P3[ 2 ] - P1[ 2 ], uv3[ 0 ] - uv1[ 0 ], uv3[ 1 ] - uv1[ 1 ] );
 
-        Vec3.cross( v1, v2, V );
+        vec3.cross( V, v1, v2 );
 
         if ( V[ 0 ] !== 0.0 ) {
-            Vec3.normalize( V, V );
+            vec3.normalize( V, V );
             vy = -V[ 1 ] / V[ 0 ];
             vz = -V[ 2 ] / V[ 0 ];
             T1[ 2 ] += vy;
@@ -219,52 +219,52 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
             B3[ 2 ] += vz;
         }
 
-        var tempVec = Vec3.create();
-        var tempVec2 = Vec3.create();
+        var tempVec = vec3.create();
+        var tempVec2 = vec3.create();
 
         var Tdst, Bdst, Ndst;
 
-        Vec3.cross( N1, T1, tempVec );
-        Vec3.cross( tempVec, N1, tempVec2 );
+        vec3.cross( tempVec, N1, T1 );
+        vec3.cross( tempVec2, tempVec, N1 );
         Tdst = this._T.subarray( i0 * 3, i0 * 3 + 3 );
-        Vec3.add( tempVec2, Tdst, Tdst );
+        vec3.add( Tdst, tempVec2, Tdst );
 
-        Vec3.cross( B1, N1, tempVec );
-        Vec3.cross( N1, tempVec, tempVec2 );
+        vec3.cross( tempVec, B1, N1 );
+        vec3.cross( tempVec2, N1, tempVec );
         Bdst = this._B.subarray( i0 * 3, i0 * 3 + 3 );
-        Vec3.add( tempVec2, Bdst, Bdst );
+        vec3.add( Bdst, tempVec2, Bdst );
 
 
-        Vec3.cross( N2, T2, tempVec );
-        Vec3.cross( tempVec, N2, tempVec2 );
+        vec3.cross( tempVec, N2, T2 );
+        vec3.cross( tempVec2, tempVec, N2 );
         Tdst = this._T.subarray( i1 * 3, i1 * 3 + 3 );
-        Vec3.add( tempVec2, Tdst, Tdst );
+        vec3.add( Tdst, tempVec2, Tdst );
 
-        Vec3.cross( B2, N2, tempVec );
-        Vec3.cross( N2, tempVec, tempVec2 );
+        vec3.cross( tempVec, B2, N2 );
+        vec3.cross( tempVec2, N2, tempVec );
         Bdst = this._B.subarray( i1 * 3, i1 * 3 + 3 );
-        Vec3.add( tempVec2, Bdst, Bdst );
+        vec3.add( Bdst, tempVec2, Bdst );
 
 
-        Vec3.cross( N3, T3, tempVec );
-        Vec3.cross( tempVec, N3, tempVec2 );
+        vec3.cross( tempVec, N3, T3 );
+        vec3.cross( tempVec2, tempVec, N3 );
         Tdst = this._T.subarray( i2 * 3, i2 * 3 + 3 );
-        Vec3.add( tempVec2, Tdst, Tdst );
+        vec3.add( Tdst, tempVec2, Tdst );
 
-        Vec3.cross( B3, N3, tempVec );
-        Vec3.cross( N3, tempVec, tempVec2 );
+        vec3.cross( tempVec, B3, N3 );
+        vec3.cross( tempVec2, N3, tempVec );
         Bdst = this._B.subarray( i2 * 3, i2 * 3 + 3 );
-        Vec3.add( tempVec2, Bdst, Bdst );
+        vec3.add( Bdst, tempVec2, Bdst );
 
 
         Ndst = this._N.subarray( i0 * 3, i0 * 3 + 3 );
-        Vec3.add( N1, Ndst, Ndst );
+        vec3.add( Ndst, N1, Ndst );
 
         Ndst = this._N.subarray( i1 * 3, i1 * 3 + 3 );
-        Vec3.add( N2, Ndst, Ndst );
+        vec3.add( Ndst, N2, Ndst );
 
         Ndst = this._N.subarray( i2 * 3, i2 * 3 + 3 );
-        Vec3.add( N3, Ndst, Ndst );
+        vec3.add( Ndst, N3, Ndst );
     }
 
 } );

@@ -10,7 +10,7 @@ var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
 var StateSet = require( 'osg/StateSet' );
 var Node = require( 'osg/Node' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Projection = require( 'osg/Projection' );
 
@@ -226,7 +226,7 @@ ReaderParser.parseSceneGraphDeprecated = function ( node ) {
         setName( newnode, node );
 
         MACROUTILS.extend( newnode, node );
-        Matrix.copy( matrix, newnode.getMatrix() );
+        mat4.copy( newnode.getMatrix(), matrix );
         node = newnode;
     }
 
@@ -235,7 +235,7 @@ ReaderParser.parseSceneGraphDeprecated = function ( node ) {
         newnode = new Projection();
         setName( newnode, node );
         MACROUTILS.extend( newnode, node );
-        Matrix.copy( projection, newnode.setProjectionMatrix() );
+        mat4.copy( newnode.setProjectionMatrix(), projection );
         node = newnode;
     }
 

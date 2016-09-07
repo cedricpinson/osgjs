@@ -131,7 +131,7 @@
 
             var root = new osg.MatrixTransform();
             this._modelNode = root;
-            osg.Matrix.makeRotate( Math.PI, 0, 0, 1, root.getMatrix() );
+            osg.mat4.fromRotation( root.getMatrix(), Math.PI, [ 0, 0, 1 ] );
 
             osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( model ) {
                 root.addChild( model );

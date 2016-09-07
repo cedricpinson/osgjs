@@ -5,7 +5,7 @@ var osgMath = require( 'osg/Math' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var CullSettings = require( 'osg/CullSettings' );
 var CullStack = require( 'osg/CullStack' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var AutoTransform = require( 'osg/AutoTransform' );
 var Projection = require( 'osg/Projection' );
@@ -20,7 +20,7 @@ var Lod = require( 'osg/Lod' );
 var PagedLOD = require( 'osg/PagedLOD' );
 var Camera = require( 'osg/Camera' );
 var TransformEnums = require( 'osg/TransformEnums' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Skeleton = require( 'osgAnimation/Skeleton' );
 var RigGeometry = require( 'osgAnimation/RigGeometry' );
 var Bone = require( 'osgAnimation/Bone' );
@@ -43,7 +43,7 @@ var CullVisitor = function () {
     this._computedNear = Number.POSITIVE_INFINITY;
     this._computedFar = Number.NEGATIVE_INFINITY;
 
-    var lookVector = Vec3.createAndSet( 0.0, 0.0, -1.0 );
+    var lookVector = vec3.fromValues( 0.0, 0.0, -1.0 );
     this._camera = undefined;
     /*jshint bitwise: false */
     this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
@@ -61,7 +61,7 @@ var CullVisitor = function () {
     this._renderBinStack = [];
     this.visitorType = NodeVisitor.CULL_VISITOR;
 
-    this._identityMatrix = Matrix.create();
+    this._identityMatrix = mat4.create();
 
     this._renderer = undefined;
     this._renderStageType = RenderStage;
@@ -110,8 +110,8 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
     },
 
     updateCalculatedNearFar: ( function () {
-        var nearVec = Vec3.create();
-        var farVec = Vec3.create();
+        var nearVec = vec3.create();
+        var farVec = vec3.create();
 
         return function ( matrix, drawable ) {
 
@@ -237,10 +237,103 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
             if ( this._clampProjectionMatrixCallback !== undefined ) {
                 this._clampProjectionMatrixCallback( m, this._computedNear, this._computedFar, this._nearFarRatio );
             } else {
-                Matrix.clampProjectionMatrix( m, this._computedNear, this._computedFar, this._nearFarRatio );
+                this.clampProjectionMatrix( m, this._computedNear, this._computedFar, this._nearFarRatio );
             }
         }
         CullStack.prototype.popProjectionMatrix.call( this );
+    },
+
+
+    clampProjectionMatrix: function ( projection, znear, zfar, nearFarRatio, resultNearFar ) {
+        var epsilon = 1e-6;
+        if ( zfar < znear - epsilon ) {
+            Notify.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar, false, true );
+            return false;
+        }
+
+        var desiredZnear, desiredZfar;
+        if ( zfar < znear + epsilon ) {
+            // znear and zfar are too close together and could cause divide by zero problems
+            // late on in the clamping code, so move the znear and zfar apart.
+            var average = ( znear + zfar ) * 0.5;
+            znear = average - epsilon;
+            zfar = average + epsilon;
+            // OSG_INFO << '_clampProjectionMatrix widening znear and zfar to '<<znear<<' '<<zfar<<std::endl;
+        }
+
+        if ( Math.abs( projection[ 3 ] ) < epsilon &&
+            Math.abs( projection[ 7 ] ) < epsilon &&
+            Math.abs( projection[ 11 ] ) < epsilon ) {
+            // OSG_INFO << 'Orthographic matrix before clamping'<<projection<<std::endl;
+
+            var deltaSpan = ( zfar - znear ) * 0.02;
+            if ( deltaSpan < 1.0 ) {
+                deltaSpan = 1.0;
+            }
+            desiredZnear = znear - deltaSpan;
+            desiredZfar = zfar + deltaSpan;
+
+            // assign the clamped values back to the computed values.
+            znear = desiredZnear;
+            zfar = desiredZfar;
+
+            projection[ 10 ] = -2.0 / ( desiredZfar - desiredZnear );
+            projection[ 14 ] = -( desiredZfar + desiredZnear ) / ( desiredZfar - desiredZnear );
+            // OSG_INFO << 'Orthographic matrix after clamping '<<projection<<std::endl;
+        } else {
+
+            // OSG_INFO << 'Persepective matrix before clamping'<<projection<<std::endl;
+            //std::cout << '_computed_znear'<<_computed_znear<<std::endl;
+            //std::cout << '_computed_zfar'<<_computed_zfar<<std::endl;
+
+            var zfarPushRatio = 1.02;
+            var znearPullRatio = 0.98;
+
+            //znearPullRatio = 0.99;
+
+            desiredZnear = znear * znearPullRatio;
+            desiredZfar = zfar * zfarPushRatio;
+
+            // near plane clamping.
+            var minNearPlane = zfar * nearFarRatio;
+            if ( desiredZnear < minNearPlane ) {
+                desiredZnear = minNearPlane;
+            }
+
+            // assign the clamped values back to the computed values.
+            znear = desiredZnear;
+            zfar = desiredZfar;
+
+            var m22 = projection[ 10 ];
+            var m32 = projection[ 14 ];
+            var m23 = projection[ 11 ];
+            var m33 = projection[ 15 ];
+            var transNearPlane = ( -desiredZnear * m22 + m32 ) / ( -desiredZnear * m23 + m33 );
+            var transFarPlane = ( -desiredZfar * m22 + m32 ) / ( -desiredZfar * m23 + m33 );
+
+            var ratio = Math.abs( 2.0 / ( transNearPlane - transFarPlane ) );
+            var center = -( transNearPlane + transFarPlane ) / 2.0;
+
+            var centerRatio = center * ratio;
+            projection[ 2 ] = projection[ 2 ] * ratio + projection[ 3 ] * centerRatio;
+            projection[ 6 ] = projection[ 6 ] * ratio + projection[ 7 ] * centerRatio;
+            projection[ 10 ] = m22 * ratio + m23 * centerRatio;
+            projection[ 14 ] = m32 * ratio + m33 * centerRatio;
+            // same as
+            // var matrix = [ 1.0, 0.0, 0.0, 0.0,
+            //     0.0, 1.0, 0.0, 0.0,
+            //     0.0, 0.0, ratio, 0.0,
+            //     0.0, 0.0, center * ratio, 1.0
+            // ];
+            // mat4.mul( projection , matrix, projection );
+
+            // OSG_INFO << 'Persepective matrix after clamping'<<projection<<std::endl;
+        }
+        if ( resultNearFar !== undefined ) {
+            resultNearFar[ 0 ] = znear;
+            resultNearFar[ 1 ] = zfar;
+        }
+        return true;
     },
 
     popCameraModelViewProjectionMatrix: function () {
@@ -397,16 +490,16 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
     if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
 
         var lastProjectionMatrix = this.getCurrentProjectionMatrix();
-        Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
+        mat4.mul( projection, lastProjectionMatrix, camera.getProjectionMatrix() );
 
         var lastViewMatrix = this.getCurrentModelViewMatrix();
-        Matrix.mult( lastViewMatrix, camera.getViewMatrix(), modelview );
+        mat4.mul( modelview, lastViewMatrix, camera.getViewMatrix() );
 
     } else {
 
         // absolute
-        Matrix.copy( camera.getViewMatrix(), modelview );
-        Matrix.copy( camera.getProjectionMatrix(), projection );
+        mat4.copy( modelview, camera.getViewMatrix() );
+        mat4.copy( projection, camera.getProjectionMatrix() );
 
     }
 
@@ -514,7 +607,7 @@ CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
 
     var matrix = this._reservedMatrixStack.get();
     var lastMatrixStack = this.getCurrentModelViewMatrix();
-    Matrix.copy( lastMatrixStack, matrix );
+    mat4.copy( matrix, lastMatrixStack );
     node.computeLocalToWorldMatrix( matrix );
     this.pushModelViewMatrix( matrix );
 
@@ -539,7 +632,7 @@ CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
 
     var lastMatrixStack = this.getCurrentProjectionMatrix();
     var matrix = this._reservedMatrixStack.get();
-    Matrix.mult( lastMatrixStack, node.getProjectionMatrix(), matrix );
+    mat4.mul( matrix, lastMatrixStack, node.getProjectionMatrix() );
     this.pushProjectionMatrix( matrix );
 
     var stateset = node.getStateSet();
@@ -609,7 +702,7 @@ CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 
 CullVisitor.prototype[ Geometry.typeID ] = ( function () {
 
-    var tempVec = Vec3.create();
+    var tempVec = vec3.create();
     var loggedOnce = false;
     return function geometryApply( node ) {
 

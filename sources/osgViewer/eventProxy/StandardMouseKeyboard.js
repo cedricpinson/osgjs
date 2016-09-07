@@ -1,5 +1,5 @@
 'use strict';
-var Vec2 = require( 'osg/Vec2' );
+var vec2 = require( 'osg/glMatrix' ).vec2;
 
 
 var StandardMouseKeyboard = function ( viewer ) {
@@ -11,7 +11,7 @@ var StandardMouseKeyboard = function ( viewer ) {
     this._wheelEventNode = undefined;
     this._keyboardEventNode = undefined;
     this._eventList = [ 'mousedown', 'mouseup', 'mouseout', 'mousemove', 'dblclick' ];
-    this._mousePosition = Vec2.create();
+    this._mousePosition = vec2.create();
 };
 
 StandardMouseKeyboard.prototype = {

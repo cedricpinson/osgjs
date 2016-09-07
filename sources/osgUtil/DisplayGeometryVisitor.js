@@ -5,7 +5,7 @@ var Geometry = require( 'osg/Geometry' );
 var RigGeometry = require( 'osgAnimation/RigGeometry' );
 var Uniform = require( 'osg/Uniform' );
 var StateSet = require( 'osg/StateSet' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var Compiler = require( 'osgShader/Compiler' );
 var BufferArray = require( 'osg/BufferArray' );
@@ -179,7 +179,7 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
 
                 } else {
 
-                    var color = Vec3.createAndSet( Math.random(), Math.random(), Math.random() );
+                    var color = vec3.fromValues( Math.random(), Math.random(), Math.random() );
                     st.addUniform( Uniform.createFloat3( color, 'uColorDebug' ) );
                     st.setShaderGeneratorName( 'debugGeometry' );
 
@@ -210,7 +210,7 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
 
                     mt.addChild( geo );
                     this.nodePath[ this.nodePath.length - 2 ].addChild( mt );
-                    color = Vec3.createAndSet( color[ 0 ] * 0.8, color[ 1 ] * 0.8, color[ 2 ] * 0.8 );
+                    color = vec3.fromValues( color[ 0 ] * 0.8, color[ 1 ] * 0.8, color[ 2 ] * 0.8 );
                     geo.getOrCreateStateSet().addUniform( Uniform.createFloat3( color, 'uColorDebug' ) );
                     mt.setStateSet( this._stCenter );
 

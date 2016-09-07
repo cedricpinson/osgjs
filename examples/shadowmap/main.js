@@ -237,8 +237,8 @@
                     lightPos[ 1 ] = y * this._positionY;
                     lightPos[ 2 ] = z * this._positionZ;
                     // lightDir = [ 0.0, -15.0, -1.0 ];
-                    lightDir = osg.Vec3.sub( lightTarget, lightPos, [] );
-                    osg.Vec3.normalize( lightDir, lightDir );
+                    lightDir = osg.vec3.sub( osg.vec3.create(), lightTarget, lightPos );
+                    osg.vec3.normalize( lightDir, lightDir );
                     break;
                 case 'Translate':
                     lightPos[ 0 ] = x * this._positionZ;
@@ -248,13 +248,13 @@
                     break;
                 case 'Nod':
                     lightTarget[ 1 ] = y * 180.0;
-                    lightDir = osg.Vec3.sub( lightTarget, lightPos, [] );
-                    osg.Vec3.normalize( lightDir, lightDir );
+                    lightDir = osg.vec3.sub( osg.vec3.create(), lightTarget, lightPos );
+                    osg.vec3.normalize( lightDir, lightDir );
                     //lightDir = [ 1.0 * x, -5.0 * x, -1.0 ];
                     break;
                 }
 
-                osg.Vec3.normalize( lightDir, lightDir );
+                osg.vec3.normalize( lightDir, lightDir );
 
                 if ( this._directLightChange ) {
                     var lightSource = node;
@@ -263,7 +263,7 @@
 
                     //best don't overwrite the direction bit on pos[3]
                     // l.setPosition( lightPos );
-                    osg.Vec3.copy( lightPos, l.getPosition() );
+                    osg.vec3.copy( l.getPosition(), lightPos );
 
                 }
             }
@@ -274,23 +274,23 @@
             //
             var up = this._up; //   camera up
             // Check it's not coincident with lightDir
-            if ( Math.abs( osg.Vec3.dot( up, lightDir ) ) >= 1.0 ) {
+            if ( Math.abs( osg.vec3.dot( up, lightDir ) ) >= 1.0 ) {
                 // another camera up
                 up = [ 1.0, 0.0, 0.0 ];
             }
 
             var lightTargetDebug = this._lightTarget;
-            //osg.Vec3.mult( lightDir, 50, lightTargetDebug );
-            //osg.Vec3.add( lightPos, lightTargetDebug, lightTargetDebug );
+            //osg.vec3.mult( lightDir, 50, lightTargetDebug );
+            //osg.vec3.add( lightPos, lightTargetDebug, lightTargetDebug );
 
             var lightMatrix = this._debugNode.getMatrix();
-            osg.Matrix.makeLookAt( lightPos, lightTargetDebug, up, lightMatrix );
-            osg.Matrix.inverse( lightMatrix, lightMatrix );
+            osg.mat4.lookAt( lightMatrix, lightPos, lightTargetDebug, up );
+            osg.mat4.invert( lightMatrix, lightMatrix );
             //
 
             if ( !this._directLightChange ) {
                 var lightNode = node.getParents()[ 0 ];
-                osg.Matrix.copy( lightMatrix, lightNode.getMatrix() );
+                osg.mat4.copy( lightNode.getMatrix(), lightMatrix );
             }
             // end light debug
 
@@ -883,11 +883,11 @@
 
 
             var matrixDest = this._composerDebugCamera.getProjectionMatrix();
-            osg.Matrix.makeOrtho( 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5, matrixDest );
+            osg.mat4.ortho( matrixDest, 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5 );
             this._composerDebugCamera.setProjectionMatrix( matrixDest ); //not really needed until we do matrix caches
 
             matrixDest = this._composerDebugCamera.getViewMatrix();
-            osg.Matrix.makeTranslate( 0, 0, 0, matrixDest );
+            osg.mat4.fromTranslation( matrixDest, [ 0, 0, 0 ] );
             this._composerDebugCamera.setViewMatrix( matrixDest );
             this._composerDebugCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
             this._composerDebugCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
@@ -980,8 +980,8 @@
                     var modelSubNodeTrans = new osg.MatrixTransform();
                     var modelSubNode = new osg.Node();
                     modelSubNode._name = 'material-test_model_1';
-                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.1, 0.1, 0.1, [] ) );
-                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0, 0, 0 );
+                    modelSubNodeTrans.setMatrix( osg.mat4.fromScaling( osg.mat4.create(), [ 0.1, 0.1, 0.1 ] ) );
+                    osg.mat4.setTranslation( modelSubNodeTrans.getMatrix(), [ 0, 0, 0 ] );
                     modelSubNodeTrans.addChild( model );
                     modelSubNode.addChild( modelSubNodeTrans );
                     modelNode.addChild( modelSubNode );
@@ -990,8 +990,8 @@
                     modelSubNode = new osg.Node();
                     modelSubNodeTrans = new osg.MatrixTransform();
                     modelSubNode._name = 'material-test_model_3';
-                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.3, 0.3, 0.3, [] ) );
-                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), dist, 0, 0 );
+                    modelSubNodeTrans.setMatrix( osg.mat4.fromScaling( osg.mat4.create(), [ 0.3, 0.3, 0.3 ] ) );
+                    osg.mat4.setTranslation( modelSubNodeTrans.getMatrix(), [ dist, 0, 0 ] );
                     modelSubNodeTrans.addChild( model );
                     modelSubNode.addChild( modelSubNodeTrans );
                     modelNode.addChild( modelSubNode );
@@ -999,8 +999,8 @@
                         modelSubNode = new osg.Node();
                         modelSubNodeTrans = new osg.MatrixTransform();
                         modelSubNode._name = 'material-test_model_3';
-                        modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
-                        osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), -dist, 0, -5 );
+                        modelSubNodeTrans.setMatrix( osg.mat4.fromScaling( osg.mat4.create(), [ 0.5, 0.5, 0.5 ] ) );
+                        osg.mat4.setTranslation( modelSubNodeTrans.getMatrix(), [ -dist, 0, -5 ] );
                         modelSubNodeTrans.addChild( model );
                         modelSubNode.addChild( modelSubNodeTrans );
                         modelNode.addChild( modelSubNode );
@@ -1008,8 +1008,8 @@
                         modelSubNode = new osg.Node();
                         modelSubNode._name = 'material-test_model_2';
                         modelSubNodeTrans = new osg.MatrixTransform();
-                        modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.7, 0.7, 0.7, [] ) );
-                        osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), dist * 2, 0.7, 0.7 );
+                        modelSubNodeTrans.setMatrix( osg.mat4.fromScaling( osg.mat4.create(), [ 0.7, 0.7, 0.7 ] ) );
+                        osg.mat4.setTranslation( modelSubNodeTrans.getMatrix(), [ dist * 2, 0.7, 0.7 ] );
                         modelSubNodeTrans.addChild( model );
                         modelSubNode.addChild( modelSubNodeTrans );
                         modelNode.addChild( modelSubNode );
@@ -1028,7 +1028,7 @@
             var cube = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size * 10 );
 
             var cubeSubNodeTrans = new osg.MatrixTransform();
-            cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( 0, 0, dist / 2, [] ) );
+            cubeSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ 0, 0, dist / 2 ] ) );
             var cubeSubNode = new osg.Node();
             cubeSubNode.addChild( cubeSubNodeTrans );
             cubeSubNodeTrans.addChild( cube );
@@ -1038,7 +1038,7 @@
             //cubeNode.addChild( cubeSubNode );
             if ( !this._config[ 'basicScene' ] ) {
                 cubeSubNodeTrans = new osg.MatrixTransform();
-                cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
+                cubeSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ dist, 0, 0 ] ) );
                 cubeSubNode = new osg.Node();
                 cubeSubNode.addChild( cubeSubNodeTrans );
                 cubeSubNodeTrans.addChild( cube );
@@ -1046,7 +1046,7 @@
                 cubeNode.addChild( cubeSubNode );
 
                 cubeSubNodeTrans = new osg.MatrixTransform();
-                cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, dist, 0, [] ) );
+                cubeSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ dist, dist, 0 ] ) );
                 cubeSubNode = new osg.Node();
                 cubeSubNode.addChild( cubeSubNodeTrans );
                 cubeSubNodeTrans.addChild( cube );
@@ -1054,7 +1054,7 @@
                 cubeNode.addChild( cubeSubNode );
 
                 cubeSubNodeTrans = new osg.MatrixTransform();
-                cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( 0, dist, 0, [] ) );
+                cubeSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ 0, dist, 0 ] ) );
                 cubeSubNode = new osg.Node();
                 cubeSubNode.addChild( cubeSubNodeTrans );
                 cubeSubNodeTrans.addChild( cube );
@@ -1062,7 +1062,7 @@
                 cubeNode.addChild( cubeSubNode );
 
                 cubeSubNodeTrans = new osg.MatrixTransform();
-                cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( -dist, dist, -dist / 2, [] ) );
+                cubeSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ -dist, dist, -dist / 2 ] ) );
                 cubeSubNode = new osg.Node();
                 cubeSubNode.addChild( cubeSubNodeTrans );
                 cubeSubNodeTrans.addChild( cube );
@@ -1103,7 +1103,7 @@
             for ( var wG = 0; wG < numPlanes; wG++ ) {
                 for ( var wH = 0; wH < numPlanes; wH++ ) {
                     var groundSubNodeTrans = new osg.MatrixTransform();
-                    groundSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( wG * groundSize - groundSize * numPlanes * 0.5, wH * groundSize - groundSize * numPlanes * 0.5, -5.0, [] ) );
+                    groundSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ wG * groundSize - groundSize * numPlanes * 0.5, wH * groundSize - groundSize * numPlanes * 0.5, -5.0 ] ) );
                     // only node are culled in CullVisitor frustum culling
                     groundSubNode = new osg.Node();
                     groundSubNode.setName( 'groundSubNode_' + wG + '_' + wH );
@@ -1201,8 +1201,8 @@
             ////////////
             //light.setPosition( position );
             var dir = [ 0, 0, 0 ];
-            osg.Vec3.sub( position, target, dir );
-            osg.Vec3.normalize( dir, dir );
+            osg.vec3.sub( dir, position, target );
+            osg.vec3.normalize( dir, dir );
             //light.setDirection( dir );
             lightSource.addUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode, position, dir ) );
 

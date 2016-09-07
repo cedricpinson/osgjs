@@ -1,5 +1,5 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
 
 /**
@@ -29,7 +29,7 @@ var PrimitiveFunctor = function ( geom, cb, vertices ) {
 
 PrimitiveFunctor.prototype = {
     applyDrawElementsPoints: ( function () {
-        var v = Vec3.create();
+        var v = vec3.create();
         return function ( count, indexes ) {
             var cb = this._cb();
             for ( var i = 0; i < count; ++i ) {
@@ -42,8 +42,8 @@ PrimitiveFunctor.prototype = {
         };
     } )(),
     applyDrawElementsLines: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
         return function ( count, indexes ) {
             var cb = this._cb();
             for ( var i = 0; i < count - 1; i += 2 ) {
@@ -61,8 +61,8 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawElementsLineStrip: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
         return function ( count, indexes ) {
             var cb = this._cb();
             for ( var i = 0; i < count - 1; ++i ) {
@@ -80,8 +80,8 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawElementsLineLoop: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
         return function ( count, indexes ) {
             var cb = this._cb();
             var last = count - 1;
@@ -109,9 +109,9 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawElementsTriangles: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
-        var v3 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var v3 = vec3.create();
         return function ( count, indexes ) {
             var cb = this._cb();
             for ( var i = 0; i < count; i += 3 ) {
@@ -133,9 +133,9 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawElementsTriangleStrip: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
-        var v3 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var v3 = vec3.create();
         return function ( count, indexes ) {
             var cb = this._cb();
             for ( var i = 2, pos = 0; i < count; ++i, ++pos ) {
@@ -161,9 +161,9 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawElementsTriangleFan: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
-        var v3 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var v3 = vec3.create();
         return function ( count, indexes ) {
             var cb = this._cb();
             var first = indexes[ 0 ];
@@ -185,7 +185,7 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawArraysPoints: ( function () {
-        var v = Vec3.create();
+        var v = vec3.create();
         return function ( first, count ) {
             var cb = this._cb();
             for ( var i = first; i < first + count; ++i ) {
@@ -199,8 +199,8 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawArraysLines: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
         return function ( first, count ) {
             var cb = this._cb();
             for ( var i = first; i < first + count - 1; i += 2 ) {
@@ -218,8 +218,8 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawArraysLineStrip: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
         return function ( first, count ) {
             var cb = this._cb();
             for ( var i = first; i < first + count - 1; ++i ) {
@@ -236,8 +236,8 @@ PrimitiveFunctor.prototype = {
         };
     } )(),
     applyDrawArraysLineLoop: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
         return function ( first, count ) {
             var cb = this._cb();
             var last = first + count - 1;
@@ -265,9 +265,9 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawArraysTriangles: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
-        var v3 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var v3 = vec3.create();
         return function ( first, count ) {
             var cb = this._cb();
             for ( var i = first; i < first + count; i += 3 ) {
@@ -289,9 +289,9 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawArraysTriangleStrip: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
-        var v3 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var v3 = vec3.create();
         return function ( first, count ) {
             var cb = this._cb();
             for ( var i = 2, pos = first; i < count; ++i, ++pos ) {
@@ -317,9 +317,9 @@ PrimitiveFunctor.prototype = {
     } )(),
 
     applyDrawArraysTriangleFan: ( function () {
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
-        var v3 = Vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var v3 = vec3.create();
         return function ( first, count ) {
             var cb = this._cb();
             for ( var i = 2, pos = first + 1; i < count; ++i, ++pos ) {

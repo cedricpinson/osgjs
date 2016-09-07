@@ -2,9 +2,9 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var Matrix = require( 'osg/Matrix' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec3 = require( 'osg/Vec3' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec2 = require( 'osg/glMatrix' ).vec2;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var BoundingSphere = require( 'osg/BoundingSphere' );
 
 /**
@@ -74,12 +74,12 @@ Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.pr
     projectBoundingSphere: ( function () {
         // from http://www.iquilezles.org/www/articles/sphereproj/sphereproj.htm
         // Sample code at http://www.shadertoy.com/view/XdBGzd?
-        var o = Vec3.create();
+        var o = vec3.create();
         return function ( sph, camMatrix, fle ) {
-            Matrix.transformVec3( camMatrix, sph.center(), o );
+            vec3.transformMat4( o, sph.center(), camMatrix );
             var r2 = sph.radius2();
             var z2 = o[ 2 ] * o[ 2 ];
-            var l2 = Vec3.length2( o );
+            var l2 = vec3.sqrLen( o );
             var area = -Math.PI * fle * fle * r2 * Math.sqrt( Math.abs( ( l2 - r2 ) / ( r2 - z2 ) ) ) / ( r2 - z2 );
             return area;
         };
@@ -98,7 +98,7 @@ Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.pr
             var max = 0.0;
             if ( this._range.lenght > 0 )
                 max = this._range[ this._range.length - 1 ][ 1 ];
-            r.push( Vec2.createAndSet( max, max ) );
+            r.push( vec2.fromValues( max, max ) );
             this._range.push( r );
         }
         return true;
@@ -109,7 +109,7 @@ Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.pr
 
         if ( this.children.length > this._range.length ) {
             var r = [];
-            r.push( Vec2.createAndSet( min, min ) );
+            r.push( vec2.fromValues( min, min ) );
             this._range.push( r );
         }
         this._range[ this.children.length - 1 ][ 0 ] = min;
@@ -121,9 +121,9 @@ Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.pr
 
         // avoid to generate variable on the heap to limit garbage collection
         // instead create variable and use the same each time
-        var zeroVector = Vec3.create();
-        var eye = Vec3.create();
-        var viewModel = Matrix.create();
+        var zeroVector = vec3.create();
+        var eye = vec3.create();
+        var viewModel = mat4.create();
 
         return function ( visitor ) {
             var traversalMode = visitor.traversalMode;
@@ -140,11 +140,11 @@ Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.pr
             case ( NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ):
                 var requiredRange = 0;
                 var matrix = visitor.getCurrentModelViewMatrix();
-                Matrix.inverse( matrix, viewModel );
+                mat4.invert( viewModel, matrix );
                 // Calculate distance from viewpoint
                 if ( this._rangeMode === Lod.DISTANCE_FROM_EYE_POINT ) {
-                    Matrix.transformVec3( viewModel, zeroVector, eye );
-                    var d = Vec3.distance( eye, this.getBound().center() );
+                    vec3.transformMat4( eye, zeroVector, viewModel );
+                    var d = vec3.distance( this.getBound().center(), eye );
                     requiredRange = d * visitor.getLODScale();
                 } else {
                     // Let's calculate pixels on screen

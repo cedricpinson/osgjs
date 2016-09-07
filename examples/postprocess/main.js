@@ -23,7 +23,7 @@
             this.update = function ( node, nv ) {
                 var currentTime = nv.getFrameStamp().getSimulationTime();
                 var x = Math.cos( currentTime );
-                osg.Matrix.makeRotate( -x, 0, 0, 1, node.getMatrix() );
+                osg.mat4.fromRotation( node.getMatrix(), -x, [ 0, 0, 1 ] );
                 node.traverse( nv );
             };
         };
@@ -32,8 +32,9 @@
         // create the camera that render the scene
         var camera = new osg.Camera();
         camera.setName( 'scene' );
-        camera.setProjectionMatrix( osg.Matrix.makePerspective( 50, quadSize[ 0 ], near, far, [] ) );
-        camera.setViewMatrix( osg.Matrix.makeLookAt( [ 0, -10, 0 ], [ 0, 0, 0 ], [ 0, 0, 1 ], [] ) );
+        camera.setProjectionMatrix( osg.mat4.perspective( osg.mat4.create(), Math.PI / 180 * 50, quadSize[ 0 ], near, far ) );
+
+        camera.setViewMatrix( osg.mat4.lookAt( osg.mat4.create(), [ 0, -10, 0 ], [ 0, 0, 0 ], [ 0, 0, 1 ] ) );
         camera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
         camera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
         camera.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );

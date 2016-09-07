@@ -1,6 +1,6 @@
 'use strict';
 var mockup = require( 'tests/mockup/mockup' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Node = require( 'osg/Node' );
 var Timer = require( 'osg/Timer' );
 var Viewer = require( 'osgViewer/Viewer' );
@@ -20,13 +20,13 @@ module.exports = function () {
         var root = new Node();
 
         // dreaded camera no modelview
-        cullVisitor.pushProjectionMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
+        cullVisitor.pushProjectionMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
 
         mockupBench.addScene( root, 20, false, false );
 
-        var fake = Matrix.create();
+        var fake = mat4.create();
         // dreaded camera no modelview
         cullVisitor.pushProjectionMatrix( fake );
         cullVisitor.pushModelViewMatrix( fake );
@@ -62,13 +62,13 @@ module.exports = function () {
         var root = new Node();
 
         // dreaded camera no modelview
-        cullVisitor.pushProjectionMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
+        cullVisitor.pushProjectionMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
 
         mockupBench.addScene( root, 20, false, true );
 
-        var fake = Matrix.create();
+        var fake = mat4.create();
         // dreaded camera no modelview
         cullVisitor.pushProjectionMatrix( fake );
         cullVisitor.pushModelViewMatrix( fake );
@@ -104,13 +104,13 @@ module.exports = function () {
         var root = new Node();
 
         // dreaded camera no modelview
-        cullVisitor.pushProjectionMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
+        cullVisitor.pushProjectionMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
 
         mockupBench.addScene( root, 20, true, true );
 
-        var fake = Matrix.create();
+        var fake = mat4.create();
         // dreaded camera no modelview
         cullVisitor.pushProjectionMatrix( fake );
         cullVisitor.pushModelViewMatrix( fake );
@@ -151,15 +151,15 @@ module.exports = function () {
 
 
         // dreaded camera no modelview
-        cullVisitor.pushProjectionMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
+        cullVisitor.pushProjectionMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
 
         mockupBench.addScene( root, 20, true, true );
 
         viewer.setSceneData( root );
 
-        var fake = Matrix.create();
+        var fake = mat4.create();
         // dreaded camera no modelview
         cullVisitor.pushProjectionMatrix( fake );
         cullVisitor.pushModelViewMatrix( fake );
@@ -207,15 +207,15 @@ module.exports = function () {
 
 
         // dreaded camera no modelview
-        cullVisitor.pushProjectionMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
-        cullVisitor.pushModelViewMatrix( Matrix.create() );
+        cullVisitor.pushProjectionMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
+        cullVisitor.pushModelViewMatrix( mat4.create() );
 
         mockupBench.addScene( root, 20, true, true );
 
         viewer.setSceneData( root );
 
-        var fake = Matrix.create();
+        var fake = mat4.create();
         // dreaded camera no modelview
         cullVisitor.pushProjectionMatrix( fake );
         cullVisitor.pushModelViewMatrix( fake );

@@ -2,7 +2,7 @@
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var Camera = require( 'osg/Camera' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var TransformEnums = require( 'osg/TransformEnums' );
 
 
@@ -10,7 +10,7 @@ module.exports = function () {
 
     test( 'Camera', function () {
 
-        var matrix = Matrix.makeOrtho( -1, 1, -1, 1, -2, 2, Matrix.create() );
+        var matrix = mat4.ortho( mat4.create(), -1, 1, -1, 1, -2, 2 );
         var camera = new Camera();
         camera.setProjectionMatrixAsOrtho( -1, 1, -1, 1, -2, 2 );
         assert.equalVector( matrix, camera.getProjectionMatrix(), 'check Camera.setProjectionMatrixAsOrtho' );
@@ -18,32 +18,32 @@ module.exports = function () {
 
     test( 'Camera absolute vs relative', function () {
 
-        var rotation = Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
-        var translate = Matrix.makeTranslate( 1, 0, 0, Matrix.create() );
-        var invRotation = Matrix.create();
-        Matrix.inverse( rotation, invRotation );
+        var rotation = mat4.fromRotation( mat4.create(), -Math.PI * 0.5, [ 1.0, 0.0, 0.0 ] );
+        var translate = mat4.fromTranslation( mat4.create(), [ 1, 0, 0 ] );
+        var invRotation = mat4.create();
+        mat4.invert( invRotation, rotation );
 
 
         var camera = new Camera();
-        Matrix.copy( rotation, camera.getViewMatrix() );
+        mat4.copy( camera.getViewMatrix(), rotation );
 
-        var test = Matrix.create();
+        var test = mat4.create();
 
-        Matrix.copy( translate, test );
+        mat4.copy( test, translate );
         camera.computeLocalToWorldMatrix( test );
-        assert.equalVector( test, Matrix.mult( translate, rotation, Matrix.create() ), 'Should expect Translation * Rotation' );
+        assert.equalVector( test, mat4.mul( mat4.create(), translate, rotation ), 'Should expect Translation * Rotation' );
 
-        Matrix.copy( translate, test );
+        mat4.copy( test, translate );
         camera.computeWorldToLocalMatrix( test );
-        assert.equalVector( test, Matrix.mult( translate, invRotation, Matrix.create() ), 'Should expect Translation * invRotation' );
+        assert.equalVector( test, mat4.mul( mat4.create(), translate, invRotation ), 'Should expect Translation * invRotation' );
 
         camera.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
 
-        Matrix.copy( translate, test );
+        mat4.copy( test, translate );
         camera.computeLocalToWorldMatrix( test );
         assert.equalVector( test, rotation, 'Should expect Rotation' );
 
-        Matrix.copy( translate, test );
+        mat4.copy( test, translate );
         camera.computeWorldToLocalMatrix( test );
         assert.equalVector( test, invRotation, 'Should expect invRotation' );
 

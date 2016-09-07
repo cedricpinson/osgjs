@@ -1,6 +1,6 @@
 'use strict';
 var osgMath = require( 'osg/Math' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
 
 
@@ -11,16 +11,16 @@ var PolytopeIntersection = function ( index, candidates, candidatesMasks, refere
     this._numPoints = 0;
     this._points = [];
     this._maxNumIntersections = 6;
-    this._center = Vec3.create();
+    this._center = vec3.create();
     for ( var i = 0, j = candidates.length; i < j; i++ ) {
         if ( candidatesMasks[ i ] === 0 ) continue;
-        this._points[ this._numPoints++ ] = Vec3.copy( candidates[ i ], Vec3.create() );
-        Vec3.add( this._center, candidates[ i ], this._center );
+        this._points[ this._numPoints++ ] = vec3.clone( candidates[ i ] );
+        vec3.add( this._center, this._center, candidates[ i ] );
         var distance = referencePlane[ 0 ] * candidates[ i ][ 0 ] + referencePlane[ 1 ] * candidates[ i ][ 1 ] + referencePlane[ 2 ] * candidates[ i ][ 2 ] + referencePlane[ 3 ];
         if ( distance > this._maxDistance ) this._maxDistance = distance;
         if ( this._numPoints === this._maxNumIntesections ) break;
     }
-    Vec3.mult( this._center, 1 / this._numPoints, this._center );
+    vec3.scale( this._center, this._center, 1 / this._numPoints );
     this._distance = referencePlane[ 0 ] * this._center[ 0 ] + referencePlane[ 1 ] * this._center[ 1 ] + referencePlane[ 2 ] * this._center[ 2 ] + referencePlane[ 3 ];
     this.nodePath = nodePath;
 };
@@ -110,7 +110,7 @@ PolytopePrimitiveIntersector.prototype = {
     },
 
     intersectPoint: ( function () {
-        var hit = Vec3.create();
+        var hit = vec3.create();
         return function ( v ) {
             this._index++;
             if ( ( this._dimensionMask & ( 1 << 0 ) ) === 0 ) return;
@@ -127,7 +127,7 @@ PolytopePrimitiveIntersector.prototype = {
             this._candidates = [];
             this._candidatesMasks = [];
             // Intersection found: Copy the value and push it
-            Vec3.copy( v, hit );
+            vec3.copy( hit, v );
             this._candidates.push( hit );
             this._candidatesMasks.push( this._planesMask );
             this._intersections.push( new PolytopeIntersection( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ) );
@@ -137,7 +137,7 @@ PolytopePrimitiveIntersector.prototype = {
 
     intersectLine: ( function () {
 
-        var hit = Vec3.create();
+        var hit = vec3.create();
         return function ( v1, v2 ) {
             this._index++;
             if ( ( this._dimensionMask & ( 1 << 1 ) ) === 0 ) return;
@@ -163,34 +163,35 @@ PolytopePrimitiveIntersector.prototype = {
                 if ( d1IsNegative ) v1Inside = false;
                 if ( d2IsNegative ) v2Inside = false;
                 if ( d1 === 0.0 ) {
-                    Vec3.copy( v1, hit );
+                    vec3.copy( hit, v1 );
                     this._candidates.push( hit );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( d2 === 0.0 ) {
-                    Vec3.copy( v2, hit );
+                    vec3.copy( hit, v2 );
                     this._candidates.push( hit );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( d1IsNegative && !d2IsNegative ) {
                     //v1-(v2-v1)*(d1/(-d1+d2))) )
-                    Vec3.sub( v2, v1, hit );
-                    Vec3.mult( hit, d1 / ( -d1 + d2 ), hit );
-                    Vec3.sub( v1, hit, hit );
+                    vec3.sub( hit, v2, v1 );
+                    vec3.scale( hit, hit, d1 / ( -d1 + d2 ) );
+                    vec3.sub( hit, v1, hit );
                     this._candidates.push( hit );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( !d1IsNegative && d2IsNegative ) {
                     //(v1+(v2-v1)*(d1/(d1-d2)))
-                    Vec3.sub( v2, v1, hit );
-                    Vec3.mult( hit, d1 / ( d1 - d2 ), hit );
-                    Vec3.add( v1, hit, hit );
+                    vec3.sub( hit, v2, v1 );
+
+                    vec3.scaleAndAdd( hit, v1, hit, d1 / ( d1 - d2 ) );
+
                     this._candidates.push( hit );
                     this._candidatesMasks.push( selectorMask );
                 }
             }
 
             if ( insideMask === this._planesMask ) {
-                this._candidates.push( Vec3.copy( v1, Vec3.create() ) );
+                this._candidates.push( vec3.clone( v1 ) );
                 this._candidatesMasks.push( this._planesMask );
-                this._candidates.push( Vec3.copy( v2, Vec3.create() ) );
+                this._candidates.push( vec3.clone( v2 ) );
                 this._candidatesMasks.push( this._planesMask );
                 this._intersections.push( new PolytopeIntersection( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ) );
                 return;
@@ -200,11 +201,11 @@ PolytopePrimitiveIntersector.prototype = {
             if ( numCands > 0 ) {
                 if ( v1Inside ) {
                     this._candidatesMasks.push( this._planesMask );
-                    this._candidates.push( Vec3.copy( v1, Vec3.create() ) );
+                    this._candidates.push( vec3.clone( v1 ) );
                 }
                 if ( v2Inside ) {
                     this._candidatesMasks.push( this._planesMask );
-                    this._candidates.push( Vec3.copy( v2, Vec3.create() ) );
+                    this._candidates.push( vec3.clone( v2 ) );
                 }
                 this._intersections.push( new PolytopeIntersection( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ) );
             }
@@ -213,14 +214,14 @@ PolytopePrimitiveIntersector.prototype = {
 
     intersectTriangle: ( function () {
 
-        var tmpHit = Vec3.create();
+        var tmpHit = vec3.create();
         // Only needed for special case, should we move it to a new function?
-        var e1 = Vec3.create();
-        var e2 = Vec3.create();
-        var point = Vec3.create();
-        var p = Vec3.create();
-        var s = Vec3.create();
-        var q = Vec3.create();
+        var e1 = vec3.create();
+        var e2 = vec3.create();
+        var point = vec3.create();
+        var p = vec3.create();
+        var s = vec3.create();
+        var q = vec3.create();
         return function ( v1, v2, v3 ) {
             this._index++;
             if ( ( this._dimensionMask & ( 1 << 2 ) ) === 0 ) return;
@@ -246,72 +247,75 @@ PolytopePrimitiveIntersector.prototype = {
                 }
                 // edge v1-v2 intersects
                 if ( d1 === 0.0 ) {
-                    Vec3.copy( v1, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.copy( tmpHit, v1 );
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( d2 === 0.0 ) {
-                    Vec3.copy( v2, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.copy( tmpHit, v2 );
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( d1IsNegative && !d2IsNegative ) {
                     //v1-(v2-v1)*(d1/(-d1+d2))) )
-                    Vec3.sub( v2, v1, tmpHit );
-                    Vec3.mult( tmpHit, d1 / ( -d1 + d2 ), tmpHit );
-                    Vec3.sub( v1, tmpHit, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.sub( tmpHit, v2, v1 );
+                    vec3.scale( tmpHit, tmpHit, d1 / ( -d1 + d2 ) );
+                    vec3.sub( tmpHit, v1, tmpHit );
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( !d1IsNegative && d2IsNegative ) {
                     //(v1+(v2-v1)*(d1/(d1-d2)))
-                    Vec3.sub( v2, v1, tmpHit );
-                    Vec3.mult( tmpHit, d1 / ( d1 - d2 ), tmpHit );
-                    Vec3.add( v1, tmpHit, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.sub( tmpHit, v2, v1 );
+
+                    vec3.scaleAndAdd( tmpHit, v1, tmpHit, d1 / ( d1 - d2 ) );
+
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 }
                 // edge v1-v3 intersects
                 if ( d3 === 0.0 ) {
-                    Vec3.copy( v3, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.copy( tmpHit, v3 );
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( d1IsNegative && !d3IsNegative ) {
                     // v1-(v3-v1)*(d1/(-d1+d3))
-                    Vec3.sub( v3, v1, tmpHit );
-                    Vec3.mult( tmpHit, d1 / ( -d1 + d3 ), tmpHit );
-                    Vec3.sub( v1, tmpHit, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.sub( tmpHit, v3, v1 );
+                    vec3.scale( tmpHit, tmpHit, d1 / ( -d1 + d3 ) );
+                    vec3.sub( tmpHit, v1, tmpHit );
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( !d1IsNegative && d3IsNegative ) {
                     // v1+(v3-v1)*(d1/(d1-d3))
-                    Vec3.sub( v3, v1, tmpHit );
-                    Vec3.mult( tmpHit, d1 / ( d1 - d3 ), tmpHit );
-                    Vec3.add( v1, tmpHit, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.sub( tmpHit, v3, v1 );
+
+                    vec3.scaleAndAdd( tmpHit, v1, tmpHit, d1 / ( d1 - d3 ) );
+
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 }
                 // edge v2-v3 intersects
                 if ( d2IsNegative && !d3IsNegative ) {
                     // v2-(v3-v2)*(d2/(-d2+d3))
-                    Vec3.sub( v3, v2, tmpHit );
-                    Vec3.mult( tmpHit, d2 / ( -d2 + d3 ), tmpHit );
-                    Vec3.sub( v2, tmpHit, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.sub( tmpHit, v3, v2 );
+                    vec3.scale( tmpHit, tmpHit, d2 / ( -d2 + d3 ) );
+                    vec3.sub( tmpHit, v2, tmpHit );
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 } else if ( !d2IsNegative && d3IsNegative ) {
                     //v2+(v3-v2)*(d2/(d2-d3))
-                    Vec3.sub( v3, v2, tmpHit );
-                    Vec3.mult( tmpHit, d2 / ( d2 - d3 ), tmpHit );
-                    Vec3.add( v2, tmpHit, tmpHit );
-                    this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
+                    vec3.sub( tmpHit, v3, v2 );
+
+                    vec3.scaleAndAdd( tmpHit, v2, tmpHit, d2 / ( d2 - d3 ) );
+
+                    this._candidates.push( vec3.clone( tmpHit ) );
                     this._candidatesMasks.push( selectorMask );
                 }
             }
             if ( insideMask === this._planesMask ) {
                 // triangle lies inside of all planes
-                this._candidates.push( Vec3.copy( v1, Vec3.create() ) );
+                this._candidates.push( vec3.clone( v1 ) );
                 this._candidatesMasks.push( this._planesMask );
-                this._candidates.push( Vec3.copy( v2, Vec3.create() ) );
+                this._candidates.push( vec3.clone( v2 ) );
                 this._candidatesMasks.push( this._planesMask );
-                this._candidates.push( Vec3.copy( v3, Vec3.create() ) );
+                this._candidates.push( vec3.clone( v3 ) );
                 this._candidatesMasks.push( this._planesMask );
                 this._intersections.push( new PolytopeIntersection( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ) );
                 return;
@@ -329,30 +333,31 @@ PolytopePrimitiveIntersector.prototype = {
             this._candidates = [];
             // check all polytope lines against the triangle
             // use algorithm from "Real-time rendering" (second edition) pp.580
-            //var e1= Vec3.create();
-            //var e2= Vec3.create();
+            //var e1= vec3.create();
+            //var e2= vec3.create();
 
-            Vec3.sub( v2, v1, e1 );
-            Vec3.sub( v3, v1, e2 );
+            vec3.sub( e1, v2, v1 );
+            vec3.sub( e2, v3, v1 );
             for ( i = 0; i < lines.length; ++i ) {
-                //var point = Vec3.create();
-                //var p = Vec3.create(); 
-                Vec3.cross( lines[ i ]._dir, e2, p );
-                var a = Vec3.dot( e1, p );
+                //var point = vec3.create();
+                //var p = vec3.create();
+                vec3.cross( p, lines[ i ]._dir, e2 );
+                var a = vec3.dot( e1, p );
                 if ( Math.abs( a ) < 1E-6 ) continue;
                 var f = 1.0 / a;
-                //var s = Vec3.create();
-                Vec3.sub( lines[ i ]._pos, v1, s );
-                var u = f * ( Vec3.dot( s, p ) );
+                //var s = vec3.create();
+                vec3.sub( s, lines[ i ]._pos, v1 );
+                var u = f * ( vec3.dot( s, p ) );
                 if ( u < 0.0 || u > 1.0 ) continue;
-                //var q = Vec3.create();
-                Vec3.cross( s, e1, q );
-                var v = f * ( Vec3.dot( lines[ i ]._dir, q ) );
+                //var q = vec3.create();
+                vec3.cross( q, s, e1 );
+                var v = f * ( vec3.dot( lines[ i ]._dir, q ) );
                 if ( v < 0.0 || u + v > 1.0 ) continue;
-                var t = f * ( Vec3.dot( e2, q ) );
-                Vec3.mult( lines[ i ]._dir, t, point );
-                Vec3.add( lines[ i ]._pos, point, point );
-                this._candidates.push( Vec3.copy( point, Vec3.create() ) );
+                var t = f * ( vec3.dot( e2, q ) );
+
+                vec3.scaleAndAdd( point, lines[ i ]._pos, lines[ i ]._dir, t );
+
+                this._candidates.push( vec3.copy( vec3.create(), point ) );
                 this._candidatesMasks.push( lines[ i ]._planeMask );
             }
             numCands = this.checkCandidatePoints( insideMask );
@@ -364,31 +369,32 @@ PolytopePrimitiveIntersector.prototype = {
     } )(),
 
     getPolytopeLines: ( function () {
-        var lineDirection = Vec3.create();
-        var searchDirection = Vec3.create();
-        var normal1 = Vec3.create();
-        var point1 = Vec3.create();
-        var normal2 = Vec3.create();
-        var linePoint = Vec3.create();
+        var lineDirection = vec3.create();
+        var searchDirection = vec3.create();
+        var normal1 = vec3.create();
+        var point1 = vec3.create();
+        var normal2 = vec3.create();
+        var linePoint = vec3.create();
         var epsilon = 1E-6;
         return function () {
             if ( this._lines.length > 0 ) return this._lines; // Polytope lines already calculated
             var selectorMask = 0x1;
             for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 ) {
-                Vec3.copy( this.getNormal( this._planes[ i ] ), normal1 );
-                Vec3.mult( normal1, -this._planes[ i ][ 3 ], point1 ); // canonical point on plane[ i ]
+                vec3.copy( normal1, this.getNormal( this._planes[ i ] ) );
+                vec3.scale( point1, normal1, -this._planes[ i ][ 3 ] ); // canonical point on plane[ i ]
                 var subSelectorMask = ( selectorMask << 1 );
                 for ( var jt = i + 1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 ) {
-                    Vec3.copy( this.getNormal( this._planes[ jt ] ), normal2 );
-                    if ( Math.abs( Vec3.dot( normal1, normal2 ) ) > ( 1.0 - epsilon ) ) continue;
-                    Vec3.cross( normal1, normal2, lineDirection );
-                    Vec3.cross( lineDirection, normal1, searchDirection );
+                    vec3.copy( normal2, this.getNormal( this._planes[ jt ] ) );
+                    if ( Math.abs( vec3.dot( normal1, normal2 ) ) > ( 1.0 - epsilon ) ) continue;
+                    vec3.cross( lineDirection, normal1, normal2 );
+                    vec3.cross( searchDirection, lineDirection, normal1 );
                     //-plane2.distance(point1)/(searchDirection*normal2);
-                    var searchDist = -this.distance( this._planes[ jt ], point1 ) / Vec3.dot( searchDirection, normal2 );
+                    var searchDist = -this.distance( this._planes[ jt ], point1 ) / vec3.dot( searchDirection, normal2 );
                     if ( osgMath.isNaN( searchDist ) ) continue;
-                    Vec3.mult( searchDirection, searchDist, linePoint );
-                    Vec3.add( point1, lineDirection, lineDirection );
-                    this._lines.push( new PlanesLine( selectorMask | subSelectorMask, Vec3.copy( linePoint, Vec3.create() ), Vec3.copy( lineDirection, Vec3.create() ) ) );
+
+                    vec3.scaleAndAdd( linePoint, point1, searchDirection, searchDist );
+
+                    this._lines.push( new PlanesLine( selectorMask | subSelectorMask, vec3.clone( linePoint ), vec3.clone( lineDirection ) ) );
                 }
             }
             return this._lines;
@@ -405,7 +411,7 @@ PolytopePrimitiveIntersector.prototype = {
     },
 
     getNormal: ( function () {
-        var normal = Vec3.create();
+        var normal = vec3.create();
         return function ( plane ) {
             normal[ 0 ] = plane[ 0 ];
             normal[ 1 ] = plane[ 1 ];

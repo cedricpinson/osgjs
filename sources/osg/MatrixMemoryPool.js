@@ -1,5 +1,5 @@
 'use strict';
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 
 /**
@@ -10,7 +10,7 @@ var Matrix = require( 'osg/Matrix' );
  */
 var MatrixMemoryPool = function () {
 
-    this._stack = [ Matrix.create() ];
+    this._stack = [ mat4.create() ];
     this._current = 0;
 
 };
@@ -32,7 +32,7 @@ MatrixMemoryPool.prototype = {
 
         if ( this._current === this._stack.length ) {
 
-            this._stack.push( Matrix.create() );
+            this._stack.push( mat4.create() );
 
         }
 

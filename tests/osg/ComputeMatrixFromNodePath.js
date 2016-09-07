@@ -5,15 +5,15 @@ var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Camera = require( 'osg/Camera' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var TransformEnums = require( 'osg/TransformEnums' );
 
 
 module.exports = function () {
 
-    !test( 'ComputeMatrixFromNodePath', function () {
+    test( 'ComputeMatrixFromNodePath', function () {
 
         ( function () {
             // test visit parents
@@ -30,17 +30,17 @@ module.exports = function () {
 
             var root = new MatrixTransform();
             root.setName( 'root' );
-            Matrix.makeTranslate( 10, 0, 0, root.getMatrix() );
+            mat4.fromTranslation( root.getMatrix(), [ 10, 0, 0 ] );
 
             var child0 = new Camera();
             child0.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
-            Matrix.makeTranslate( 0, 5, 0, child0.getViewMatrix() );
+            mat4.fromTranslation( child0.getViewMatrix(), [ 0, 5, 0 ] );
 
             var child1 = new MatrixTransform();
-            Matrix.makeTranslate( 0, -10, 0, child1.getMatrix() );
+            mat4.fromTranslation( child1.getMatrix(), [ 0, -10, 0 ] );
 
             var child2 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 10, child2.getMatrix() );
+            mat4.fromTranslation( child2.getMatrix(), [ 0, 0, 10 ] );
 
             root.addChild( child0 );
             child0.addChild( child1 );
@@ -48,7 +48,7 @@ module.exports = function () {
 
             var path = [ root, child0, child1, child2 ];
             var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
-            var trans = Matrix.getTrans( matrix, [ 0, 0, 0 ] );
+            var trans = mat4.getTranslation( vec3.create(), matrix );
             assert.equalVector( trans, [ 0, -10, 10 ], 'Check translation of matrix' );
         } )();
 
@@ -56,18 +56,18 @@ module.exports = function () {
         ( function () {
             var root = new Camera();
             root.setName( 'root' );
-            root.setViewMatrix( Matrix.makeTranslate( 0, 0, 1000, Matrix.create() ) );
+            root.setViewMatrix( mat4.fromTranslation( mat4.create(), [ 0, 0, 1000 ] ) );
 
             var child1 = new MatrixTransform();
-            Matrix.makeTranslate( 0, -10, 0, child1.getMatrix() );
+            mat4.fromTranslation( child1.getMatrix(), [ 0, -10, 0 ] );
 
             var child2 = new MatrixTransform();
-            Matrix.makeTranslate( 0, 0, 10, child2.getMatrix() );
+            mat4.fromTranslation( child2.getMatrix(), [ 0, 0, 10 ] );
 
             var path = [ root, child1, child2 ];
             var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
-            var result = Vec3.create();
-            Matrix.getTrans( matrix, result );
+            var result = vec3.create();
+            mat4.getTranslation( result, matrix );
             assert.equalVector( result, [ 0, -10, 10 ], 'Check we dont use the camera on top' );
         } )();
 

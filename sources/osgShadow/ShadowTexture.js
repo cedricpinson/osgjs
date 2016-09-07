@@ -4,7 +4,7 @@ var Notify = require( 'osg/Notify' );
 var Texture = require( 'osg/Texture' );
 var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
-var Vec4 = require( 'osg/Vec4' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
 
 
 /**
@@ -18,7 +18,7 @@ var Vec4 = require( 'osg/Vec4' );
 var ShadowTexture = function () {
     Texture.call( this );
     this._uniforms = {};
-    this._mapSize = Vec4.create();
+    this._mapSize = vec4.create();
     this._lightUnit = -1; // default for a valid cloneType
 };
 

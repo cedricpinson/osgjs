@@ -1,7 +1,7 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/Shape' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
@@ -234,8 +234,8 @@ module.exports = function () {
 
         assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
         var result = [ 0.4, 0.2, 0 ];
-        var dir = Vec3.sub( end, start, [] );
-        var found = Vec3.add( start, Vec3.mult( dir, hits[ 0 ].ratio, [] ), [] );
+        var dir = vec3.sub( vec3.create(), end, start );
+        var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, hits[ 0 ].ratio ) );
         assert.equalVector( found, result, 1e-4 );
 
         hits.length = 0;

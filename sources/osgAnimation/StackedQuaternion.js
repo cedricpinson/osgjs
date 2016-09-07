@@ -1,14 +1,15 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
-var Matrix = require( 'osg/Matrix' );
-var Quat = require( 'osg/Quat' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var quat = require( 'osg/glMatrix' ).quat;
 var Target = require( 'osgAnimation/Target' );
 
+var qIdentity = quat.create();
 
-var StackedQuaternion = function ( name, quat ) {
+var StackedQuaternion = function ( name, q ) {
     Object.call( this );
-    this._target = Target.createQuatTarget( quat || Quat.identity );
+    this._target = Target.createQuatTarget( q || qIdentity );
     if ( name ) this.setName( name );
 };
 
@@ -16,11 +17,11 @@ StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( q ) {
         this.setQuaternion( q );
-        Quat.copy( q, this._target.defaultValue );
+        quat.copy( this._target.defaultValue, q );
     },
 
     setQuaternion: function ( q ) {
-        Quat.copy( q, this._target.value );
+        quat.copy( this._target.value, q );
     },
 
     getTarget: function () {
@@ -32,12 +33,12 @@ StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
     applyToMatrix: ( function () {
-        var matrixTmp = Matrix.create();
+        var matrixTmp = mat4.create();
 
         return function applyToMatrix( m ) {
             var mtmp = matrixTmp;
-            Matrix.setRotateFromQuat( mtmp, this._target.value );
-            Matrix.preMult( m, mtmp );
+            mat4.fromQuat( mtmp, this._target.value );
+            mat4.mul( m, m, mtmp );
         };
     } )()
 

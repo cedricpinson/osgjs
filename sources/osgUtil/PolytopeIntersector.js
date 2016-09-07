@@ -1,8 +1,7 @@
 'use strict';
 var PolytopePrimitiveIntersector = require( 'osgUtil/PolytopePrimitiveIntersector' );
-var Matrix = require( 'osg/Matrix' );
-var Vec4 = require( 'osg/Vec4' );
-var Vec3 = require( 'osg/Vec3' );
+var vec4 = require( 'osg/glMatrix' ).vec4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 /** Concrete class for implementing polytope intersections with the scene graph.
  * To be used in conjunction with IntersectionVisitor. */
@@ -11,8 +10,8 @@ var PolytopeIntersector = function () {
     this._index = 0;
     this._polytope = [];
     this._iPolytope = [];
-    this._referencePlane = Vec4.create();
-    this._iReferencePlane = Vec4.create();
+    this._referencePlane = vec4.create();
+    this._iReferencePlane = vec4.create();
     this._intersectionLimit = PolytopeIntersector.NO_LIMIT;
     this._dimensionMask = PolytopeIntersector.AllDims;
 };
@@ -28,6 +27,18 @@ PolytopeIntersector.DimOne = ( 1 << 1 );
 PolytopeIntersector.DimTwo = ( 1 << 2 );
 PolytopeIntersector.AllDims = ( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne | PolytopeIntersector.DimTwo );
 
+
+var transformVec4PostMult = function ( out, p, m ) {
+    var x = p[ 0 ];
+    var y = p[ 1 ];
+    var z = p[ 2 ];
+    var w = p[ 3 ];
+
+    out[ 0 ] = m[ 0 ] * x + m[ 1 ] * y + m[ 2 ] * z + m[ 3 ] * w;
+    out[ 1 ] = m[ 4 ] * x + m[ 5 ] * y + m[ 6 ] * z + m[ 7 ] * w;
+    out[ 2 ] = m[ 8 ] * x + m[ 9 ] * y + m[ 10 ] * z + m[ 11 ] * w;
+    out[ 3 ] = m[ 12 ] * x + m[ 13 ] * y + m[ 14 ] * z + m[ 15 ] * w;
+};
 
 PolytopeIntersector.prototype = {
 
@@ -46,11 +57,11 @@ PolytopeIntersector.prototype = {
         // Now we are only supporting WINDOW coordinate frame, so must change this if we decide to support
         // other types of Coordinate Frame
         this.setPolytope( [
-            Vec4.createAndSet( 1.0, 0.0, 0.0, -xMin ),
-            Vec4.createAndSet( -1.0, 0.0, 0.0, xMax ),
-            Vec4.createAndSet( 0.0, 1.0, 0.0, -yMin ),
-            Vec4.createAndSet( 0.0, -1.0, 0.0, yMax ),
-            Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 )
+            vec4.fromValues( 1.0, 0.0, 0.0, -xMin ),
+            vec4.fromValues( -1.0, 0.0, 0.0, xMax ),
+            vec4.fromValues( 0.0, 1.0, 0.0, -yMin ),
+            vec4.fromValues( 0.0, -1.0, 0.0, yMax ),
+            vec4.fromValues( 0.0, 0.0, 1.0, 0.0 )
         ] );
     },
 
@@ -78,12 +89,12 @@ PolytopeIntersector.prototype = {
 
     // Intersection Polytope/Sphere
     intersects: ( function () {
-        var position = Vec3.create();
+        var position = vec3.create();
         return function ( bsphere ) {
             if ( !bsphere.valid() ) return false;
             var pos = bsphere.center();
             var d;
-            Vec3.copy( pos, position );
+            vec3.copy( position, pos );
             var radius = -bsphere.radius();
             for ( var i = 0, j = this._iPolytope.length; i < j; i++ ) {
                 d = this._iPolytope[ i ][ 0 ] * position[ 0 ] + this._iPolytope[ i ][ 1 ] * position[ 1 ] + this._iPolytope[ i ][ 2 ] * position[ 2 ] + this._iPolytope[ i ][ 3 ];
@@ -127,21 +138,22 @@ PolytopeIntersector.prototype = {
     setCurrentTransformation: function ( matrix ) {
         // Transform the polytope and the referencePlane to the current Model local coordinate frame
         var inv;
-        var iplane = Vec4.create();
+        var iplane = vec4.create();
         for ( var i = 0, j = this._polytope.length; i < j; i++ ) {
             var plane = this._polytope[ i ];
             // PostMult
-            Matrix.transformVec4PostMult( matrix, plane, iplane );
+            transformVec4PostMult( iplane, plane, matrix );
             // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds.
             inv = 1.0 / Math.sqrt( iplane[ 0 ] * iplane[ 0 ] + iplane[ 1 ] * iplane[ 1 ] + iplane[ 2 ] * iplane[ 2 ] );
             iplane[ 0 ] *= inv;
             iplane[ 1 ] *= inv;
             iplane[ 2 ] *= inv;
             iplane[ 3 ] *= inv;
-            this._iPolytope[ i ] = Vec4.copy( iplane, Vec4.create() );
+            this._iPolytope[ i ] = vec4.clone( iplane );
         }
         //Post Mult
-        Matrix.transformVec4PostMult( matrix, this._referencePlane, this._iReferencePlane );
+        transformVec4PostMult( this._iReferencePlane, this._referencePlane, matrix );
+
         // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds.
         inv = 1.0 / Math.sqrt( this._iReferencePlane[ 0 ] * this._iReferencePlane[ 0 ] + this._iReferencePlane[ 1 ] * this._iReferencePlane[ 1 ] + this._iReferencePlane[ 2 ] * this._iReferencePlane[ 2 ] );
         this._iReferencePlane[ 0 ] *= inv;

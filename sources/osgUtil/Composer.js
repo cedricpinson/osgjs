@@ -8,15 +8,15 @@ var Texture = require( 'osg/Texture' );
 var Camera = require( 'osg/Camera' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Viewport = require( 'osg/Viewport' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Uniform = require( 'osg/Uniform' );
 var StateSet = require( 'osg/StateSet' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
 var Shape = require( 'osg/Shape' );
 var TransformEnums = require( 'osg/TransformEnums' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec3 = require( 'osg/Vec3' );
+var vec2 = require( 'osg/glMatrix' ).vec2;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
 /*
@@ -236,7 +236,7 @@ Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
             // FIXME: not really useful, but osgjs keep pushing projection matrix
             // and maybe some old code still use it
-            Matrix.makeOrtho( 0, 1, 0, 1, -5, 5, camera.getProjectionMatrix() );
+            mat4.ortho( camera.getProjectionMatrix(), 0, 1, 0, 1, -5, 5 );
 
             var quad = Shape.createTexturedFullScreenFakeQuadGeometry();
 
@@ -262,7 +262,7 @@ Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
 
             camera.addChild( quad );
-            element.filter.getStateSet().addUniform( Uniform.createFloat2( Vec2.createAndSet( w, h ), 'RenderSize' ) );
+            element.filter.getStateSet().addUniform( Uniform.createFloat2( vec2.fromValues( w, h ), 'RenderSize' ) );
 
             // Optimization, no need to clear,
             // unless we know we'll have transparent parts
@@ -1045,7 +1045,7 @@ Composer.Filter.VBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.HBlu
 // http://en.wikipedia.org/wiki/Sobel_operator
 Composer.Filter.SobelFilter = function () {
     Composer.Filter.call( this );
-    this._color = Uniform.createFloat3( Vec3.createAndSet( 1.0, 1.0, 1.0 ), 'color' );
+    this._color = Uniform.createFloat3( vec3.fromValues( 1.0, 1.0, 1.0 ), 'color' );
     this._factor = Uniform.createFloat( 1.0, 'factor' );
     this._fragmentName = 'SobelFilter';
 };
@@ -1223,7 +1223,7 @@ Composer.Filter.SSAO = function ( options ) {
         var texturePosition = options.position;
         var w = textureNormal.getWidth();
         var h = textureNormal.getHeight();
-        this._size = Vec2.createAndSet( w, h );
+        this._size = vec2.fromValues( w, h );
 
         stateSet.setTextureAttributeAndModes( 0, textureNormal );
         stateSet.setTextureAttributeAndModes( 1, texturePosition );
@@ -1251,12 +1251,12 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
         var sizeNoise = this._noiseTextureSize;
         var noise = new Array( sizeNoise * sizeNoise * 3 );
         ( function ( array ) {
-            var n = Vec2.createAndSet( 0.0, 0.0 );
+            var n = vec2.fromValues( 0.0, 0.0 );
             for ( var i = 0; i < sizeNoise * sizeNoise; i++ ) {
                 n[ 0 ] = 2.0 * ( Math.random() - 0.5 );
                 n[ 1 ] = 2.0 * ( Math.random() - 0.5 );
 
-                Vec2.normalize( n, n );
+                vec2.normalize( n, n );
                 array[ i * 3 + 0 ] = 255 * ( n[ 0 ] * 0.5 + 0.5 );
                 array[ i * 3 + 1 ] = 255 * ( n[ 1 ] * 0.5 + 0.5 );
                 array[ i * 3 + 2 ] = 255 * 0.5;
@@ -1301,13 +1301,13 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
         var nbSamples = this._nbSamples;
         var kernel = new Array( nbSamples * 4 );
         ( function ( array ) {
-            var v = Vec3.create();
+            var v = vec3.create();
             for ( var i = 0; i < nbSamples; i++ ) {
                 v[ 0 ] = 2.0 * ( Math.random() - 0.5 );
                 v[ 1 ] = 2.0 * ( Math.random() - 0.5 );
                 v[ 2 ] = Math.random();
 
-                Vec3.normalize( v, v );
+                vec3.normalize( v, v );
                 var scale = Math.max( i / nbSamples, 0.1 );
                 scale = 0.1 + ( 1.0 - 0.1 ) * ( scale * scale );
                 array[ i * 3 + 0 ] = v[ 0 ];
@@ -1321,10 +1321,10 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
         stateSet.setTextureAttributeAndModes( 2, this._noiseTexture );
         var uniform = stateSet.getUniform( 'noiseSampling' );
         if ( uniform === undefined ) {
-            uniform = Uniform.createFloat2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
+            uniform = Uniform.createFloat2( vec2.fromValues( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
             stateSet.addUniform( uniform );
         } else {
-            uniform.setVec2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
+            uniform.setVec2( vec2.fromValues( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
         }
         var vertexShader = [
             '',
@@ -1441,13 +1441,13 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
         var kernel = new Array( nbSamples * 4 );
         //var angleLimit = this._angleLimit;
         ( function ( array ) {
-            var v = Vec3.create();
+            var v = vec3.create();
             for ( var i = 0; i < nbSamples; i++ ) {
                 v[ 0 ] = 2.0 * ( Math.random() - 0.5 );
                 v[ 1 ] = 2.0 * ( Math.random() - 0.5 );
                 v[ 2 ] = Math.random();
 
-                Vec3.normalize( v, v );
+                vec3.normalize( v, v );
                 var scale = Math.max( i / nbSamples, 0.1 );
                 scale = 0.1 + ( 1.0 - 0.1 ) * ( scale * scale );
                 array[ i * 3 + 0 ] = v[ 0 ];
@@ -1461,10 +1461,10 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
         stateSet.setTextureAttributeAndModes( 2, this._noiseTexture );
         var uniform = stateSet.getUniform( 'noiseSampling' );
         if ( uniform === undefined ) {
-            uniform = Uniform.createFloat2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
+            uniform = Uniform.createFloat2( vec2.fromValues( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
             stateSet.addUniform( uniform );
         } else {
-            uniform.setVec2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
+            uniform.setVec2( vec2.fromValues( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
         }
         var vertexShader = [
             '',

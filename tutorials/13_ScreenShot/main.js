@@ -31,10 +31,10 @@ SimpleUpdateCallback.prototype = {
         // rotation
         var m = node.getMatrix();
 
-        osg.Matrix.makeRotate( -this.angle, 0.0, 0.0, 1.0, m );
+        osg.mat4.fromRotation( m, -this.angle, [ 0.0, 0.0, 1.0 ] );
 
 
-        osg.Matrix.setTrans( m, 0, 0, 0 );
+        osg.mat4.setTranslation( m, [ 0, 0, 0 ] );
 
         this.angle += 0.1;
 

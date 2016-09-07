@@ -22,8 +22,8 @@ CullSettings.prototype = {
         this.bbCornerNear = 4;
         // see code below for for the
         // Code simplification origin
-        // var Vec3 = require( 'osg/Vec3' );
-        // var lookVector = Vec3.createAndSet( 0.0, 0.0, -1.0 );
+        // var vec3 = require( 'osg/glMatrix' ).vec3;
+        // var lookVector = vec3.fromValues( 0.0, 0.0, -1.0 );
         // /*jshint bitwise: false */
         // this.bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
         // this.bbCornerNear = ( ~this.bbCornerFar ) & 7;

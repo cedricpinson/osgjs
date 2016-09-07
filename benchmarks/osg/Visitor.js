@@ -1,7 +1,7 @@
 'use strict';
 var mockup = require( 'tests/mockup/mockup' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Node = require( 'osg/Node' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var Timer = require( 'osg/Timer' );
@@ -46,12 +46,13 @@ module.exports = function () {
 
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
-        view.getCamera().setViewMatrix( Matrix.makeLookAt(
-            Vec3.createAndSet( 0, 0, -10 ),
-            Vec3.createAndSet( 0, 0, 0 ),
-            Vec3.createAndSet( 0, 1, 0 ),
-            Matrix.create() ) );
-        view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, Matrix.create() ) );
+        view.getCamera().setViewMatrix( mat4.lookAt(
+            mat4.create() ,
+            vec3.fromValues( 0, 0, -10 ),
+            vec3.fromValues( 0, 0, 0 ),
+            vec3.fromValues( 0, 1, 0 )) );
+        view.getCamera().setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         // TODO it uses the old sync parseSceneGraphDeprecated
         var root = ReaderParser.parseSceneGraph( mockup.getScene() );
@@ -69,11 +70,12 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( Matrix.makeLookAt(
-            Vec3.createAndSet( 0, 0, -10 ),
-            Vec3.createAndSet( 0, 0, 0 ),
-            Vec3.createAndSet( 0, 1, 0 ), Matrix.create() ) );
-        camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, Matrix.create() ) );
+        camera.setViewMatrix( mat4.lookAt(  mat4.create() ,
+            vec3.fromValues( 0, 0, -10 ),
+            vec3.fromValues( 0, 0, 0 ),
+            vec3.fromValues( 0, 1, 0 )) );
+        camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
+
 
         var result;
         var accum = 0;

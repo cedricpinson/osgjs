@@ -15,7 +15,7 @@ window.addEventListener( 'load', function () {
     // Here we create a special Node
     // that will hold the transformation.
     var group = new osg.MatrixTransform();
-    group.setMatrix( osg.Matrix.makeTranslate( -5, 10, -5, osg.Matrix.create() ) );
+    group.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ -5, 10, -5 ] ) );
     var size = 5;
     // that node will be the geometry
     var ground = osg.createTexturedBox( 0, 0, 0, size, size, size );

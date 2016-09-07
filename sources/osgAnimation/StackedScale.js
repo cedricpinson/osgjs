@@ -1,14 +1,14 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var Target = require( 'osgAnimation/Target' );
 
 
 var StackedScale = function ( name, scale ) {
     Object.call( this );
-    this._target = Target.createVec3Target( scale || Vec3.one );
+    this._target = Target.createVec3Target( scale || vec3.ONE );
     if ( name ) this.setName( name );
 };
 
@@ -17,11 +17,11 @@ StackedScale.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( scale ) {
         this.setScale( scale );
-        Vec3.copy( scale, this._target.defaultValue );
+        vec3.copy( this._target.defaultValue, scale );
     },
 
     setScale: function ( scale ) {
-        Vec3.copy( scale, this._target.value );
+        vec3.copy( this._target.value, scale );
     },
 
     getTarget: function () {
@@ -36,8 +36,7 @@ StackedScale.prototype = MACROUTILS.objectInherit( Object.prototype, {
     applyToMatrix: function ( m ) {
 
         var scale = this._target.value;
-
-        Matrix.preMultScale( m, scale );
+        mat4.scale( m, m, scale );
 
     }
 

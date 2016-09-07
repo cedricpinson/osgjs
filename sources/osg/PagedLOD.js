@@ -2,8 +2,8 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Lod = require( 'osg/Lod' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var Matrix = require( 'osg/Matrix' );
-var Vec3 = require( 'osg/Vec3' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
 /**
@@ -133,9 +133,9 @@ PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Lo
 
         // avoid to generate variable on the heap to limit garbage collection
         // instead create variable and use the same each time
-        var zeroVector = Vec3.create();
-        var eye = Vec3.create();
-        var viewModel = Matrix.create();
+        var zeroVector = vec3.create();
+        var eye = vec3.create();
+        var viewModel = mat4.create();
 
         return function ( visitor ) {
 
@@ -161,10 +161,10 @@ PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Lo
 
                 // Calculate distance from viewpoint
                 var matrix = visitor.getCurrentModelViewMatrix();
-                Matrix.inverse( matrix, viewModel );
+                mat4.invert( viewModel, matrix );
                 if ( this._rangeMode === Lod.DISTANCE_FROM_EYE_POINT ) {
-                    Matrix.transformVec3( viewModel, zeroVector, eye );
-                    var d = Vec3.distance( eye, this.getBound().center() );
+                    vec3.transformMat4( eye, zeroVector, viewModel );
+                    var d = vec3.distance( this.getBound().center(), eye );
                     requiredRange = d * visitor.getLODScale();
                 } else {
                     // Calculate pixels on screen

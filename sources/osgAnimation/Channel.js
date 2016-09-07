@@ -1,6 +1,7 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
-var Quat = require( 'osg/Quat' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var quat = require( 'osg/glMatrix' ).quat;
+
 var Target = require( 'osgAnimation/Target' );
 var channelType = require( 'osgAnimation/channelType' );
 
@@ -54,7 +55,6 @@ var createVec3CubicBezierChannel = function ( keys, times, targetName, channelNa
 };
 
 
-
 // channel contains {
 //     keys: [],
 //     times: [],
@@ -63,7 +63,7 @@ var createVec3CubicBezierChannel = function ( keys, times, targetName, channelNa
 // }
 // return {
 //     channel: channel,
-//     value: Vec3.create(),
+//     value: vec3.create(),
 //     targetID: int,
 //     key: 0,
 //     t: 0, //global start time
@@ -74,6 +74,17 @@ var Float = {
         return 0;
     }
 };
+var Vec3 = {
+    create: function () {
+        return vec3.create32();
+    }
+};
+var Quat = {
+    create: function () {
+        return quat.create32();
+    }
+};
+
 
 var createInstanceChannelType = function ( operator, channel ) {
     return {
@@ -132,8 +143,6 @@ var createInstanceChannel = function ( channel ) {
 
  //   initChannelTargetID pour toute les animations du manager
  //      id -> targetName
-
-
 
 
  // get target for an animation to push on target list ( to blend )
@@ -212,7 +221,6 @@ var createInstanceChannel = function ( channel ) {
      t = ( 1.0 - weight ) * channels[i].weight / priorityWeight;
      lerp( t, value, channels[i].value );
  }
-
 
 
  */

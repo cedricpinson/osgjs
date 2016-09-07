@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Transform = require( 'osg/Transform' );
 var TransformEnums = require( 'osg/TransformEnums' );
 
@@ -11,7 +11,7 @@ var TransformEnums = require( 'osg/TransformEnums' );
  */
 var MatrixTransform = function () {
     Transform.call( this );
-    this.matrix = Matrix.create();
+    this.matrix = mat4.create();
 };
 
 /** @lends MatrixTransform.prototype */
@@ -30,22 +30,22 @@ MatrixTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInhe
     computeLocalToWorldMatrix: function ( matrix /*, nodeVisitor */ ) {
 
         if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-            Matrix.preMult( matrix, this.matrix );
+            mat4.mul( matrix, matrix, this.matrix );
         } else {
-            Matrix.copy( this.matrix, matrix );
+            mat4.copy( matrix, this.matrix );
         }
         return true;
     },
 
     computeWorldToLocalMatrix: ( function () {
-        var minverse = Matrix.create();
+        var minverse = mat4.create();
         return function ( matrix /*, nodeVisitor */ ) {
 
-            Matrix.inverse( this.matrix, minverse );
+            mat4.invert( minverse, this.matrix );
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                Matrix.postMult( minverse, matrix );
+                mat4.mul( matrix, minverse, matrix );
             } else { // absolute
-                Matrix.copy( minverse, matrix );
+                mat4.copy( matrix, minverse );
             }
             return true;
         };

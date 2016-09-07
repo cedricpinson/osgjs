@@ -6,7 +6,7 @@ var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
 var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
 var StackedRotateAxis = require( 'osgAnimation/StackedRotateAxis' );
 var StackedMatrix = require( 'osgAnimation/StackedMatrix' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 
 module.exports = function () {
@@ -133,7 +133,7 @@ module.exports = function () {
         basicAnimationManager.update( null, nv );
         assert.equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
 
-        assert.equalVector( animationCallback._matrix, Matrix.createAndSet( 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ), 'check matrix computed' );
+        assert.equalVector( animationCallback._matrix, mat4.fromValues( 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ), 'check matrix computed' );
 
     } );
 

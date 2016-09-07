@@ -1,19 +1,20 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 
 
 var BoundingBox = function () {
-    this._min = Vec3.create();
-    this._max = Vec3.create();
+    this._min = vec3.create();
+    this._max = vec3.create();
     this.init();
 };
 BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
 
     init: function () {
-        Vec3.copy( Vec3.infinity, this._min );
-        Vec3.copy( Vec3.negativeInfinity, this._max );
+        vec3.copy( this._min, vec3.INFINITY );
+        vec3.copy( this._max, vec3.NEGATIVE_INFINITY );
     },
 
     copy: function ( bbox ) {
@@ -58,7 +59,7 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
         return this.expandByBoundingSphere( bs );
     },
 
-    expandByVec3: function ( v ) {
+    expandByvec3: function ( v ) {
         var min = this._min;
         var max = this._max;
         min[ 0 ] = Math.min( min[ 0 ], v[ 0 ] );
@@ -120,12 +121,12 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
     },
 
     setMin: function ( min ) {
-        Vec3.copy( min, this._min );
+        vec3.copy( this._min, min );
         return this;
     },
 
     setMax: function ( max ) {
-        Vec3.copy( max, this._max );
+        vec3.copy( this._max, max );
         return this;
     },
 
@@ -172,7 +173,56 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
         }
         return ret;
         /*jshint bitwise: true */
-    }
+    },
+
+    // http://dev.theomader.com/transform-bounding-boxes/
+    // https://github.com/erich666/GraphicsGems/blob/master/gems/TransBox.c
+    transformMat4: ( function () {
+        var tmpMin = vec3.create();
+        var tmpMax = vec3.create();
+        return function ( out, m ) {
+
+            var inMin = this.getMin();
+            var inMax = this.getMax();
+
+            /* Take care of translation by beginning at T. */
+            mat4.getTranslation( tmpMin, m );
+            vec3.copy( tmpMax, tmpMin );
+
+            /* Now find the extreme points by considering the product of the */
+            /* min and max with each component of M.  */
+            for ( var i = 0; i < 3; ++i ) {
+                var i4 = i * 4;
+                var mini = inMin[ i ];
+                var maxi = inMax[ i ];
+                for ( var j = 0; j < 3; ++j ) {
+                    var cm = m[ i4 + j ];
+                    var a = cm * maxi;
+                    var b = cm * mini;
+                    if ( a < b ) {
+                        tmpMin[ j ] += a;
+                        tmpMax[ j ] += b;
+                    } else {
+                        tmpMin[ j ] += b;
+                        tmpMax[ j ] += a;
+                    }
+                }
+            }
+            var outMax = out.getMax();
+            var outMin = out.getMin();
+
+            outMax[ 0 ] = tmpMax[ 0 ];
+            outMax[ 1 ] = tmpMax[ 1 ];
+            outMax[ 2 ] = tmpMax[ 2 ];
+
+            outMin[ 0 ] = tmpMin[ 0 ];
+            outMin[ 1 ] = tmpMin[ 1 ];
+            outMin[ 2 ] = tmpMin[ 2 ];
+
+            return out;
+        };
+    } )()
+
 }, 'osg', 'BoundingBox' );
 
 module.exports = BoundingBox;

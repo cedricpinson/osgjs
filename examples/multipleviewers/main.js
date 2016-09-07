@@ -25,7 +25,7 @@
         },
         createScene2: function () {
             var node = new osg.MatrixTransform();
-            osg.Matrix.makeRotate( -Math.PI, 0, 0, 1, node.getMatrix() );
+            osg.mat4.fromRotation( node.getMatrix(), -Math.PI, [ 0, 0, 1 ] );
 
             var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
             request.then( function ( model ) {

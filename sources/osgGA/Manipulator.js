@@ -1,6 +1,6 @@
 'use strict';
 var BoundingSphere = require( 'osg/BoundingSphere' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Notify = require( 'osg/Notify' );
 
 
@@ -11,7 +11,7 @@ var Manipulator = function ( boundStrategy ) {
         this._boundStrategy = Manipulator.COMPUTE_HOME_USING_SPHERE;
 
     this._controllerList = {};
-    this._inverseMatrix = Matrix.create();
+    this._inverseMatrix = mat4.create();
     this._camera = undefined;
     this._node = undefined;
     this._frustum = {};
@@ -60,7 +60,7 @@ Manipulator.prototype = {
     getHomeDistance: function ( bs ) {
         var frustum = this._frustum;
         var dist = bs.radius();
-        if ( this._camera && Matrix.getFrustum( this._camera.getProjectionMatrix(), frustum ) ) {
+        if ( this._camera && mat4.getFrustum( frustum, this._camera.getProjectionMatrix() ) ) {
             var vertical2 = Math.abs( frustum.right - frustum.left ) / frustum.zNear / 2;
             var horizontal2 = Math.abs( frustum.top - frustum.bottom ) / frustum.zNear / 2;
             dist /= Math.sin( Math.atan2( horizontal2 < vertical2 ? horizontal2 : vertical2, 1 ) );

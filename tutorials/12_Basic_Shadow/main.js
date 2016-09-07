@@ -72,7 +72,7 @@ window.addEventListener( 'load', function () {
     mainNode.addChild( lightNodeModelNodeParent );
 
     // setting light, each above its cube
-    lightNodeModelNodeParent.setMatrix( osg.Matrix.makeTranslate( -10, -10, 10, osg.Matrix.create() ) );
+    lightNodeModelNodeParent.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ -10, -10, 10 ] ) );
 
     // red light
     lightNew.setAmbient( [ 0.0, 0, 0.0, 1.0 ] );

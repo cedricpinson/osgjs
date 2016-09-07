@@ -43,7 +43,7 @@ function createScene() {
     var targetNode2 = new osg.MatrixTransform();
     var targetModel2 = osg.createTexturedSphere( 10, 30, 30 );
     var m = targetNode2.getMatrix();
-    osg.Matrix.setTrans( m, -25.0, 0.0, 0.0, 0.0 );
+    osg.mat4.setTranslation( m, -25.0, [ 0.0, 0.0, 0.0 ] );
     targetNode2.setMatrix( m );
     targetNode2.addChild( targetModel2 );
     targetNode.addChild( targetNode2 );
@@ -102,7 +102,6 @@ function createScene() {
     targetNode.getOrCreateStateSet().addUniform( lightIntensity );
 
 
-
     // That's where we update lights direction at each frame
     var LightUpdateCallback = function () {};
     LightUpdateCallback.prototype = {
@@ -112,8 +111,8 @@ function createScene() {
             var mdelta = ( currentTime - this.lastTime );
             this.lastTime = currentTime;
             var m = lightNode.getMatrix();
-            osg.Matrix.setTrans( m, 25 + 25 * Math.sin( t ), 0.0, Math.min( 25 * Math.cos( t ) ), 0.0 );
-            osg.Matrix.makeRotate( -Math.min( t, Math.PI * 2 ), 0.0, 1.0, 0.0, m );
+            osg.mat4.setTranslation( m, 25 + 25 * Math.sin( t ), [ 0.0, Math.min( 25 * Math.cos( t ) ), 0.0 ] );
+            osg.mat4.fromRotation( m, -Math.min( t, Math.PI * 2 ), [ 0.0, 1.0, 0.0 ] );
 
             lightNode.setMatrix( m );
 

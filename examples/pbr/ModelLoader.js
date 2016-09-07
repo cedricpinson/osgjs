@@ -110,7 +110,7 @@ window.ModelLoader = ( function () {
                 }
 
                 if ( config.rotate ) {
-                    osg.Matrix.makeRotate( config.rotate[ 0 ] * Math.PI / 2, config.rotate[ 1 ], config.rotate[ 2 ], config.rotate[ 3 ], this._node.getMatrix() );
+                    osg.mat4.fromRotation( this._node.getMatrix(), config.rotate[ 0 ] * Math.PI / 2, [ config.rotate[ 1 ], config.rotate[ 2 ], config.rotate[ 3 ] ] );
                 }
 
 

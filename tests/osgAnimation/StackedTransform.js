@@ -1,8 +1,8 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var Matrix = require( 'osg/Matrix' );
-var Quat = require( 'osg/Quat' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var quat = require( 'osg/glMatrix' ).quat;
 var StackedRotateAxis = require( 'osgAnimation/StackedRotateAxis' );
 var StackedTranslate = require( 'osgAnimation/StackedTranslate' );
 var StackedScale = require( 'osgAnimation/StackedScale' );
@@ -51,9 +51,9 @@ module.exports = function () {
 
         var st = new StackedMatrix( 'matrix' );
         assert.isOk( st.getName() === 'matrix', 'Check Name' );
-        assert.isOk( Matrix.isIdentity( st._target.value ), 'Check default matrix' );
+        assert.isOk( mat4.exactEquals( st._target.value, mat4.IDENTITY ), 'Check default matrix' );
 
-        var m = Matrix.makeTranslate( 4, 0, 0, Matrix.create() );
+        var m = mat4.fromTranslation( mat4.create(), [ 4, 0, 0 ] );
         st.init( m );
         assert.equalVector( m, st._target.value, 'Check matrix value after init' );
 
@@ -62,11 +62,11 @@ module.exports = function () {
     test( 'StackedQuaternion', function () {
 
         var st = new StackedQuaternion( 'quat' );
-        var q = Quat.create();
+        var q = quat.create();
         assert.isOk( st.getName() === 'quat', 'Check Name' );
         assert.equalVector( st._target.value, q, 'Check default quat value' );
 
-        Quat.makeRotate( 0.45, 0, 0, 1, q );
+        quat.setAxisAngle( q, [ 0, 0, 1 ], 0.45 );
         st.init( q );
         assert.equalVector( q, st._target.value, 'Check quat value after init' );
 

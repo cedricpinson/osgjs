@@ -1,5 +1,5 @@
 'use strict';
-var Vec2 = require( 'osg/Vec2' );
+var vec2 = require( 'osg/glMatrix' ).vec2;
 
 
 var OrbitManipulatorGamePadController = function ( manipulator ) {
@@ -77,10 +77,10 @@ OrbitManipulatorGamePadController.prototype = {
             var pan = this._manipulator.getPanInterpolator();
             var panTarget = pan.getTarget();
             var delta = {
-                12: Vec2.createAndSet( 0, -1 ),
-                13: Vec2.createAndSet( 0, 1 ),
-                14: Vec2.createAndSet( -1, 0 ),
-                15: Vec2.createAndSet( 1, 0 )
+                12: vec2.fromValues( 0, -1 ),
+                13: vec2.fromValues( 0, 1 ),
+                14: vec2.fromValues( -1, 0 ),
+                15: vec2.fromValues( 1, 0 )
             }[ event.button ];
             pan.setDelay( this._delay );
             pan.setTarget( panTarget[ 0 ] - delta[ 0 ] * 10, panTarget[ 1 ] + delta[ 1 ] * 10 );

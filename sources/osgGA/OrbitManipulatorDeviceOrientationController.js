@@ -1,6 +1,6 @@
 'use strict';
-var Quat = require( 'osg/Quat' );
-var Vec3 = require( 'osg/Vec3' );
+var quat = require( 'osg/glMatrix' ).quat;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 var FirstPersonDeviceOrientation = require( 'osgGA/FirstPersonManipulatorDeviceOrientationController' );
 
@@ -14,8 +14,8 @@ OrbitManipulatorDeviceOrientationController.prototype = {
 
     init: function () {
         this._stepFactor = 1.0; // meaning radius*stepFactor to move
-        this._quat = Quat.create();
-        this._pos = Vec3.create();
+        this._quat = quat.create();
+        this._pos = vec3.create();
     },
 
     update: function ( deviceOrientation, screenOrientation ) {

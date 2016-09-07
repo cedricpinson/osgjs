@@ -1,6 +1,6 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
@@ -394,9 +394,9 @@ var createTexturedQuadGeometry = function ( cornerx, cornery, cornerz,
     uvs[ 6 ] = r;
     uvs[ 7 ] = t;
 
-    var n = Vec3.createAndSet( wx, wy, wz );
-    Vec3.cross( n, Vec3.createAndSet( hx, hy, hz ), n );
-    Vec3.normalize( n, n );
+    var n = vec3.fromValues( wx, wy, wz );
+    vec3.cross( n, n, vec3.fromValues( hx, hy, hz ) );
+    vec3.normalize( n, n );
 
     var normal = new MACROUTILS.Float32Array( 12 );
     normal[ 0 ] = n[ 0 ];
@@ -568,7 +568,7 @@ var createTexturedSphere = function ( radius, widthSegments, heightSegments, phi
         coord[ 0 ] = -radius * Math.cos( phiStart + u * phiLength ) * Math.sin( thetaStart + v * thetaLength );
         coord[ 1 ] = radius * Math.cos( thetaStart + v * thetaLength );
         coord[ 2 ] = radius * Math.sin( phiStart + u * phiLength ) * Math.sin( thetaStart + v * thetaLength );
-        Vec3.normalize( coord, norm );
+        vec3.normalize( norm, coord );
         uv[ 0 ] = u;
         uv[ 1 ] = 1 - v;
     };

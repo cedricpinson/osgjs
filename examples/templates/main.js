@@ -36,7 +36,7 @@
             var self = this;
             controller.onChange( function ( value ) {
                 // change the matrix
-                osg.Matrix.makeScale( value, value, value, self._model.getMatrix() );
+                osg.mat4.fromScaling( self._model.getMatrix(), [ value, value, value ] );
                 self._model.dirtyBound();
             } );
 

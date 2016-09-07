@@ -5,12 +5,13 @@ var Camera = require( 'osg/Camera' );
 var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 var CullSettings = require( 'osg/CullSettings' );
 var CullingSet = require( 'osg/CullingSet' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var Plane = require( 'osg/Plane' );
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var Transform = require( 'osg/Transform' );
 var Notify = require( 'osg/Notify' );
 var TransformEnums = require( 'osg/TransformEnums' );
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 
 var CullStack = function () {
 
@@ -101,7 +102,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
             var indexInModelViewMatrixStack = this._cameraModelViewIndexStack[ this._cameraModelViewIndexStack.length - 1 ];
             var mat = this._modelViewMatrixStack[ indexInModelViewMatrixStack ];
             var matInverse = this._reservedMatrixStack.get();
-            Matrix.inverse( mat, matInverse );
+            mat4.invert( matInverse, mat );
             this._cameraMatrixInverse[ id ] = matInverse;
         }
         return this._cameraMatrixInverse[ id ];
@@ -112,7 +113,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         // and / or use this method only if the shader use it
         var invMatrix = this.getCameraInverseMatrix();
         var m = this._reservedMatrixStack.get();
-        var world = Matrix.mult( invMatrix, this.getCurrentModelViewMatrix(), m );
+        var world = mat4.mul( m, invMatrix, this.getCurrentModelViewMatrix() );
         return world;
     },
 
@@ -137,7 +138,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
     },
     getLookVectorLocal: function ( outLookVector ) {
         var lookVectorLocal = this.getCurrentModelViewMatrix();
-        return Vec3.set( -lookVectorLocal[ 2 ], -lookVectorLocal[ 6 ], -lookVectorLocal[ 10 ], outLookVector );
+        return vec3.set( outLookVector, -lookVectorLocal[ 2 ], -lookVectorLocal[ 6 ], -lookVectorLocal[ 10 ] );
     },
     pushViewport: function ( vp ) {
         this._viewportStack.push( vp );
@@ -146,10 +147,72 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         this._viewportStack.pop();
     },
 
+    getFrustumPlanes: ( function () {
+
+        var mvp = mat4.create();
+
+        return function ( out, projection, view, withNearFar ) {
+            mat4.mul( mvp, projection, view );
+
+            var computeNearFar = !!withNearFar;
+
+            // Right clipping plane.
+            var right = out[ 0 ];
+            right[ 0 ] = mvp[ 3 ] - mvp[ 0 ];
+            right[ 1 ] = mvp[ 7 ] - mvp[ 4 ];
+            right[ 2 ] = mvp[ 11 ] - mvp[ 8 ];
+            right[ 3 ] = mvp[ 15 ] - mvp[ 12 ];
+
+            // Left clipping plane.
+            var left = out[ 1 ];
+            left[ 0 ] = mvp[ 3 ] + mvp[ 0 ];
+            left[ 1 ] = mvp[ 7 ] + mvp[ 4 ];
+            left[ 2 ] = mvp[ 11 ] + mvp[ 8 ];
+            left[ 3 ] = mvp[ 15 ] + mvp[ 12 ];
+
+            // Bottom clipping plane.
+            var bottom = out[ 2 ];
+            bottom[ 0 ] = mvp[ 3 ] + mvp[ 1 ];
+            bottom[ 1 ] = mvp[ 7 ] + mvp[ 5 ];
+            bottom[ 2 ] = mvp[ 11 ] + mvp[ 9 ];
+            bottom[ 3 ] = mvp[ 15 ] + mvp[ 13 ];
+
+            // Top clipping plane.
+            var top = out[ 3 ];
+            top[ 0 ] = mvp[ 3 ] - mvp[ 1 ];
+            top[ 1 ] = mvp[ 7 ] - mvp[ 5 ];
+            top[ 2 ] = mvp[ 11 ] - mvp[ 9 ];
+            top[ 3 ] = mvp[ 15 ] - mvp[ 13 ];
+
+            if ( computeNearFar ) {
+                // Far clipping plane.
+                var far = out[ 4 ];
+                far[ 0 ] = mvp[ 3 ] - mvp[ 2 ];
+                far[ 1 ] = mvp[ 7 ] - mvp[ 6 ];
+                far[ 2 ] = mvp[ 11 ] - mvp[ 10 ];
+                far[ 3 ] = mvp[ 15 ] - mvp[ 14 ];
+
+                // Near clipping plane.
+                var near = out[ 5 ];
+                near[ 0 ] = mvp[ 3 ] + mvp[ 2 ];
+                near[ 1 ] = mvp[ 7 ] + mvp[ 6 ];
+                near[ 2 ] = mvp[ 11 ] + mvp[ 10 ];
+                near[ 3 ] = mvp[ 15 ] + mvp[ 14 ];
+            }
+
+            //Normalize the planes
+            var j = withNearFar ? 6 : 4;
+            for ( var i = 0; i < j; i++ ) {
+                Plane.normalizeEquation( out[ i ] );
+            }
+
+        };
+    } )(),
+
     pushCullingSet: function () {
         var cs = this._getReservedCullingSet();
         if ( this._enableFrustumCulling ) {
-            Matrix.getFrustumPlanes( this.getCurrentProjectionMatrix(), this.getCurrentModelViewMatrix(), cs.getFrustum().getPlanes(), false );
+            mat4.getFrustumPlanes( cs.getFrustum().getPlanes(), this.getCurrentProjectionMatrix(), this.getCurrentModelViewMatrix(), false );
             // TODO: no far no near.
             // should check if we have them
             // should add at least a near 0 clip if not
@@ -203,7 +266,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
                     return false; // father bounding sphere totally inside
 
                 var matrix = this._reservedMatrixStack.get();
-                Matrix.makeIdentity( matrix );
+                mat4.identity( matrix );
 
                 // TODO: Perf just get World Matrix at each node transform
                 // store it in a World Transform Node Path (only world matrix change)
@@ -227,7 +290,9 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
                 }
 
-                Matrix.transformBoundingSphere( matrix, node.getBound(), bsWorld );
+                // Matrix.transformBoundingSphere( matrix, node.getBound(), bsWorld );
+                node.getBound().transformMat4( bsWorld, matrix );
+
                 return this.getCurrentCullingSet().isBoundingSphereCulled( bsWorld );
             } else {
                 this.getCurrentCullingSet().resetCullingMask();
@@ -239,7 +304,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
 
     pushModelViewMatrix: ( function () {
-        var lookVector = Vec3.create();
+        var lookVector = vec3.create();
         return function ( matrix ) {
 
             // When pushing a matrix, it can be a transform or camera. To compute
@@ -258,7 +323,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
             var length = np.length;
             if ( !length ) { // root
                 var matInverse = this._reservedMatrixStack.get();
-                Matrix.inverse( matrix, matInverse );
+                mat4.invert( matInverse, matrix );
                 this._cameraMatrixInverseRoot = matInverse;
             } else {
                 var index = length - 1;
@@ -279,7 +344,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         };
     } )(),
     popModelViewMatrix: ( function () {
-        var lookVector = Vec3.create();
+        var lookVector = vec3.create();
 
         return function () {
 
@@ -296,7 +361,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
             if ( this._modelViewMatrixStack.length !== 0 ) {
                 this.getLookVectorLocal( lookVector );
             } else {
-                Vec3.set( 0.0, 0.0, -1.0, lookVector );
+                vec3.set( lookVector, 0.0, 0.0, -1.0 );
             }
 
             /*jshint bitwise: false */
@@ -321,7 +386,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         this._frustumVolume = -1.0;
 
         this.popCullingSet();
-    },
+    }
 
 
 } );

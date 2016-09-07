@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Notify = require( 'osg/Notify' );
 var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var NodeVisitor = require( 'osg/NodeVisitor' );
 
 
@@ -34,7 +34,7 @@ UpdateBone.prototype = MACROUTILS.objectInherit( UpdateMatrixTransform.prototype
             var parent = bone.getBoneParent();
 
             if ( parent ) {
-                Matrix.mult( parent.getMatrixInSkeletonSpace(), matrix, bone.getMatrixInSkeletonSpace() );
+                mat4.mul( bone.getMatrixInSkeletonSpace(), parent.getMatrixInSkeletonSpace(), matrix );
             } else {
                 bone.setMatrixInSkeletonSpace( matrix );
             }

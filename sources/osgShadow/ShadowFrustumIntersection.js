@@ -4,7 +4,7 @@ var BoundingSphere = require( 'osg/BoundingSphere' );
 var Camera = require( 'osg/Camera' );
 var Geometry = require( 'osg/Geometry' );
 var Light = require( 'osg/Light' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
@@ -17,7 +17,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var ComputeMultiFrustumBoundsVisitor = function () {
 
     NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
-    this._matrixStack = [ Matrix.create() ];
+    this._matrixStack = [ mat4.create() ];
     this._reservedMatrixStack = new MatrixMemoryPool();
     this._bb = new BoundingBox();
     this._bs = new BoundingSphere();
@@ -79,11 +79,11 @@ ComputeMultiFrustumBoundsVisitor.prototype = MACROUTILS.objectInherit( NodeVisit
 
         var matrix = this._reservedMatrixStack.get();
         var stackLength = this._matrixStack.length;
-        Matrix.copy( this._matrixStack[ stackLength - 1 ], matrix );
+        mat4.copy( matrix, this._matrixStack[ stackLength - 1 ] );
         transform.computeLocalToWorldMatrix( matrix, this );
 
         var bs = this._bs;
-        Matrix.transformBoundingSphere( matrix, transform.getBound(), this._bs );
+        transform.getBound().transformMat4( this._bs, matrix );
 
         // camera cull
         if ( this._cameraFrustum.getCurrentMask() !== 0 ) {
@@ -118,10 +118,10 @@ ComputeMultiFrustumBoundsVisitor.prototype = MACROUTILS.objectInherit( NodeVisit
         return function ( bbox ) {
             var stackLength = this._matrixStack.length;
             var matrix = this._matrixStack[ stackLength - 1 ];
-            if ( Matrix.isIdentity( matrix ) ) {
+            if ( mat4.exactEquals( matrix, mat4.IDENTITY ) ) {
                 this._bb.expandByBoundingBox( bbox );
             } else if ( bbox.valid() ) {
-                Matrix.transformBoundingBox( matrix, bbox, bbOut );
+                bbox.transformMat4( bbOut, matrix );
                 this._bb.expandByBoundingBox( bbOut );
             }
         };
@@ -138,7 +138,7 @@ ComputeMultiFrustumBoundsVisitor.prototype = MACROUTILS.objectInherit( NodeVisit
         } else if ( typeID === Geometry.getTypeID() ) {
             var bs = this._bs;
             var matrix = this._matrixStack[ this._matrixStack.length - 1 ];
-            Matrix.transformBoundingSphere( matrix, node.getBound(), bs );
+            node.getBound().transformMat4( bs, matrix );
 
             // camera cull
             if ( this._cameraFrustum.getCurrentMask() !== 0 ) {

@@ -2,10 +2,10 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Manipulator = require( 'osgGA/Manipulator' );
 var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
-var Matrix = require( 'osg/Matrix' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec3 = require( 'osg/Vec3' );
-var Quat = require( 'osg/Quat' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
+var vec2 = require( 'osg/glMatrix' ).vec2;
+var vec3 = require( 'osg/glMatrix' ).vec3;
+var quat = require( 'osg/glMatrix' ).quat;
 var FirstPersonManipulatorDeviceOrientationController = require( 'osgGA/FirstPersonManipulatorDeviceOrientationController' );
 var FirstPersonManipulatorHammerController = require( 'osgGA/FirstPersonManipulatorHammerController' );
 var FirstPersonManipulatorWebVRController = require( 'osgGA/FirstPersonManipulatorWebVRController' );
@@ -38,15 +38,15 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
 
         this._distance = this.getHomeDistance( bs );
         var cen = bs.center();
-        Vec3.mult( this._direction, -this._distance, this._eye );
-        Vec3.add( cen, this._eye, this._eye );
+        vec3.scale( this._eye, this._direction, -this._distance );
+        vec3.add( this._eye, cen, this._eye );
         this.setTarget( cen );
     },
 
     init: function () {
-        this._direction = Vec3.createAndSet( 0.0, 1.0, 0.0 );
-        this._eye = Vec3.createAndSet( 0.0, 25.0, 10.0 );
-        this._up = Vec3.createAndSet( 0.0, 0.0, 1.0 );
+        this._direction = vec3.fromValues( 0.0, 1.0, 0.0 );
+        this._eye = vec3.fromValues( 0.0, 25.0, 10.0 );
+        this._up = vec3.fromValues( 0.0, 0.0, 1.0 );
         this._distance = 1.0;
         this._forward = new OrbitManipulator.Interpolator( 1 );
         this._side = new OrbitManipulator.Interpolator( 1 );
@@ -61,13 +61,13 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         this._angleHorizontal = 0.0;
 
         // tmp value use for computation
-        this._tmpGetTargetDir = Vec3.create();
+        this._tmpGetTargetDir = vec3.create();
 
         // vr controls
         this._vrEnable = false;
-        this._vrRot = Quat.create(); // absolute orientation
-        this._vrPos = Vec3.create(); // absolute position
-        this._vrTrans = Vec3.create(); // delta translation since last update
+        this._vrRot = quat.create(); // absolute orientation
+        this._vrPos = vec3.create(); // absolute position
+        this._vrTrans = vec3.create(); // delta translation since last update
 
         var self = this;
 
@@ -103,25 +103,25 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
     },
 
     getTarget: function ( pos ) {
-        var dir = Vec3.mult( this._direction, this._distance, this._tmpGetTargetDir );
-        Vec3.add( this._eye, dir, pos );
+        var dir = vec3.scale( this._tmpGetTargetDir, this._direction, this._distance );
+        vec3.add( pos, this._eye, dir );
         return pos;
     },
 
     setTarget: function ( pos ) {
         var dir = this._tmpGetTargetDir;
-        Vec3.sub( pos, this._eye, dir );
+        vec3.sub( dir, pos, this._eye );
         dir[ 2 ] = 0.0;
-        Vec3.normalize( dir, dir );
+        vec3.normalize( dir, dir );
         this._angleHorizontal = Math.acos( dir[ 1 ] );
         if ( dir[ 0 ] < 0.0 ) {
             this._angleHorizontal = -this._angleHorizontal;
         }
-        Vec3.sub( pos, this._eye, dir );
-        Vec3.normalize( dir, dir );
+        vec3.sub( dir, pos, this._eye );
+        vec3.normalize( dir, dir );
 
         this._angleVertical = -Math.asin( dir[ 2 ] );
-        Vec3.copy( dir, this._direction );
+        vec3.copy( this._direction, dir );
     },
 
     getLookPositionInterpolator: function () {
@@ -145,11 +145,11 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
     },
 
     computeRotation: ( function () {
-        var first = Matrix.create();
-        var rotMat = Matrix.create();
+        var first = mat4.create();
+        var rotMat = mat4.create();
 
-        var upy = Vec3.createAndSet( 0.0, 1.0, 0.0 );
-        var upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
+        var upy = vec3.fromValues( 0.0, 1.0, 0.0 );
+        var upz = vec3.fromValues( 0.0, 0.0, 1.0 );
         var LIMIT = Math.PI * 0.5;
         return function ( dx, dy ) {
             this._angleVertical += dy * 0.01;
@@ -158,18 +158,18 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             else if ( this._angleVertical < -LIMIT ) this._angleVertical = -LIMIT;
 
             if ( this._vrEnable ) {
-                Quat.transformVec3( this._vrRot, upy, this._direction );
-                Vec3.normalize( this._direction, this._direction );
-                Quat.transformVec3( this._vrRot, upz, this._up );
+                vec3.transformQuat( this._direction, upy, this._vrRot );
+                vec3.normalize( this._direction, this._direction );
+                vec3.transformQuat( this._up, upz, this._vrRot );
 
             } else {
-                Matrix.makeRotate( -this._angleVertical, 1.0, 0.0, 0.0, first );
-                Matrix.makeRotate( -this._angleHorizontal, 0.0, 0.0, 1.0, rotMat );
-                Matrix.preMult( rotMat, first );
+                mat4.fromRotation( first, -this._angleVertical, [ 1.0, 0.0, 0.0 ] );
+                mat4.fromRotation( rotMat, -this._angleHorizontal, [ 0.0, 0.0, 1.0 ] );
+                mat4.mul( rotMat, rotMat, first );
 
-                Matrix.transformVec3( rotMat, upy, this._direction );
-                Vec3.normalize( this._direction, this._direction );
-                Matrix.transformVec3( rotMat, upz, this._up );
+                vec3.transformMat4( this._direction, upy, rotMat );
+                vec3.normalize( this._direction, this._direction );
+                vec3.transformMat4( this._up, upz, rotMat );
             }
         };
     } )(),
@@ -187,7 +187,7 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
     },
 
     computePosition: ( function () {
-        var vec = Vec2.create();
+        var vec = vec2.create();
 
         return function ( dt ) {
             this._forward.update( dt );
@@ -203,8 +203,8 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             // time based displacement vector
             vec[ 0 ] = this._forward.getCurrent()[ 0 ];
             vec[ 1 ] = this._side.getCurrent()[ 0 ];
-            var len2 = Vec2.length2( vec );
-            if ( len2 > 1.0 ) Vec2.mult( vec, 1.0 / Math.sqrt( len2 ), vec );
+            var len2 = vec2.sqrLen( vec );
+            if ( len2 > 1.0 ) vec2.scale( vec, vec, 1.0 / Math.sqrt( len2 ) );
 
             // direct displacement vectors
             var pan = this._pan.update( dt );
@@ -218,16 +218,16 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             this.strafeVertical( -pan[ 1 ] * directFactor );
 
             if ( this._vrEnable ) {
-                Vec3.add( this._eye, this._vrTrans, this._eye );
+                vec3.add( this._eye, this._eye, this._vrTrans );
                 // in case setPoseVR skips some frame (possible if tracking is lost temporarily)
-                Vec3.init( this._vrTrans );
+                vec3.init( this._vrTrans );
             }
         };
     } )(),
 
 
     update: ( function () {
-        var tmpTarget = Vec3.create();
+        var tmpTarget = vec3.create();
 
         return function ( nv ) {
 
@@ -237,8 +237,8 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
             this.computePosition( dt );
 
-            Vec3.add( this._eye, this._direction, tmpTarget );
-            Matrix.makeLookAt( this._eye, tmpTarget, this._up, this._inverseMatrix );
+            vec3.add( tmpTarget, this._eye, this._direction );
+            mat4.lookAt( this._inverseMatrix, this._eye, tmpTarget, this._up );
 
             this._vrEnable = false; // setPoseVR is called on each frame
         };
@@ -246,36 +246,36 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
 
     setPoseVR: function ( quat, pos ) {
         this._vrEnable = true;
-        Quat.copy( quat, this._vrRot );
-        Vec3.sub( pos, this._vrPos, this._vrTrans );
-        Vec3.copy( pos, this._vrPos );
+        quat.copy( this._vrRot, quat );
+        vec3.sub( this._vrTrans, pos, this._vrPos );
+        vec3.copy( this._vrPos, pos );
     },
 
     moveForward: ( function () {
-        var tmp = Vec3.create();
+        var tmp = vec3.create();
         return function ( distance ) {
-            Vec3.normalize( this._direction, tmp );
-            Vec3.mult( tmp, distance, tmp );
-            Vec3.add( this._eye, tmp, this._eye );
+            vec3.normalize( tmp, this._direction );
+            vec3.scale( tmp, tmp, distance );
+            vec3.add( this._eye, this._eye, tmp );
         };
     } )(),
 
     strafe: ( function () {
-        var tmp = Vec3.create();
+        var tmp = vec3.create();
         return function ( distance ) {
-            Vec3.cross( this._direction, this._up, tmp );
-            Vec3.normalize( tmp, tmp );
-            Vec3.mult( tmp, distance, tmp );
-            Vec3.add( this._eye, tmp, this._eye );
+            vec3.cross( tmp, this._direction, this._up );
+            vec3.normalize( tmp, tmp );
+            vec3.scale( tmp, tmp, distance );
+            vec3.add( this._eye, this._eye, tmp );
         };
     } )(),
 
     strafeVertical: ( function () {
-        var tmp = Vec3.create();
+        var tmp = vec3.create();
         return function ( distance ) {
-            Vec3.normalize( this._up, tmp );
-            Vec3.mult( tmp, distance, tmp );
-            Vec3.add( this._eye, tmp, this._eye );
+            vec3.normalize( tmp, this._up );
+            vec3.scale( tmp, tmp, distance );
+            vec3.add( this._eye, this._eye, tmp );
         };
     } )()
 

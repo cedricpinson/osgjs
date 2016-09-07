@@ -60,8 +60,8 @@
             var groundPlace = new osg.MatrixTransform();
             groundPlace.addChild( ground );
             var m = groundPlace.getMatrix();
-            osg.Matrix.makeRotate( 0.0, 0.0, 0.0, 1.0, m );
-            osg.Matrix.setTrans( m, 0.0, 0.0, 0.0 );
+            osg.mat4.fromRotation( m, 0.0, [ 0.0, 0.0, 1.0 ] );
+            osg.mat4.setTranslation( m, [ 0.0, 0.0, 0.0 ] );
             group.addChild( groundPlace );
 
             ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, osg.Texture.createFromURL( this._mediaPath + 'textures/seamless/bricks1.jpg' ) );
@@ -120,11 +120,11 @@
                 osg.extend( optionsDebug, optionalArgs );
 
             var matrixDest = ComposerdebugCamera.getProjectionMatrix();
-            osg.Matrix.makeOrtho( 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5, matrixDest );
+            osg.mat4.ortho( matrixDest, 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5 );
             ComposerdebugCamera.setProjectionMatrix( matrixDest ); //not really needed until we do matrix caches
 
             matrixDest = ComposerdebugCamera.getViewMatrix();
-            osg.Matrix.makeTranslate( 0, 0, 0, matrixDest );
+            osg.mat4.fromTranslation( matrixDest, [ 0, 0, 0 ] );
             ComposerdebugCamera.setViewMatrix( matrixDest );
             ComposerdebugCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
             ComposerdebugCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
@@ -192,7 +192,7 @@
 
             if ( is3D ) {
                 camera.attachRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16 );
-                camera.setClearColor( osg.Vec4.create( [ 0.0, 0.0, 0.1, 1.0 ] ) );
+                camera.setClearColor( osg.vec4.fromValues( 0.0, 0.0, 0.1, 1.0 ) );
             } else {
 
                 camera.setClearMask( 0 );
@@ -244,8 +244,8 @@
 
             // rotation
             var m = this._rotate.getMatrix();
-            osg.Matrix.makeRotate( this._angle, 0.0, 0.0, 1.0, m );
-            osg.Matrix.setTrans( m, 0, 0, 0 );
+            osg.mat4.fromRotation( m, this._angle, [ 0.0, 0.0, 1.0 ] );
+            osg.mat4.setTranslation( m, [ 0, 0, 0 ] );
 
             this._angle += parseFloat( this._config.angle );
 
@@ -490,7 +490,7 @@
             //        cameraScene.setComputeNearFar( false );
             var m = cameraScene.getViewMatrix();
 
-            osg.Matrix.makeRotate( -90, 0.0, 1.0, 0.0, m );
+            osg.mat4.fromRotation( m, -90, [ 0.0, 1.0, 0.0 ] );
 
 
             cameraScene.setViewMatrix( m );

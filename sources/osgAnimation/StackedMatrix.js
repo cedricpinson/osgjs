@@ -1,13 +1,13 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var Target = require( 'osgAnimation/Target' );
 
 
 var StackedMatrix = function ( name, matrix ) {
     Object.call( this );
-    this._target = Target.createMatrixTarget( matrix || Matrix.identity );
+    this._target = Target.createMatrixTarget( matrix || mat4.IDENTITY );
     if ( name ) this.setName( name );
 };
 
@@ -15,7 +15,7 @@ StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( matrix ) {
         this.setMatrix( matrix );
-        Matrix.copy( matrix, this._target.defaultValue );
+        mat4.copy( this._target.defaultValue, matrix );
     },
 
     getTarget: function () {
@@ -27,7 +27,7 @@ StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
     setMatrix: function ( m ) {
-        Matrix.copy( m, this._target.value );
+        mat4.copy( this._target.value, m );
     },
 
     resetToDefaultValue: function () {
@@ -35,7 +35,7 @@ StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
     },
 
     applyToMatrix: function ( m ) {
-        Matrix.preMult( m, this._target.value );
+        mat4.mul( m, m, this._target.value );
     }
 
 } );

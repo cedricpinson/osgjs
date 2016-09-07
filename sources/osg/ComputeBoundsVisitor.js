@@ -1,7 +1,7 @@
 'use strict';
 var BoundingBox = require( 'osg/BoundingBox' );
 var Geometry = require( 'osg/Geometry' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var Transform = require( 'osg/Transform' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
@@ -43,9 +43,9 @@ ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objec
         var stackLength = this._matrixStack.length;
 
         if ( stackLength )
-            Matrix.copy( this._matrixStack[ stackLength - 1 ], matrix );
+            mat4.copy( matrix, this._matrixStack[ stackLength - 1 ] );
         else
-            Matrix.makeIdentity( matrix );
+            mat4.identity( matrix );
 
         transform.computeLocalToWorldMatrix( matrix, this );
 
@@ -91,7 +91,8 @@ ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objec
                 this._bb.expandByBoundingBox( bbox );
             else if ( bbox.valid() ) {
                 var matrix = this._matrixStack[ stackLength - 1 ];
-                Matrix.transformBoundingBox( matrix, bbox, bbOut );
+                //Matrix.transformBoundingBox( matrix, bbox, bbOut );
+                bbox.transformMat4( bbOut, matrix );
                 this._bb.expandByBoundingBox( bbOut );
             }
 

@@ -1,5 +1,5 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 var Notify = require( 'osg/Notify' );
 
@@ -10,9 +10,9 @@ var KdTreeRayIntersector = function () {
     }
 
     this._intersector = new TriangleIntersector();
-    this._dInvX = Vec3.create();
-    this._dInvY = Vec3.create();
-    this._dInvZ = Vec3.create();
+    this._dInvX = vec3.create();
+    this._dInvY = vec3.create();
+    this._dInvZ = vec3.create();
 
 };
 
@@ -24,18 +24,18 @@ KdTreeRayIntersector.prototype = {
     },
     init: ( function () {
 
-        var dir = Vec3.create();
+        var dir = vec3.create();
 
         return function ( intersections, start, end, nodePath ) {
-            var d = Vec3.sub( end, start, dir );
-            var len = Vec3.length( d );
+            var d = vec3.sub( dir, end, start );
+            var len = vec3.length( d );
             var invLen = 0.0;
             if ( len !== 0.0 )
                 invLen = 1.0 / len;
-            Vec3.mult( d, invLen, d );
-            if ( d[ 0 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 0 ], this._dInvX );
-            if ( d[ 1 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 1 ], this._dInvY );
-            if ( d[ 2 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 2 ], this._dInvZ );
+            vec3.scale( d, d, invLen );
+            if ( d[ 0 ] !== 0.0 ) vec3.scale( this._dInvX, d, 1.0 / d[ 0 ] );
+            if ( d[ 1 ] !== 0.0 ) vec3.scale( this._dInvY, d, 1.0 / d[ 1 ] );
+            if ( d[ 2 ] !== 0.0 ) vec3.scale( this._dInvZ, d, 1.0 / d[ 2 ] );
 
             this._intersector._intersections = intersections;
             this._intersector.setNodePath( nodePath );
@@ -48,9 +48,9 @@ KdTreeRayIntersector.prototype = {
     // intersects the boundinbox of the nodes
     intersect: ( function () {
 
-        var v0 = Vec3.create();
-        var v1 = Vec3.create();
-        var v2 = Vec3.create();
+        var v0 = vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
 
         return function ( node, ls, le ) {
             var first = node._first;
@@ -94,8 +94,8 @@ KdTreeRayIntersector.prototype = {
                 var kNodes = this._kdNodes;
 
                 var kNode;
-                Vec3.copy( ls, s );
-                Vec3.copy( le, e );
+                vec3.copy( s, ls );
+                vec3.copy( e, le );
                 if ( first > 0 ) {
                     kNode = kNodes[ first ];
                     if ( this.intersectAndClip( s, e, kNode._bb ) ) {
@@ -103,8 +103,8 @@ KdTreeRayIntersector.prototype = {
                     }
                 }
                 if ( second > 0 ) {
-                    Vec3.copy( ls, s );
-                    Vec3.copy( le, e );
+                    vec3.copy( s, ls );
+                    vec3.copy( e, le );
                     kNode = kNodes[ second ];
                     if ( this.intersectAndClip( s, e, kNode._bb ) ) {
                         this.intersect( kNode, s, e );
@@ -118,9 +118,6 @@ KdTreeRayIntersector.prototype = {
     // If so... it clip the ray so that the start and end point of the ray are
     // snapped to the bounding box of the nodes
     intersectAndClip: ( function () {
-
-        // needed because of precision picking
-        var tmp = new Float64Array( 3 );
 
         return function ( s, e, bb ) {
             var min = bb._min;
@@ -144,14 +141,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( s[ 0 ] < xmin ) {
                     // clip s to xMin.
-                    Vec3.mult( invX, xmin - s[ 0 ], tmp );
-                    Vec3.add( s, tmp, s );
+                    vec3.scaleAndAdd( s, s, invX, xmin - s[ 0 ] );
                 }
 
                 if ( e[ 0 ] > xmax ) {
                     // clip e to xMax.
-                    Vec3.mult( invX, xmax - s[ 0 ], tmp );
-                    Vec3.add( s, tmp, e );
+                    vec3.scaleAndAdd( e, s, invX, xmax - s[ 0 ] );
                 }
             } else {
                 if ( s[ 0 ] < xmin ) return false;
@@ -159,14 +154,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( e[ 0 ] < xmin ) {
                     // clip s to xMin.
-                    Vec3.mult( invX, xmin - s[ 0 ], tmp );
-                    Vec3.add( s, tmp, e );
+                    vec3.scaleAndAdd( e, s, invX, xmin - s[ 0 ] );
                 }
 
                 if ( s[ 0 ] > xmax ) {
                     // clip e to xMax.
-                    Vec3.mult( invX, xmax - s[ 0 ], tmp );
-                    Vec3.add( s, tmp, s );
+                    vec3.scaleAndAdd( s, s, invX, xmax - s[ 0 ] );
                 }
             }
 
@@ -179,14 +172,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( s[ 1 ] < ymin ) {
                     // clip s to yMin.
-                    Vec3.mult( invY, ymin - s[ 1 ], tmp );
-                    Vec3.add( s, tmp, s );
+                    vec3.scaleAndAdd( s, s, invY, ymin - s[ 1 ] );
                 }
 
                 if ( e[ 1 ] > ymax ) {
                     // clip e to yMax.
-                    Vec3.mult( invY, ymax - s[ 1 ], tmp );
-                    Vec3.add( s, tmp, e );
+                    vec3.scaleAndAdd( e, s, invY, ymax - s[ 1 ] );
                 }
             } else {
                 if ( s[ 1 ] < ymin ) return false;
@@ -194,14 +185,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( e[ 1 ] < ymin ) {
                     // clip s to yMin.
-                    Vec3.mult( invY, ymin - s[ 1 ], tmp );
-                    Vec3.add( s, tmp, e );
+                    vec3.scaleAndAdd( e, s, invY, ymin - s[ 1 ] );
                 }
 
                 if ( s[ 1 ] > ymax ) {
                     // clip e to yMax.
-                    Vec3.mult( invY, ymax - s[ 1 ], tmp );
-                    Vec3.add( s, tmp, s );
+                    vec3.scaleAndAdd( s, s, invY, ymax - s[ 1 ] );
                 }
             }
 
@@ -213,14 +202,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( s[ 2 ] < zmin ) {
                     // clip s to zMin.
-                    Vec3.mult( invZ, zmin - s[ 2 ], tmp );
-                    Vec3.add( s, tmp, s );
+                    vec3.scaleAndAdd( s, s, invZ, zmin - s[ 2 ] );
                 }
 
                 if ( e[ 2 ] > zmax ) {
                     // clip e to zMax.
-                    Vec3.mult( invZ, zmax - s[ 2 ], tmp );
-                    Vec3.add( s, tmp, e );
+                    vec3.scaleAndAdd( e, s, invZ, zmax - s[ 2 ] );
                 }
             } else {
                 if ( s[ 2 ] < zmin ) return false;
@@ -228,14 +215,12 @@ KdTreeRayIntersector.prototype = {
 
                 if ( e[ 2 ] < zmin ) {
                     // clip s to zMin.
-                    Vec3.mult( invZ, zmin - s[ 2 ], tmp );
-                    Vec3.add( s, tmp, e );
+                    vec3.scaleAndAdd( e, s, invZ, zmin - s[ 2 ] );
                 }
 
                 if ( s[ 2 ] > zmax ) {
                     // clip e to zMax.
-                    Vec3.mult( invZ, zmax - s[ 2 ], tmp );
-                    Vec3.add( s, tmp, s );
+                    vec3.scaleAndAdd( s, s, invZ, zmax - s[ 2 ] );
                 }
             }
             return true;

@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Matrix = require( 'osg/Matrix' );
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
 
 
@@ -13,7 +13,7 @@ var UpdateMatrixTransform = function () {
     // maybe could have a more generic name and used by all AnimationUpdateCallback
     this._stackedTransforms = [];
 
-    this._matrix = Matrix.create();
+    this._matrix = mat4.create();
 
     this._dirty = false;
 };
@@ -28,7 +28,7 @@ UpdateMatrixTransform.prototype = MACROUTILS.objectInherit( AnimationUpdateCallb
     computeChannels: function () {
         this._dirty = true;
         var matrix = this._matrix;
-        Matrix.makeIdentity( matrix );
+        mat4.identity( matrix );
         var transforms = this._stackedTransforms;
 
         for ( var i = 0, l = transforms.length; i < l; i++ ) {
@@ -38,7 +38,7 @@ UpdateMatrixTransform.prototype = MACROUTILS.objectInherit( AnimationUpdateCallb
     },
 
     update: function ( node /*, nv */ ) {
-        Matrix.copy( this._matrix, node.getMatrix() );
+        mat4.copy( node.getMatrix(), this._matrix );
         if ( this._dirty ) {
             node.dirtyBound();
             this._dirty = false;
