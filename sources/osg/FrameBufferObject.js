@@ -18,7 +18,7 @@ var FrameBufferObject = function () {
     this._rbo = undefined;
     this._attachments = [];
     this._dirty = true;
-
+    this._extDrawBuffers = undefined;
 };
 
 FrameBufferObject.COLOR_ATTACHMENT0 = 0x8CE0;
@@ -249,10 +249,9 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
         var gl = this._gl;
         var status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
-        if ( status !== 0x8CD5 ) {
+        if ( status !== gl.FRAMEBUFFER_COMPLETE ) {
             this._reportFrameBufferError( status );
         }
-
     },
 
     _checkAllowedSize: function ( w, h ) {
@@ -285,6 +284,14 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
                 this.bindFrameBufferObject();
 
+
+                // Check extDrawBuffers extension
+                var extDrawBuffers = this._extDrawBuffers;
+                if ( extDrawBuffers === undefined ) { // will be null if not supported
+                    extDrawBuffers = WebglCaps.instance( gl ).getWebGLExtension( 'WEBGL_draw_buffers' );
+                    this._extDrawBuffers = extDrawBuffers;
+                }
+                var bufs = extDrawBuffers ? [] : undefined;
                 var hasRenderBuffer = false;
 
                 for ( var i = 0, l = attachments.length; i < l; ++i ) {
@@ -313,16 +320,20 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                             return;
                         }
 
+                        // Not sure is needed to check the attachment.attachment
+                        if ( extDrawBuffers !== undefined && attachment.attachment >= extDrawBuffers.COLOR_ATTACHMENT0_WEBGL && attachment.attachment <= extDrawBuffers.COLOR_ATTACHMENT15_WEBGL ) {
+                            bufs.push( attachment.attachment );
+                        }
+
                         if ( !this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture ) ) {
                             this.releaseGLObjects();
                             return;
 
                         }
-
-
                     }
-
                 }
+                if ( extDrawBuffers )
+                    extDrawBuffers.drawBuffersWEBGL( bufs );
 
                 this.checkStatus();
 
