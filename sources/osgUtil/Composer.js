@@ -269,8 +269,7 @@ Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
             // which is a special case rather than the default
             camera.setClearMask( 0 );
 
-
-            camera.setName( 'Composer Pass' + i );
+            camera.setName( element.filter.getFragmentName() || 'Composer Pass' + i );
             // add to composer
             self.addChild( camera );
         } );

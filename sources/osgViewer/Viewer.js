@@ -4,6 +4,7 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var Options = require( 'osg/Options' );
 var P = require( 'bluebird' );
 var Timer = require( 'osg/Timer' );
+var TimerGPU = require( 'osg/TimerGPU' );
 var UpdateVisitor = require( 'osg/UpdateVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 var Texture = require( 'osg/Texture' );
@@ -310,7 +311,13 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         if ( !options.getBoolean( 'stats' ) )
             return;
 
-        this._stats = createStats();
+        this._stats = createStats( options );
+
+        TimerGPU.instance( this.getGraphicContext() ).setCallback( this.callbackTimerGPU.bind( this ) );
+    },
+
+    callbackTimerGPU: function ( average, queryID ) {
+        if ( this._stats ) this._stats.rStats( queryID ).set( average / 1e6 );
     },
 
     getViewerStats: function () {
@@ -326,15 +333,28 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         if ( this.getCamera() ) {
 
             var stats = this._stats;
+            var timerGPU = stats && TimerGPU.instance( this.getGraphicContext() );
+
             var renderer = this.getCamera().getRenderer();
 
             if ( stats ) stats.rStats( 'cull' ).start();
+
             renderer.cull();
+
             if ( stats ) stats.rStats( 'cull' ).end();
 
-            if ( stats ) stats.rStats( 'render' ).start();
+            if ( stats ) {
+                timerGPU.pollQueries();
+                timerGPU.start( 'glframe' );
+                stats.rStats( 'render' ).start();
+            }
+
             renderer.draw();
-            if ( stats ) stats.rStats( 'render' ).end();
+
+            if ( stats ) {
+                stats.rStats( 'render' ).end();
+                timerGPU.end( 'glframe' );
+            }
 
             if ( stats ) {
                 var cullVisitor = renderer.getCullVisitor();
@@ -344,7 +364,6 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
                 stats.rStats( 'cullnode' ).set( cullVisitor._numNode );
                 stats.rStats( 'cullightsource' ).set( cullVisitor._numLightSource );
                 stats.rStats( 'cullgeometry' ).set( cullVisitor._numGeometry );
-
                 stats.rStats( 'pushstateset' ).set( renderer.getState()._numPushStateSet );
             }
 
@@ -399,11 +418,13 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
         var stats = this._stats;
 
-        if ( stats ) stats.rStats( 'frame' ).start();
-        if ( stats ) stats.glS.start();
+        if ( stats ) {
+            stats.rStats( 'frame' ).start();
+            stats.glS.start();
 
-        if ( stats ) stats.rStats( 'rAF' ).tick();
-        if ( stats ) stats.rStats( 'FPS' ).frame();
+            stats.rStats( 'rAF' ).tick();
+            stats.rStats( 'FPS' ).frame();
+        }
 
     },
 
@@ -417,13 +438,12 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         // update texture stats
         if ( rStats ) {
             Texture.getTextureManager( this.getGraphicContext() ).updateStats( frameNumber, rStats );
+            rStats( 'frame' ).end();
+
+            rStats( 'rStats' ).start();
+            rStats().update();
+            rStats( 'rStats' ).end();
         }
-
-        if ( rStats ) rStats( 'frame' ).end();
-
-        if ( rStats ) rStats( 'rStats' ).start();
-        if ( rStats ) rStats().update();
-        if ( rStats ) rStats( 'rStats' ).end();
 
     },
 
