@@ -14,6 +14,7 @@ var EventProxy = require( 'osgViewer/eventProxy/EventProxy' );
 var View = require( 'osgViewer/View' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
 var WebGLDebugUtils = require( 'osgViewer/webgl-debug' );
+var requestFile = require( 'osgDB/requestFile' );
 
 
 var OptionsURL = ( function () {
@@ -92,7 +93,6 @@ var OptionsURL = ( function () {
 
 
 var getGLSLOptimizer = function () {
-    if ( !window.$ ) return P.reject( 'jquery not found to load GLSL optimizer' );
 
     var deferOptimizeGLSL = P.defer();
     window.deferOptimizeGLSL = deferOptimizeGLSL;
@@ -122,18 +122,17 @@ var getGLSLOptimizer = function () {
         '        };'
     ].join( '\n' );
 
-    var $ = window.$;
     Notify.log( 'try to load glsl optimizer' );
     var url = 'https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/glsl-optimizer.js';
-    $.get( url )
-        .done( function ( script ) {
-            /*jshint evil: true */
-            eval( mod + script );
-            /*jshint evil: false */
-        } )
-        .fail( function () {
-            deferOptimizeGLSL.reject();
-        } );
+    var promise = requestFile( url );
+    promise.then( function ( script ) {
+        /*jshint evil: true */
+        eval( mod + script );
+        /*jshint evil: false */
+    } ).catch( function () {
+        deferOptimizeGLSL.reject();
+    } );
+
     return deferOptimizeGLSL.promise;
 };
 

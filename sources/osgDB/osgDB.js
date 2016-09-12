@@ -14,5 +14,5 @@ osgDB.DatabasePager = DatabasePager;
 osgDB.ObjectWrapper.serializers.osg = osgWrappers;
 osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
 osgDB.ObjectWrapper.serializers.osgText = osgTextWrappers;
-
+osgDB.requestFile = require( 'osgDB/requestFile' );
 module.exports = osgDB;
