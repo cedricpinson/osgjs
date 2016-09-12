@@ -1,5 +1,5 @@
 var mth = require( 'osg/Math' );
-var glm = require( 'osg/glMatrix/glMatrix' );
+var glm = require( 'gl-matrix' );
 var config = require( 'config.js' );
 glm.glMatrix.setMatrixArrayType( config.ArrayType );
 
