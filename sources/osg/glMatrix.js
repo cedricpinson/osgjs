@@ -94,7 +94,7 @@ vec2.fromValues64 = function ( a, b ) {
 };
 
 vec2.init = function ( out ) {
-    return vec3.set( out, 0.0, 0.0 );
+    return vec2.set( out, 0.0, 0.0 );
 };
 
 vec2.valid = function ( a ) {
