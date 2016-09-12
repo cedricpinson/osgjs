@@ -1327,14 +1327,14 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var values = this.stateSets.values();
         var nbStateSets = values.length;
         if ( nbLast !== nbStateSets )
-            return false;
+            return true;
 
         for ( var i = 0; i < nbStateSets; i++ ) {
             if ( id !== values[ i ].getDrawID() )
-                return false;
+                return true;
         }
 
-        return true;
+        return false;
     }
 
 
