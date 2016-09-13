@@ -237,7 +237,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
 
     setMinDistance: function ( d ) {
-        this._minDistance = Math.max( 1e-4, d );
+        this._minDistance = d;
     },
     getMinDistance: function () {
         return this._minDistance;
