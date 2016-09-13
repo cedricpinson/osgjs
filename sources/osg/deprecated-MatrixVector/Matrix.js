@@ -216,7 +216,7 @@ var Matrix = {
     },
 
     transformVec4: function ( matrix, vector, result ) {
-        return glm.vec4.transformMat4( result, matrix, vector );
+        return glm.vec4.transformMat4( result, vector, matrix );
     },
 
     // http://dev.theomader.com/transform-bounding-boxes/
