@@ -192,15 +192,15 @@ var Matrix = {
 
     preMultRotate: ( function () {
         var r = matrixCreate();
-        return function ( matrix, quat ) {
-            return glm.mat4.multiply( matrix, matrix, glm.mat4.fromQuat( r, quat ) );
+        return function ( matrix, q ) {
+            return glm.mat4.multiply( matrix, matrix, glm.mat4.fromQuat( r, q ) );
         };
     } )(),
 
     postMultRotate: ( function () {
         var r = matrixCreate();
-        return function ( matrix, quat ) {
-            return glm.mat4.multiply( matrix, glm.mat4.fromQuat( r, quat ), matrix );
+        return function ( m, q ) {
+            return glm.mat4.multiply( m, glm.mat4.fromQuat( r, q ), m );
         };
     } )(),
 
@@ -619,24 +619,24 @@ var Matrix = {
         return glm.mat4.frustum( result, left, right, bottom, top, znear, zfar );
     },
 
-    makeRotateFromQuat: function ( quat, result ) {
-        return glm.mat4.fromQuat( result, quat );
+    makeRotateFromQuat: function ( q, result ) {
+        return glm.mat4.fromQuat( result, q );
     },
 
-    setRotateFromQuat: function ( matrix, q ) {
+    setRotateFromQuat: function ( m, q ) {
         var length2 = glm.quat.sqrLen( q );
         if ( Mabs( length2 ) <= NMIN_VALUE ) {
-            matrix[ 0 ] = 0.0;
-            matrix[ 1 ] = 0.0;
-            matrix[ 2 ] = 0.0;
+            m[ 0 ] = 0.0;
+            m[ 1 ] = 0.0;
+            m[ 2 ] = 0.0;
 
-            matrix[ 4 ] = 0.0;
-            matrix[ 5 ] = 0.0;
-            matrix[ 6 ] = 0.0;
+            m[ 4 ] = 0.0;
+            m[ 5 ] = 0.0;
+            m[ 6 ] = 0.0;
 
-            matrix[ 8 ] = 0.0;
-            matrix[ 9 ] = 0.0;
-            matrix[ 10 ] = 0.0;
+            m[ 8 ] = 0.0;
+            m[ 9 ] = 0.0;
+            m[ 10 ] = 0.0;
         } else {
             var rlength2;
             // normalize quat if required.
@@ -676,20 +676,20 @@ var Matrix = {
             // methodology.  The matrix assignment has been altered in the next
             // few lines of code to do the right thing.
             // Don Burns - Oct 13, 2001
-            matrix[ 0 ] = 1.0 - ( yy + zz );
-            matrix[ 4 ] = xy - wz;
-            matrix[ 8 ] = xz + wy;
+            m[ 0 ] = 1.0 - ( yy + zz );
+            m[ 4 ] = xy - wz;
+            m[ 8 ] = xz + wy;
 
 
-            matrix[ 0 + 1 ] = xy + wz;
-            matrix[ 4 + 1 ] = 1.0 - ( xx + zz );
-            matrix[ 8 + 1 ] = yz - wx;
+            m[ 0 + 1 ] = xy + wz;
+            m[ 4 + 1 ] = 1.0 - ( xx + zz );
+            m[ 8 + 1 ] = yz - wx;
 
-            matrix[ 0 + 2 ] = xz - wy;
-            matrix[ 4 + 2 ] = yz + wx;
-            matrix[ 8 + 2 ] = 1.0 - ( xx + yy );
+            m[ 0 + 2 ] = xz - wy;
+            m[ 4 + 2 ] = yz + wx;
+            m[ 8 + 2 ] = 1.0 - ( xx + yy );
         }
-        return matrix;
+        return m;
     }
 };
 

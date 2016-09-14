@@ -106,7 +106,7 @@ FirstPersonManipulatorDeviceOrientationController.computeQuaternion = ( function
         // var result = mat4.create();
         // mat4.mul( result, rotateY, rotateX );
         // mat4.mul( result, result, rotateZ );
-        // mat4.getRotation( quat, result );
+        // mat4.getRotation( q, result );
 
         var minusHalfAngle = -screenAngle / 2.0;
         screenTransform[ 1 ] = Math.sin( minusHalfAngle );
