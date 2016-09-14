@@ -187,7 +187,10 @@ var Matrix = {
     },
 
     makeRotate: function ( angle, x, y, z, result ) {
-        return glm.mat4.fromRotation( result, angle, [ x, y, z ] );
+        var v = [ x, y, z ];
+        if ( x === 0.0 && y === 0.0 && z === 0.0 )
+            v[ 2 ] = 1.0;
+        return glm.mat4.fromRotation( result, angle, v );
     },
 
     preMultRotate: ( function () {
