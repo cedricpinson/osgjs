@@ -1,6 +1,6 @@
 
     if (!lighted)
-        return 1.;
+        return 0.;
 
     if (depthRange.x == depthRange.y)
         return 1.;
