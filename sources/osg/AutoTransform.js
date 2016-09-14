@@ -60,8 +60,8 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         return this._position;
     },
 
-    setRotation: function ( quat ) {
-        this._rotation = quat;
+    setRotation: function ( q ) {
+        this._rotation = q;
         this._matrixDirty = true;
         this.dirtyBound();
     },

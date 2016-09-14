@@ -244,9 +244,9 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         };
     } )(),
 
-    setPoseVR: function ( quat, pos ) {
+    setPoseVR: function ( q, pos ) {
         this._vrEnable = true;
-        quat.copy( this._vrRot, quat );
+        quat.copy( this._vrRot, q );
         vec3.sub( this._vrTrans, pos, this._vrPos );
         vec3.copy( this._vrPos, pos );
     },
