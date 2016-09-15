@@ -116,10 +116,12 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._distance = 25.0;
         this._target = vec3.create();
         this._upz = vec3.fromValues( 0.0, 0.0, 1.0 );
+        this._right = vec3.fromValues( 1.0, 0.0, 0.0 );
+
         vec3.init( this._target );
 
-        var rot1 = mat4.fromRotation( mat4.create(), -Math.PI, [ 0.0, 0.0, 1.0 ] );
-        var rot2 = mat4.fromRotation( mat4.create(), Math.PI / 10.0, [ 1.0, 0.0, 0.0 ] );
+        var rot1 = mat4.fromRotation( mat4.create(), -Math.PI, this._upz );
+        var rot2 = mat4.fromRotation( mat4.create(), Math.PI / 10.0, this._right );
         this._rotation = mat4.create();
         mat4.mul( this._rotation, rot1, rot2 );
         this._time = 0.0;
@@ -143,7 +145,6 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
         this._eye = undefined;
 
-        this._right = vec3.fromValues( 1.0, 0.0, 0.0 );
 
         this._zoomDir = vec3.create();
 

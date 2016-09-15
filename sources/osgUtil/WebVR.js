@@ -9,6 +9,7 @@ var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
 var Uniform = require( 'osg/Uniform' );
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var Viewport = require( 'osg/Viewport' );
 var Composer = require( 'osgUtil/Composer' );
@@ -145,8 +146,8 @@ WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldF
     // Compute projections and view matrices for both eyes
     var projectionLeft = perspectiveMatrixFromVRFieldOfView( left.fieldOfView, 0.1, 1000.0 );
     var projectionRight = perspectiveMatrixFromVRFieldOfView( right.fieldOfView, 0.1, 1000.0 );
-    var viewLeft = mat4.fromTranslation( mat4.create(), [ -worldFactor * left.offset[ 0 ], left.offset[ 1 ], left.offset[ 2 ] ] );
-    var viewRight = mat4.fromTranslation( mat4.create(), [ -worldFactor * right.offset[ 0 ], right.offset[ 1 ], right.offset[ 2 ] ] );
+    var viewLeft = mat4.fromTranslation( mat4.create(), vec3.fromValues( -worldFactor * left.offset[ 0 ], left.offset[ 1 ], left.offset[ 2 ] ) );
+    var viewRight = mat4.fromTranslation( mat4.create(), vec3.fromValues( -worldFactor * right.offset[ 0 ], right.offset[ 1 ], right.offset[ 2 ] ) );
 
     // Each eye is rendered on a texture whose width is half of the final combined texture
     var eyeTextureSize = {

@@ -67,7 +67,7 @@ var Matrix = {
      * @param {Array} matrix to write result
      */
     makeTranslate: function ( x, y, z, matrix ) {
-        return glm.mat4.fromTranslation( matrix, [ x, y, z ] );
+        return glm.mat4.fromTranslation( matrix, vec3.fromValues( x, y, z ) );
     },
 
     setTrans: function ( matrix, x, y, z ) {
@@ -187,7 +187,7 @@ var Matrix = {
     },
 
     makeRotate: function ( angle, x, y, z, result ) {
-        var v = [ x, y, z ];
+        var v = vec3.fromValues( x, y, z );
         if ( x === 0.0 && y === 0.0 && z === 0.0 )
             v[ 2 ] = 1.0;
         return glm.mat4.fromRotation( result, angle, v );
