@@ -1,7 +1,8 @@
 var mth = require( 'osg/Math' );
-var glm = require( 'osg/glMatrix/glMatrix' );
+var glm = require( 'gl-matrix' );
 var config = require( 'config.js' );
 glm.glMatrix.setMatrixArrayType( config.ArrayType );
+
 
 var vec2 = glm.vec2;
 var vec3 = glm.vec3;
@@ -12,19 +13,11 @@ var quat = glm.quat;
 // osg vec3 additions
 
 vec3.create32 = function () {
-    var out = new Float32Array( 3 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    out[ 2 ] = 0.0;
-    return out;
+    return new Float32Array( 3 );
 };
 
 vec3.create64 = function () {
-    var out = new Float64Array( 3 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    out[ 2 ] = 0.0;
-    return out;
+    return new Float64Array( 3 );
 };
 
 vec3.fromValues32 = function ( a, b, c ) {
@@ -32,6 +25,7 @@ vec3.fromValues32 = function ( a, b, c ) {
     out[ 0 ] = a;
     out[ 1 ] = b;
     out[ 2 ] = c;
+    return out;
 };
 
 vec3.fromValues64 = function ( a, b, c ) {
@@ -46,7 +40,7 @@ vec3.init = function ( out ) {
     return vec3.set( out, 0.0, 0.0, 0.0 );
 };
 
-vec3.transformMat4R = function ( out, m, v ) {
+vec3.transformMat4R = function ( out, v, m ) {
     out[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
     out[ 1 ] = m[ 4 ] * v[ 0 ] + m[ 5 ] * v[ 1 ] + m[ 6 ] * v[ 2 ];
     out[ 2 ] = m[ 8 ] * v[ 0 ] + m[ 9 ] * v[ 1 ] + m[ 10 ] * v[ 2 ];
@@ -67,23 +61,18 @@ vec3.NEGATIVE_INFINITY = vec3.fromValues( -Infinity, -Infinity, -Infinity );
 // osg vec2 additions
 
 vec2.create32 = function () {
-    var out = new Float32Array( 2 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    return out;
+    return new Float32Array( 2 );
 };
 
 vec2.create64 = function () {
-    var out = new Float64Array( 2 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    return out;
+    return new Float64Array( 2 );
 };
 
 vec2.fromValues32 = function ( a, b ) {
     var out = new Float32Array( 2 );
     out[ 0 ] = a;
     out[ 1 ] = b;
+    return out;
 };
 
 vec2.fromValues64 = function ( a, b ) {
@@ -94,7 +83,7 @@ vec2.fromValues64 = function ( a, b ) {
 };
 
 vec2.init = function ( out ) {
-    return vec3.set( out, 0.0, 0.0 );
+    return vec2.set( out, 0.0, 0.0 );
 };
 
 vec2.valid = function ( a ) {
@@ -111,21 +100,11 @@ vec2.NEGATIVE_INFINITY = vec2.fromValues( -Infinity, -Infinity );
 // osg vec4 additions
 
 vec4.create32 = function () {
-    var out = new Float32Array( 4 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    out[ 2 ] = 0.0;
-    out[ 3 ] = 0.0;
-    return out;
+    return new Float32Array( 4 );
 };
 
 vec4.create64 = function () {
-    var out = new Float64Array( 4 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    out[ 2 ] = 0.0;
-    out[ 3 ] = 0.0;
-    return out;
+    return new Float64Array( 4 );
 };
 
 vec4.fromValues32 = function ( a, b, c, d ) {
@@ -172,18 +151,12 @@ quat.zeroRotation = function ( q ) {
 
 quat.create32 = function () {
     var out = new Float32Array( 4 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    out[ 2 ] = 0.0;
     out[ 3 ] = 1.0;
     return out;
 };
 
 quat.create64 = function () {
     var out = new Float64Array( 4 );
-    out[ 0 ] = 0.0;
-    out[ 1 ] = 0.0;
-    out[ 2 ] = 0.0;
     out[ 3 ] = 1.0;
     return out;
 };
@@ -267,43 +240,13 @@ mat4.IDENTITY = mat4.create();
 
 mat4.create32 = function () {
     var out = new Float32Array( 16 );
-    out[ 0 ] = 1;
-    out[ 1 ] = 0;
-    out[ 2 ] = 0;
-    out[ 3 ] = 0;
-    out[ 4 ] = 0;
-    out[ 5 ] = 1;
-    out[ 6 ] = 0;
-    out[ 7 ] = 0;
-    out[ 8 ] = 0;
-    out[ 9 ] = 0;
-    out[ 10 ] = 1;
-    out[ 11 ] = 0;
-    out[ 12 ] = 0;
-    out[ 13 ] = 0;
-    out[ 14 ] = 0;
-    out[ 15 ] = 1;
+    out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
     return out;
 };
 
 mat4.create64 = function () {
     var out = new Float64Array( 16 );
-    out[ 0 ] = 1;
-    out[ 1 ] = 0;
-    out[ 2 ] = 0;
-    out[ 3 ] = 0;
-    out[ 4 ] = 0;
-    out[ 5 ] = 1;
-    out[ 6 ] = 0;
-    out[ 7 ] = 0;
-    out[ 8 ] = 0;
-    out[ 9 ] = 0;
-    out[ 10 ] = 1;
-    out[ 11 ] = 0;
-    out[ 12 ] = 0;
-    out[ 13 ] = 0;
-    out[ 14 ] = 0;
-    out[ 15 ] = 1;
+    out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
     return out;
 };
 
