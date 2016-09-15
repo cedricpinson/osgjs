@@ -106,7 +106,7 @@ EllipsoidModel.prototype = {
     },
     computeLocalToWorldTransformFromXYZ: function ( X, Y, Z ) {
         var lla = this.convertXYZToLatLongHeight( X, Y, Z );
-        var m = mat4.fromTranslation( mat4.create(), [ X, Y, Z ] );
+        var m = mat4.fromTranslation( mat4.create(), vec3.fromValues( X, Y, Z ) );
         this.computeCoordinateFrame( lla[ 0 ], lla[ 1 ], m );
         return m;
     },

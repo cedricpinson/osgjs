@@ -119,8 +119,8 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._upz = vec3.fromValues( 0.0, 0.0, 1.0 );
         vec3.init( this._target );
 
-        var rot1 = mat4.fromRotation( mat4.create(), -Math.PI, [ 0.0, 0.0, 1.0 ] );
-        var rot2 = mat4.fromRotation( mat4.create(), Math.PI / 10.0, [ 1.0, 0.0, 0.0 ] );
+        var rot1 = mat4.fromRotation( mat4.create(), -Math.PI, this._upz );
+        var rot2 = mat4.fromRotation( mat4.create(), Math.PI / 10.0, vec3.fromValues( 1.0, 0.0, 0.0 ) );
         this._rotation = mat4.create();
         mat4.mul( this._rotation, rot1, rot2 );
         this._time = 0.0;
@@ -297,16 +297,17 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         var r = mat4.create();
         var r2 = mat4.create();
         var tmp = vec3.create();
+        var right = vec3.fromValues( 1.0, 0.0, 0.0 );
         var radLimit = Math.acos( DOT_LIMIT ) * 2.0;
         return function ( dx, dy ) {
-            mat4.fromRotation( of, -dx / 10.0, [ 0.0, 0.0, 1.0 ] );
+            mat4.fromRotation( of, -dx / 10.0, this._upz );
             mat4.mul( r, this._rotation, of );
 
             // limit the dy movement to the range [-radLimit, radLimit]
             // so that we can't "jump" to the other side of the poles
             // with a rapid mouse movement
             dy = Math.max( Math.min( dy / 10.0, radLimit ), -radLimit );
-            mat4.fromRotation( of, -dy, [ 1.0, 0.0, 0.0 ] );
+            mat4.fromRotation( of, -dy, right );
             mat4.mul( r2, of, r );
 
             // prevent going on the other side of the sphere (block y)

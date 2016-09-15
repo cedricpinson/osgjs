@@ -67,7 +67,7 @@ var Matrix = {
      * @param {Array} matrix to write result
      */
     makeTranslate: function ( x, y, z, matrix ) {
-        return glm.mat4.fromTranslation( matrix, [ x, y, z ] );
+        return glm.mat4.fromTranslation( matrix, vec3.fromValues( x, y, z ) );
     },
 
     setTrans: function ( matrix, x, y, z ) {
@@ -187,7 +187,7 @@ var Matrix = {
     },
 
     makeRotate: function ( angle, x, y, z, result ) {
-        return glm.mat4.fromRotation( result, angle, [ x, y, z ] );
+        return glm.mat4.fromRotation( result, angle, vec3.fromValues( x, y, z ) );
     },
 
     preMultRotate: ( function () {

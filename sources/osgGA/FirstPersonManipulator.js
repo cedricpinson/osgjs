@@ -148,6 +148,7 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         var first = mat4.create();
         var rotMat = mat4.create();
 
+        var right = vec3.fromValues( 1.0, 0.0, 0.0 );
         var upy = vec3.fromValues( 0.0, 1.0, 0.0 );
         var upz = vec3.fromValues( 0.0, 0.0, 1.0 );
         var LIMIT = Math.PI * 0.5;
@@ -163,8 +164,8 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
                 vec3.transformQuat( this._up, upz, this._vrRot );
 
             } else {
-                mat4.fromRotation( first, -this._angleVertical, [ 1.0, 0.0, 0.0 ] );
-                mat4.fromRotation( rotMat, -this._angleHorizontal, [ 0.0, 0.0, 1.0 ] );
+                mat4.fromRotation( first, -this._angleVertical, right );
+                mat4.fromRotation( rotMat, -this._angleHorizontal, upz );
                 mat4.mul( rotMat, rotMat, first );
 
                 vec3.transformMat4( this._direction, upy, rotMat );
