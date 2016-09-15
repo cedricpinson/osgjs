@@ -409,11 +409,11 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // cone arrow
         var mtCone = new MatrixTransform();
-        mat4.fromTranslation( mtCone.getMatrix(), [ 0.0, 0.0, aHeight + aConeHeight * 0.5 ] );
+        mat4.fromTranslation( mtCone.getMatrix(), vec3.fromValues( 0.0, 0.0, aHeight + aConeHeight * 0.5 ) );
         mtCone.addChild( GizmoGeometry.createCylinderGeometry( 0.0, 0.07, aConeHeight, 32, 1, true, true ) );
         // arrow base
         var mtArrow = new MatrixTransform();
-        mat4.fromTranslation( mtArrow.getMatrix(), [ 0.0, 0.0, aHeight * 0.5 ] );
+        mat4.fromTranslation( mtArrow.getMatrix(), vec3.fromValues( 0.0, 0.0, aHeight * 0.5 ) );
         mtArrow.addChild( GizmoGeometry.createCylinderGeometry( 0.01, 0.01, aHeight, 32, 1, true, true ) );
         // draw arrow
         var drawArrow = new Node();
@@ -429,12 +429,12 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mtY._nbAxis = 1;
         mtZ._nbAxis = 2;
 
-        mat4.fromRotation( mtX.getMatrix(), Math.PI * 0.5, [ 0.0, 1.0, 0.0 ] );
-        mat4.fromRotation( mtY.getMatrix(), -Math.PI * 0.5, [ 1.0, 0.0, 0.0 ] );
+        mat4.fromRotation( mtX.getMatrix(), Math.PI * 0.5, vec3.fromValues( 0.0, 1.0, 0.0 ) );
+        mat4.fromRotation( mtY.getMatrix(), -Math.PI * 0.5, vec3.fromValues( 1.0, 0.0, 0.0 ) );
 
         var hideNode = new MatrixTransform();
         hideNode.setCullCallback( new HideCullCallback() );
-        mat4.fromTranslation( hideNode.getMatrix(), [ 0.0, 0.0, pickStart + pickHeight * 0.5 ] );
+        mat4.fromTranslation( hideNode.getMatrix(), vec3.fromValues( 0.0, 0.0, pickStart + pickHeight * 0.5 ) );
         hideNode.addChild( pickArrow );
 
         // set masks
@@ -465,8 +465,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     initNodeTranslatePlane: function () {
         var mtPlane = new MatrixTransform();
-        mat4.fromTranslation( mtPlane.getMatrix(), [ 0.5, 0.5, 0.0 ] );
-        mat4.mul( mtPlane.getMatrix(), mat4.fromScaling( mat4.create(), [ 0.5, 0.5, 1.0 ] ), mtPlane.getMatrix() );
+        mat4.fromTranslation( mtPlane.getMatrix(), vec3.fromValues( 0.5, 0.5, 0.0 ) );
+        mat4.mul( mtPlane.getMatrix(), mat4.fromScaling( mat4.create(), vec3.fromValues( 0.5, 0.5, 1.0 ) ), mtPlane.getMatrix() );
         mtPlane.addChild( GizmoGeometry.createPlaneGeometry() );
 
         var mtX = new MatrixTransform();
@@ -476,8 +476,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mtY._nbAxis = 1;
         mtZ._nbAxis = 2;
 
-        mat4.fromRotation( mtX.getMatrix(), -Math.PI * 0.5, [ 0.0, 1.0, 0.0 ] );
-        mat4.fromRotation( mtY.getMatrix(), Math.PI * 0.5, [ 1.0, 0.0, 0.0 ] );
+        mat4.fromRotation( mtX.getMatrix(), -Math.PI * 0.5, vec3.fromValues( 0.0, 1.0, 0.0 ) );
+        mat4.fromRotation( mtY.getMatrix(), Math.PI * 0.5, vec3.fromValues( 1.0, 0.0, 0.0 ) );
 
         // set masks
         mtX.setNodeMask( NodeGizmo.PICK_PLANE_X );
@@ -731,7 +731,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         mat4.copy( this._editLocal, this._attachedNode.getMatrix() );
         // save the world translation
         var wm = this._attachedNode.getWorldMatrices()[ 0 ];
-        mat4.fromTranslation( this._editWorldTrans, [ wm[ 12 ], wm[ 13 ], wm[ 14 ] ] );
+        mat4.fromTranslation( this._editWorldTrans, vec3.fromValues( wm[ 12 ], wm[ 13 ], wm[ 14 ] ) );
         // save the inv of world rotation + scale
         mat4.copy( this._editWorldScaleRot, wm );
         // removes translation
@@ -887,7 +887,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     updateRotateEdit: ( function () {
         var mrot = mat4.create();
         var vec = vec2.create();
-
+        var right = vec3.fromValues( 1.0, 0.0, 0.0 );
+        var upy = vec3.fromValues( 0.0, 1.0, 0.0 );
+        var upz = vec3.fromValues( 0.0, 0.0, 1.0 );
         return function ( e ) {
 
             var origin = this._editLineOrigin;
@@ -904,11 +906,11 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             angle %= ( Math.PI * 2 );
             var nbAxis = this._hoverNode._nbAxis;
             if ( nbAxis === 0 )
-                mat4.fromRotation( mrot, -angle, [ 1.0, 0.0, 0.0 ] );
+                mat4.fromRotation( mrot, -angle, right );
             else if ( nbAxis === 1 )
-                mat4.fromRotation( mrot, -angle, [ 0.0, 1.0, 0.0 ] );
+                mat4.fromRotation( mrot, -angle, upy );
             else if ( nbAxis === 2 )
-                mat4.fromRotation( mrot, -angle, [ 0.0, 0.0, 1.0 ] );
+                mat4.fromRotation( mrot, -angle, upz );
 
             this._showAngle.getOrCreateStateSet().getUniform( 'uAngle' ).setFloat( nbAxis === 0 ? -angle : angle );
 
