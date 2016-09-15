@@ -3,6 +3,7 @@ var glm = require( 'gl-matrix' );
 var config = require( 'config.js' );
 glm.glMatrix.setMatrixArrayType( config.ArrayType );
 
+
 var vec2 = glm.vec2;
 var vec3 = glm.vec3;
 var vec4 = glm.vec4;
@@ -39,7 +40,7 @@ vec3.init = function ( out ) {
     return vec3.set( out, 0.0, 0.0, 0.0 );
 };
 
-vec3.transformMat4R = function ( out, m, v ) {
+vec3.transformMat4R = function ( out, v, m ) {
     out[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
     out[ 1 ] = m[ 4 ] * v[ 0 ] + m[ 5 ] * v[ 1 ] + m[ 6 ] * v[ 2 ];
     out[ 2 ] = m[ 8 ] * v[ 0 ] + m[ 9 ] * v[ 1 ] + m[ 10 ] * v[ 2 ];
