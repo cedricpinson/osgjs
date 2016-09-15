@@ -10,6 +10,7 @@ var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
 var Uniform = require( 'osg/Uniform' );
 var vec2 = require( 'osg/glMatrix' ).vec2;
+var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var Viewport = require( 'osg/Viewport' );
 var Composer = require( 'osgUtil/Composer' );
@@ -78,10 +79,10 @@ var setupWebVR = function ( worldFactor, HMD, webVRUniforms, webVRMatrices ) {
 
     var leftMat = mat4.create();
     var rightMat = mat4.create();
-    webVRMatrices.projectionLeft = mat4.mul( leftMat, mat4.fromTranslation( leftMat, [ hOffset, 0.0, 0.0 ] ), proj );
-    webVRMatrices.projectionRight = mat4.mul( rightMat, mat4.fromTranslation( rightMat, [ -hOffset, 0.0, 0.0 ] ), proj );
-    webVRMatrices.viewLeft = mat4.fromTranslation( mat4.create(), [ worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 ] );
-    webVRMatrices.viewRight = mat4.fromTranslation( mat4.create(), [ -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 ] );
+    webVRMatrices.projectionLeft = mat4.mul( leftMat, mat4.fromTranslation( leftMat, vec3.fromValues( hOffset, 0.0, 0.0 ) ), proj );
+    webVRMatrices.projectionRight = mat4.mul( rightMat, mat4.fromTranslation( rightMat, vec3.fromValues( -hOffset, 0.0, 0.0 ) ), proj );
+    webVRMatrices.viewLeft = mat4.fromTranslation( mat4.create(), vec3.fromValues( worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 ) );
+    webVRMatrices.viewRight = mat4.fromTranslation( mat4.create(), vec3.fromValues( -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 ) );
 
     webVRUniforms.lensCenterLeft = vec2.fromValues( lensShift, 0.0 );
     webVRUniforms.lensCenterRight = vec2.fromValues( -lensShift, 0.0 );
