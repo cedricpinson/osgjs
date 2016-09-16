@@ -1,7 +1,10 @@
+'use strict';
+
 var mth = require( 'osg/Math' );
 var glm = require( 'osg/glMatrix/glMatrix' );
 var config = require( 'config.js' );
 glm.glMatrix.setMatrixArrayType( config.ArrayType );
+glm.glMatrix.EPSILON = 1e-9;
 
 var vec2 = glm.vec2;
 var vec3 = glm.vec3;
@@ -575,5 +578,15 @@ mat4.getSqrScale = ( function () {
         return out;
     };
 } )();
+
+var glmRotate = mat4.rotate;
+mat4.rotate = function ( out, a, rad, axis ) {
+    return glmRotate( out, a, rad, axis ) || mat4.identity( out );
+};
+
+var glmFromRotate = mat4.fromRotation;
+mat4.fromRotation = function ( out, rad, axis ) {
+    return glmFromRotate( out, rad, axis ) || mat4.identity( out );
+};
 
 module.exports = glm;
