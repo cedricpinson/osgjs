@@ -289,11 +289,11 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     },
 
     isDirectionLight: function () {
-        return this._position[ 3 ] === 0.0 && this._ground[ 3 ] < 0.0;
+        return this._position[ 3 ] === 0.0 && this._ground[ 3 ] === -1.0;
     },
 
     isHemiLight: function () {
-        return this._ground[ 3 ] >= 0.0;
+        return this._ground[ 3 ] === 1.0;
     },
 
     // matrix is current model view, which can mean:
