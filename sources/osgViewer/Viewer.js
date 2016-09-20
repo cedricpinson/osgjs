@@ -484,7 +484,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
         // submit frame to vr headset
         if ( this._hmd && this._hmd.isPresenting )
-            this._hmd.submitFrame( this._eventProxy.WebVR._lastPose );
+            this._hmd.submitFrame();
     },
 
     setDone: function ( bool ) {
