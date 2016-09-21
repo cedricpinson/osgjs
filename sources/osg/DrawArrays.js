@@ -30,8 +30,14 @@ DrawArrays.prototype = {
     getMode: function () {
         return this.mode;
     },
+    setCount: function ( count ) {
+        this.count = count;
+    },
     getCount: function () {
         return this.count;
+    },
+    setFirst: function ( first ) {
+        this.first = first;
     },
     getFirst: function () {
         return this.first;
