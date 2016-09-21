@@ -5,15 +5,11 @@ var CustomCompiler;
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
 
-
     // this compiler use basic lighting and add a node to demonstrate how to
     // customize the shader compiler
     CustomCompiler = function () {
         osgShader.Compiler.apply( this, arguments );
     };
-
-    CustomCompiler.validAttributeType = osgShader.Compiler.validAttributeType.slice();
-    CustomCompiler.validAttributeType.push( 'Temporal' );
 
     CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
 

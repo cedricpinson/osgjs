@@ -20,7 +20,6 @@ var Depth = require( 'osg/Depth' );
 ////////////////////////
 var CompilerColorGeometry = function () {
     Compiler.apply( this, arguments );
-    this._isVertexColored = false;
 };
 
 CompilerColorGeometry.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
@@ -39,8 +38,7 @@ CompilerColorGeometry.prototype = MACROUTILS.objectInherit( Compiler.prototype, 
         } );
 
         return [ frag ];
-    },
-    declareVertexTransforms: Compiler.prototype.declareVertexTransformShadeless
+    }
 } );
 
 var ShaderGeneratorCompilerColorGeometry = function () {
@@ -55,7 +53,6 @@ ShaderGeneratorCompilerColorGeometry.prototype = ShaderGenerator.prototype;
 ////////////////////////
 var CompilerColorSkinning = function () {
     Compiler.apply( this, arguments );
-    this._isVertexColored = false;
 };
 
 CompilerColorSkinning.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
@@ -75,12 +72,10 @@ CompilerColorSkinning.prototype = MACROUTILS.objectInherit( Compiler.prototype, 
 
         return [ frag ];
     },
-    declareVertexTransforms: function ( glPosition ) {
-
+    declareVertexVaryings: function ( roots ) {
         var color = this.getOrCreateVarying( 'vec3', 'vBonesColor' );
         this.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec3', 'BonesColor' ) ).outputs( color );
-
-        return Compiler.prototype.declareVertexTransformShadeless.call( this, glPosition );
+        return Compiler.prototype.declareVertexVaryings.call( this, roots );
     }
 } );
 

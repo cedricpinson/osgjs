@@ -35,7 +35,9 @@ Node.prototype = {
     },
 
     toString: function () {
-        return 'name : ' + this._name + ', type : ' + this.type;
+        var str = 'name : ' + this._name;
+        if ( this.type ) str += ' (' + this.type + ')';
+        return str;
     },
 
     getInputs: function () {

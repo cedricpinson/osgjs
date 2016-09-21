@@ -164,7 +164,6 @@ MatrixMultPosition.prototype = MACROUTILS.objectInherit( MatrixMultDirection.pro
 //        } ).outputs( {
 //            out: this.getNode( 'glPointSize' )
 // }
-// glsl code glPointSize = unitFloat;
 //
 var InlineCode = function () {
     Node.call( this );

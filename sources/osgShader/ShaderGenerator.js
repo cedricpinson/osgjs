@@ -231,8 +231,8 @@ ShaderGenerator.prototype = {
             }, false, true );
             /* develblock:end */
 
-            var vertexshader = shaderGen.createVertexShader();
             var fragmentshader = shaderGen.createFragmentShader();
+            var vertexshader = shaderGen.createVertexShader();
 
             var program = new Program(
                 new Shader( Shader.VERTEX_SHADER, vertexshader ),

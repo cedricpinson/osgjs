@@ -4,10 +4,7 @@
     //  get other js file Classes
     var CustomCompiler = window.CustomCompiler;
     var TemporalAttribute = window.TemporalAttribute;
-
-    // globals
-    var P = window.P;
-    var $ = window.$;
+    var ExampleOSGJS = window.ExampleOSGJS;
 
     var OSG = window.OSG;
     var osg = OSG.osg;
@@ -357,7 +354,9 @@
             // create a new shader generator with our own compiler
             var shaderGenerator = new osgShader.ShaderGenerator();
             shaderGenerator.setShaderCompiler( CustomCompiler );
-            // make the ShaderGenerator accept new Attributes
+
+            var accepted = shaderGenerator.getAcceptAttributeTypes();
+            accepted.add( 'Temporal' );
 
             // get or create instance of ShaderGeneratorProxy
             var shaderGeneratorProxy = this._viewer.getState().getShaderGeneratorProxy();
