@@ -28,44 +28,6 @@ UpdateRttCameraCallback.prototype = {
     }
 };
 
-var perspectiveMatrixFromVRFieldOfView = function ( fov, zNear, zFar ) {
-
-    var matrix = mat4.create();
-
-    var degToRad = Math.PI / 180.0;
-    var upTan = Math.tan( fov.upDegrees * degToRad );
-    var downTan = Math.tan( fov.downDegrees * degToRad );
-    var leftTan = Math.tan( fov.leftDegrees * degToRad );
-    var rightTan = Math.tan( fov.rightDegrees * degToRad );
-
-    var xScale = 2.0 / ( leftTan + rightTan );
-    var yScale = 2.0 / ( upTan + downTan );
-
-    // http://mozvr.github.io/webvr-spec/webvr.html
-    // (with ndc normalized)
-    matrix[ 0 ] = xScale;
-    matrix[ 1 ] = 0.0;
-    matrix[ 2 ] = 0.0;
-    matrix[ 3 ] = 0.0;
-
-    matrix[ 4 ] = 0.0;
-    matrix[ 5 ] = yScale;
-    matrix[ 6 ] = 0.0;
-    matrix[ 7 ] = 0.0;
-
-    matrix[ 8 ] = -( ( leftTan - rightTan ) * xScale * 0.5 );
-    matrix[ 9 ] = ( ( upTan - downTan ) * yScale * 0.5 );
-    matrix[ 10 ] = -( zNear + zFar ) / ( zFar - zNear );
-    matrix[ 11 ] = -1.0;
-
-    matrix[ 12 ] = 0.0;
-    matrix[ 13 ] = 0.0;
-    matrix[ 14 ] = -( 2.0 * zFar * zNear ) / ( zFar - zNear );
-    matrix[ 15 ] = 0.0;
-
-    return matrix;
-};
-
 var createTexture = function ( size ) {
     var texture = new Texture();
     texture.setTextureSize( size.width, size.height );
@@ -143,9 +105,10 @@ WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldF
     var left = HMDdevice.getEyeParameters( 'left' );
     var right = HMDdevice.getEyeParameters( 'right' );
 
+    var frameData = new window.VRFrameData();
+    HMDdevice.getFrameData( frameData );
+
     // Compute projections and view matrices for both eyes
-    var projectionLeft = perspectiveMatrixFromVRFieldOfView( left.fieldOfView, 0.1, 1000.0 );
-    var projectionRight = perspectiveMatrixFromVRFieldOfView( right.fieldOfView, 0.1, 1000.0 );
     var viewLeft = mat4.fromTranslation( mat4.create(), vec3.fromValues( -worldFactor * left.offset[ 0 ], left.offset[ 1 ], left.offset[ 2 ] ) );
     var viewRight = mat4.fromTranslation( mat4.create(), vec3.fromValues( -worldFactor * right.offset[ 0 ], right.offset[ 1 ], right.offset[ 2 ] ) );
 
@@ -159,8 +122,8 @@ WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldF
     var rightEyeTexture = createTexture( eyeTextureSize );
 
     // Setup the render cameras for both eyes
-    var camRttLeft = createCameraRtt( leftEyeTexture, projectionLeft );
-    var camRttRight = createCameraRtt( rightEyeTexture, projectionRight );
+    var camRttLeft = createCameraRtt( leftEyeTexture, frameData.leftProjectionMatrix );
+    var camRttRight = createCameraRtt( rightEyeTexture, frameData.rightProjectionMatrix );
 
     // The viewMatrix of each eye is updated with the current viewer's camera viewMatrix
     var rootViewMatrix = viewer.getCamera().getViewMatrix();

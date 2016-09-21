@@ -3,6 +3,7 @@ var Notify = require( 'osg/Notify' );
 var quat = require( 'osg/glMatrix' ).quat;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
+require( 'osgUtil/webvr-1-1' ); // polyfill
 
 
 var WebVR = function ( viewer ) {
@@ -13,7 +14,7 @@ var WebVR = function ( viewer ) {
     this._hmd = undefined;
     this._sensor = undefined;
 
-    this._lastPose = undefined; // so that we can pass it to the submitFrame call
+    this._frameData = undefined;
     this._quat = quat.create();
     this._pos = vec3.create();
 
@@ -43,6 +44,7 @@ WebVR.prototype = {
         navigator.getVRDisplays().then( function ( displays ) {
             if ( displays.length > 0 ) {
                 self._hmd = displays[ 0 ];
+                self._frameData = new window.VRFrameData();
                 Notify.log( 'Found a VR display' );
                 // currently it's the event proxy webvr that has the responsability of detecting vr devices
                 self._viewer.setVRDisplay( self._hmd );
@@ -89,18 +91,20 @@ WebVR.prototype = {
             if ( !this._hmd.capabilities.hasOrientation && !this._hmd.capabilities.hasPosition )
                 return;
 
-            this._lastPose = this._hmd.getPose(); // if no prediction, call this._hmd.getImmediatePose()
+            this._hmd.getFrameData( this._frameData );
+
+            var pose = this._frameData.pose;
 
             // WebVR up vector is Y
             // OSGJS up vector is Z
 
             var sitToStand = this._hmd.stageParameters && this._hmd.stageParameters.sittingToStandingTransform;
 
-            var q = this._lastPose.orientation;
+            var q = pose.orientation;
             if ( q ) {
                 if ( sitToStand ) {
                     q = mat4.getRotation( tempQuat, sitToStand );
-                    quat.mul( q, q, this._lastPose.orientation );
+                    quat.mul( q, q, pose.orientation );
                 }
 
                 this._quat[ 0 ] = q[ 0 ];
@@ -109,7 +113,7 @@ WebVR.prototype = {
                 this._quat[ 3 ] = q[ 3 ];
             }
 
-            var pos = this._lastPose.position;
+            var pos = pose.position;
             if ( pos ) {
                 if ( sitToStand ) {
                     pos = vec3.transformMat4( tempPos, pos, sitToStand );
