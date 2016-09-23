@@ -95,6 +95,9 @@ WebVR.prototype = {
 
             var pose = this._frameData.pose;
 
+            if ( !pose )
+                return;
+
             // WebVR up vector is Y
             // OSGJS up vector is Z
 
