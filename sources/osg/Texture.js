@@ -10,6 +10,7 @@ var CustomMap = require( 'osg/Map' );
 var TextureManager = require( 'osg/TextureManager' );
 var WebglCaps = require( 'osg/WebGLCaps' );
 
+var ImageBitmap = window.ImageBitmap || function () {};
 
 // helper
 var isPowerOf2 = function ( x ) {
@@ -408,6 +409,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         var image = img;
         if ( img instanceof window.Image ||
             img instanceof HTMLCanvasElement ||
+            img instanceof ImageBitmap ||
             img instanceof Uint8Array ) {
             image = new Image( img );
         }

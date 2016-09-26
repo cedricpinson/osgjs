@@ -3,6 +3,7 @@ var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
 
+var ImageBitmap = window.ImageBitmap || function () {};
 
 var ImageObject = function ( image ) {
     Object.call( this );
@@ -80,6 +81,10 @@ ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         return this.getImage() instanceof window.HTMLCanvasElement;
     },
 
+    isBitmap: function () {
+        return this.getImage() instanceof ImageBitmap;
+    },
+
     isVideo: function () {
         return this.getImage() instanceof window.HTMLVideoElement;
     },
@@ -107,7 +112,7 @@ ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             return img.naturalWidth;
         } else if ( this.isVideo() ) {
             return img.videoWidth;
-        } else if ( this.isCanvas() ) {
+        } else if ( this.isCanvas() || this.isBitmap() ) {
             return img.width;
         }
         return this._width;
@@ -119,7 +124,7 @@ ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             return img.naturalHeight;
         } else if ( this.isVideo() ) {
             return img.videoHeight;
-        } else if ( this.isCanvas() ) {
+        } else if ( this.isCanvas() || this.isBitmap() ) {
             return img.height;
         }
         return this._height;
@@ -180,8 +185,7 @@ ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
 
         // image are ready for static data
-        if ( this.isCanvas() ||
-            this.isTypedArray() ) {
+        if ( this.isCanvas() || this.isTypedArray() || this.isBitmap() ) {
             return true;
         }
 
