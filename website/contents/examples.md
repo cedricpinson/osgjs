@@ -75,14 +75,6 @@ samples:
         image: assets/img/picking.jpg
         link: examples/picking
     -
-        title: Point Cloud
-        image: assets/img/pointcloud.jpg
-        link: examples/pointcloud
-    -
-        title: Poker Scene
-        image: assets/img/pockerscene.jpg
-        link: examples/pokerscene
-    -
         title: Post Processing Shaders
         image: assets/img/postproc.jpg
         link: examples/postprocess
@@ -98,10 +90,6 @@ samples:
         title: Shadowmap
         image: assets/img/shadowmap.jpg
         link: examples/shadowmap
-    -
-        title: Shadow
-        image: assets/img/shadow.jpg
-        link: examples/shadow
     -
         title: Text 2D
         image: assets/img/text2D.jpg
