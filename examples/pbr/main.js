@@ -1163,7 +1163,7 @@
                 controller = gui.add( this._config, 'occlusionHorizon' );
                 controller.onChange( this.updateOcclusionHorizon.bind( this ) );
 
-                controller = gui.add( this._config, 'cameraPreset', Object.keys( CameraPresets ) ).listen();
+                controller = gui.add( this._config, 'cameraPreset', Object.keys( CameraPresets ) );
                 controller.onChange( this.updateCameraPreset.bind( this ) );
 
                 controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
@@ -1172,10 +1172,10 @@
                     this._lod.dirty();
                 }.bind( this ) );
 
-                controller = gui.add( this._config, 'pbr', [ this._config.pbr, 'UE4', ] ).listen();
-                controller.onChange( this.updateEnvironment.bind( this ) ); // is also call updatePBR
+                controller = gui.add( this._config, 'pbr', [ this._config.pbr, 'UE4' ] );
+                controller.onChange( this.updateEnvironment.bind( this ) );
 
-                controller = gui.add( this._config, 'format', window.formatList ).listen();
+                controller = gui.add( this._config, 'format', window.formatList );
                 controller.onChange( this.updateEnvironment.bind( this ) );
 
 
@@ -1183,7 +1183,7 @@
                 var updateShaderCallback = this.updateShaderPBR.bind( this );
                 controller.onChange( updateShaderCallback );
 
-                controller = gui.add( this._config, 'environmentType', [ 'cubemapSeamless', 'panorama' ] ).listen();
+                controller = gui.add( this._config, 'environmentType', [ 'cubemapSeamless', 'panorama' ] );
                 controller.onChange( this.updateEnvironment.bind( this ) );
 
                 controller = gui.add( this._config, 'material', Object.keys( PredefinedMaterials ) );
@@ -1196,7 +1196,7 @@
                 controller.onChange( this.updateAlbedo.bind( this ) );
 
 
-                controller = gui.add( this._config, 'model', modelList ); //.listen();
+                controller = gui.add( this._config, 'model', modelList );
                 controller.onChange( this.updateModel.bind( this ) );
 
                 if ( !hasTextureLod )
@@ -1208,6 +1208,10 @@
                 this._config.pbr = 'UE4';
                 this.updateModel();
 
+                // Iterate over all controllers
+                for ( var i in gui.__controllers ) {
+                    gui.__controllers[ i ].updateDisplay();
+                }
 
             }.bind( this ) );
 
