@@ -73,6 +73,12 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
                 } else {
                     this.setMode( OrbitManipulatorEnums.ROTATE );
                 }
+            } else if ( ev.button === 2 ) {
+                //For users on Mac machines for who CTRL+LeftClick is naturally converted 
+                // into a RightClick in Firefox.
+                if ( ev.ctrlKey ) {
+                    this.setMode( OrbitManipulatorEnums.ZOOM );
+                }
             } else {
                 this.setMode( OrbitManipulatorEnums.PAN );
             }
