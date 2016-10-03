@@ -1,4 +1,4 @@
-varying vec2 FragTexCoord0;
+varying vec2 vTexCoord0;
 uniform vec2 RenderSize;
 uniform sampler2D Texture0;
 uniform sampler2D Texture1;
@@ -61,9 +61,9 @@ vec4 supersample(const in vec4 currFragColor,  const in sampler2D tex, const in 
 
 void main()
 {
-    vec4 currColor = texture2D(Texture0, FragTexCoord0.xy);
+    vec4 currColor = texture2D(Texture0, vTexCoord0.xy);
 
-    vec4 superSample =   supersample(currColor, Texture1, FragTexCoord0.xy, halton);
+    vec4 superSample =   supersample(currColor, Texture1, vTexCoord0.xy, halton);
 
 
     gl_FragColor = superSample;

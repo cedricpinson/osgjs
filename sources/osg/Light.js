@@ -65,7 +65,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     getUniformName: function ( name ) {
         var prefix = this.getType() + this._lightUnit.toString();
-        return prefix + '_uniform_' + name;
+        return 'u' + prefix + '_' + name;
     },
 
     getHash: function () {
@@ -79,33 +79,19 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
         if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
 
-        var uniformList = {
-            ambient: 'createFloat4',
-            diffuse: 'createFloat4',
-            specular: 'createFloat4',
-
-            attenuation: 'createFloat4',
-            position: 'createFloat4',
-            direction: 'createFloat3',
-
-            spotCutOff: 'createFloat1',
-            spotBlend: 'createFloat1',
-
-            ground: 'createFloat4',
-
-            matrix: 'createMatrix4',
-            invMatrix: 'createMatrix4'
+        var uniforms = {
+            ambient: Uniform.createFloat4( this.getUniformName( 'ambient' ) ),
+            diffuse: Uniform.createFloat4( this.getUniformName( 'diffuse' ) ),
+            specular: Uniform.createFloat4( this.getUniformName( 'specular' ) ),
+            attenuation: Uniform.createFloat4( this.getUniformName( 'attenuation' ) ),
+            position: Uniform.createFloat4( this.getUniformName( 'position' ) ),
+            direction: Uniform.createFloat3( this.getUniformName( 'direction' ) ),
+            spotCutOff: Uniform.createFloat1( this.getUniformName( 'spotCutOff' ) ),
+            spotBlend: Uniform.createFloat1( this.getUniformName( 'spotBlend' ) ),
+            ground: Uniform.createFloat4( this.getUniformName( 'ground' ) ),
+            matrix: Uniform.createMatrix4( this.getUniformName( 'matrix' ) ),
+            invMatrix: Uniform.createMatrix4( this.getUniformName( 'invMatrix' ) )
         };
-
-        var uniforms = {};
-
-        window.Object.keys( uniformList ).forEach( function ( key ) {
-
-            var type = uniformList[ key ];
-            var func = Uniform[ type ];
-            uniforms[ key ] = func( this.getUniformName( key ) );
-
-        }.bind( this ) );
 
         obj.uniforms[ typeMember ] = new Map( uniforms );
 

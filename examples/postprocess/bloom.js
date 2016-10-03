@@ -45,7 +45,7 @@
 
                 '#define USE_LINEAR_SPACE 1',
 
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
                 'uniform sampler2D Texture0;',
                 'uniform float threshold;',
 
@@ -61,7 +61,7 @@
 
                 'void main(void) {',
                 '',
-                '   vec4 color = texture2D( Texture0, FragTexCoord0);',
+                '   vec4 color = texture2D( Texture0, vTexCoord0);',
                 '   vec3 result = vec3(0);',
                 '',
                 // Keep only the pixels whose luminance is above threshold
@@ -85,15 +85,15 @@
                 '#ifdef GL_ES',
                 'precision highp float;',
                 '#endif',
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
                 'uniform sampler2D Texture0;',
                 'uniform sampler2D Texture1;',
                 'uniform float factor;',
 
 
                 'void main(void) {',
-                '  vec4 color_a = texture2D( Texture0, FragTexCoord0);',
-                '  vec4 color_b = texture2D( Texture1, FragTexCoord0);',
+                '  vec4 color_a = texture2D( Texture0, vTexCoord0);',
+                '  vec4 color_b = texture2D( Texture1, vTexCoord0);',
 
                 '  gl_FragColor = color_a + (color_b * factor);',
                 '}',

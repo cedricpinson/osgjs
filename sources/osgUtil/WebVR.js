@@ -42,15 +42,15 @@ var getAssembleShader = function () {
         '#ifdef GL_ES',
         '   precision highp float;',
         '#endif',
-        'varying vec2 FragTexCoord0;',
+        'varying vec2 vTexCoord0;',
         'uniform sampler2D TextureLeft;',
         'uniform sampler2D TextureRight;',
 
         'void main() {',
-        '   if (FragTexCoord0.x < 0.5)',
-        '       gl_FragColor = texture2D(TextureLeft, vec2(FragTexCoord0.x * 2.0, FragTexCoord0.y));',
+        '   if (vTexCoord0.x < 0.5)',
+        '       gl_FragColor = texture2D(TextureLeft, vec2(vTexCoord0.x * 2.0, vTexCoord0.y));',
         '   else',
-        '       gl_FragColor = texture2D(TextureRight, vec2(FragTexCoord0.x * 2.0 - 1.0, FragTexCoord0.y));',
+        '       gl_FragColor = texture2D(TextureRight, vec2(vTexCoord0.x * 2.0 - 1.0, vTexCoord0.y));',
         '}',
     ].join( '\n' );
 

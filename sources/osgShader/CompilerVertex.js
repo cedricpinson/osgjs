@@ -14,7 +14,7 @@ var CompilerVertex = {
         if ( vname ) roots.push( this.getNode( 'Define', 'SHADER_NAME' ).setValue( vname ) );
 
         // call the graph compiler itself
-        var shader = this.createShaderFromGraphs( roots, 'vertex' );
+        var shader = this.createShaderFromGraphs( roots );
 
         Notify.debug( shader );
 
@@ -37,20 +37,20 @@ var CompilerVertex = {
     declareVertexVaryings: function ( roots ) {
         var varyings = this._varyings;
 
-        if ( varyings.WorldPosition ) this.getOrCreateWorldPosition();
+        if ( varyings.vModelVertex ) this.getNode( 'SetFromNode' ).inputs( this.getOrCreateModelVertex() ).outputs( varyings.vModelVertex );
+        if ( varyings.vModelNormal ) this.getNode( 'SetFromNode' ).inputs( this.getOrCreateModelNormal() ).outputs( varyings.vModelNormal );
+        if ( varyings.vModelTangent ) this.getNode( 'SetFromNode' ).inputs( this.getOrCreateModelTangent() ).outputs( varyings.vModelTangent );
 
-        if ( varyings.FragNormal ) this.getOrCreateViewNormal();
+        if ( varyings.vViewVertex ) this.getNode( 'SetFromNode' ).inputs( this.getOrCreateViewVertex() ).outputs( varyings.vViewVertex );
+        if ( varyings.vViewNormal ) this.getNode( 'SetFromNode' ).inputs( this.getOrCreateViewNormal() ).outputs( varyings.vViewNormal );
+        if ( varyings.vViewTangent ) this.getNode( 'SetFromNode' ).inputs( this.getOrCreateViewTangent() ).outputs( varyings.vViewTangent );
 
-        if ( varyings.FragTangent ) this.getOrCreateViewTangent();
-
-        if ( varyings.FragEyeVector ) this.getOrCreateViewVertex();
-
-        if ( varyings.VertexColor ) {
-            this.getNode( 'InlineCode' ).code( '%VertexColor = %venabled == 1.0 ? %vcolor : vec4(1.0, 1.0, 1.0, 1.0);' ).inputs( {
-                venabled: this.getOrCreateUniform( 'float', 'ArrayColorEnabled' ),
-                vcolor: this.getOrCreateAttribute( 'vec4', 'Color' )
+        if ( varyings.vVertexColor ) {
+            this.getNode( 'InlineCode' ).code( '%vcolor = %venabled == 1.0 ? %acolor : vec4(1.0, 1.0, 1.0, 1.0);' ).inputs( {
+                venabled: this.getOrCreateUniform( 'float', 'uArrayColorEnabled' ),
+                acolor: this.getOrCreateAttribute( 'vec4', 'Color' )
             } ).outputs( {
-                VertexColor: this.getOrCreateVarying( 'vec4', 'VertexColor' )
+                vcolor: this.getOrCreateVarying( 'vec4', 'vVertexColor' )
             } );
         }
 
@@ -60,8 +60,8 @@ var CompilerVertex = {
             roots.push( varying );
 
             var name = varying.getVariable();
-            if ( name.indexOf( 'FragTexCoord' ) !== -1 ) {
-                this.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec2', name.substring( 4 ) ) ).outputs( varying );
+            if ( name.indexOf( 'vTexCoord' ) !== -1 ) {
+                this.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec2', name.substring( 1 ) ) ).outputs( varying );
             }
         }
     },
@@ -73,13 +73,13 @@ var CompilerVertex = {
         return glPosition;
     },
 
-    getOrCreateWorldPosition: function () {
-        var out = this._variables.WorldPosition;
-        if ( out && !out.isEmpty() ) return out;
-        out = this._varyings.WorldPosition || this.createVariable( 'vec3', 'WorldPosition' );
+    getOrCreateModelVertex: function () {
+        var out = this._variables.modelVertex;
+        if ( out ) return out;
+        out = this.createVariable( 'vec3', 'modelVertex' );
 
         this.getNode( 'MatrixMultPosition' ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ),
+            matrix: this.getOrCreateUniform( 'mat4', 'uModelMatrix' ),
             vec: this.getOrCreateLocalVertex()
         } ).outputs( {
             vec: out
@@ -88,46 +88,47 @@ var CompilerVertex = {
         return out;
     },
 
-    getOrCreateWorldNormal: function () {
-        var out = this._variables.WorldNormal;
-        if ( out && !out.isEmpty() ) return out;
-        out = this._varyings.WorldNormal || this.createVariable( 'vec3', 'WorldNormal' );
+    getOrCreateModelNormal: function () {
+        var out = this._variables.modelNormal;
+        if ( out ) return out;
+        out = this.createVariable( 'vec3', 'modelNormal' );
 
         this.getNode( 'MatrixMultDirection' ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ), // ModelNormalMatrix
+            matrix: this.getOrCreateUniform( 'mat4', 'uModelMatrix' ), // ModelNormalMatrix
             vec: this.getOrCreateLocalNormal()
         } ).outputs( {
             vec: out
         } );
 
+        // not normalized
+
         return out;
     },
 
-    getOrCreateWorldTangent: function () {
-        var out = this._variables.WorldTangent;
-        if ( out && !out.isEmpty() ) return out;
-        out = this._varyings.WorldTangent || this.createVariable( 'vec4', 'WorldTangent' );
+    getOrCreateModelTangent: function () {
+        var out = this._variables.modelTangent;
+        if ( out ) return out;
+        out = this.createVariable( 'vec4', 'modelTangent' );
 
-        var localTangent = this.getOrCreateLocalTangent();
-
-        var tmp = this.createVariable( 'vec3' );
-        this.getNode( 'MatrixMultDirection' ).setForceComplement( false ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ), // ModelNormalMatrix
-            vec: localTangent
+        this.getNode( 'MatrixMultDirection' ).setOverwriteW( false ).inputs( {
+            matrix: this.getOrCreateUniform( 'mat4', 'uModelMatrix' ), // ModelNormalMatrix
+            vec: this.getOrCreateLocalTangent()
         } ).outputs( {
-            vec: tmp
+            vec: out
         } );
+
+        // not normalized
 
         return out;
     },
 
     getOrCreateViewVertex: function () {
-        var out = this._variables.FragEyeVector;
-        if ( out && !out.isEmpty() ) return out;
-        out = this._varyings.FragEyeVector || this.createVariable( 'vec4', 'FragEyeVector' );
+        var out = this._variables.viewVertex;
+        if ( out ) return out;
+        out = this.createVariable( 'vec4', 'viewVertex' );
 
         this.getNode( 'MatrixMultPosition' ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
+            matrix: this.getOrCreateUniform( 'mat4', 'uModelViewMatrix' ),
             vec: this.getOrCreateLocalVertex()
         } ).outputs( {
             vec: out
@@ -137,12 +138,12 @@ var CompilerVertex = {
     },
 
     getOrCreateViewNormal: function () {
-        var out = this._variables.FragNormal;
-        if ( out && !out.isEmpty() ) return out;
-        out = this._varyings.FragNormal || this.createVariable( 'vec3', 'FragNormal' );
+        var out = this._variables.viewNormal;
+        if ( out ) return out;
+        out = this.createVariable( 'vec3', 'viewNormal' );
 
         this.getNode( 'MatrixMultDirection' ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
+            matrix: this.getOrCreateUniform( 'mat4', 'uModelViewNormalMatrix' ),
             vec: this.getOrCreateLocalNormal()
         } ).outputs( {
             vec: out
@@ -152,12 +153,12 @@ var CompilerVertex = {
     },
 
     getOrCreateViewTangent: function () {
-        var out = this._variables.FragTangent;
-        if ( out && !out.isEmpty() ) return out;
-        out = this._varyings.FragTangent || this.createVariable( 'vec4', 'FragTangent' );
+        var out = this._variables.viewTangent;
+        if ( out ) return out;
+        out = this.createVariable( 'vec4', 'viewTangent' );
 
-        this.getNode( 'MatrixMultDirection' ).setForceComplement( false ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
+        this.getNode( 'MatrixMultDirection' ).setOverwriteW( false ).inputs( {
+            matrix: this.getOrCreateUniform( 'mat4', 'uModelViewNormalMatrix' ),
             vec: this.getOrCreateLocalTangent()
         } ).outputs( {
             vec: out
@@ -178,8 +179,8 @@ var CompilerVertex = {
     declareVertexTransformBillboard: function ( glPosition ) {
         this.getNode( 'Billboard' ).inputs( {
             Vertex: this.getOrCreateAttribute( 'vec3', 'Vertex' ),
-            ModelViewMatrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
-            ProjectionMatrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' )
+            ModelViewMatrix: this.getOrCreateUniform( 'mat4', 'uModelViewMatrix' ),
+            ProjectionMatrix: this.getOrCreateUniform( 'mat4', 'uProjectionMatrix' )
         } ).outputs( {
             vec: glPosition
         } );

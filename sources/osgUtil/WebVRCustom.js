@@ -107,11 +107,11 @@ var getWebVRShader = function () {
         'uniform vec4 uChromAbParam;',
         'uniform sampler2D Texture0;',
 
-        'varying vec2 FragTexCoord0;',
+        'varying vec2 vTexCoord0;',
 
         // from http://paradise.untergrund.net/tmp/demoshit/examples/js/effects/OculusRiftEffect.js
         'void main(void) {',
-        '  vec2 uv = (FragTexCoord0 * 2.0) - 1.0;', // range from [0,1] to [-1,1]
+        '  vec2 uv = (vTexCoord0 * 2.0) - 1.0;', // range from [0,1] to [-1,1]
         '  vec2 theta = (uv - uLensCenter) * uScaleIn;',
         '  float rSq = theta.x * theta.x + theta.y * theta.y;',
         '  vec2 rvector = theta * (uHmdWarpParam.x + uHmdWarpParam.y * rSq + uHmdWarpParam.z * rSq * rSq + uHmdWarpParam.w * rSq * rSq * rSq);',

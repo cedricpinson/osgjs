@@ -108,7 +108,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         return this._cameraMatrixInverse[ id ];
     },
 
-    getCurrentModelWorldMatrix: function () {
+    getCurrentModelMatrix: function () {
         // Improvment could be to cache more things
         // and / or use this method only if the shader use it
         var invMatrix = this.getCameraInverseMatrix();
@@ -270,9 +270,9 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
                 // TODO: Perf just get World Matrix at each node transform
                 // store it in a World Transform Node Path (only world matrix change)
-                // so that it's computed once and reused for each further node getCurrentModelWorld
+                // so that it's computed once and reused for each further node getCurrentModel
                 // otherwise, it's 1 mult for each node, each matrix node, and each geometry
-                //matrix = this.getCurrentModelWorldMatrix();
+                //matrix = this.getCurrentModelMatrix();
                 // tricky: change push be before isculled, and pop in case of culling
                 // strange bug for now on frustum culling sample with that
 
@@ -308,7 +308,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         return function ( matrix ) {
 
             // When pushing a matrix, it can be a transform or camera. To compute
-            // differents matrix type in shader ( ViewMatrix/ModelWorldMatrix/ModelViewMatrix )
+            // differents matrix type in shader ( ViewMatrix/ModelMatrix/ModelViewMatrix )
             // we track camera node when using pushModelViewMatrix
             // To detect a camera, we check on the nodepath the type of the node and if the
             // camera is relatif or absolute.

@@ -12,12 +12,12 @@
             'precision highp float;',
             '#endif',
             'attribute vec3 Vertex;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
             'varying vec4 position;',
             'void main(void) {',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-            '  position = ModelViewMatrix * vec4(Vertex,1.0);',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+            '  position = uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
         ].join( '\n' );
 

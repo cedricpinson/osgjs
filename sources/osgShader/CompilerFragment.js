@@ -6,18 +6,6 @@ var MACROUTILS = require( 'osg/Utils' );
 
 var CompilerFragment = {
 
-    getOrCreateInputTangent: function () {
-        return this.getOrCreateVarying( 'vec4', 'FragTangent' );
-    },
-
-    getOrCreateInputNormal: function () {
-        return this.getOrCreateVarying( 'vec3', 'FragNormal' );
-    },
-
-    getOrCreateInputPosition: function () {
-        return this.getOrCreateVarying( 'vec4', 'FragEyeVector' );
-    },
-
     createFragmentShader: function () {
 
         this._fragmentShaderMode = true;
@@ -27,7 +15,7 @@ var CompilerFragment = {
         var fname = this.getFragmentShaderName();
         if ( fname ) roots.push( this.getNode( 'Define', 'SHADER_NAME' ).setValue( fname ) );
 
-        var shader = this.createShaderFromGraphs( roots, 'fragment' );
+        var shader = this.createShaderFromGraphs( roots );
 
         Notify.debug( shader );
 
@@ -156,7 +144,7 @@ var CompilerFragment = {
         var frontTangent = this.createVariable( 'vec4', 'frontTangent' );
 
         this.getNode( 'FrontNormal' ).inputs( {
-            normal: this.getOrCreateInputTangent()
+            normal: this.getOrCreateVarying( 'vec4', 'vViewTangent' )
         } ).outputs( {
             normal: frontTangent
         } );
@@ -165,11 +153,10 @@ var CompilerFragment = {
     },
 
     getOrCreateFrontNormal: function () {
-        var inputNormal = this.getOrCreateInputNormal();
         var frontNormal = this.createVariable( 'vec3', 'frontNormal' );
 
         this.getNode( 'FrontNormal' ).inputs( {
-            normal: inputNormal
+            normal: this.getOrCreateVarying( 'vec3', 'vViewNormal' )
         } ).outputs( {
             normal: frontNormal
         } );
@@ -181,6 +168,7 @@ var CompilerFragment = {
         var normal = this._variables[ 'normal' ];
         if ( normal )
             return normal;
+
         var out = this.createVariable( 'vec3', 'normal' );
         this.getNode( 'Normalize' ).inputs( {
             vec: this.getOrCreateFrontNormal()
@@ -195,7 +183,7 @@ var CompilerFragment = {
             return eye;
         var nor = this.createVariable( 'vec3' );
         var castEye = this.createVariable( 'vec3' );
-        this.getNode( 'SetFromNode' ).inputs( this.getOrCreateInputPosition() ).outputs( castEye );
+        this.getNode( 'SetFromNode' ).inputs( this.getOrCreateVarying( 'vec4', 'vViewVertex' ) ).outputs( castEye );
         this.getNode( 'Normalize' ).inputs( {
             vec: castEye
         } ).outputs( {
@@ -245,8 +233,8 @@ var CompilerFragment = {
         if ( diffuseColor === undefined )
             return undefined;
 
-        var vertexColor = this.getOrCreateVarying( 'vec4', 'VertexColor' );
-        var vertexColorUniform = this.getOrCreateUniform( 'float', 'ArrayColorEnabled' );
+        var vertexColor = this.getOrCreateVarying( 'vec4', 'vVertexColor' );
+        var vertexColorUniform = this.getOrCreateUniform( 'float', 'uArrayColorEnabled' );
         var tmp = this.createVariable( 'vec4' );
 
         var str = [ '',
@@ -339,7 +327,7 @@ var CompilerFragment = {
         if ( !hasShadows ) return undefined;
 
         // Varyings
-        var vertexWorld = this.getOrCreateVarying( 'vec3', 'WorldPosition' );
+        var vertexWorld = this.getOrCreateVarying( 'vec3', 'vModelVertex' );
 
         // asserted we have a shadow we do the shadow node allocation
         // and mult with lighted output

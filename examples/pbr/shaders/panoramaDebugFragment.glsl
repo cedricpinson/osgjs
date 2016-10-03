@@ -6,13 +6,13 @@
 uniform sampler2D uEnvironment;
 uniform vec2 uEnvironmentSize;
 
-varying vec2 osg_FragTexCoord0;
+varying vec2 vTexCoord0;
 
 #pragma include "panoramaSampler.glsl"
 
 void main() {
 
-    vec3 color = texturePanorama(uEnvironment, osg_FragTexCoord0);
+    vec3 color = texturePanorama(uEnvironment, vTexCoord0);
     gl_FragColor = vec4( color, 1.0);
 
 }

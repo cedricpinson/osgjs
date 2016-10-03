@@ -56,7 +56,7 @@
                 '#ifdef GL_ES',
                 'precision highp float;',
                 '#endif',
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
                 'uniform sampler2D input_texture;',
                 'uniform sampler2D lum_texture;',
 
@@ -119,9 +119,9 @@
                 '}',
 
                 'void main() {',
-                '   float avgLum = texture2D(lum_texture, FragTexCoord0, locality).r;',
+                '   float avgLum = texture2D(lum_texture, vTexCoord0, locality).r;',
 
-                '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
+                '   vec3 texel = decodeRGBE(texture2D(input_texture, vTexCoord0));',
                 '   // We do the tonemapping on the Yxy luminance to preserve colors',
                 '   vec3 Yxy = RGB2Yxy(texel);',
                 '',
@@ -170,7 +170,7 @@
                 '#endif',
                 '#define USE_LINEAR_SPACE 1',
 
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
                 'uniform sampler2D input_texture;',
 
                 // convert 8-bit RGB channels into floats using the common E exponent
@@ -191,7 +191,7 @@
 
                 'void main() {',
                 '   // TODO: Use log on luminance to decrease the influence of small bright spots',
-                '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
+                '   vec3 texel = decodeRGBE(texture2D(input_texture, vTexCoord0));',
                 '   gl_FragColor = vec4(vec3(calcLuminance(texel)), 1.0);',
                 '}',
 

@@ -1,6 +1,6 @@
 
-varying vec3 osg_FragNormal;
-varying vec3 osg_FragVertex;
+varying vec3 vViewNormal;
+varying vec3 vLocalVertex;
 
 uniform vec3 uEnvironmentSphericalHarmonics[9];
 uniform mat4 uEnvironmentTransform;
@@ -21,7 +21,7 @@ mat3 getEnvironmentTransfrom( mat4 transform ) {
 void main() {
 
     mat3 environmentTransform = getEnvironmentTransfrom( uEnvironmentTransform );
-    vec3 n = normalize( osg_FragNormal );
+    vec3 n = normalize( vViewNormal );
     n = environmentTransform * n;
     vec3 color = sphericalHarmonics( uEnvironmentSphericalHarmonics, n );
     gl_FragColor = vec4( linearTosRGB(color, DefaultGamma), 1.0);

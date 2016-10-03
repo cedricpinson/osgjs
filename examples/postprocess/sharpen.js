@@ -48,7 +48,7 @@
                 'precision highp float;',
                 '#endif',
 
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
                 'uniform sampler2D inputTexture;',
                 'uniform vec2 RenderSize;',
                 'uniform mat3 kernel;',
@@ -58,16 +58,16 @@
 
                 'void main() {',
 
-                '	vec4 color = texture2D(inputTexture, FragTexCoord0);',
+                '	vec4 color = texture2D(inputTexture, vTexCoord0);',
 
-                '	vec2 uv = FragTexCoord0;',
+                '	vec2 uv = vTexCoord0;',
                 '	vec2 offset = vec2(0.0);',
                 '',
                 '	for (int i=0; i < 3; i++) {',
                 '		offset.x = (1.0 - float(i)) * stepX;',
                 '		for (int j=0; j < 3; j++) {',
                 '			offset.y = (1.0 - float(j)) * stepY;',
-                '			color += kernel[i][j] * texture2D(inputTexture, FragTexCoord0 + offset);',
+                '			color += kernel[i][j] * texture2D(inputTexture, vTexCoord0 + offset);',
                 '		}',
                 '	}',
 

@@ -24,7 +24,7 @@
                 'precision highp float;',
                 '#endif',
 
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
                 'uniform sampler2D input_texture;',
                 'uniform float factor;',
 
@@ -33,7 +33,7 @@
                 // Texel to center vector
                 // This vector gives the direction and a linear
                 // scaling component for the offset
-                '   vec2 dist = FragTexCoord0 - 0.5;',
+                '   vec2 dist = vTexCoord0 - 0.5;',
 
                 // If we just linearly offset the fetch, the result would just look uniformly scaled
                 // So we apply another factor based on the distance to have an offset which changes
@@ -46,9 +46,9 @@
                 // The red is sampled towards the center
                 // The blue is sampled in the opposite direction
                 // The green sampling location is untouched
-                '   float r = texture2D(input_texture, FragTexCoord0 - offset).r;',
-                '   float g = texture2D(input_texture, FragTexCoord0).g;',
-                '   float b = texture2D(input_texture, FragTexCoord0 + offset).b;',
+                '   float r = texture2D(input_texture, vTexCoord0 - offset).r;',
+                '   float g = texture2D(input_texture, vTexCoord0).g;',
+                '   float b = texture2D(input_texture, vTexCoord0 + offset).b;',
 
                 '   gl_FragColor = vec4(r, g, b, 1.0);',
 

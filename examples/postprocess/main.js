@@ -64,12 +64,12 @@
             '#endif',
             'attribute vec3 Vertex;',
             'attribute vec2 TexCoord0;',
-            'varying vec2 FragTexCoord0;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
+            'varying vec2 vTexCoord0;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
             'void main(void) {',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-            '  FragTexCoord0 = TexCoord0;',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+            '  vTexCoord0 = TexCoord0;',
             '}',
             ''
         ].join( '\n' );
@@ -79,13 +79,13 @@
             '#ifdef GL_ES',
             'precision highp float;',
             '#endif',
-            'varying vec2 FragTexCoord0;',
+            'varying vec2 vTexCoord0;',
             'uniform sampler2D Texture0;',
 
             '',
             'void main (void)',
             '{',
-            '  vec2 uv = FragTexCoord0;',
+            '  vec2 uv = vTexCoord0;',
             '  gl_FragColor = vec4(texture2D(Texture0, uv));',
             '}',
             ''

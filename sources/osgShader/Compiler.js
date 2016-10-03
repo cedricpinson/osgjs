@@ -35,6 +35,7 @@ var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
     this._textures = [];
     this._material = null;
 
+    this._invariantPosition = false;
     this._isBillboard = false;
 
     // Important: if not using Compiler for Both VS and FS Check either of those
@@ -50,7 +51,7 @@ var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
 Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
     getOrCreateProjectionMatrix: function () {
-        return this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' );
+        return this.getOrCreateUniform( 'mat4', 'uProjectionMatrix' );
     },
 
     getFragmentShaderName: function () {
@@ -168,7 +169,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
             return;
         }
 
-        var texCoord = this._fragmentShaderMode ? this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit ) : this.getOrCreateAttribute( 'vec2', 'TexCoord' + texCoordUnit );
+        var texCoord = this._fragmentShaderMode ? this.getOrCreateVarying( 'vec2', 'vTexCoord' + texCoordUnit ) : this.getOrCreateAttribute( 'vec2', 'TexCoord' + texCoordUnit );
 
         texObj.variable = this.createTextureRGBA( texture, textureSampler, texCoord );
 
@@ -191,7 +192,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
     },
 
     // The Compiler Main Code called on Vertex or Fragment Shader Graph
-    createShaderFromGraphs: function ( roots, type ) {
+    createShaderFromGraphs: function ( roots ) {
         this._compiledNodeList = {};
 
         // list all vars
@@ -213,6 +214,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         var shaderStack = [];
         shaderStack.push( '\n' );
         shaderStack.push( this.evaluateGlobalVariableDeclaration( roots ) );
+        if ( this._invariantPosition && !this._fragmentShaderMode ) shaderStack.push( '\ninvariant gl_Position;' );
         shaderStack.push( '\n' );
         shaderStack.push( this.evaluateGlobalFunctionDeclaration( roots ) );
 
@@ -239,7 +241,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         var shaderStr = shaderStack.join( '\n' );
 
         // Process defines, add precision, resolve include pragma
-        var shader = this._shaderProcessor.processShader( shaderStr, defines, extensions, type );
+        var shader = this._shaderProcessor.processShader( shaderStr, defines, extensions, this._fragmentShaderMode ? 'fragment' : 'vertex' );
 
         /*develblock:start*/
         // Check
@@ -647,42 +649,50 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
         this.preTraverse( func );
 
-        for ( var j = 0, jl = nodes.length; j < jl; j++ ) {
-            this.traverse( func, nodes[ j ] );
+        var i = 0;
+        var nbNodes = nodes.length;
+        for ( i = 0; i < nbNodes; i++ ) {
+            this.traverse( func, nodes[ i ] );
         }
 
-        // Attribute 0 Must Be vertex
-        // perf warning in console otherwiser in opengl Desktop
-        if ( func._text.length ) {
-            // sort in alphabetical order
-            // attr, unif, sample, varying
-            func._text.sort();
-            // now sort Attributes
-            // making sure Vertex is always coming first
-            var toShift = [];
-            for ( j = 0; j < func._text.length; j++ ) {
-                // found vertex, break
-                if ( func._text[ 0 ].indexOf( 'Vertex' ) !== -1 ) break;
-                // not yet, keep referenc to push after vertex
-                toShift.push( func._text.shift() ); // remove
-            }
-            // Add after vertex all the  found attributes
-            func._text.splice( 1, 0, toShift.join( '\n' ) );
+        // beautify/formatting with empty line between type of var
+        var declarations = func._text;
+        var len = declarations.length;
+        if ( len > 0 ) {
+            this.sortDeclarations( declarations );
 
-            // beautify/formatting with empty line between type of var
-            var type = func._text[ 0 ][ 0 ];
-            var len = func._text.length;
-            for ( j = 0; j < len; j++ ) {
-                if ( func._text[ j ][ 0 ] !== type ) {
-                    type = func._text[ j ][ 0 ];
-                    func._text.splice( j, 0, '' );
-                    len++;
+            var type = declarations[ 0 ][ 0 ];
+            for ( i = 0; i < len; ++i ) {
+                var iType = declarations[ i ][ 0 ];
+                if ( iType !== type ) {
+                    type = iType;
+                    declarations[ i - 1 ] += '\n';
                 }
             }
         }
-        return func._text.join( '\n' );
+
+        return declarations.join( '\n' );
     },
 
+    sortDeclarations: function ( declarations ) {
+        // sort in alphabetical order attr, unif, sample, varying
+        declarations.sort();
+
+        if ( this._fragmentShaderMode ) return;
+
+        // making sure Vertex is always coming first (because of webgl warning)
+        for ( var i = 0, len = declarations.length; i < len; ++i ) {
+            var vatt = declarations[ i ];
+
+            if ( vatt[ 0 ] !== 'a' ) break;
+
+            if ( vatt.indexOf( 'Vertex' ) !== -1 ) {
+                declarations.splice( i, 1 );
+                declarations.unshift( vatt );
+                break;
+            }
+        }
+    },
 
     evaluate: function ( nodes ) {
 

@@ -17,19 +17,19 @@
             'attribute vec3 Normal;',
 
             'uniform vec3 uCenterPicking;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
+            'uniform mat4 uModelViewNormalMatrix;',
 
-            'varying vec3 vVertex;',
+            'varying vec3 vViewVertex;',
             'varying vec3 vNormal;',
             'varying vec3 vInter;',
 
             'void main( void ) {',
-            '  vInter = vec3( ModelViewMatrix * vec4( uCenterPicking, 1.0 ) );',
-            '  vNormal = normalize(vec3( NormalMatrix * vec4( Normal, 1.0 )) );',
-            '  vVertex = vec3( ModelViewMatrix * vec4( Vertex, 1.0 ) );',
-            '  gl_Position = ProjectionMatrix * (ModelViewMatrix * vec4( Vertex, 1.0 ));',
+            '  vInter = vec3( uModelViewMatrix * vec4( uCenterPicking, 1.0 ) );',
+            '  vNormal = normalize(vec3( uModelViewNormalMatrix * vec4( Normal, 1.0 )) );',
+            '  vViewVertex = vec3( uModelViewMatrix * vec4( Vertex, 1.0 ) );',
+            '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4( Vertex, 1.0 ));',
             '}'
         ].join( '\n' );
 
@@ -42,14 +42,14 @@
             'uniform float uTime;',
             'uniform float uRadiusSquared;',
 
-            'varying vec3 vVertex;',
+            'varying vec3 vViewVertex;',
             'varying vec3 vNormal;',
             'varying vec3 vInter;',
 
             'void main( void ) {',
             '  float t = mod( uTime * 0.5, 1000.0 ) / 1000.0;', // time [0..1]
             '  t = t > 0.5 ? 1.0 - t : t;', // [0->0.5] , [0.5->0]
-            '  vec3 vecDistance = ( vVertex - vInter );',
+            '  vec3 vecDistance = ( vViewVertex - vInter );',
             '  float dotSquared = dot( vecDistance, vecDistance );',
             '  if ( dotSquared < uRadiusSquared * 1.1 && dotSquared > uRadiusSquared*0.90 )',
             '    gl_FragColor = vec4( 0.75-t, 0.25+t, 0.0, 1.0 );',
@@ -73,7 +73,6 @@
 
         promise.then( function ( child ) {
             node.addChild( child );
-            viewer.getManipulator().computeHomePosition();
 
             child.getOrCreateStateSet().setAttributeAndModes( getShader() );
             child.getOrCreateStateSet().addUniform( unifs.center );

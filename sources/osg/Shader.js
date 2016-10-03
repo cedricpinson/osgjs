@@ -23,7 +23,7 @@ Shader.VERTEX_SHADER = 0x8B31;
 Shader.FRAGMENT_SHADER = 0x8B30;
 
 // Debug Pink shader for when shader fails
-Shader.VS_DBG = 'attribute vec3 Vertex;uniform mat4 ModelViewMatrix;uniform mat4 ProjectionMatrix;void main(void) {  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);}';
+Shader.VS_DBG = 'attribute vec3 Vertex;uniform mat4 uModelViewMatrix;uniform mat4 uProjectionMatrix;void main(void) {  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex, 1.0);}';
 Shader.FS_DBG = 'precision lowp float; void main(void) { gl_FragColor = vec4(1.0, 0.6, 0.6, 1.0);}';
 
 var debugName = '\n#define SHADER_NAME FailSafe\n';

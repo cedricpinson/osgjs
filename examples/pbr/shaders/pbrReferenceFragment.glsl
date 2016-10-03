@@ -28,10 +28,10 @@ uniform vec3 uEnvironmentSphericalHarmonics[9];
 
 //uniform vec2 uHammersleySamples[NB_SAMPLES];
 
-varying vec3 osg_FragEye;
-varying vec3 osg_FragNormal;
-varying vec2 osg_FragTexCoord0;
-varying vec4 osg_FragTangent;
+varying vec3 vViewVertex;
+varying vec3 vViewNormal;
+varying vec2 vTexCoord0;
+varying vec4 vViewTangent;
 
 mat3 environmentTransform;
 
@@ -203,10 +203,10 @@ float adjustRoughness( const in float roughness, const in vec3 normal ) {
 
 void main(void) {
 
-    vec3 normal = normalize(osg_FragNormal);
-    vec3 eye = normalize(osg_FragEye);
-    vec4 tangent = osg_FragTangent;
-    vec2 uv = osg_FragTexCoord0.xy;
+    vec3 normal = normalize(vViewNormal);
+    vec3 eye = normalize(vViewVertex);
+    vec4 tangent = vViewTangent;
+    vec2 uv = vTexCoord0.xy;
 
     environmentTransform = getEnvironmentTransfrom( uEnvironmentTransform );
 
@@ -246,7 +246,7 @@ void main(void) {
     vec3 specular;
 
 #ifdef SPECULAR
-    specular = sRGBToLinear( texture2D( specularMap, osg_FragTexCoord0 ), DefaultGamma ).rgb;
+    specular = sRGBToLinear( texture2D( specularMap, vTexCoord0 ), DefaultGamma ).rgb;
 #else
     float metallic = texture2D( specularMap, uv ).r;
     vec3 albedoReduced = albedo * (1.0 - metallic);

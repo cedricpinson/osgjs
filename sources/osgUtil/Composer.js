@@ -324,16 +324,16 @@ Composer.Filter.prototype = {
 // no need of modelView, projection, nor texcoord
 Composer.Filter.defaultVertexShader = [
     'attribute vec3 Vertex;',
-    'varying vec2 FragTexCoord0;',
+    'varying vec2 vTexCoord0;',
     'void main(void) {',
     '  gl_Position = vec4(Vertex*2.0 - 1.0,1.0);',
-    '  FragTexCoord0 = Vertex.xy;',
+    '  vTexCoord0 = Vertex.xy;',
     '}',
     ''
 ].join( '\n' );
 Composer.Filter.defaultFragmentShaderHeader = [
     '#ifdef GL_FRAGMENT_PRECISION_HIGH\n precision highp float;\n #else\n precision mediump float;\n#endif',
-    'varying vec2 FragTexCoord0;',
+    'varying vec2 vTexCoord0;',
     'uniform vec2 RenderSize;',
     'uniform sampler2D Texture0;',
     ''
@@ -656,7 +656,7 @@ Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInherit( Composer.Filt
 
         var kernel = [];
 
-        kernel.push( ' pixel = unpack(Texture0, FragTexCoord0 );' );
+        kernel.push( ' pixel = unpack(Texture0, vTexCoord0 );' );
         kernel.push( ' if (pixel.w == 0.0) { gl_FragColor = pixel; return; }' );
         kernel.push( ' vec2 offset;' );
         var i;
@@ -670,8 +670,8 @@ Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInherit( Composer.Filt
         if ( !this._linear ) {
             for ( i = 0; i < numTexBlurStep; i++ ) {
                 kernel.push( ' offset = ' + this.getUVOffset( ( i + 1 ) * this._pixelSize ) );
-                kernel.push( ' pixel += unpack(Texture0, FragTexCoord0 + offset);' );
-                kernel.push( ' pixel += unpack(Texture0, FragTexCoord0 - offset);' );
+                kernel.push( ' pixel += unpack(Texture0, vTexCoord0 + offset);' );
+                kernel.push( ' pixel += unpack(Texture0, vTexCoord0 - offset);' );
             }
             kernel.push( ' pixel *= float(' + weight + ');' );
 
@@ -696,8 +696,8 @@ Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInherit( Composer.Filt
 
                 kernel.push( ' offset = ' + offset );
 
-                kernel.push( ' pixelLin += unpack(Texture0, FragTexCoord0 + offset);' );
-                kernel.push( ' pixelLin += unpack(Texture0, FragTexCoord0 - offset);' );
+                kernel.push( ' pixelLin += unpack(Texture0, vTexCoord0 + offset);' );
+                kernel.push( ' pixelLin += unpack(Texture0, vTexCoord0 - offset);' );
             }
             kernel.push( ' pixel += pixelLin * float(' + weightTwo * 2 + ');' );
 
@@ -804,21 +804,21 @@ Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInherit( Composer.Fi
     getShaderBlurKernel: function () {
         var nbSamples = this._nbSamples;
         var kernel = [];
-        kernel.push( ' pixel = unpack(Texture0, FragTexCoord0 );' );
+        kernel.push( ' pixel = unpack(Texture0, vTexCoord0 );' );
         kernel.push( ' if (pixel.w <= 0.0001) { gl_FragColor = vec4(1.0); return; }' );
         kernel.push( ' vec2 offset, tmpUV;' );
-        kernel.push( ' depth = getDepthValue(unpack(Texture1, FragTexCoord0 ));' );
+        kernel.push( ' depth = getDepthValue(unpack(Texture1, vTexCoord0 ));' );
         for ( var i = 1; i < Math.ceil( nbSamples / 2 ); i++ ) {
             kernel.push( ' offset = ' + this.getUVOffset( i ) );
 
-            kernel.push( ' tmpUV =  FragTexCoord0 + offset;' );
+            kernel.push( ' tmpUV =  vTexCoord0 + offset;' );
             kernel.push( ' tmpDepth = getDepthValue(unpack(Texture1, tmpUV ));' );
             kernel.push( ' if ( abs(depth-tmpDepth) < radius) {' );
             kernel.push( '   pixel += unpack(Texture0, tmpUV);' );
             kernel.push( '   nbHits += 1.0;' );
             kernel.push( ' }' );
 
-            kernel.push( ' tmpUV =  FragTexCoord0 - offset;' );
+            kernel.push( ' tmpUV =  vTexCoord0 - offset;' );
             kernel.push( ' tmpDepth = getDepthValue(unpack(Texture1, tmpUV ));' );
             kernel.push( ' if ( abs(depth-tmpDepth) < radius) {' );
             kernel.push( '   pixel += unpack(Texture0, tmpUV);' );
@@ -957,7 +957,7 @@ Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prot
         var start = Math.floor( coeffIdx / 2.0 );
 
         var kernel = [];
-        kernel.push( ' pixel = float(' + weights[ start ] + ')*unpack(Texture0, FragTexCoord0 ).rgb;' );
+        kernel.push( ' pixel = float(' + weights[ start ] + ')*unpack(Texture0, vTexCoord0 ).rgb;' );
 
         kernel.push( ' vec2 offset;' );
         var idx, i, weight, offset, offsetIdx;
@@ -972,8 +972,8 @@ Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prot
                 offset = this.getUVOffset( offsetIdx );
 
                 kernel.push( ' offset = ' + offset );
-                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
-                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (vTexCoord0.xy + offset.xy)).rgb;' );
+                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (vTexCoord0.xy - offset.xy)).rgb;' );
             }
         } else {
 
@@ -996,8 +996,8 @@ Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prot
                 offset = this.getUVOffset( offsetIdx );
 
                 kernel.push( ' offset = ' + offset );
-                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
-                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (vTexCoord0.xy + offset.xy)).rgb;' );
+                kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (vTexCoord0.xy - offset.xy)).rgb;' );
             }
         }
         var fgt = [
@@ -1070,14 +1070,14 @@ Composer.Filter.SobelFilter.prototype = MACROUTILS.objectInherit( Composer.Filte
             '  float fac1 = 1.0;',
             '  float offsetx = 1.0/RenderSize[0];',
             '  float offsety = 1.0/RenderSize[1];',
-            '  vec4 texel0 = texture2D(Texture0, FragTexCoord0 + vec2(offsetx, offsety));',
-            '  vec4 texel1 = texture2D(Texture0, FragTexCoord0 + vec2(offsetx, 0.0));',
-            '  vec4 texel2 = texture2D(Texture0, FragTexCoord0 + vec2(offsetx, -offsety));',
-            '  vec4 texel3 = texture2D(Texture0, FragTexCoord0 + vec2(0.0, -offsety));',
-            '  vec4 texel4 = texture2D(Texture0, FragTexCoord0 + vec2(-offsetx, -offsety));',
-            '  vec4 texel5 = texture2D(Texture0, FragTexCoord0 + vec2(-offsetx, 0.0));',
-            '  vec4 texel6 = texture2D(Texture0, FragTexCoord0 + vec2(-offsetx, offsety));',
-            '  vec4 texel7 = texture2D(Texture0, FragTexCoord0 + vec2(0.0, offsety));',
+            '  vec4 texel0 = texture2D(Texture0, vTexCoord0 + vec2(offsetx, offsety));',
+            '  vec4 texel1 = texture2D(Texture0, vTexCoord0 + vec2(offsetx, 0.0));',
+            '  vec4 texel2 = texture2D(Texture0, vTexCoord0 + vec2(offsetx, -offsety));',
+            '  vec4 texel3 = texture2D(Texture0, vTexCoord0 + vec2(0.0, -offsety));',
+            '  vec4 texel4 = texture2D(Texture0, vTexCoord0 + vec2(-offsetx, -offsety));',
+            '  vec4 texel5 = texture2D(Texture0, vTexCoord0 + vec2(-offsetx, 0.0));',
+            '  vec4 texel6 = texture2D(Texture0, vTexCoord0 + vec2(-offsetx, offsety));',
+            '  vec4 texel7 = texture2D(Texture0, vTexCoord0 + vec2(0.0, offsety));',
             '  vec4 rowx = -fac0*texel5 + fac0*texel1 +  -fac1*texel6 + fac1*texel0 + -fac1*texel4 + fac1*texel2;',
             '  vec4 rowy = -fac0*texel3 + fac0*texel7 +  -fac1*texel4 + fac1*texel6 + -fac1*texel2 + fac1*texel0;',
             '  float mag = sqrt(dot(rowy,rowy)+dot(rowx,rowx));',
@@ -1145,7 +1145,7 @@ Composer.Filter.BlendMix.prototype = MACROUTILS.objectInherit( Composer.Filter.p
 
             'void main (void)',
             '{',
-            '  gl_FragColor = mix(texture2D(Texture0,FragTexCoord0), texture2D(Texture1,FragTexCoord0),MixValue);',
+            '  gl_FragColor = mix(texture2D(Texture0,vTexCoord0), texture2D(Texture1,vTexCoord0),MixValue);',
             '}',
             ''
         ].join( '\n' );
@@ -1192,7 +1192,7 @@ Composer.Filter.BlendMultiply.prototype = MACROUTILS.objectInherit( Composer.Fil
 
             'void main (void)',
             '{',
-            '  gl_FragColor = texture2D(Texture0,FragTexCoord0)*texture2D(Texture1,FragTexCoord0);',
+            '  gl_FragColor = texture2D(Texture0,vTexCoord0)*texture2D(Texture1,vTexCoord0);',
             '}',
             ''
         ].join( '\n' );
@@ -1329,12 +1329,12 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
             '',
             'attribute vec3 Vertex;',
             'attribute vec2 TexCoord0;',
-            'varying vec2 FragTexCoord0;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
+            'varying vec2 vTexCoord0;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
             'void main(void) {',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-            '  FragTexCoord0 = TexCoord0;',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+            '  vTexCoord0 = TexCoord0;',
             '}',
             ''
         ].join( '\n' );
@@ -1368,7 +1368,7 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
 
             'mat3 computeBasis()',
             '{',
-            '  vec2 uvrand = FragTexCoord0*noiseSampling;',
+            '  vec2 uvrand = vTexCoord0*noiseSampling;',
             '  vec3 rvec = texture2D(Texture2, uvrand*2.0).xyz*2.0-vec3(1.0);',
             '  vec3 tangent = normalize(rvec - normal * dot(rvec, normal));',
             '  vec3 bitangent = cross(normal, tangent);',
@@ -1379,8 +1379,8 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
             'void main (void)',
             '{',
             kernelglsl,
-            '  position = texture2D(Texture1, FragTexCoord0);',
-            '  vec4 p = texture2D(Texture0, FragTexCoord0);',
+            '  position = texture2D(Texture1, vTexCoord0);',
+            '  vec4 p = texture2D(Texture0, vTexCoord0);',
             '  depth = p.w;',
             '  normal = vec3(p);',
             '  if ( position.w == 0.0) {',
@@ -1470,14 +1470,14 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
             'attribute vec3 Vertex;',
             'attribute vec2 TexCoord0;',
             'attribute vec3 TexCoord1;',
-            'varying vec2 FragTexCoord0;',
-            'varying vec3 FragTexCoord1;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
+            'varying vec2 vTexCoord0;',
+            'varying vec3 vTexCoord1;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
             'void main(void) {',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-            '  FragTexCoord0 = TexCoord0;',
-            '  FragTexCoord1 = TexCoord1;',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+            '  vTexCoord0 = TexCoord0;',
+            '  vTexCoord1 = TexCoord1;',
             '}',
             ''
         ].join( '\n' );
@@ -1495,7 +1495,7 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
         var fragmentShader = [
             '',
             Composer.Filter.defaultFragmentShaderHeader,
-            'varying vec3 FragTexCoord1;',
+            'varying vec3 vTexCoord1;',
             'uniform sampler2D Texture1;',
             'uniform sampler2D Texture2;',
             'uniform mat4 projection;',
@@ -1514,7 +1514,7 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
 
             'mat3 computeBasis()',
             '{',
-            '  vec2 uvrand = FragTexCoord0*noiseSampling;',
+            '  vec2 uvrand = vTexCoord0*noiseSampling;',
             '  //uvrand = rand(gl_FragCoord.xy);',
             '  vec3 rvec = texture2D(Texture2, uvrand*2.0).xyz*2.0-vec3(1.0);',
             '  //vec3 rvec = normalize(vec3(uvrand,0.0));',
@@ -1534,7 +1534,7 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
             'void main (void)',
             '{',
             kernelglsl,
-            '  vec4 p = texture2D(Texture0, FragTexCoord0);',
+            '  vec4 p = texture2D(Texture0, vTexCoord0);',
             '  if (dot(p,p) < 0.001) { ',
             '     gl_FragColor = vec4(1.0,1.0,1.0,0.0);',
             '     return;',
@@ -1542,7 +1542,7 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
             '  znear = projection[3][2] / (projection[2][2]-1.0);',
             '  zfar = projection[3][2] / (projection[2][2]+1.0);',
             '  zrange = zfar-znear;',
-            '  depth = getDepthValue(texture2D(Texture1, FragTexCoord0));',
+            '  depth = getDepthValue(texture2D(Texture1, vTexCoord0));',
             //B = (A - znear)/(zfar-znear);',
             //B = A/(zfar-znear) - znear/(zfar-znear);',
             //B+ znear/(zfar-znear) = A/(zfar-znear) ;',
@@ -1556,7 +1556,7 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
 
             '  normal = decodeNormal(unpack4x8To2Float(p));',
 
-            '  position = -FragTexCoord1*depth;',
+            '  position = -vTexCoord1*depth;',
             '  position.z = -position.z;',
 
             '',

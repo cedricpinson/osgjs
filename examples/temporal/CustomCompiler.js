@@ -21,7 +21,7 @@ var CustomCompiler;
             projMat = this.createVariable( 'mat4', 'projectionMatrix' );
 
 
-            var projectionMatrix = this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' );
+            var projectionMatrix = this.getOrCreateUniform( 'mat4', 'uProjectionMatrix' );
             var halton = this.getOrCreateUniform( 'vec4', 'halton' );
             var renderSize = this.getOrCreateUniform( 'vec2', 'RenderSize' );
 

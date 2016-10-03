@@ -15,12 +15,12 @@ function getShader() {
         'precision highp float;',
         '#endif',
         'attribute vec3 Vertex;',
-        'uniform mat4 ModelViewMatrix;',
-        'uniform mat4 ProjectionMatrix;',
-        'varying vec4 position;',
+        'uniform mat4 uModelViewMatrix;',
+        'uniform mat4 uProjectionMatrix;',
+        'varying vec4 vModelVertex;',
         'void main(void) {',
-        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-        '  position = ModelViewMatrix * vec4(Vertex,1.0);',
+        '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+        '  vModelVertex = uModelViewMatrix * vec4(Vertex,1.0);',
         '}'
     ].join( '\n' );
 
@@ -30,7 +30,7 @@ function getShader() {
         '#ifdef GL_ES',
         'precision highp float;',
         '#endif',
-        'varying vec4 position;',
+        'varying vec4 vModelVertex;',
         'uniform float density; //  { \"min\": 0.0,  \"max\": 0.8, \"step\": 0.01, \"value\": 0.2 } ',
         'void main(void) {',
         '  float d = density; //0.001;',

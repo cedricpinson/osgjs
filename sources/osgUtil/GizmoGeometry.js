@@ -21,12 +21,12 @@ var getOrCreateShader = function () {
     var vertexshader = [
         glPrecision,
         'attribute vec3 Vertex;',
-        'uniform mat4 ModelViewMatrix;',
-        'uniform mat4 ProjectionMatrix;',
+        'uniform mat4 uModelViewMatrix;',
+        'uniform mat4 uProjectionMatrix;',
         shaderName,
         '',
         'void main(void) {',
-        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
+        '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex, 1.0);',
         '}'
     ].join( '\n' );
 
@@ -82,14 +82,14 @@ var getOrCreateShaderQuadCircle = function () {
     var vertexshader = [
         glPrecision,
         'attribute vec3 Vertex;',
-        'uniform mat4 ModelViewMatrix;',
-        'uniform mat4 ProjectionMatrix;',
-        'varying vec3 vVertex;',
+        'uniform mat4 uModelViewMatrix;',
+        'uniform mat4 uProjectionMatrix;',
+        'varying vec3 vViewVertex;',
         shaderName,
         '',
         'void main(void) {',
-        '  vVertex = Vertex;',
-        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
+        '  vViewVertex = Vertex;',
+        '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex, 1.0);',
         '}'
     ].join( '\n' );
 
@@ -97,15 +97,15 @@ var getOrCreateShaderQuadCircle = function () {
         glPrecision,
         'uniform float uAngle;',
         'uniform vec3 uBase;',
-        'varying vec3 vVertex;',
+        'varying vec3 vViewVertex;',
         'const float PI = 3.14159265358979323846264;',
         'const float PI2 = PI * 2.0;',
         shaderName,
         '',
         'void main(void) {',
-        '  if(length(vVertex) > 0.5)',
+        '  if(length(vViewVertex) > 0.5)',
         '    discard;',
-        '  vec3 vn = normalize(vVertex);',
+        '  vec3 vn = normalize(vViewVertex);',
         '  float angle = atan(uBase.y * vn.x - uBase.x * vn.y, dot(uBase, vn));',
         '  if(angle > 0.0) {',
         '    if(uAngle >= 0.0 && angle > uAngle) discard;',

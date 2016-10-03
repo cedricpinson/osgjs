@@ -39,12 +39,12 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
     getUniformName: function ( name ) {
         var prefix = 'Shadow_' + this.getType() + this._lightUnit.toString();
-        return prefix + '_uniform_' + name;
+        return 'u' + prefix + '_' + name;
     },
 
     getVaryingName: function ( name ) {
         var prefix = this.getType() + this._lightUnit.toString();
-        return prefix + '_varying_' + name;
+        return 'v' + prefix + '_' + name;
     },
 
     getOrCreateUniforms: function ( unit ) {
@@ -56,22 +56,12 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
         if ( obj.uniforms[ unit ] !== undefined ) return obj.uniforms[ unit ];
 
-        var uniformList = {
-            'ViewMatrix': 'createMat4',
-            'ProjectionMatrix': 'createMat4',
-            'DepthRange': 'createFloat4',
-            'MapSize': 'createFloat4'
+        var uniforms = {
+            ViewMatrix: Uniform.createMat4( this.getUniformName( 'viewMatrix' ) ),
+            ProjectionMatrix: Uniform.createMat4( this.getUniformName( 'projectionMatrix' ) ),
+            DepthRange: Uniform.createFloat4( this.getUniformName( 'depthRange' ) ),
+            MapSize: Uniform.createFloat4( this.getUniformName( 'mapSize' ) )
         };
-
-        var uniforms = {};
-
-        window.Object.keys( uniformList ).forEach( function ( key ) {
-
-            var type = uniformList[ key ];
-            var func = Uniform[ type ];
-            uniforms[ key ] = func( this.getUniformName( key ) );
-
-        }.bind( this ) );
 
         // Dual Uniform of texture, needs:
         // - Sampler (type of texture)

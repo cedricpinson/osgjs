@@ -898,18 +898,18 @@
                     '',
                     'attribute vec3 Vertex;',
                     'attribute vec2 TexCoord0;',
-                    'varying vec2 FragTexCoord0;',
-                    'uniform mat4 ModelViewMatrix;',
-                    'uniform mat4 ProjectionMatrix;',
+                    'varying vec2 vCoord0;',
+                    'uniform mat4 uModelViewMatrix;',
+                    'uniform mat4 uProjectionMatrix;',
                     'void main(void) {',
-                    '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-                    '  FragTexCoord0 = TexCoord0;',
+                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                    '  vTexCoord0 = TexCoord0;',
                     '}',
                     ''
                 ].join( '\n' );
 
                 var fgt = [
-                    osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0,FragTexCoord0);', '}', ''
+                    osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0, vTexCoord0);', '}', ''
                 ].join( '\n' );
                 var program = new osg.Program(
                     new osg.Shader( 'VERTEX_SHADER', vertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
@@ -1324,7 +1324,7 @@
             this._maxTextureSize = caps.getWebGLParameter( 'MAX_TEXTURE_SIZE' );
             this._maxTextureUnit = caps.getWebGLParameter( 'MAX_TEXTURE_IMAGE_UNITS' );
             // shaders has to have under max varying decl max = this._maxVaryings -1
-            // usual shader is already 4 vertexColor, FragNormal, FragEye, FragTexcoord. each shadow is 1 more vec4 per shadow
+            // usual shader is already 4 vertexColor, vViewNormal, vViewVertex, vTexcoord. each shadow is 1 more vec4 per shadow
             this._maxLights = Math.min( this._maxTextureUnit - 1, this._maxVaryings - 5 );
 
             var opt = {

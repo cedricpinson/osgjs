@@ -40,10 +40,10 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
 
         return [ frag ];
     },
-    _getDirectionVec: function () {
-        return this.getOrCreateWorldNormal();
+    getOffsetDirection: function () {
+        return this.getOrCreateModelNormal();
     },
-    getOrCreateWorldPosition: function () {
+    getOrCreateModelVertex: function () {
         var vertexOffset = this.getVariable( 'vertexOffset' );
         if ( vertexOffset ) return vertexOffset;
 
@@ -52,10 +52,9 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
         var str = '%out = %offset == 1.0 ? %vertex + normalize(%direction.xyz) * %scale: %vertex;';
         this.getNode( 'InlineCode' ).code( str ).inputs( {
             offset: this.getOrCreateAttribute( 'float', 'Offset' ),
-            direction: this._getDirectionVec(),
-            vertex: Compiler.prototype.getOrCreateWorldPosition.call( this ),
-            scale: this.getOrCreateUniform( 'float', 'uScale' ),
-            world: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' )
+            direction: this.getOffsetDirection(),
+            vertex: Compiler.prototype.getOrCreateModelVertex.call( this ),
+            scale: this.getOrCreateUniform( 'float', 'uScale' )
         } ).outputs( {
             out: vertexOffset
         } );
@@ -68,8 +67,8 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
         out = this._varyings.FragEyeVector || this.createVariable( 'vec4', 'FragEyeVector' );
 
         this.getNode( 'MatrixMultPosition' ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'ViewMatrix' ),
-            vec: this.getOrCreateWorldPosition()
+            matrix: this.getOrCreateUniform( 'mat4', 'uViewMatrix' ),
+            vec: this.getOrCreateModelVertex()
         } ).outputs( {
             vec: out
         } );
@@ -95,8 +94,8 @@ CompilerOffsetTangent.prototype = MACROUTILS.objectInherit( CompilerOffsetNormal
     getFragmentShaderName: function () {
         return 'CompilerOffsetTangent';
     },
-    _getDirectionVec: function () {
-        return this.getOrCreateWorldTangent();
+    getOffsetDirection: function () {
+        return this.getOrCreateModelTangent();
     }
 } );
 

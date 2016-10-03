@@ -640,7 +640,7 @@ module.exports = function () {
 
         var checkLeaf = function ( leaf ) {
             var tmp = mat4.create();
-            mat4.mul( tmp, leaf._view, leaf._modelWorld );
+            mat4.mul( tmp, leaf._view, leaf._model );
 
             assert.equalVector( tmp, leaf._modelView );
             //assert.isOk( mockup.checkNear( tmp, leaf.modelview ), 'View * World === ModelView' );

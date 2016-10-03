@@ -7,11 +7,9 @@ uniform float uBrightness;
 
 uniform mat4 uEnvironmentTransform;
 
-varying vec3 osg_FragEye;
-varying vec3 osg_FragNormal;
-varying vec2 osg_FragTexCoord0;
-varying vec3 osg_FragVertex;
-varying vec3 osg_FragWorldVertex;
+varying vec3 vViewVertex;
+varying vec3 vViewNormal;
+varying vec2 vTexCoord0;
 
 #pragma include "math.glsl"
 #pragma include "colorSpace.glsl"
@@ -42,17 +40,17 @@ mat3 getEnvironmentTransfrom( mat4 transform ) {
 
 void main() {
 
-    // vec3 N = normalize(osg_FragNormal);
+    // vec3 N = normalize(vViewNormal);
     // mat3 environmentTransform = getEnvironmentTransfrom ( uEnvironmentTransform );
 
-    // vec3 E = normalize(osg_FragEye);
+    // vec3 E = normalize(vViewVertex);
     // vec3 V = -E;
     // vec3 H = N;
     // vec3 L = normalize(2.0 * dot(V, H) * H - V);
 
     // vec3 direction = environmentTransform * L;
 
-    vec3 direction = normalize( osg_FragNormal);
+    vec3 direction = normalize( vViewNormal);
     direction = getEnvironmentTransfrom ( uEnvironmentTransform ) * direction;
 
     vec3 color = test0( direction );

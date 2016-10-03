@@ -202,21 +202,16 @@
             'attribute vec3 Vertex;',
             'attribute vec3 Normal;',
             'attribute vec2 TexCoord0;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
 
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragVertex;',
-            'varying vec2 osg_TexCoord0;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
+            'uniform mat4 uModelViewNormalMatrix;',
+
+            'varying vec3 vLocalVertex;',
 
             'void main(void) {',
-            '  osg_FragVertex = Vertex;',
-            '  osg_TexCoord0 = TexCoord0;',
-            '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
-            '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+            '  vLocalVertex = Vertex;',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
         ].join( '\n' );
 
@@ -231,10 +226,7 @@
             'uniform float hdrExposure;',
             'uniform float hdrGamma;',
 
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragVertex;',
-            'varying vec2 osg_TexCoord0;',
+            'varying vec3 vLocalVertex;',
 
             // convert 8-bit RGB channels into floats using the common E exponent
             'vec3 decodeRGBE(vec4 rgbe) {',
@@ -255,7 +247,7 @@
             '}',
 
             'void main(void) {',
-            '  vec3 normal = normalize(osg_FragVertex.xyz);',
+            '  vec3 normal = normalize(vLocalVertex.xyz);',
             '  vec3 c = toneMapHDR(decodeRGBE(textureSphere(Texture0, normal)));',
             '  gl_FragColor = vec4(c, 1.0);',
             '}',
@@ -279,21 +271,21 @@
             'attribute vec3 Vertex;',
             'attribute vec3 Normal;',
 
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
+            'uniform mat4 uModelViewNormalMatrix;',
 
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragNormalWorld;',
-            'varying vec3 osg_FragLightDirection;',
+            'varying vec3 vViewVertex;',
+            'varying vec3 vViewNormal;',
+            'varying vec3 vModelNormal;',
+            'varying vec3 vViewLightDirection;',
 
             'void main(void) {',
-            '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex, 1.0));',
-            '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-            '  osg_FragNormalWorld = Normal;',
-            '  osg_FragLightDirection = vec3(NormalMatrix * vec4(0.0, -1.0, 0.0, 1.0));',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+            '  vViewVertex = vec3(uModelViewMatrix * vec4(Vertex, 1.0));',
+            '  vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 0.0));',
+            '  vModelNormal = Normal;',
+            '  vViewLightDirection = vec3(uModelViewNormalMatrix * vec4(0.0, -1.0, 0.0, 1.0));',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
         ].join( '\n' );
 
@@ -310,10 +302,10 @@
             'uniform float hdrGamma;',
             'uniform mat4 CubemapTransform;',
 
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragNormalWorld;',
-            'varying vec3 osg_FragLightDirection;',
+            'varying vec3 vViewVertex;',
+            'varying vec3 vViewNormal;',
+            'varying vec3 vModelNormal;',
+            'varying vec3 vViewLightDirection;',
 
             'vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)',
             '{',
@@ -345,10 +337,10 @@
             '}',
 
             'void main(void) {',
-            '  vec3 normalWorld = normalize(osg_FragNormalWorld);',
-            '  vec3 N = normalize(osg_FragNormal);',
-            '  vec3 L = normalize(osg_FragLightDirection);',
-            '  vec3 E = normalize(osg_FragEye);',
+            '  vec3 normalWorld = normalize(vModelNormal);',
+            '  vec3 N = normalize(vViewNormal);',
+            '  vec3 L = normalize(vViewLightDirection);',
+            '  vec3 E = normalize(vViewVertex);',
             '  vec3 R = cubemapReflectionVector(CubemapTransform, E, N);',
 
             '  float NdotL = dot(-N, L);',

@@ -465,7 +465,7 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
             this.getCurrentProjectionMatrix(),
             this.getCurrentViewMatrix(),
             this.getCurrentModelViewMatrix(),
-            this.getCurrentModelWorldMatrix(),
+            this.getCurrentModelMatrix(),
             depth );
 
         leafs.push( leaf );

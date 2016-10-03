@@ -7,10 +7,10 @@ uniform vec2 uEnvironmentLodRange;
 #extension GL_EXT_shader_texture_lod : enable
 uniform vec2 uEnvironmentSize;
 
-varying vec3 osg_FragEye;
-varying vec3 osg_FragNormal;
-varying vec2 osg_FragTexCoord0;
-varying vec3 osg_FragVertex;
+varying vec3 vViewVertex;
+varying vec3 vViewNormal;
+varying vec2 vTexCoord0;
+varying vec3 vLocalVertex;
 
 #pragma include "cubemapSampler.glsl"
 #pragma include "colorSpace.glsl"
@@ -24,8 +24,8 @@ mat3 getEnvironmentTransfrom( mat4 transform ) {
 }
 
 void main() {
-    vec3 direction = normalize( osg_FragNormal);
-    //direction = normalize(osg_FragVertex.xyz);
+    vec3 direction = normalize( vViewNormal);
+    //direction = normalize(vLocalVertex.xyz);
     direction = getEnvironmentTransfrom( uEnvironmentTransform ) * direction;
 #ifdef CUBEMAP_LOD
     vec3 color = uBrightness * textureCubeLodEXTFixed(uEnvironmentCube, direction, uLod ).rgb;

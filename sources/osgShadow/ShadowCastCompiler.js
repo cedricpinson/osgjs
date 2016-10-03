@@ -44,8 +44,8 @@ CompilerShadowCast.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
 
             exponent0: this.getOrCreateUniform( 'float', 'exponent0' ),
             exponent1: this.getOrCreateUniform( 'float', 'exponent1' ),
-            shadowDepthRange: this.getOrCreateUniform( 'vec4', 'Shadow_DepthRange' ),
-            fragEye: this.getOrCreateInputPosition()
+            shadowDepthRange: this.getOrCreateUniform( 'vec4', 'uShadowDepthRange' ),
+            fragEye: this.getOrCreateVarying( 'vec4', 'vViewVertex' )
 
         } ).outputs( {
 

@@ -117,7 +117,7 @@ var ShadowMap = function ( settings ) {
 
     var near = 0.001;
     var far = 1000;
-    var unifRange = Uniform.createFloat4( 'Shadow_DepthRange' );
+    var unifRange = Uniform.createFloat4( 'uShadowDepthRange' );
     this._casterStateSet.addUniform( unifRange );
     this._depthRange = unifRange.getInternalArray();
     this._depthRange[ 0 ] = near;
@@ -867,7 +867,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._depthRange[ 3 ] = 1.0 / ( this._depthRange[ 2 ] );
 
         var castUniforms = this._casterStateSet.getUniformList();
-        castUniforms[ 'Shadow_DepthRange' ].getUniform().setVec4( this._depthRange );
+        castUniforms.uShadowDepthRange.getUniform().setVec4( this._depthRange );
 
         this._texture.setViewMatrix( this._viewMatrix );
         this._texture.setProjectionMatrix( this._projectionMatrix );
@@ -884,7 +884,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         var castUniforms = this._casterStateSet.getUniformList();
 
-        castUniforms[ 'Shadow_DepthRange' ].getUniform().setVec4( this._depthRange );
+        castUniforms.uShadowDepthRange.getUniform().setVec4( this._depthRange );
         this._texture.setDepthRange( this._depthRange );
 
         var camera = this._cameraShadow;
@@ -938,7 +938,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         // HERE we get the shadowedScene Current World Matrix
         // to get any world transform ABOVE the shadowedScene
-        var worldMatrix = cullVisitor.getCurrentModelWorldMatrix();
+        var worldMatrix = cullVisitor.getCurrentModelMatrix();
         // it does fuck up the results.
         bbox.transformMat4( bbox, worldMatrix );
 
