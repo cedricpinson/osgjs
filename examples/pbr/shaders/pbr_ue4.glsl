@@ -77,7 +77,7 @@ vec3 approximateSpecularIBL( const in vec3 specularColor,
 
 
     // marmoset tricks
-    prefilteredColor *= occlusionHorizon( dominantR, osg_FragNormal );
+    prefilteredColor *= occlusionHorizon( dominantR, vViewNormal );
 
 #ifdef MOBILE
     return uBrightness * prefilteredColor * integrateBRDFApprox( specularColor, roughnessLinear, NoV );

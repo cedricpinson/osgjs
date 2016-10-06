@@ -1103,7 +1103,6 @@ module.exports = function () {
         };
 
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-            console.log( result.getChildren()[ 0 ].getName() );
             assert.isOk( result.getChildren()[ 0 ].getName() === 'cow', 'the first node should be cow' );
             assert.isOk( result.getChildren()[ 1 ].getName() === 'cessna', 'the second node should be cessna' );
             done();

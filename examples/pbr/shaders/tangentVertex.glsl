@@ -9,26 +9,26 @@ attribute vec3 Normal;
 attribute vec2 TexCoord0;
 attribute vec4 Tangent;
 
-uniform mat4 ModelViewMatrix;
-uniform mat4 ProjectionMatrix;
-uniform mat4 NormalMatrix;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+uniform mat4 uModelViewNormalMatrix;
 
 
-varying vec3 osg_FragEye;
-varying vec3 osg_FragNormal;
-varying vec4 osg_FragTangent;
-varying vec2 osg_FragTexCoord0;
-varying vec3 osg_FragVertex;
+varying vec3 vViewVertex;
+varying vec3 vViewNormal;
+varying vec4 vViewTangent;
+varying vec2 vTexCoord0;
+varying vec3 vLocalVertex;
 
 
 void main(void) {
 
-    osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex, 1.0));
-    osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));
-    osg_FragVertex = Vertex;
+    vViewVertex = vec3(uModelViewMatrix * vec4(Vertex, 1.0));
+    vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 0.0));
+    vLocalVertex = Vertex;
 
-    osg_FragTangent = Tangent;
-    osg_FragTexCoord0 = TexCoord0;
+    vViewTangent = Tangent;
+    vTexCoord0 = TexCoord0;
 
-    gl_Position = ProjectionMatrix * (ModelViewMatrix * vec4(Vertex,1.0));
+    gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex,1.0));
 }

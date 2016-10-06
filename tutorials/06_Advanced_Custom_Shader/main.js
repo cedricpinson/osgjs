@@ -13,9 +13,9 @@ function getShader() {
         'precision highp float;',
         'attribute vec3 Vertex;',
         'attribute vec3 Normal;',
-        'uniform mat4 ModelViewMatrix;',
-        'uniform mat4 ProjectionMatrix;',
-        'uniform mat4 NormalMatrix;',
+        'uniform mat4 uModelViewMatrix;',
+        'uniform mat4 uProjectionMatrix;',
+        'uniform mat4 uModelViewNormalMatrix;',
         'uniform vec4 lightPos;',
         'uniform vec4 eyePos;',
         'varying vec4 position;',
@@ -29,17 +29,17 @@ function getShader() {
 
 
         'void main(void) {',
-        '  vec3 p = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
+        '  vec3 p = vec3(uModelViewMatrix * vec4(Vertex,1.0));',
         '  l = normalize (vec3(lightPos) - p);',
 
         '  v = normalize (vec3(eyePos) - p);',
 
-        '  n = normalize( vec3(NormalMatrix * vec4(Normal, 1.0)));',
+        '  n = normalize( vec3(uModelViewNormalMatrix * vec4(Normal, 1.0)));',
         '//Vertex.x = Vertex.x + rand(1.0); Vertex.y = Vertex.y + rand(1.0);',
 
-        ' if(Vertex.x == 1.0 &&  Vertex.y == 1.0 && Vertex.z == 1.0){ gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex.x + 1.0, Vertex.y + 1.0, Vertex.z + 1.0,1.0); alpha = 0.0;}',
-        'else {gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0); alpha = 1.0;}',
-        '  position = ModelViewMatrix * vec4(Vertex.x  ,Vertex.y ,Vertex.z,1.0); ',
+        ' if(Vertex.x == 1.0 &&  Vertex.y == 1.0 && Vertex.z == 1.0){ gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex.x + 1.0, Vertex.y + 1.0, Vertex.z + 1.0,1.0); alpha = 0.0;}',
+        'else {gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0); alpha = 1.0;}',
+        '  position = uModelViewMatrix * vec4(Vertex.x  ,Vertex.y ,Vertex.z,1.0); ',
         '}'
     ].join( '\n' );
 
@@ -83,9 +83,9 @@ function getShaderVariant2() {
         '',
         'attribute vec3 Vertex;',
         'attribute vec3 Normal;',
-        'uniform mat4 ModelViewMatrix;',
-        'uniform mat4 ProjectionMatrix;',
-        'uniform mat4 NormalMatrix;',
+        'uniform mat4 uModelViewMatrix;',
+        'uniform mat4 uProjectionMatrix;',
+        'uniform mat4 uModelViewNormalMatrix;',
         'uniform vec4 lightPos;',
         'uniform vec4 eyePos;',
         'varying vec4 position;',
@@ -94,17 +94,17 @@ function getShaderVariant2() {
         'varying vec3 v;',
         'varying vec3 n;',
         'void main(void) {',
-        '  vec3 p = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
+        '  vec3 p = vec3(uModelViewMatrix * vec4(Vertex,1.0));',
         '  l = normalize (vec3(lightPos) - p);',
 
         '  v = normalize (vec3(eyePos) - p);',
         '  h = normalize (l+ v);',
 
-        '  n = normalize( vec3(NormalMatrix * vec4(Normal, 1.0)));',
+        '  n = normalize( vec3(uModelViewNormalMatrix * vec4(Normal, 1.0)));',
         ' if(Vertex.x == 3.0 &&  Vertex.y == 1.0 && Vertex.z == 1.0){ }',
-        'else {gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0); }',
+        'else {gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0); }',
 
-        '  position = ModelViewMatrix * vec4(Vertex,1.0);',
+        '  position = uModelViewMatrix * vec4(Vertex,1.0);',
         '}'
     ].join( '\n' );
 

@@ -245,7 +245,7 @@
 
             this._rootItems = new osg.Node();
 
-            this._rootItems.setUpdateCallback( new FPSUpdateCallback( this._config ) );
+            this._rootItems.addUpdateCallback( new FPSUpdateCallback( this._config ) );
 
             this._rootItems.addChild( this.createItems( this._config.deep ) );
 

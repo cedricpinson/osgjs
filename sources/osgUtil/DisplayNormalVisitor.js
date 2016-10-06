@@ -21,7 +21,6 @@ var UpdateMorph = require( 'osgAnimation/UpdateMorph' );
 ////////////////////////
 var CompilerOffsetNormal = function () {
     Compiler.apply( this, arguments );
-    this._isVertexColored = false;
 };
 
 CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
@@ -41,30 +40,41 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
 
         return [ frag ];
     },
-    _getDirectionVec: function () {
-        return this.getOrCreateNormalAttribute();
+    getOffsetDirection: function () {
+        return this.getOrCreateModelNormal();
     },
-    getOrCreateVertexAttribute: function () {
+    getOrCreateModelVertex: function () {
         var vertexOffset = this.getVariable( 'vertexOffset' );
         if ( vertexOffset ) return vertexOffset;
 
         vertexOffset = this.createVariable( 'vec3', 'vertexOffset' );
 
-        // normalize len (divide scale of worldmat, don't work for non uniform scale, but work enough for debug)
-        var str = '%out = %offset == 1.0 ? %vertex + normalize(%direction.xyz) * %scale / length(%world[0].xyz) : %vertex;';
+        var str = '%out = %offset == 1.0 ? %vertex + normalize(%direction.xyz) * %scale: %vertex;';
         this.getNode( 'InlineCode' ).code( str ).inputs( {
             offset: this.getOrCreateAttribute( 'float', 'Offset' ),
-            direction: this._getDirectionVec(),
-            vertex: Compiler.prototype.getOrCreateVertexAttribute.call( this ),
-            scale: this.getOrCreateUniform( 'float', 'uScale' ),
-            world: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' )
+            direction: this.getOffsetDirection(),
+            vertex: Compiler.prototype.getOrCreateModelVertex.call( this ),
+            scale: this.getOrCreateUniform( 'float', 'uScale' )
         } ).outputs( {
             out: vertexOffset
         } );
 
         return vertexOffset;
     },
-    declareVertexTransforms: Compiler.prototype.declareVertexTransformShadeless
+    getOrCreateViewVertex: function () {
+        var out = this._variables.FragEyeVector;
+        if ( out && !out.isEmpty() ) return out;
+        out = this._varyings.FragEyeVector || this.createVariable( 'vec4', 'FragEyeVector' );
+
+        this.getNode( 'MatrixMultPosition' ).inputs( {
+            matrix: this.getOrCreateUniform( 'mat4', 'uViewMatrix' ),
+            vec: this.getOrCreateModelVertex()
+        } ).outputs( {
+            vec: out
+        } );
+
+        return out;
+    }
 } );
 
 var ShaderGeneratorCompilerOffsetNormal = function () {
@@ -84,8 +94,8 @@ CompilerOffsetTangent.prototype = MACROUTILS.objectInherit( CompilerOffsetNormal
     getFragmentShaderName: function () {
         return 'CompilerOffsetTangent';
     },
-    _getDirectionVec: function () {
-        return this.getOrCreateTangentAttribute();
+    getOffsetDirection: function () {
+        return this.getOrCreateModelTangent();
     }
 } );
 

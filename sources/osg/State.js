@@ -66,15 +66,15 @@ var State = function ( shaderGeneratorProxy ) {
 
     this.attributeMap = new Map();
 
-    this.modelWorldMatrix = Uniform.createMatrix4( mat4.create(), 'ModelWorldMatrix' );
-    this.viewMatrix = Uniform.createMatrix4( mat4.create(), 'ViewMatrix' );
-    this.modelViewMatrix = Uniform.createMatrix4( mat4.create(), 'ModelViewMatrix' );
-    this.projectionMatrix = Uniform.createMatrix4( mat4.create(), 'ProjectionMatrix' );
-    this.normalMatrix = Uniform.createMatrix4( mat4.create(), 'NormalMatrix' );
+    this.modelMatrix = Uniform.createMatrix4( mat4.create(), 'uModelMatrix' );
+    this.viewMatrix = Uniform.createMatrix4( mat4.create(), 'uViewMatrix' );
+    this.modelViewMatrix = Uniform.createMatrix4( mat4.create(), 'uModelViewMatrix' );
+    this.projectionMatrix = Uniform.createMatrix4( mat4.create(), 'uProjectionMatrix' );
+    this.modelViewNormalMatrix = Uniform.createMatrix4( mat4.create(), 'uModelViewNormalMatrix' );
 
     // track uniform for color array enabled
     var arrayColorEnable = new Stack();
-    arrayColorEnable.globalDefault = Uniform.createFloat1( 0.0, 'ArrayColorEnabled' );
+    arrayColorEnable.globalDefault = Uniform.createFloat1( 0.0, 'uArrayColorEnabled' );
 
     this.uniforms.setMap( {
         ArrayColorEnabled: arrayColorEnable
@@ -256,7 +256,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var program = this.getLastProgramApplied();
             var uniformCache = program.getUniformsCache();
             var mu = this.modelViewMatrix;
-            var mul = uniformCache.ModelViewMatrix;
+            var mul = uniformCache.uModelViewMatrix;
             var gc = this.getGraphicContext();
             if ( mul ) {
 
@@ -282,8 +282,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             }
 
             if ( sendNormal ) {
-                mu = this.normalMatrix;
-                mul = uniformCache.NormalMatrix;
+                mu = this.modelViewNormalMatrix;
+                mul = uniformCache.uModelViewNormalMatrix;
                 if ( mul ) {
 
                     normal[ 0 ] = matrix[ 0 ];
@@ -337,7 +337,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var program = this.getLastProgramApplied();
 
             var mu = this.modelViewMatrix;
-            var mul = program.getUniformsCache().ModelViewMatrix;
+            var mul = program.getUniformsCache().uModelViewMatrix;
             if ( mul ) {
 
                 mu.setMatrix4( matrix );
@@ -359,8 +359,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             }
 
             if ( sendNormal ) {
-                mu = this.normalMatrix;
-                mul = program.getUniformsCache().NormalMatrix;
+                mu = this.modelViewNormalMatrix;
+                mul = program.getUniformsCache().uModelViewNormalMatrix;
                 if ( mul ) {
 
                     // mat4.copy( normal , matrix );
@@ -839,7 +839,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var program = this.attributeMap.Program.lastApplied;
 
-        if ( !program.getUniformsCache().ArrayColorEnabled ||
+        if ( !program.getUniformsCache().uArrayColorEnabled ||
             !program.getAttributesCache().Color ) return; // no color uniform or attribute used, exit
 
         // update uniform
@@ -849,7 +849,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         if ( !previousColorEnabled ) {
             uniform.setFloat( 1.0 );
-            uniform.apply( this.getGraphicContext(), program.getUniformsCache().ArrayColorEnabled );
+            uniform.apply( this.getGraphicContext(), program.getUniformsCache().uArrayColorEnabled );
             this._previousColorAttribPair[ program.getInstanceID() ] = true;
         }
 
@@ -860,7 +860,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var program = this.attributeMap.Program.lastApplied;
 
-        if ( !program.getUniformsCache().ArrayColorEnabled ||
+        if ( !program.getUniformsCache().uArrayColorEnabled ||
             !program.getAttributesCache().Color ) return; // no color uniform or attribute used, exit
 
         // update uniform
@@ -870,7 +870,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         if ( previousColorEnabled ) {
             uniform.setFloat( 0.0 );
-            uniform.apply( this.getGraphicContext(), program.getUniformsCache().ArrayColorEnabled );
+            uniform.apply( this.getGraphicContext(), program.getUniformsCache().uArrayColorEnabled );
             this._previousColorAttribPair[ program.getInstanceID() ] = false;
         }
 
@@ -1149,11 +1149,11 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
                 // filter 'standard' uniform matrix that will be applied for all shader
                 if ( name !== this.modelViewMatrix.getName() &&
-                    name !== this.modelWorldMatrix.getName() &&
+                    name !== this.modelMatrix.getName() &&
                     name !== this.viewMatrix.getName() &&
                     name !== this.projectionMatrix.getName() &&
-                    name !== this.normalMatrix.getName() &&
-                    name !== 'ArrayColorEnabled' ) {
+                    name !== this.modelViewNormalMatrix.getName() &&
+                    name !== 'uArrayColorEnabled' ) {
                     foreignUniforms.push( name );
                 }
             }

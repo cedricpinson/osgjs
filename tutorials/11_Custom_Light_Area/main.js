@@ -50,8 +50,6 @@ function createScene() {
     root.addChild( targetNode );
 
 
-
-
     lightNode = new osg.MatrixTransform();
     QuadSizeX = 25;
     QuadSizeY = QuadSizeX * 9 / 16.0;
@@ -83,7 +81,7 @@ function createScene() {
     targetNode.getOrCreateStateSet().setAttributeAndModes( getShader() );
 
     var viewMatrixArr = viewer.getCamera().getViewMatrix();
-    var ViewMatrix = osg.Uniform.createMatrix4( viewMatrixArr, 'ViewMatrix' );
+    var ViewMatrix = osg.Uniform.createMatrix4( viewMatrixArr, 'uViewMatrix' );
     targetNode.getOrCreateStateSet().addUniform( ViewMatrix );
 
     var lightMatrixWorldArr = lightNode.getMatrix();
@@ -122,9 +120,9 @@ function createScene() {
 
             var matrixList = lightNode.getWorldMatrices();
             var worldMatrix = matrixList[ 0 ];
-            lightMatrixWorld.set( worldMatrix );
+            osg.Matrix.copy( worldMatrix, lightMatrixWorld.getInternalArray() );
 
-            ViewMatrix.set( viewer.getCamera().getViewMatrix() );
+            osg.Matrix.copy( viewer.getCamera().getViewMatrix(), ViewMatrix.getInternalArray() );
 
             node.traverse( nv );
         }

@@ -33,8 +33,6 @@
         rttTargetTexture.setMagFilter( 'LINEAR' );
         rttCamera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTargetTexture );
 
-
-
         // now we want to use the result of the previous rtt
         // for this we will create a textured quad that will use the rtt
         // target texture

@@ -9,29 +9,6 @@
     var osgDB = OSG.osgDB;
 
 
-    var main = function () {
-
-        var canvas = document.getElementById( 'View' );
-
-        var viewer = new osgViewer.Viewer( canvas, {
-            antialias: true
-        } );
-        Viewer = viewer;
-        viewer.init();
-        var rotate = new osg.MatrixTransform();
-        rotate.addChild( createScene() );
-        viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
-        viewer.setSceneData( rotate );
-        viewer.setupManipulator();
-        viewer.getManipulator().computeHomePosition();
-
-        //viewer.getManipulator().setDistance(100.0);
-        //viewer.getManipulator().setTarget([0,0,0]);
-
-        viewer.run();
-
-    };
-
     function getShader() {
         var vertexshader = [
             '',
@@ -40,19 +17,17 @@
             '#endif',
             'attribute vec3 Vertex;',
             'attribute vec3 Normal;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
+            'uniform mat4 uModelViewNormalMatrix;',
 
-            'varying vec3 osg_FragWorldNormal;',
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
+            'varying vec3 vViewNormal;',
+            'varying vec3 vViewVertex;',
 
             'void main(void) {',
-            '  osg_FragWorldNormal = Normal;',
-            '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
-            '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+            '  vViewVertex = vec3(uModelViewMatrix * vec4(Vertex,1.0));',
+            '  vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 0.0));',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
         ].join( '\n' );
 
@@ -64,9 +39,8 @@
             'uniform samplerCube Texture0;',
             'uniform mat4 CubemapTransform;',
 
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragWorldNormal;',
+            'varying vec3 vViewNormal;',
+            'varying vec3 vViewVertex;',
 
             'vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)',
             '{',
@@ -80,8 +54,8 @@
             '}',
 
             'void main(void) {',
-            '  vec3 normal = normalize(osg_FragNormal);',
-            '  vec3 eye = -normalize(osg_FragEye);',
+            '  vec3 normal = normalize(vViewNormal);',
+            '  vec3 eye = -normalize(vViewVertex);',
             '  vec3 ray = cubemapReflectionVector(CubemapTransform, eye, normal);',
             '  gl_FragColor = textureCube(Texture0, normalize(ray));',
             '}',
@@ -105,21 +79,17 @@
             'attribute vec3 Vertex;',
             'attribute vec3 Normal;',
             'attribute vec2 TexCoord0;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
+            'uniform mat4 uModelViewMatrix;',
+            'uniform mat4 uProjectionMatrix;',
+            'uniform mat4 uModelViewNormalMatrix;',
 
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragVertex;',
-            'varying vec2 osg_TexCoord0;',
+            'varying vec3 vViewNormal;',
+            'varying vec3 vLocalVertex;',
 
             'void main(void) {',
-            '  osg_FragVertex = Vertex;',
-            '  osg_TexCoord0 = TexCoord0;',
-            '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
-            '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+            '  vLocalVertex = Vertex;',
+            '  vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 1.0));',
+            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
         ].join( '\n' );
 
@@ -129,13 +99,11 @@
             'precision highp float;',
             '#endif',
             'uniform samplerCube Texture0;',
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragVertex;',
-            'varying vec2 osg_TexCoord0;',
+            'varying vec3 vViewNormal;',
+            'varying vec3 vLocalVertex;',
 
             'void main(void) {',
-            '  vec3 eye = -normalize(osg_FragVertex);',
+            '  vec3 eye = -normalize(vLocalVertex);',
             '  gl_FragColor = textureCube(Texture0, eye);',
             '}',
             ''
@@ -262,7 +230,29 @@
         return group;
     }
 
+    var main = function () {
 
+        var canvas = document.getElementById( 'View' );
+
+        var viewer = new osgViewer.Viewer( canvas, {
+            antialias: true
+        } );
+        Viewer = viewer;
+        viewer.init();
+        var rotate = new osg.MatrixTransform();
+        rotate.addChild( createScene() );
+        viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+        viewer.setSceneData( rotate );
+        viewer.setupManipulator();
+        viewer.getManipulator().computeHomePosition();
+
+        //viewer.getManipulator().setDistance(100.0);
+        //viewer.getManipulator().setTarget([0,0,0]);
+
+        viewer.run();
+
+    };
 
     window.addEventListener( 'load', main, true );
+
 } )();

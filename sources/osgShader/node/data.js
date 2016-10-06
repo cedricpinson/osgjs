@@ -32,12 +32,30 @@ Variable.prototype = MACROUTILS.objectInherit( Node.prototype, {
         return this;
     },
 
+    toString: function () {
+        var str = 'prefix : ' + this._prefix;
+        str += ', name : ' + this._prefix;
+        if ( this.type ) str += ' (' + this.type + ')';
+        return str;
+    },
+
     declare: function () {
         if ( this._value !== undefined ) {
             return sprintf( '%s %s = %s;', [ this._type, this.getVariable(), this._value ] );
         } else {
             return sprintf( '%s %s;', [ this._type, this.getVariable() ] );
         }
+    },
+
+    isEmpty: function () {
+        return this._value === undefined && this._inputs.length === 0;
+    },
+
+    reset: function () {
+        this._inputs = [];
+        this._outputs = null;
+        this._value = undefined;
+        this._text = undefined;
     }
 } );
 
@@ -101,19 +119,8 @@ Varying.prototype = MACROUTILS.objectInherit( Variable.prototype, {
 
     globalDeclaration: function () {
         return sprintf( 'varying %s %s;', [ this._type, this.getVariable() ] );
-    },
-
-    // bewteen vertex shader and fragmetn shader
-    // we keep varying but not associated
-    reset: function () {
-        this._inputs = [];
-        this._outputs = null;
-        this._text = undefined;
     }
 } );
-
-
-
 
 var Sampler = function ( type, prefix ) {
     Variable.call( this, type, prefix );
@@ -129,7 +136,6 @@ Sampler.prototype = MACROUTILS.objectInherit( Variable.prototype, {
     }
 
 } );
-
 
 // Graph Root Node Abstract Class
 // Derive from that for new outputs
@@ -166,7 +172,7 @@ glPosition.prototype = MACROUTILS.objectInherit( Output.prototype, {} );
 
 
 var glPointSize = function () {
-    Output.call( this, 'vec4', 'gl_PointSize' );
+    Output.call( this, 'float', 'gl_PointSize' );
     this._name = 'glPointSize';
 };
 glPointSize.prototype = MACROUTILS.objectInherit( Output.prototype, {} );

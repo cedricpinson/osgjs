@@ -1360,7 +1360,7 @@
                 '#endif',
 
                 'uniform sampler2D source;',
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
 
                 'vec4 textureRGBE(const in sampler2D texture, const in vec2 uv) {',
                 '    vec4 rgbe = texture2D(texture, uv );',
@@ -1370,7 +1370,7 @@
                 '}',
 
                 'void main() {',
-                '  vec3 decode = textureRGBE(source, FragTexCoord0).rgb;',
+                '  vec3 decode = textureRGBE(source, vTexCoord0).rgb;',
                 '  //gl_FragColor = vec4(vec3(1.0,0.0,1.0), 1.0);',
                 '  gl_FragColor = vec4(decode, 1.0);',
                 '}',

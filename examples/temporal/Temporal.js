@@ -7,7 +7,8 @@
         osg.StateAttribute.call( this );
         this._attributeEnable = false;
     };
-    osg.createPrototypeStateAttribute( TemporalAttribute, osg.objectInherit( osg.StateAttribute.prototype, {
+
+    TemporalAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( osg.StateAttribute.prototype, {
         attributeType: 'Temporal',
 
         cloneType: function () {

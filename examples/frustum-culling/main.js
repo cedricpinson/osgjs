@@ -405,7 +405,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var stateset;
 
             var fgt = [
-                osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0,FragTexCoord0);', '}', ''
+                osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0, vTexCoord0);', '}', ''
             ].join( '\n' );
 
 
@@ -413,12 +413,12 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                 '',
                 'attribute vec3 Vertex;',
                 'attribute vec2 TexCoord0;',
-                'varying vec2 FragTexCoord0;',
-                'uniform mat4 ModelViewMatrix;',
-                'uniform mat4 ProjectionMatrix;',
+                'varying vec2 vTexCoord0;',
+                'uniform mat4 uModelViewMatrix;',
+                'uniform mat4 uProjectionMatrix;',
                 'void main(void) {',
-                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-                '  FragTexCoord0 = TexCoord0;',
+                '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                '  vTexCoord0 = TexCoord0;',
                 '}',
                 ''
             ].join( '\n' );

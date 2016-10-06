@@ -264,7 +264,7 @@ vec3 evaluateSpecularIBL( const in vec3 N,
         vec3 color = uBrightness * getReferenceTexelEnvironmentLod( L, pdf ).rgb;
 
         // marmoset tricks
-        color *= occlusionHorizon( L, osg_FragNormal );
+        color *= occlusionHorizon( L, vViewNormal );
 
         // to debug the brdf
         //vec3 color = vec3(1.0);

@@ -5,15 +5,11 @@ var CustomCompiler;
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
 
-
     // this compiler use basic lighting and add a node to demonstrate how to
     // customize the shader compiler
     CustomCompiler = function () {
         osgShader.Compiler.apply( this, arguments );
     };
-
-    CustomCompiler.validAttributeType = osgShader.Compiler.validAttributeType.slice();
-    CustomCompiler.validAttributeType.push( 'Temporal' );
 
     CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
 
@@ -25,7 +21,7 @@ var CustomCompiler;
             projMat = this.createVariable( 'mat4', 'projectionMatrix' );
 
 
-            var projectionMatrix = this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' );
+            var projectionMatrix = this.getOrCreateUniform( 'mat4', 'uProjectionMatrix' );
             var halton = this.getOrCreateUniform( 'vec4', 'halton' );
             var renderSize = this.getOrCreateUniform( 'vec2', 'RenderSize' );
 

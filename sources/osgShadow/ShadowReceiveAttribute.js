@@ -63,7 +63,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
     getUniformName: function ( name ) {
         var prefix = this.getType() + this.getLightNumber().toString();
-        return prefix + '_uniform_' + name;
+        return 'u' + prefix + '_' + name;
     },
 
     getRotateOffset: function () {
@@ -151,22 +151,12 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
 
         // Variance Shadow mapping use One more epsilon
-        var uniformList = {
-            bias: 'createFloat',
-            exponent0: 'createFloat',
-            exponent1: 'createFloat',
-            epsilonVSM: 'createFloat'
+        var uniforms = {
+            bias: Uniform.createFloat( this.getUniformName( 'bias' ) ),
+            exponent0: Uniform.createFloat( this.getUniformName( 'exponent0' ) ),
+            exponent1: Uniform.createFloat( this.getUniformName( 'exponent1' ) ),
+            epsilonVSM: Uniform.createFloat( this.getUniformName( 'epsilonVSM' ) )
         };
-
-        var uniforms = {};
-
-        window.Object.keys( uniformList ).forEach( function ( key ) {
-
-            var type = uniformList[ key ];
-            var func = Uniform[ type ];
-            uniforms[ key ] = func( this.getUniformName( key ) );
-
-        }.bind( this ) );
 
         obj.uniforms[ typeMember ] = new Map( uniforms );
 

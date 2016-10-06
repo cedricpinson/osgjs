@@ -24,7 +24,7 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
     },
 
     getParameterName: function ( name ) {
-        return this.getType() + '_uniform_' + name;
+        return 'u' + this.getType() + '_' + name;
     },
 
     getOrCreateUniforms: function () {
@@ -32,11 +32,11 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
         if ( obj.uniforms ) return obj.uniforms;
 
         var uniformList = {
-            ambient: Uniform.createFloat4( vec4.create(), 'MaterialAmbient' ),
-            diffuse: Uniform.createFloat4( vec4.create(), 'MaterialDiffuse' ),
-            specular: Uniform.createFloat4( vec4.create(), 'MaterialSpecular' ),
-            emission: Uniform.createFloat4( vec4.create(), 'MaterialEmission' ),
-            shininess: Uniform.createFloat1( [ 0 ], 'MaterialShininess' )
+            ambient: Uniform.createFloat4( 'uMaterialAmbient' ),
+            diffuse: Uniform.createFloat4( 'uMaterialDiffuse' ),
+            specular: Uniform.createFloat4( 'uMaterialSpecular' ),
+            emission: Uniform.createFloat4( 'uMaterialEmission' ),
+            shininess: Uniform.createFloat1( 'uMaterialShininess' )
         };
 
         obj.uniforms = new Map( uniformList );

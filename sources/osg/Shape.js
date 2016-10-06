@@ -464,18 +464,14 @@ var createAxisGeometry = function ( size ) {
                     '#endif',
                     'attribute vec3 Vertex;',
                     'attribute vec4 Color;',
-                    'uniform mat4 ModelViewMatrix;',
-                    'uniform mat4 ProjectionMatrix;',
+                    'uniform mat4 uModelViewMatrix;',
+                    'uniform mat4 uProjectionMatrix;',
                     '',
-                    'varying vec4 FragColor;',
-                    '',
-                    'vec4 ftransform() {',
-                    'return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
-                    '}',
+                    'varying vec4 vColor;',
                     '',
                     'void main(void) {',
-                    'gl_Position = ftransform();',
-                    'FragColor = Color;',
+                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex, 1.0);',
+                    '  vColor = Color;',
                     '}'
                 ].join( '\n' );
 
@@ -483,10 +479,10 @@ var createAxisGeometry = function ( size ) {
                     '#ifdef GL_ES',
                     'precision highp float;',
                     '#endif',
-                    'varying vec4 FragColor;',
+                    'varying vec4 vColor;',
 
                     'void main(void) {',
-                    'gl_FragColor = FragColor;',
+                    'gl_FragColor = vColor;',
                     '}'
                 ].join( '\n' );
 

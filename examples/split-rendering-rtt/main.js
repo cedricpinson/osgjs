@@ -11,8 +11,8 @@
         'uniform sampler2D Texture1;',
         'void main (void)',
         '{',
-        '  vec4 transp = texture2D(Texture1, FragTexCoord0 );',
-        '  vec4 opaque = texture2D(Texture0, FragTexCoord0 );',
+        '  vec4 transp = texture2D(Texture1, vTexCoord0 );',
+        '  vec4 opaque = texture2D(Texture0, vTexCoord0 );',
         '  gl_FragColor = opaque * (1.0 - transp.a) + transp.rgba;',
         '}'
     ].join( '\n' );

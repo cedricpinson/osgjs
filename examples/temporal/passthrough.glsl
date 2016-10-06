@@ -1,6 +1,6 @@
 
 
-varying vec2 FragTexCoord0;
+varying vec2 vTexCoord0;
 uniform vec2 RenderSize;
 
 uniform sampler2D Texture0;
@@ -15,7 +15,7 @@ void main()
     // halton[2] : 0 disable; 1: supersample, 2: motion blur
     // halton[3] : Frame Number since start of amortized supersample of static frame
 
-    vec4 superSampleResult = (mod(halton[3], 2.0) == 0.0) ? texture2D(Texture0, FragTexCoord0) : texture2D(Texture1, FragTexCoord0);
+    vec4 superSampleResult = (mod(halton[3], 2.0) == 0.0) ? texture2D(Texture0, vTexCoord0) : texture2D(Texture1, vTexCoord0);
 
     gl_FragColor = superSampleResult;
 

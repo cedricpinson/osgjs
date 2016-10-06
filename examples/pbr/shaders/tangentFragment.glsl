@@ -1,8 +1,8 @@
-varying vec3 osg_FragEye;
-varying vec3 osg_FragNormal;
-varying vec4 osg_FragTangent;
-varying vec2 osg_FragTexCoord0;
-varying vec3 osg_FragVertex;
+varying vec3 vViewVertex;
+varying vec3 vViewNormal;
+varying vec4 vViewTangent;
+varying vec2 vTexCoord0;
+varying vec3 vLocalVertex;
 
 
 void computeTangentFrame( const in vec4 tangent, const in vec3 normal,
@@ -31,14 +31,14 @@ void main() {
     //vectors used for importance sampling
     vec3 tangentX, tangentY;
 
-    vec3 N = normalize(osg_FragNormal);
-    vec3 E = normalize(osg_FragEye);
+    vec3 N = normalize(vViewNormal);
+    vec3 E = normalize(vViewVertex);
 
-    computeTangentFrame(osg_FragTangent, N, tangentX, tangentY );
-    // vec3 N = normalize(osg_FragNormal);
+    computeTangentFrame(vViewTangent, N, tangentX, tangentY );
+    // vec3 N = normalize(vViewNormal);
     // mat3 environmentTransform = getEnvironmentTransfrom ( uEnvironmentTransform );
 
-    // vec3 E = normalize(osg_FragEye);
+    // vec3 E = normalize(vViewVertex);
     // vec3 V = -E;
     // vec3 H = N;
     // vec3 L = normalize(2.0 * dot(V, H) * H - V);
@@ -46,5 +46,5 @@ void main() {
     // vec3 direction = environmentTransform * L;
 
 
-    gl_FragColor = vec4( osg_FragTangent.xyz, 1.0);
+    gl_FragColor = vec4( vViewTangent.xyz, 1.0);
 }

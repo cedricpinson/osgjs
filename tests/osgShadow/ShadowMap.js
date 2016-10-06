@@ -53,8 +53,6 @@ module.exports = function () {
         resultProj = mat4.fromValues( 1.3763819204711736, 0.0, 0.0, 0.0, 0.0, 1.3763819204711736, 0.0, 0.0, 0.0, 0.0, -1, -1, 0.0, 0.0, -0.1461688261717007, 0.0 );
         resultNearFar = vec2.fromValues( 0.07308441308585036, 14.61688261717007 );
 
-        console.log( shadowMap._viewMatrix, shadowMap._projectionMatrix, shadowMap._depthRange );
-
         assert.isOk( matrixCompare( shadowMap._viewMatrix, resultView ), 'correct view shadow matrix for spot light  inside scene Bbox' );
         assert.isOk( matrixCompare( shadowMap._projectionMatrix, resultProj ), 'correct projection shadow matrix for spot light inside scene Bbox' );
         assert.isOk( mockup.checkNear( shadowMap._depthRange[ 0 ] === resultNearFar[ 0 ] ), 'correct near shadow  for spot light  inside scene Bbox' );

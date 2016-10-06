@@ -2,7 +2,7 @@
 var StateGraph = require( 'osg/StateGraph' );
 
 var CacheUniformApply = function ( state, program ) {
-    this.modelWorldUniform = program._uniformsCache[ state.modelWorldMatrix.getName() ];
+    this.modelUniform = program._uniformsCache[ state.modelMatrix.getName() ];
     this.viewUniform = program._uniformsCache[ state.viewMatrix.getName() ];
 
     this.apply = undefined;
@@ -19,11 +19,11 @@ CacheUniformApply.prototype = {
         functionStr.push( 'var matrixModelViewChanged = state.applyModelViewMatrix( modelview );' );
         functionStr.push( 'state.applyProjectionMatrix( projection );' );
 
-        if ( this.modelWorldUniform !== undefined ) {
+        if ( this.modelUniform !== undefined ) {
             functionStr.push( 'if ( matrixModelViewChanged ) {' );
-            functionStr.push( '    var modelWorldMatrix = state.modelWorldMatrix;' );
-            functionStr.push( '    modelWorldMatrix.setMatrix4( modelworld );' );
-            functionStr.push( '    modelWorldMatrix.apply( gl, this.modelWorldUniform);' );
+            functionStr.push( '    var modelMatrix = state.modelMatrix;' );
+            functionStr.push( '    modelMatrix.setMatrix4( model );' );
+            functionStr.push( '    modelMatrix.apply( gl, this.modelUniform);' );
             functionStr.push( '};' );
         }
 
@@ -39,7 +39,7 @@ CacheUniformApply.prototype = {
         /*jshint evil: true */
         // name the function
         // http://stackoverflow.com/questions/5905492/dynamic-function-name-in-javascript
-        var func = ( new Function( 'state', 'modelview', 'modelworld', 'view', 'projection', 'return function RenderLeafApplyMatrixUniformCache( state, modelview, modelworld, view, projection ) { ' + functionStr.join( '\n' ) + '}' ) )();
+        var func = ( new Function( 'state', 'modelview', 'model', 'view', 'projection', 'return function RenderLeafApplyMatrixUniformCache( state, modelview, model, view, projection ) { ' + functionStr.join( '\n' ) + '}' ) )();
         /*jshint evil: false */
 
         this.apply = func;
@@ -55,7 +55,7 @@ var RenderLeaf = function () {
 
     this._projection = undefined;
     this._view = undefined;
-    this._modelWorld = undefined;
+    this._model = undefined;
     this._modelView = undefined;
 };
 
@@ -68,11 +68,11 @@ RenderLeaf.prototype = {
 
         this._projection = undefined;
         this._view = undefined;
-        this._modelWorld = undefined;
+        this._model = undefined;
         this._modelView = undefined;
     },
 
-    init: function ( parent, geom, projection, view, modelView, modelWorld, depth ) {
+    init: function ( parent, geom, projection, view, modelView, model, depth ) {
 
         this._parent = parent;
         this._geometry = geom;
@@ -80,7 +80,7 @@ RenderLeaf.prototype = {
 
         this._projection = projection;
         this._view = view;
-        this._modelWorld = modelWorld;
+        this._model = model;
         this._modelView = modelView;
 
     },
@@ -100,7 +100,7 @@ RenderLeaf.prototype = {
                 cache[ programInstanceID ] = obj;
             }
 
-            obj.apply( state, this._modelView, this._modelWorld, this._view, this._projection, this._normal );
+            obj.apply( state, this._modelView, this._model, this._view, this._projection, this._normal );
 
             this._geometry.drawImplementation( state );
 
