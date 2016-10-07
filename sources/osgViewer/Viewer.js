@@ -307,12 +307,16 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
     initStats: function ( options ) {
 
-        if ( !options.getBoolean( 'stats' ) )
+        var timerGPU = TimerGPU.instance( this.getGraphicContext() );
+
+        if ( !options.getBoolean( 'stats' ) ) {
+            timerGPU.disable();
             return;
+        }
 
         this._stats = createStats( options );
 
-        TimerGPU.instance( this.getGraphicContext() ).setCallback( this.callbackTimerGPU.bind( this ) );
+        timerGPU.setCallback( this.callbackTimerGPU.bind( this ) );
     },
 
     callbackTimerGPU: function ( average, queryID ) {
@@ -332,7 +336,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         if ( this.getCamera() ) {
 
             var stats = this._stats;
-            var timerGPU = stats && TimerGPU.instance( this.getGraphicContext() );
+            var timerGPU = TimerGPU.instance( this.getGraphicContext() );
 
             var renderer = this.getCamera().getRenderer();
 
@@ -342,9 +346,10 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
             if ( stats ) stats.rStats( 'cull' ).end();
 
+            timerGPU.pollQueries();
+            timerGPU.start( 'glframe' );
+
             if ( stats ) {
-                timerGPU.pollQueries();
-                timerGPU.start( 'glframe' );
                 stats.rStats( 'render' ).start();
             }
 
@@ -352,8 +357,9 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
             if ( stats ) {
                 stats.rStats( 'render' ).end();
-                timerGPU.end( 'glframe' );
             }
+
+            timerGPU.end( 'glframe' );
 
             if ( stats ) {
                 var cullVisitor = renderer.getCullVisitor();
