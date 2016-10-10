@@ -40,6 +40,22 @@ var Program = function ( vShader, fShader ) {
     this._dirty = true;
 };
 
+
+var getAttributeList = function ( vertexShader ) {
+    var attributeMap = {};
+
+    var r = vertexShader.match( /attribute\s+\w+\s+\w+/g );
+    if ( r !== null ) {
+        for ( var i = 0, l = r.length; i < l; i++ ) {
+            var attr = r[ i ].match( /attribute\s+\w+\s+(\w+)/ )[ 1 ];
+            attributeMap[ attr ] = true;
+        }
+    }
+
+    return attributeMap;
+};
+
+
 // static cache of glPrograms flagged for deletion, which will actually
 // be deleted in the correct GL context.
 Program._sDeletedGLProgramCache = new window.Map();
@@ -189,9 +205,16 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 compileClean = this._fragment.compile( gl );
             }
 
+            var attributeMap = getAttributeList( this._vertex.getText() );
+
             if ( compileClean ) {
 
                 this._program = gl.createProgram();
+
+                if ( attributeMap.Vertex ) {
+                    // force Vertex to be on 0
+                    gl.bindAttribLocation( this._program, 0, 'Vertex' );
+                }
 
                 gl.attachShader( this._program, this._vertex.shader );
                 gl.attachShader( this._program, this._fragment.shader );
@@ -250,7 +273,7 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             this.cacheUniformList( gl, this._vertex.text );
             this.cacheUniformList( gl, this._fragment.text );
 
-            this.cacheAttributeList( gl, this._vertex.text );
+            this.cacheAttributeList( gl, window.Object.keys( attributeMap ) );
 
             this._dirty = false;
         }
@@ -278,21 +301,22 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
     },
 
-    cacheAttributeList: function ( gl, str ) {
-        var r = str.match( /attribute\s+\w+\s+\w+/g );
+    cacheAttributeList: function ( gl, attributeList ) {
+
         var map = this._attributesCache;
-        if ( r !== null ) {
-            for ( var i = 0, l = r.length; i < l; i++ ) {
-                var attr = r[ i ].match( /attribute\s+\w+\s+(\w+)/ )[ 1 ];
-                var location = gl.getAttribLocation( this._program, attr );
-                if ( location !== -1 && location !== undefined ) {
-                    if ( map[ attr ] === undefined ) {
-                        map[ attr ] = location;
-                        this._attributesCache.dirty();
-                    }
+        for ( var i = 0, l = attributeList.length; i < l; i++ ) {
+
+            var attr = attributeList[ i ];
+            var location = gl.getAttribLocation( this._program, attr );
+
+            if ( location !== -1 && location !== undefined ) {
+                if ( map[ attr ] === undefined ) {
+                    map[ attr ] = location;
+                    this._attributesCache.dirty();
                 }
             }
         }
+
     }
 } ) ), 'osg', 'Program' );
 
