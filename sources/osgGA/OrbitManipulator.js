@@ -109,8 +109,6 @@ OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
     'WebVR'
 ];
 
-var DOT_LIMIT = 0.99; // angle limit around the pole
-
 /** @lends OrbitManipulator.prototype */
 OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     init: function () {
@@ -142,6 +140,17 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         // with a very low _minDistance, it's like a fps manipulator as long as you don't unzoom
         this._autoPushTarget = true;
 
+        // pitch range [-PI/2, PI/2]
+        this._limitPitchUp = Math.PI * 0.5 * 0.9;
+        this._limitPitchDown = -this._limitPitchUp;
+
+        // yaw range [-PI, PI]
+        this._limitYawLeft = -Math.PI;
+        this._limitYawRight = -this._limitYawLeft;
+
+        this._limitZoomIn = -Infinity;
+        this._limitZoomOut = Infinity;
+
         // instance of controller
         var self = this;
 
@@ -150,6 +159,24 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                 self._controllerList[ value ] = new OrbitManipulator[ value ]( self );
             }
         } );
+    },
+    setLimitPitchUp: function ( up ) {
+        this._limitPitchUp = up;
+    },
+    setLimitPitchDown: function ( down ) {
+        this._limitPitchDown = down;
+    },
+    setLimitYawLeft: function ( left ) {
+        this._limitYawLeft = left;
+    },
+    setLimitYawRight: function ( right ) {
+        this._limitYawRight = right;
+    },
+    setLimitZoomOut: function ( zoomOut ) {
+        this._limitZoomOut = zoomOut;
+    },
+    setLimitZoomIn: function ( zoomIn ) {
+        this._limitZoomIn = zoomIn;
     },
     setDelay: function ( dt ) {
         this._rotate.setDelay( dt );
@@ -293,30 +320,19 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         };
     } )(),
     computeRotation: ( function () {
-        var of = mat4.create();
-        var r = mat4.create();
-        var r2 = mat4.create();
-        var tmp = vec3.create();
         var right = vec3.fromValues( 1.0, 0.0, 0.0 );
-        var radLimit = Math.acos( DOT_LIMIT ) * 2.0;
+
         return function ( dx, dy ) {
-            mat4.fromRotation( of, -dx / 10.0, this._upz );
-            mat4.mul( r, this._rotation, of );
+            var pitch = Math.atan( -this._rotation[ 6 ] / this._rotation[ 5 ] ) + dy / 10.0;
+            pitch = Math.min( Math.max( pitch, this._limitPitchDown ), this._limitPitchUp );
 
-            // limit the dy movement to the range [-radLimit, radLimit]
-            // so that we can't "jump" to the other side of the poles
-            // with a rapid mouse movement
-            dy = Math.max( Math.min( dy / 10.0, radLimit ), -radLimit );
-            mat4.fromRotation( of, -dy, right );
-            mat4.mul( r2, of, r );
+            var yaw = Math.atan2( this._rotation[ 4 ], this._rotation[ 0 ] ) + dx / 10.0;
+            if ( yaw > Math.PI ) yaw = yaw % Math.PI - Math.PI;
+            else if ( yaw < -Math.PI ) yaw = yaw % Math.PI + Math.PI;
+            yaw = Math.min( Math.max( yaw, this._limitYawLeft ), this._limitYawRight );
 
-            // prevent going on the other side of the sphere (block y)
-            vec3.transformMat4( tmp, this._upz, r2 );
-            if ( Math.abs( tmp[ 1 ] ) > DOT_LIMIT ) {
-                mat4.copy( this._rotation, r );
-                return;
-            }
-            mat4.copy( this._rotation, r2 );
+            mat4.fromRotation( this._rotation, -pitch, right );
+            mat4.rotate( this._rotation, this._rotation, -yaw, this._upz );
         };
     } )(),
     computeZoom: function ( dz ) {
@@ -346,7 +362,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             if ( newValue > this._maxDistance )
                 newValue = this._maxDistance;
 
-            this._distance = newValue;
+            this._distance = Math.max( this._limitZoomIn, Math.min( this._limitZoomOut, newValue ) );
         };
     } )(),
 
