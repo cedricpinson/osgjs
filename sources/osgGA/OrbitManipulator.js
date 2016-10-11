@@ -129,15 +129,13 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._pan = new OrbitManipulator.Interpolator( 2 );
         this._zoom = new OrbitManipulator.Interpolator( 1 );
 
-        this._maxDistance = Infinity;
-        this._minDistance = 1e-4; // min distance allowed between eye and target
         this._minSpeed = 1e-4; // set a limit to pan/zoom speed
         this._scaleMouseMotion = 1.0;
 
         this._inverseMatrix = mat4.create();
 
-        // if we hit the min distance and can't zoom anymore, maybe we still want to move on
-        // with a very low _minDistance, it's like a fps manipulator as long as you don't unzoom
+        // distance at which we start pushing the target (so that we can still zoom)
+        // with a very low _limitZoomIn, it's like a fps manipulator as long as you don't unzoom
         this._autoPushTarget = true;
 
         // pitch range [-PI/2, PI/2]
@@ -148,7 +146,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._limitYawLeft = -Math.PI;
         this._limitYawRight = -this._limitYawLeft;
 
-        this._limitZoomIn = -Infinity;
+        this._limitZoomIn = 1e-4;
         this._limitZoomOut = Infinity;
 
         // instance of controller
@@ -256,20 +254,6 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         return this._homePosition;
     },
 
-    setMaxDistance: function ( d ) {
-        this._maxDistance = d;
-    },
-    getMaxDistance: function () {
-        return this._maxDistance;
-    },
-
-    setMinDistance: function ( d ) {
-        this._minDistance = d;
-    },
-    getMinDistance: function () {
-        return this._minDistance;
-    },
-
     setMinSpeed: function ( s ) {
         this._minSpeed = s;
     },
@@ -348,19 +332,13 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         return function ( ratio ) {
             var newValue = this._distance + this.getSpeedFactor() * ( ratio - 1.0 );
 
-            if ( newValue < this._minDistance ) {
-                if ( this._autoPushTarget ) {
-                    // push the target instead of zooming on it
-                    vec3.sub( dir, this._target, this.getEyePosition( dir ) );
-                    vec3.normalize( dir, dir );
-                    vec3.scale( dir, dir, this._minDistance - newValue );
-                    vec3.add( this._target, this._target, dir );
-                }
-                newValue = this._minDistance;
+            if ( this._autoPushTarget && newValue < this._limitZoomIn ) {
+                // push the target instead of zooming on it
+                vec3.sub( dir, this._target, this.getEyePosition( dir ) );
+                vec3.normalize( dir, dir );
+                vec3.scale( dir, dir, this._limitZoomIn - newValue );
+                vec3.add( this._target, this._target, dir );
             }
-
-            if ( newValue > this._maxDistance )
-                newValue = this._maxDistance;
 
             this._distance = Math.max( this._limitZoomIn, Math.min( this._limitZoomOut, newValue ) );
         };
