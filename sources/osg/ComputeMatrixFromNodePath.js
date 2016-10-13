@@ -3,7 +3,6 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var TransformEnums = require( 'osg/TransformEnums' );
 
 
-// TODO: GC PERF: add a result Matrix Parameter.
 var computeLocalToWorld = function ( nodePath, ignoreCameras, userMatrix ) {
 
     var ignoreCamera = ignoreCameras;

@@ -3,6 +3,10 @@
 title: SDK Examples
 samples:
     -
+        title: 3D sounds
+        image: assets/img/sound3d.jpg
+        link: examples/sound-3d
+    -
         title: PBR
         image: assets/img/pbr.jpg
         link: examples/pbr
