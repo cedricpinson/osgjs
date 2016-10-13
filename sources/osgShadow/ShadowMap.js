@@ -6,13 +6,17 @@ var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
 var Depth = require( 'osg/Depth' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
+var MatrixTransform = require( 'osg/MatrixTransform' );
 var Notify = require( 'osg/Notify' );
+var Shape = require( 'osg/Shape' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var StateSet = require( 'osg/StateSet' );
+var Debug = require( 'osgUtil/debug' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
 var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
+var PrimitiveSet = require( 'osg/PrimitiveSet' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var Viewport = require( 'osg/Viewport' );
@@ -166,6 +170,7 @@ var ShadowMap = function ( settings ) {
     this._casterStateSet.setAttributeAndModes( shadowStateAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
     this._casterStateSet.setShaderGeneratorName( this._shadowCastShaderGeneratorName, StateAttribute.OVERRIDE | StateAttribute.ON );
 
+    this._debug = false;
 };
 
 
@@ -819,6 +824,15 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
             // and compute a perspective frustum
             this.makePerspectiveFromBoundingBox( frustumBound, light.getSpotCutoff(), worldLightPos, worldLightDir, view, projection );
+
+            if ( this._debug ) {
+
+                this._debugGeomFrustum.updateGeometry( this._projectionMatrix, this._depthRange );
+                mat4.invert( this._debugNodeFrustum.getMatrix(), this._viewMatrix );
+
+            }
+
+
         } else {
 
             vec4.transformMat4( worldLightPos, light.getPosition(), lightMatrix );
@@ -830,6 +844,11 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             vec3.scale( worldLightPos, worldLightPos, -1.0 );
             vec3.normalize( worldLightPos, worldLightPos );
             this.makeOrthoFromBoundingBox( frustumBound, worldLightPos, view, projection );
+
+            if ( this._debug ) {
+                // project box by view to get projection debug bbox
+                mat4.invert( this._debugNodeFrustum.getMatrix(), view );
+            }
         }
 
         mat4.copy( camera.getProjectionMatrix(), this._projectionMatrix );
@@ -837,6 +856,14 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         // set values now
         this.setShadowUniformsDepthValue();
+
+        if ( this._debug ) {
+
+            this._debugGeomFrustum.updateGeometry( this._projectionMatrix, this._depthRange );
+            mat4.invert( this._debugNodeFrustum.getMatrix(), this._viewMatrix );
+
+        }
+
 
     },
 
@@ -936,6 +963,23 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         }
 
+
+        if ( this._debug ) {
+
+            var min = bbox.getMin();
+            var max = bbox.getMax();
+            bbox.center( this._tmpVec );
+            var matrix = this._debugNodeSceneCast.getMatrix();
+
+            mat4.fromScaling( matrix, [ max[ 0 ] - min[ 0 ],
+                max[ 1 ] - min[ 1 ],
+                max[ 2 ] - min[ 2 ], 1
+            ] );
+            mat4.setTranslation( matrix,
+                this._tmpVec );
+
+        }
+
         // HERE we get the shadowedScene Current World Matrix
         // to get any world transform ABOVE the shadowedScene
         var worldMatrix = cullVisitor.getCurrentModelMatrix();
@@ -976,6 +1020,10 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         // (as in clamped too tight projection)
         var needNearFar = this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask;
         this._cameraShadow.setComputeNearFar( needNearFar );
+
+        if ( this._debug ) {
+            this._debugNode.accept( cullVisitor );
+        }
 
 
         // do RTT from the camera traversal mimicking light pos/orient
@@ -1035,6 +1083,39 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         //this._shadowReceiveAttribute = undefined;
         this._texture = undefined;
         this._shadowedScene = undefined;
+    },
+
+    setDebug: function ( enable ) {
+
+        if ( enable && !this._debug ) {
+
+            if ( !this._debugNode ) {
+
+                this._debugGeomFrustum = Debug.createDebugFrustumGeometry();
+
+                this._debugGeomSceneCast = Shape.createBoundingBoxGeometry();
+
+                this._debugGeomSceneCast.getPrimitives()[ 0 ].mode = PrimitiveSet.LINES;
+
+
+                this._debugNode = new MatrixTransform();
+                this._debugNodeFrustum = new MatrixTransform();
+                this._debugNodeSceneCast = new MatrixTransform();
+
+
+                this._debugNodeFrustum.addChild( this._debugGeomFrustum );
+                this._debugNodeSceneCast.addChild( this._debugGeomSceneCast );
+
+                this._debugNode.addChild( this._debugNodeFrustum );
+                this._debugNode.addChild( this._debugNodeSceneCast );
+
+            }
+        }
+        this._debug = enable;
+
+    },
+    getDebug: function () {
+        return this._debug;
     }
 
 } ), 'osgShadow', 'ShadowMap' );

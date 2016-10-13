@@ -1,10 +1,12 @@
 'use strict';
 var Composer = require( 'osgUtil/Composer' );
+var debug = require( 'osgUtil/debug' );
 var DisplayNormalVisitor = require( 'osgUtil/DisplayNormalVisitor' );
 var DisplayGeometryVisitor = require( 'osgUtil/DisplayGeometryVisitor' );
 var DisplayGraph = require( 'osgUtil/DisplayGraph' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
+var MACROUTILS = require( 'osg/Utils' );
 var NodeGizmo = require( 'osgUtil/NodeGizmo' );
 var GizmoGeometry = require( 'osgUtil/GizmoGeometry' );
 var ParameterVisitor = require( 'osgUtil/ParameterVisitor' );
@@ -20,6 +22,7 @@ var WebVR = require( 'osgUtil/WebVR' );
 var osgUtil = {};
 
 osgUtil.Composer = Composer;
+MACROUTILS.objectMix( osgUtil, debug );
 osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
 osgUtil.DisplayGeometryVisitor = DisplayGeometryVisitor;
 osgUtil.DisplayGraph = DisplayGraph;

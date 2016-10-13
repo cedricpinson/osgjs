@@ -17,6 +17,7 @@
         // sample default parameters
         // at start most can be changed by the UI
         this._config = {
+            'debugBounds': false,
             'textureSize': 1024,
             'shadow': 'PCF',
             'textureType': 'UNSIGNED_BYTE',
@@ -370,6 +371,8 @@
             controller.onChange( this.updateShadow.bind( this ) );
 
             controller = gui.add( this._config, 'disableShadows' );
+
+            controller = gui.add( this._config, 'debugBounds' );
             controller.onChange( this.updateShadow.bind( this ) );
 
 
@@ -833,6 +836,7 @@
             while ( l-- ) {
                 var shadowMap = this._shadowTechnique[ l ];
                 shadowMap.setShadowSettings( this._shadowSettings[ l ] );
+                shadowMap.setDebug( this._config[ 'debugBounds' ] );
             }
 
             // Iterate over all controllers
@@ -898,11 +902,11 @@
                     '',
                     'attribute vec3 Vertex;',
                     'attribute vec2 TexCoord0;',
-                    'varying vec2 vCoord0;',
+                    'varying vec2 vTexCoord0;',
                     'uniform mat4 uModelViewMatrix;',
                     'uniform mat4 uProjectionMatrix;',
                     'void main(void) {',
-                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                    '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex,1.0));',
                     '  vTexCoord0 = TexCoord0;',
                     '}',
                     ''
