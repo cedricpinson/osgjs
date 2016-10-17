@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var skinning = require( 'osgShader/node/skinning' );
 var data = require( 'osgShader/node/data' );
 var functions = require( 'osgShader/node/functions' );

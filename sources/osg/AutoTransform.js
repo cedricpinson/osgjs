@@ -7,7 +7,7 @@ var vec4 = require( 'osg/glMatrix' ).vec4;
 var quat = require( 'osg/glMatrix' ).quat;
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 var Node = require( 'osg/Node' );
 
 /** AutoTransform is a derived form of Transform that automatically

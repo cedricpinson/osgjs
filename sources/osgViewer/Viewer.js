@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var Options = require( 'osg/Options' );
 var P = require( 'bluebird' );
@@ -10,7 +10,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var Texture = require( 'osg/Texture' );
 var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
 var createStats = require( 'osgViewer/createStats' );
-var EventProxy = require( 'osgViewer/eventProxy/EventProxy' );
+var EventProxy = require( 'osgViewer/eventProxy/eventProxy' );
 var View = require( 'osgViewer/View' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
 var WebGLDebugUtils = require( 'osgViewer/webgl-debug' );

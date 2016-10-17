@@ -5,8 +5,8 @@ var Camera = require( 'osg/Camera' );
 var Viewport = require( 'osg/Viewport' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var Shape = require( 'osg/Shape' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var Shape = require( 'osg/shape' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 
 module.exports = function () {

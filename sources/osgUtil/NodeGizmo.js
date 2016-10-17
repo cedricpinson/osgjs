@@ -1,7 +1,7 @@
 'use strict';
 var Node = require( 'osg/Node' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Depth = require( 'osg/Depth' );
 var BlendFunc = require( 'osg/BlendFunc' );
 var CullFace = require( 'osg/CullFace' );
@@ -13,8 +13,8 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var quat = require( 'osg/glMatrix' ).quat;
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
-var GizmoGeometry = require( 'osgUtil/GizmoGeometry' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var GizmoGeometry = require( 'osgUtil/gizmoGeometry' );
+var TransformEnums = require( 'osg/transformEnums' );
 var MACROUTILS = require( 'osg/Utils' );
 
 

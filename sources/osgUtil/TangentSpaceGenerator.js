@@ -3,7 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
 

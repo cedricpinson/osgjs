@@ -5,7 +5,7 @@ var DatabasePager = require( 'osgDB/DatabasePager' );
 var PagedLOD = require( 'osg/PagedLOD' );
 var Node = require( 'osg/Node' );
 var FrameStamp = require( 'osg/FrameStamp' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 
 module.exports = function () {

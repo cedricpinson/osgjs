@@ -1,6 +1,6 @@
 'use strict';
 var Map = require( 'osg/Map' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Object = require( 'osg/Object' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var MACROUTILS = require( 'osg/Utils' );

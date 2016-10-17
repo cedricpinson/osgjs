@@ -1,7 +1,7 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
     this.normal = normal;

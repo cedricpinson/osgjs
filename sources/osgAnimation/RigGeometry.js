@@ -2,14 +2,14 @@
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var Geometry = require( 'osg/Geometry' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var StateSet = require( 'osg/StateSet' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 var UpdateRigGeometry = require( 'osgAnimation/UpdateRigGeometry' );
 var RigTransformHardware = require( 'osgAnimation/RigTransformHardware' );
 var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
-var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
+var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
 
 
 // RigGeometry is a Geometry deformed by bones

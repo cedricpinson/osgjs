@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var NodeVisitor = require( 'osg/NodeVisitor' );

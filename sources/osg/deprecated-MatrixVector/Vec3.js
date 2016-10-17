@@ -1,5 +1,5 @@
 'use strict';
-var osgMath = require( 'osg/Math' );
+var osgMath = require( 'osg/math' );
 var glm = require( 'osg/glMatrix' );
 var vec3 = glm.vec3;
 

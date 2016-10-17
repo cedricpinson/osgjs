@@ -1,7 +1,7 @@
 'use strict';
 
 var Light = require( 'osg/Light' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 
 var CompilerFragment = {

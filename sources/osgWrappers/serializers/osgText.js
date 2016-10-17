@@ -1,7 +1,7 @@
 'use strict';
 var P = require( 'bluebird' );
 var osgWrapper = require( 'osgWrappers/serializers/osg' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Text = require( 'osgText/Text' );
 
 var osgTextWrapper = {};

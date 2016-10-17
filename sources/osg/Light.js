@@ -6,7 +6,7 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var Map = require( 'osg/Map' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 
 // use the same kind of opengl lights

@@ -3,7 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 
 var IntersectionVisitor = function () {

@@ -1,5 +1,5 @@
 'use strict';
-var osgMath = require( 'osg/Math' );
+var osgMath = require( 'osg/math' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
 

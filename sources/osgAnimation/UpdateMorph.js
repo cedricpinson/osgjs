@@ -3,7 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var BufferArray = require( 'osg/BufferArray' );
 var RigGeometry = require( 'osgAnimation/RigGeometry' );
 var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
-var Target = require( 'osgAnimation/Target' );
+var Target = require( 'osgAnimation/target' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 
 var UpdateMorph = function () {

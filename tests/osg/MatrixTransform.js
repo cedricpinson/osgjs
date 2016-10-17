@@ -3,8 +3,8 @@ var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var ReaderParser = require( 'osgDB/ReaderParser' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var ReaderParser = require( 'osgDB/readerParser' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 
 module.exports = function () {

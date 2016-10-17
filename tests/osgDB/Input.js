@@ -2,7 +2,7 @@
 var assert = require( 'chai' ).assert;
 var P = require( 'bluebird' );
 var Input = require( 'osgDB/Input' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Image = require( 'osg/Image' );
 
 

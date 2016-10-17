@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Timer = require( 'osg/Timer' );
 var GLObject = require( 'osg/GLObject' );

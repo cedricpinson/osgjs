@@ -4,7 +4,7 @@ var mockup = require( 'tests/mockup/mockup' );
 var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixTransform = require( 'osg/MatrixTransform' );
-var Shape = require( 'osg/Shape' );
+var Shape = require( 'osg/shape' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
 module.exports = function () {

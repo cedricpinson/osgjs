@@ -2,7 +2,7 @@
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var Viewer = require( 'osgViewer/Viewer' );
-var Shape = require( 'osg/Shape' );
+var Shape = require( 'osg/shape' );
 
 module.exports = function () {
 

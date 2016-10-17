@@ -4,7 +4,7 @@ var mockup = require( 'tests/mockup/mockup' );
 var Node = require( 'osg/Node' );
 var Lod = require( 'osg/Lod' );
 var PagedLOD = require( 'osg/PagedLOD' );
-var Shape = require( 'osg/Shape' );
+var Shape = require( 'osg/shape' );
 
 
 module.exports = function () {

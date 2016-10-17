@@ -10,7 +10,7 @@ var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var Compiler = require( 'osgShader/Compiler' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Depth = require( 'osg/Depth' );
 

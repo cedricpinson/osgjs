@@ -1,7 +1,7 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
-var osgMath = require( 'osg/Math' );
+var osgMath = require( 'osg/math' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var CullSettings = require( 'osg/CullSettings' );
 var CullStack = require( 'osg/CullStack' );
@@ -19,7 +19,7 @@ var Node = require( 'osg/Node' );
 var Lod = require( 'osg/Lod' );
 var PagedLOD = require( 'osg/PagedLOD' );
 var Camera = require( 'osg/Camera' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var Skeleton = require( 'osgAnimation/Skeleton' );
 var RigGeometry = require( 'osgAnimation/RigGeometry' );

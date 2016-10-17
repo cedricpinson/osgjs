@@ -2,7 +2,7 @@
 
 var DisplayGraphRenderer = require( 'osgUtil/DisplayGraphRenderer' );
 var DisplayGraphNode = require( 'osgUtil/DisplayGraphNode' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 var $;
 

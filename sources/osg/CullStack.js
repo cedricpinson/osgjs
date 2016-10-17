@@ -2,15 +2,15 @@
 var MACROUTILS = require( 'osg/Utils' );
 var BoundingSphere = require( 'osg/BoundingSphere' );
 var Camera = require( 'osg/Camera' );
-var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
+var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
 var CullSettings = require( 'osg/CullSettings' );
 var CullingSet = require( 'osg/CullingSet' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var Plane = require( 'osg/Plane' );
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var Transform = require( 'osg/Transform' );
-var Notify = require( 'osg/Notify' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var Notify = require( 'osg/notify' );
+var TransformEnums = require( 'osg/transformEnums' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
 var CullStack = function () {

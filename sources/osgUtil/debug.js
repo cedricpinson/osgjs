@@ -1,5 +1,5 @@
 'use strict';
-var Shape = require( 'osg/Shape' );
+var Shape = require( 'osg/shape' );
 
 /*
  * Given a Camera, update a wireframe representation of its

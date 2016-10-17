@@ -16,7 +16,7 @@ var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var Renderer = require( 'osgViewer/Renderer' );
 var Scene = require( 'osgViewer/Scene' );
 var DisplayGraph = require( 'osgUtil/DisplayGraph' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 
 // View is normally inherited from osg/View. In osgjs we dont need it yet

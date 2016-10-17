@@ -1,7 +1,7 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 var KdTreeRayIntersector = function () {
 

@@ -1,6 +1,6 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var Notify = require( 'osg/notify' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 
 
 /**

@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var ObjectBase = require( 'osg/Object' );
 var FindNearestParentSkeleton = require( 'osgAnimation/FindNearestParentSkeleton' );
 

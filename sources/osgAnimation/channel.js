@@ -2,7 +2,7 @@
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
 
-var Target = require( 'osgAnimation/Target' );
+var Target = require( 'osgAnimation/target' );
 var channelType = require( 'osgAnimation/channelType' );
 
 

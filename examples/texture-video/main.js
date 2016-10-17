@@ -47,7 +47,7 @@
 
             if ( !this._model ) {
 
-                // check osg/Shape.js to see arguements of createTexturedQuadGeometry
+                // check osg/shape.js to see arguements of createTexturedQuadGeometry
                 this._model = osg.createTexturedQuadGeometry( -width / 2, 0, -height / 2,
                     width, 0, 0,
                     0, 0, height );

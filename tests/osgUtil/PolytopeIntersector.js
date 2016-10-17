@@ -11,7 +11,7 @@ var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 
 
 module.exports = function () {

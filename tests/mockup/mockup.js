@@ -4,8 +4,8 @@ var chai = require( 'chai' );
 
 var getScene = require( 'tests/mockup/scene' );
 var getBoxScene = require( 'tests/mockup/box' );
-var Channel = require( 'osgAnimation/Channel' );
-var Animation = require( 'osgAnimation/Animation' );
+var Channel = require( 'osgAnimation/channel' );
+var Animation = require( 'osgAnimation/animation' );
 var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
 var StackedRotateAxis = require( 'osgAnimation/StackedRotateAxis' );
 var StackedScale = require( 'osgAnimation/StackedScale' );

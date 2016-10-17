@@ -1,7 +1,7 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
-var Channel = require( 'osgAnimation/Channel' );
+var Channel = require( 'osgAnimation/channel' );
 
 
 var vec3CopyKeyFrame = function ( i, keys, result ) {

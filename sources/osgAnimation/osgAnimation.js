@@ -1,14 +1,14 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Animation = require( 'osgAnimation/Animation' );
+var Animation = require( 'osgAnimation/animation' );
 var SkinningAttribute = require( 'osgAnimation/SkinningAttribute' );
 var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
 var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
 var Bone = require( 'osgAnimation/Bone' );
-var Channel = require( 'osgAnimation/Channel' );
+var Channel = require( 'osgAnimation/channel' );
 var CollectAnimationUpdateCallbackVisitor = require( 'osgAnimation/CollectAnimationUpdateCallbackVisitor' );
-var Easing = require( 'osgAnimation/Easing' );
-var Interpolator = require( 'osgAnimation/Interpolator' );
+var Easing = require( 'osgAnimation/easing' );
+var Interpolator = require( 'osgAnimation/interpolator' );
 var MorphAttribute = require( 'osgAnimation/MorphAttribute' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 var RigGeometry = require( 'osgAnimation/RigGeometry' );
