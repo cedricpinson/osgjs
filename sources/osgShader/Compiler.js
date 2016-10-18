@@ -176,21 +176,6 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         return texObj;
     },
 
-    getTexCoordUnit: function ( id ) {
-        var texture = this._textures[ id ];
-        if ( texture === undefined )
-            return undefined;
-
-        var textureMaterial = this._texturesByName[ texture.getName() ];
-        if ( !textureMaterial )
-            return undefined;
-
-        var texCoordUnit = textureMaterial.textureUnit;
-        if ( texCoordUnit === undefined )
-            textureMaterial.textureUnit = texCoordUnit = id;
-        return texCoordUnit;
-    },
-
     // The Compiler Main Code called on Vertex or Fragment Shader Graph
     createShaderFromGraphs: function ( roots ) {
         this._compiledNodeList = {};
