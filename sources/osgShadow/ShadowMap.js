@@ -39,25 +39,19 @@ var CameraCullCallback = function ( shadowTechnique ) {
 CameraCullCallback.prototype = {
     cull: function ( node, nv ) {
 
-        // see ShadowTechnique CameraCullCallback
         this._shadowTechnique.getShadowedScene().nodeTraverse( nv );
 
         var cs = nv.getCurrentCullingSet();
-        if ( nv.getComputeNearFar() === true && nv.getComputedFar() >= nv.getComputedNear() ) {
-            var m = nv.getCurrentProjectionMatrix();
+        var m = nv.getCurrentProjectionMatrix();
+        var near = nv.getComputedNear(),
+            far = nv.getComputedFar();
 
-            this._shadowTechnique.getDepthRange()[ 0 ] = nv.getComputedNear();
-            this._shadowTechnique.getDepthRange()[ 1 ] = nv.getComputedFar();
+        mat4.getFrustumPlanes( cs.getFrustum().getPlanes(), m, nv.getCurrentModelViewMatrix(), false );
+        cs.getFrustum().setupMask( 6 );
 
-            mat4.getFrustumPlanes( cs.getFrustum().getPlanes(), m, nv.getCurrentModelViewMatrix(), false );
+        this._shadowTechnique.setLightFrustum( cs.getFrustum(), near, far );
 
-            // TODO: no far no near.
-            // should check if we have them
-            // should add at least a near 0 clip if not
-            cs.getFrustum().setupMask( 6 );
-        }
 
-        this._shadowTechnique.setLightFrustum( cs.getFrustum() );
         return false;
     }
 };
@@ -180,8 +174,21 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     getDepthRange: function () {
         return this._depthRange;
     },
-    setLightFrustum: function ( lf ) {
+    setLightFrustum: function ( lf, near, far ) {
+
         this._lightFrustum = lf;
+
+        this._depthRange[ 0 ] = near;
+        this._depthRange[ 1 ] = far;
+        this.nearFarBounding();
+
+        if ( this._debug ) {
+
+            this._debugGeomFrustum.updateGeometry( this._projectionMatrix, this._depthRange );
+            mat4.invert( this._debugNodeFrustum.getMatrix(), this._viewMatrix );
+
+        }
+
     },
     getCamera: function () {
         return this._cameraShadow;
@@ -636,34 +643,23 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             zNear = epsilon;
         }
 
-        var nearFarRatio = 0.005;
-        if ( zNear < zFar * nearFarRatio ) {
-            zNear = zFar * nearFarRatio;
-        }
-
         this._depthRange[ 0 ] = zNear;
         this._depthRange[ 1 ] = zFar;
+
     },
 
     makePerspectiveFromBoundingBox: function ( bbox, fov, eyePos, eyeDir, view, projection ) {
+
         var center = bbox.center( this._tmpVec );
         var radius = bbox.radius();
         var epsilon = ShadowMap.EPSILON;
         var zNear = epsilon;
         var zFar = 1.0;
 
-        vec3.copy( this._tmpVecBis, eyeDir );
-        vec3.neg( this._tmpVecBis, this._tmpVecBis );
-        vec3.normalize( this._tmpVecBis, this._tmpVecBis );
+        this._radius = radius;
 
-        // light Near Plane Equation
-        // E = eyeDir + d
-        var d = vec3.dot( eyePos, this._tmpVecBis );
-        // then distance to center point of sphere
-        // perpendicular to lightdir
-        var distance = vec3.dot( center, this._tmpVecBis ) + d;
-
-        // inside or not have unfluence
+        var distance = vec3.distance( center, eyePos );
+        // inside or not have influence
         // on using radius for fov
         if ( distance < -radius ) {
             // won't render anything the object  is behind..
@@ -805,10 +801,11 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         mat4.invert( eyeToWorld, cullVisitor.getCurrentModelViewMatrix() );
 
         //  light pos & lightTarget in World Space
-        if ( light.getPosition()[ 3 ] !== 0.0 && light.getSpotCutoff() < 180 ) {
-            //TODO: check when spot light is camera attached?
+        if ( !this._light.isDirectionLight() ) {
+
             mat4.mul( this._tmpMatrix, eyeToWorld, lightMatrix );
             var worldMatrix = this._tmpMatrix;
+
             // same code as light spot shader
             vec3.transformMat4( worldLightPos, light.getPosition(), worldMatrix );
             worldMatrix[ 12 ] = 0;
@@ -817,20 +814,13 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             mat4.invert( worldMatrix, worldMatrix );
             mat4.transpose( worldMatrix, worldMatrix );
 
-            // not a directionnal light, compute the world light dir
+            // not a directional light, compute the world light dir
             vec3.copy( worldLightDir, light.getDirection() );
             vec4.transformMat4( worldLightDir, worldLightDir, worldMatrix );
             vec3.normalize( worldLightDir, worldLightDir );
 
             // and compute a perspective frustum
             this.makePerspectiveFromBoundingBox( frustumBound, light.getSpotCutoff(), worldLightPos, worldLightDir, view, projection );
-
-            if ( this._debug ) {
-
-                this._debugGeomFrustum.updateGeometry( this._projectionMatrix, this._depthRange );
-                mat4.invert( this._debugNodeFrustum.getMatrix(), this._viewMatrix );
-
-            }
 
 
         } else {
@@ -857,14 +847,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         // set values now
         this.setShadowUniformsDepthValue();
 
-        if ( this._debug ) {
-
-            this._debugGeomFrustum.updateGeometry( this._projectionMatrix, this._depthRange );
-            mat4.invert( this._debugNodeFrustum.getMatrix(), this._viewMatrix );
-
-        }
-
-
     },
 
     // culling is done,
@@ -873,12 +855,13 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     frameShadowCastingFrustum: function ( cullVisitor ) {
 
         if ( !this._infiniteFrustum ) {
-            this.nearFarBounding();
+
             CullVisitor.prototype.clampProjectionMatrix( this._projectionMatrix, this._depthRange[ 0 ], this._depthRange[ 1 ], cullVisitor.getNearFarRatio(), this._depthRange );
-            this.setShadowUniformsDepthValue();
         }
 
-        // overwrite any cullvisitor wrongness
+        this.setShadowUniformsDepthValue();
+
+        // overwrite any cullvisitor wrongness done by any clampProjectionMatrix
         var camera = this._cameraShadow;
         mat4.copy( camera.getProjectionMatrix(), this._projectionMatrix );
         mat4.copy( camera.getViewMatrix(), this._viewMatrix );
@@ -886,8 +869,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     },
 
     setShadowUniformsDepthValue: function () {
-
-        this.nearFarBounding();
 
         // set values now
         this._depthRange[ 2 ] = this._depthRange[ 1 ] - this._depthRange[ 0 ];
@@ -1016,10 +997,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         cullVisitor.pushStateSet( this._casterStateSet );
 
         this._cameraShadow.setEnableFrustumCulling( true );
-        // enabling this makes for strange projection fuck up
-        // (as in clamped too tight projection)
-        var needNearFar = this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask;
-        this._cameraShadow.setComputeNearFar( needNearFar );
+        this._cameraShadow.setComputeNearFar( true );
 
         if ( this._debug ) {
             this._debugNode.accept( cullVisitor );
@@ -1029,16 +1007,16 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         // do RTT from the camera traversal mimicking light pos/orient
         this._cameraShadow.accept( cullVisitor );
 
+        // make sure no negative near 
+        this.nearFarBounding();
+
         // Here culling is done, we do have near/far.
         // and cull/non-culled info
         // if we wanted a tighter frustum.
-        if ( needNearFar ) {
-            this.frameShadowCastingFrustum( cullVisitor );
-        }
+        this.frameShadowCastingFrustum( cullVisitor );
 
-
-        // enabling this makes for strange projection fuck up
-        // (as in clamped too tight projection)
+        // disabling to prevent cullvisitor breaking
+        // the projection matrix by "clamping" it
         this._cameraShadow.setComputeNearFar( false );
 
         if ( this._removeNodesNeverCastingVisitor ) {
@@ -1051,7 +1029,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         cullVisitor.popStateSet();
 
-        // reapply the original traversal mask
+        // re-apply the original traversal mask
         cullVisitor.setTraversalMask( traversalMask );
         this._filledOnce = true;
     },

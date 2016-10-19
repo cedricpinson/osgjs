@@ -46,6 +46,7 @@
             'frustumTest': 'free',
             'texture': true,
             'debugRTT': true,
+            'targetPosition': [ 0.0, 0.0, 0.0 ],
 
             '_spotCutoff': 25,
             '_spotBlend': 0.3,
@@ -165,13 +166,15 @@
         for ( var i = 0; i < keys.length; i++ ) {
 
             var property = keys[ i ];
-            var n = queryDict[ property ];
+            if ( queryDict[ property ] && queryDict[ property ].length !== 0 ) {
+                var n = JSON.parse( queryDict[ property ] );
 
-            if ( !isNaN( parseFloat( n ) ) && isFinite( n ) ) {
-                n = parseFloat( n );
+                if ( !isNaN( parseFloat( n ) ) && isFinite( n ) ) {
+                    n = parseFloat( n );
+                }
+
+                this._config[ property ] = n;
             }
-
-            this._config[ property ] = n;
 
         }
     };
@@ -179,7 +182,7 @@
 
     // That's where we update lights position/direction at each frame
     // so that the sample is not too much static
-    var LightUpdateCallback = function ( light, myExample, debugNode, position, dir ) {
+    var LightUpdateCallback = function ( light, myExample, debugNode, position, dir, target ) {
         this._example = myExample;
 
         this._positionX = position[ 0 ];
@@ -193,7 +196,7 @@
         this._lightDir = dir;
 
         this._up = [ 0.0, 0.0, 1.0 ];
-        this._lightTarget = [ 0.0, 0.0, 0.0 ];
+        this._lightTarget = target;
 
         this._directLightChange = false; // GUI change, mmm
 
@@ -634,20 +637,20 @@
                 switch ( this._config[ 'lightType' ] ) {
                 case 'Spot':
                     {
-                        if ( this._previousSpotFov )
-                            this._config[ 'fov' ] = this._previousSpotFov;
-
+                        this._config[ 'fov' ] = this._previousSpotFov;
                         l = this._lights.length;
                         while ( l-- ) {
                             this._lights[ l ].setLightAsSpot();
                         }
+
+
                         break;
                     }
                 case 'Point':
                     {
 
                         if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config[ 'fov' ];
-                        this._config[ 'fov' ] = 181;
+                        this._config[ 'fov' ] = 180;
                         l = this._lights.length;
                         while ( l-- ) {
                             this._lights[ l ].setLightAsPoint();
@@ -657,7 +660,7 @@
                 case 'Directional':
                     {
                         if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config[ 'fov' ];
-                        this._config[ 'fov' ] = 181;
+                        this._config[ 'fov' ] = 180;
                         l = this._lights.length;
                         while ( l-- ) {
                             this._lights[ l ].setLightAsDirection();
@@ -951,7 +954,10 @@
         // Scene to be shadowed,  and to cast  shadow from
         // Multiple parents...
         createSceneCasterReceiver: function () {
-            var ShadowScene = new osg.Node();
+
+            var ShadowScene = new osg.MatrixTransform();
+            osg.mat4.setTranslation( ShadowScene.getMatrix(), this._config[ 'targetPosition' ] );
+
             ShadowScene.setName( 'ShadowScene' );
 
             var modelNode = new osg.Node();
@@ -1120,7 +1126,7 @@
         },
         addShadowedLight: function ( group, num, lightScale, position, target ) {
 
-            if ( !target ) target = [ 0, 0, 0 ];
+            if ( !target ) target = this._config[ 'targetPosition' ];
 
             if ( !position ) position = [ -25 + -15 * num + -25 * ( num % 2 ),
                 25 + 15 * num - 25 * ( num % 2 ),
@@ -1147,6 +1153,8 @@
 
             light.setName( 'light' + num );
 
+
+
             switch ( this._config[ 'lightType' ] ) {
             case 'Directional':
                 light.setLightAsDirection();
@@ -1158,7 +1166,6 @@
             case 'Spot':
                 light.setLightAsSpot();
             }
-
 
             light.setSpotCutoff( this._config[ '_spotCutoff' ] );
             light.setSpotBlend( this._config[ '_spotBlend' ] );
@@ -1199,7 +1206,7 @@
             osg.vec3.sub( dir, position, target );
             osg.vec3.normalize( dir, dir );
             //light.setDirection( dir );
-            lightSource.addUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode, position, dir ) );
+            lightSource.addUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode, position, dir, target ) );
 
             // need to set lightSource rather than light pos
             // as there is no link in Light to get current Matrix.
@@ -1376,7 +1383,7 @@
             }
 
             this.initDatGUI();
-
+            this.updateShadow();
         }
     };
     // execute loaded code when ready
