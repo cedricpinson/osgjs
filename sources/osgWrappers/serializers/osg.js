@@ -250,6 +250,17 @@ osgWrapper.LightSource = function ( input, node ) {
     } );
 };
 
+// not robust, but we probably don't want to complexify the function for now
+osgWrapper.functionSortAttributes = function ( a, b ) {
+    if ( a.indexOf( 'TexCoord' ) !== -1 && b.indexOf( 'TexCoord' ) !== -1 ) {
+        return parseInt( a.substr( 8 ), 10 ) - parseInt( b.substr( 8 ), 10 );
+    }
+
+    if ( a < b ) return -1;
+    if ( a > b ) return 1;
+    return 0;
+};
+
 osgWrapper.Geometry = function ( input, node ) {
     var jsonObj = input.getJSON();
     if ( !jsonObj.VertexAttributeList )
@@ -276,6 +287,11 @@ osgWrapper.Geometry = function ( input, node ) {
 
     var vList = jsonObj.VertexAttributeList;
     var keys = window.Object.keys( vList );
+
+    // TexCoord10 should be sorted after TexCoord5 (in case of referenced attributes)
+    // alternative is to resolve the referenced keys (2 passes method for example)
+    keys.sort( osgWrapper.functionSortAttributes );
+
     l = keys.length;
     for ( i = 0; i < l; i++ ) {
         var name = keys[ i ];
