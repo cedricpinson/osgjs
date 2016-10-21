@@ -1,6 +1,6 @@
 'use strict';
 
-var Shape = require( 'osg/Shape' );
+var Shape = require( 'osg/shape' );
 var Timer = require( 'osg/Timer' );
 var reportStats = require( 'benchmarks/reportStats' );
 

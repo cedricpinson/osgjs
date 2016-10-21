@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
 var Texture;
 

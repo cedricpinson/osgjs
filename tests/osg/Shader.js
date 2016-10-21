@@ -1,7 +1,7 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var Shader = require( 'osg/Shader' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 
 module.exports = function () {

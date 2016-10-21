@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var BufferArrayProxy = require( 'osg/BufferArrayProxy' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var Geometry = require( 'osg/Geometry' );
 var StateSet = require( 'osg/StateSet' );

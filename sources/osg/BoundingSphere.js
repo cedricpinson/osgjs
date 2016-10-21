@@ -1,6 +1,6 @@
 'use strict';
 var BoundingBox = require( 'osg/BoundingBox' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
 

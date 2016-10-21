@@ -5,11 +5,11 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var BoundingSphere = require( 'osg/BoundingSphere' );
 var StateSet = require( 'osg/StateSet' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
-var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 
 /**
@@ -35,7 +35,6 @@ var Node = function () {
     this._cullCallback = undefined;
     this._cullingActive = true;
     this._numChildrenWithCullingDisabled = 0;
-
     this._numChildrenRequiringUpdateTraversal = 0;
 
     // it's a tmp object for internal use, do not use

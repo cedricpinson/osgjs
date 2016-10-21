@@ -1,6 +1,6 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
 

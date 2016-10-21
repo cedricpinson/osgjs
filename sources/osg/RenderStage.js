@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Camera = require( 'osg/Camera' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var RenderBin = require( 'osg/RenderBin' );
 var vec4 = require( 'osg/glMatrix' ).vec4;
 

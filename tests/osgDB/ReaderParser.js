@@ -1,10 +1,10 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var ReaderParser = require( 'osgDB/readerParser' );
 var Texture = require( 'osg/Texture' );
 var Input = require( 'osgDB/Input' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 
 
 module.exports = function () {

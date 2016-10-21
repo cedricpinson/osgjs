@@ -1,11 +1,11 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 var Image = require( 'osg/Image' );
 var GLObject = require( 'osg/GLObject' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var ReaderParser = require( 'osgDB/readerParser' );
 var CustomMap = require( 'osg/Map' );
 var TextureManager = require( 'osg/TextureManager' );
 var WebglCaps = require( 'osg/WebGLCaps' );

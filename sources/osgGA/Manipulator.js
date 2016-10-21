@@ -1,7 +1,7 @@
 'use strict';
 var BoundingSphere = require( 'osg/BoundingSphere' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 
 // Base class for Camera / User manipulator

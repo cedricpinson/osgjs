@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 var DrawElements = require( 'osg/DrawElements' );
 var BufferArrayProxy = require( 'osg/BufferArrayProxy' );

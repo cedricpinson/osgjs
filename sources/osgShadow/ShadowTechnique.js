@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Object = require( 'osg/Object' );
 var MACROUTILS = require( 'osg/Utils' );
 

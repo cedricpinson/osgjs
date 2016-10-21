@@ -10,9 +10,9 @@ var Viewport = require( 'osg/Viewport' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var MatrixTransform = require( 'osg/MatrixTransform' );
-var Shape = require( 'osg/Shape' );
+var Shape = require( 'osg/shape' );
 var View = require( 'osgViewer/View' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var ReaderParser = require( 'osgDB/readerParser' );
 
 
 module.exports = function () {

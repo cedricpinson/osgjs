@@ -1,6 +1,6 @@
 'use strict';
 
-var mth = require( 'osg/Math' );
+var mth = require( 'osg/math' );
 var glm = require( 'gl-matrix' );
 var config = require( 'config.js' );
 glm.glMatrix.setMatrixArrayType( config.ArrayType );

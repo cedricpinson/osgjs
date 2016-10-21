@@ -1,10 +1,10 @@
 'use strict';
 var P = require( 'bluebird' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var osgWrapper = require( 'osgWrappers/serializers/osg' );
-var Channel = require( 'osgAnimation/Channel' );
-var Animation = require( 'osgAnimation/Animation' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var Channel = require( 'osgAnimation/channel' );
+var Animation = require( 'osgAnimation/animation' );
+var ReaderParser = require( 'osgDB/readerParser' );
 var StackedMatrix = require( 'osgAnimation/StackedMatrix' );
 var StackedScale = require( 'osgAnimation/StackedScale' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );

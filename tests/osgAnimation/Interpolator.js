@@ -1,8 +1,8 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var Interpolator = require( 'osgAnimation/Interpolator' );
-var Channel = require( 'osgAnimation/Channel' );
+var Interpolator = require( 'osgAnimation/interpolator' );
+var Channel = require( 'osgAnimation/channel' );
 
 
 module.exports = function () {

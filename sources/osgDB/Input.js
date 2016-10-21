@@ -3,14 +3,14 @@ var P = require( 'bluebird' );
 var MACROUTILS = require( 'osg/Utils' );
 var osgNameSpace = require( 'osgNameSpace' );
 var _requestFile = require( 'osgDB/requestFile' );
-var Options = require( 'osgDB/Options' );
-var Notify = require( 'osg/Notify' );
+var Options = require( 'osgDB/options' );
+var Notify = require( 'osg/notify' );
 var Image = require( 'osg/Image' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawArrayLengths = require( 'osg/DrawArrayLengths' );
 var DrawElements = require( 'osg/DrawElements' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 
 
 var Input = function ( json, identifier ) {
@@ -241,7 +241,7 @@ Input.prototype = {
 
         var self = this;
 
-        var ReaderParser = require( 'osgDB/ReaderParser' );
+        var ReaderParser = require( 'osgDB/readerParser' );
 
         var readSceneGraph = function ( data ) {
 
@@ -619,7 +619,7 @@ Input.prototype = {
             return P.reject();
         }
 
-        var ReaderParser = require( 'osgDB/ReaderParser' );
+        var ReaderParser = require( 'osgDB/readerParser' );
         var scope = ReaderParser.ObjectWrapper.serializers;
 
         if ( this._cacheReadObject[ prop ] ) {

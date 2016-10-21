@@ -4,7 +4,7 @@ var Transform = require( 'osg/Transform' );
 var CullSettings = require( 'osg/CullSettings' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var Texture = require( 'osg/Texture' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 var vec4 = require( 'osg/glMatrix' ).vec4;
 
 

@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
 var Map = require( 'osg/Map' );

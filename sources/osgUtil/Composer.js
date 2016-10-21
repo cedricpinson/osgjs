@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
 var CullFace = require( 'osg/CullFace' );
@@ -13,8 +13,8 @@ var Uniform = require( 'osg/Uniform' );
 var StateSet = require( 'osg/StateSet' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
-var Shape = require( 'osg/Shape' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var Shape = require( 'osg/shape' );
+var TransformEnums = require( 'osg/transformEnums' );
 var vec2 = require( 'osg/glMatrix' ).vec2;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 

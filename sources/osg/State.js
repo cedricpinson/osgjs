@@ -1,7 +1,7 @@
 'use strict';
 var Map = require( 'osg/Map' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Object = require( 'osg/Object' );
 var Program = require( 'osg/Program' );
 var StateAttribute = require( 'osg/StateAttribute' );

@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 /**
  * Transform - base class for Transform type node ( Camera, MatrixTransform )

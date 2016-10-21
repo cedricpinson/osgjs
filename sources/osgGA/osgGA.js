@@ -17,7 +17,7 @@ var OrbitManipulatorLeapMotionController = require( 'osgGA/OrbitManipulatorLeapM
 var OrbitManipulatorStandardMouseKeyboardController = require( 'osgGA/OrbitManipulatorStandardMouseKeyboardController' );
 var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRController' );
 var SwitchManipulator = require( 'osgGA/SwitchManipulator' );
-var OrbitManipulatorEnums = require( 'osgGA/OrbitManipulatorEnums' );
+var OrbitManipulatorEnums = require( 'osgGA/orbitManipulatorEnums' );
 
 
 var osgGA = {};

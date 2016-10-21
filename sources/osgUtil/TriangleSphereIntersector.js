@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 var TriangleIntersection = function ( normal, i1, i2, i3 ) {
     this.normal = normal;

@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 var CADManipulatorHammerController = function ( manipulator ) {
     this._manipulator = manipulator;

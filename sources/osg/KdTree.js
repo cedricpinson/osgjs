@@ -3,7 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var BoundingBox = require( 'osg/BoundingBox' );
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 var KdTreeRayIntersector = require( 'osg/KdTreeRayIntersector' );
 var KdTreeSphereIntersector = require( 'osg/KdTreeSphereIntersector' );
 

@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Bone = require( 'osgAnimation/Bone' );
 
 

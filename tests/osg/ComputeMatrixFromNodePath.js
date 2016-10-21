@@ -1,14 +1,14 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
+var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var Camera = require( 'osg/Camera' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 
 module.exports = function () {

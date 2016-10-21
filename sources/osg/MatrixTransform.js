@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var Transform = require( 'osg/Transform' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 
 /**

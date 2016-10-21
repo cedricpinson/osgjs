@@ -1,15 +1,15 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var BaseObject = require( 'osg/Object' );
 var quat = require( 'osg/glMatrix' ).quat;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var Channel = require( 'osgAnimation/Channel' );
-var Animation = require( 'osgAnimation/Animation' );
-var Interpolator = require( 'osgAnimation/Interpolator' );
+var Channel = require( 'osgAnimation/channel' );
+var Animation = require( 'osgAnimation/animation' );
+var Interpolator = require( 'osgAnimation/interpolator' );
 var CollectAnimationUpdateCallbackVisitor = require( 'osgAnimation/CollectAnimationUpdateCallbackVisitor' );
-var Target = require( 'osgAnimation/Target' );
+var Target = require( 'osgAnimation/target' );
 var UpdateMorph = require( 'osgAnimation/UpdateMorph' );
 
 

@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Uniform = require( 'osg/Uniform' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 

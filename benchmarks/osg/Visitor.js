@@ -11,7 +11,7 @@ var KdTreeBuilder = require( 'osg/KdTreeBuilder' );
 var Camera = require( 'osg/Camera' );
 var Viewport = require( 'osg/Viewport' );
 var View = require( 'osgViewer/View' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var ReaderParser = require( 'osgDB/readerParser' );
 
 module.exports = function () {
 
@@ -47,10 +47,10 @@ module.exports = function () {
         var view = new View();
         view.getCamera().setViewport( new Viewport() );
         view.getCamera().setViewMatrix( mat4.lookAt(
-            mat4.create() ,
+            mat4.create(),
             vec3.fromValues( 0, 0, -10 ),
             vec3.fromValues( 0, 0, 0 ),
-            vec3.fromValues( 0, 1, 0 )) );
+            vec3.fromValues( 0, 1, 0 ) ) );
         view.getCamera().setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
 
 
@@ -70,10 +70,10 @@ module.exports = function () {
 
         var camera = new Camera();
         camera.setViewport( new Viewport() );
-        camera.setViewMatrix( mat4.lookAt(  mat4.create() ,
+        camera.setViewMatrix( mat4.lookAt( mat4.create(),
             vec3.fromValues( 0, 0, -10 ),
             vec3.fromValues( 0, 0, 0 ),
-            vec3.fromValues( 0, 1, 0 )) );
+            vec3.fromValues( 0, 1, 0 ) ) );
         camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
 
 

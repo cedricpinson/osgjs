@@ -4,7 +4,7 @@ var mockup = require( 'tests/mockup/mockup' );
 var TextureCubeMap = require( 'osg/TextureCubeMap' );
 var Texture = require( 'osg/Texture' );
 var State = require( 'osg/State' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var ReaderParser = require( 'osgDB/readerParser' );
 var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
 
 

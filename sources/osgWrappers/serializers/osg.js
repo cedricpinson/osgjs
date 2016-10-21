@@ -1,6 +1,6 @@
 'use strict';
 var P = require( 'bluebird' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 
 var osgWrapper = {};
 

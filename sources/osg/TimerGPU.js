@@ -1,6 +1,6 @@
 'use strict';
 
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 /*
 use EXT_disjoint_timer_queryto time webgl calls GPU side average over multiple frames

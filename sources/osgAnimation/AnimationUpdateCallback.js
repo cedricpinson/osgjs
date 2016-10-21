@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
 var MatrixTransform = require( 'osg/MatrixTransform' );

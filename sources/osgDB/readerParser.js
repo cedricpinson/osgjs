@@ -1,11 +1,11 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Uniform = require( 'osg/Uniform' );
 var BlendFunc = require( 'osg/BlendFunc' );
 var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
 var StateSet = require( 'osg/StateSet' );

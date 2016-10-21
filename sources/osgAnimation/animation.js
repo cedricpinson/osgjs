@@ -1,5 +1,5 @@
 'use strict';
-var Channel = require( 'osgAnimation/Channel' );
+var Channel = require( 'osgAnimation/channel' );
 
 
 // create Animation data

@@ -1,9 +1,9 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
 var Program = require( 'osg/Program' );
@@ -470,7 +470,7 @@ var createAxisGeometry = function ( size ) {
                     'varying vec4 vColor;',
                     '',
                     'void main(void) {',
-                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex, 1.0);',
+                    '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex, 1.0));',
                     '  vColor = Color;',
                     '}'
                 ].join( '\n' );
@@ -730,6 +730,59 @@ var createGridGeometry = function ( cx, cy, cz, wx, wy, wz, hx, hy, hz, res1, re
     return g;
 };
 
+/*
+ * debug lines showing bounding box abstraction
+ * @param col bbox color
+ */
+var createBoundingBoxGeometry = function ( col ) {
+
+    var g = new Geometry();
+    //unit cube centered on 0
+    var vertices = new Float32Array( [ -0.5, -0.5, -0.5,
+        0.5, -0.5, -0.5,
+        0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5,
+        0.5, -0.5, 0.5,
+        0.5, 0.5, 0.5, -0.5, 0.5, 0.5
+    ] );
+    g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
+
+    // use color or red
+    if ( !col ) col = [ 1.0, 0.0, 0.0, 1.0 ];
+    var colors = new MACROUTILS.Float32Array( 8 * 4 );
+    for ( var i = 0; i < 8; i++ ) {
+        for ( var k = 0; k < 4; k++ ) {
+            colors[ i * 3 + k ] = col[ k ];
+        }
+    }
+
+    g.getAttributes().Color = new BufferArray( BufferArray.ARRAY_BUFFER, colors, 4 );
+
+    var indexes = new MACROUTILS.Uint16Array(
+        [
+            //up
+            0, 1,
+            1, 2,
+            2, 3,
+            3, 0,
+            //down
+            4, 5,
+            5, 6,
+            6, 7,
+            7, 4,
+            // side
+            0, 4,
+            1, 5,
+            2, 6,
+            3, 7
+
+        ] );
+
+    g.getPrimitives().push( new DrawElements( PrimitiveSet.LINES, new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) ) );
+
+    return g;
+
+};
+
 module.exports = {
     createTexturedBoxGeometry: createTexturedBoxGeometry,
     createTexturedQuadGeometry: createTexturedQuadGeometry,
@@ -739,5 +792,6 @@ module.exports = {
     createTexturedQuad: createTexturedQuad,
     createAxisGeometry: createAxisGeometry,
     createTexturedSphere: createTexturedSphere,
-    createGridGeometry: createGridGeometry
+    createGridGeometry: createGridGeometry,
+    createBoundingBoxGeometry: createBoundingBoxGeometry
 };

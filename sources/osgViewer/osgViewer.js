@@ -2,7 +2,7 @@
 var Renderer = require( 'osgViewer/Renderer' );
 var View = require( 'osgViewer/View' );
 var Viewer = require( 'osgViewer/Viewer' );
-var EventProxy = require( 'osgViewer/eventProxy/EventProxy' );
+var EventProxy = require( 'osgViewer/eventProxy/eventProxy' );
 var Scene = require( 'osgViewer/Scene' );
 
 

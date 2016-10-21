@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osgShader/node/Node' );
 var utils = require( 'osgShader/utils' );

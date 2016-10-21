@@ -2,7 +2,7 @@
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var BoundingBox = require( 'osg/BoundingBox' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var ReaderParser = require( 'osgDB/readerParser' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
 

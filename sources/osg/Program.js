@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var GLObject = require( 'osg/GLObject' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var CustomMap = require( 'osg/Map' );

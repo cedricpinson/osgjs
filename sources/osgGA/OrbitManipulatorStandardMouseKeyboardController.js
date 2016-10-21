@@ -1,6 +1,6 @@
 'use strict';
-var osgMath = require( 'osg/Math' );
-var OrbitManipulatorEnums = require( 'osgGA/OrbitManipulatorEnums' );
+var osgMath = require( 'osg/math' );
+var OrbitManipulatorEnums = require( 'osgGA/orbitManipulatorEnums' );
 
 
 var OrbitManipulatorStandardMouseKeyboardController = function ( manipulator ) {

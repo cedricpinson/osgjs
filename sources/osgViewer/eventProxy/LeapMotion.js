@@ -1,6 +1,6 @@
 'use strict';
 var Leap = require( 'leap' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 
 var LeapMotion = function ( viewer ) {
     this._viewer = viewer;

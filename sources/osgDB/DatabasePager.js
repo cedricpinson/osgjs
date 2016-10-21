@@ -311,9 +311,9 @@ DatabasePager.prototype = MACROUTILS.objectLibraryClass( {
     },
 
     loadNodeFromURL: function ( url ) {
-        var ReaderParser = require( 'osgDB/ReaderParser' );
+        var ReaderParser = require( 'osgDB/readerParser' );
         // Call to ReaderParser just in case there is a custom readNodeURL Callback
-        // See osgDB/Options.js and/or osgDB/Input.js
+        // See osgDB/options.js and/or osgDB/Input.js
         // TODO: We should study if performance can be improved if separating the XHTTP request from
         // the parsing. This way several/many request could be done at the same time.
         // Also we should be able to cancel requests, so there is a need to have access

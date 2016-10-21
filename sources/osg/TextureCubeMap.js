@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Image = require( 'osg/Image' );
-var Notify = require( 'osg/Notify' );
+var Notify = require( 'osg/notify' );
 var Texture = require( 'osg/Texture' );
 
 

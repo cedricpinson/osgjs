@@ -2,10 +2,10 @@
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var Shape = require( 'osg/Shape' );
+var Shape = require( 'osg/shape' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var PrimitiveSet = require( 'osg/primitiveSet' );
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 var KdTree = require( 'osg/KdTree' );

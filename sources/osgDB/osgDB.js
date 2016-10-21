@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Input = require( 'osgDB/Input' );
-var ReaderParser = require( 'osgDB/ReaderParser' );
+var ReaderParser = require( 'osgDB/readerParser' );
 var DatabasePager = require( 'osgDB/DatabasePager' );
 var osgWrappers = require( 'osgWrappers/serializers/osg' );
 var osgAnimationWrappers = require( 'osgWrappers/serializers/osgAnimation' );

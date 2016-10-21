@@ -4,7 +4,7 @@ var Object = require( 'osg/Object' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
-var Target = require( 'osgAnimation/Target' );
+var Target = require( 'osgAnimation/target' );
 
 
 var StackedRotateAxis = function ( name, axis, angle ) {

@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
-var TransformEnums = require( 'osg/TransformEnums' );
+var TransformEnums = require( 'osg/transformEnums' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
 /**
