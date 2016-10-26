@@ -6,6 +6,8 @@ var DatabasePager = require( 'osgDB/DatabasePager' );
 var osgWrappers = require( 'osgWrappers/serializers/osg' );
 var osgAnimationWrappers = require( 'osgWrappers/serializers/osgAnimation' );
 var osgTextWrappers = require( 'osgWrappers/serializers/osgText' );
+var Registry = require( 'osgDB/Registry' );
+
 
 var osgDB = {};
 osgDB.Input = Input;
@@ -14,5 +16,6 @@ osgDB.DatabasePager = DatabasePager;
 osgDB.ObjectWrapper.serializers.osg = osgWrappers;
 osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
 osgDB.ObjectWrapper.serializers.osgText = osgTextWrappers;
+osgDB.Registry = Registry;
 osgDB.requestFile = require( 'osgDB/requestFile' );
 module.exports = osgDB;
