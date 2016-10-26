@@ -1,7 +1,6 @@
 'use strict';
 
 var requestFile = require( 'osgDB/requestFile.js' );
-var Notify = require( 'osg/notify' );
 var Registry = require( 'osgDB/Registry' );
 var Input = require( 'osgDB/Input' );
 var animation = require( 'osgAnimation/animation' );
@@ -190,7 +189,7 @@ GLTFLoader.prototype = {
             var ext = urlOrFiles.split( '.' ).pop();
             if ( ext !== 'gltf' ) {
 
-                Notify.warn( 'The given URL does not point toward a valid glTF file' );
+                console.warn( 'The given URL does not point toward a valid glTF file' );
                 return Promise.resolve( null );
 
             }
@@ -204,7 +203,7 @@ GLTFLoader.prototype = {
 
             if ( !( urlOrFiles instanceof FileList ) && !this._preloaded ) {
 
-                Notify.warn( 'The provided argument is neither a FileList nor a valid URL' );
+                console.warn( 'The provided argument is neither a files array nor a valid URL' );
                 return Promise.resolve( null );
 
             }
@@ -226,7 +225,7 @@ GLTFLoader.prototype = {
 
         if ( !glTFFileOrUrl ) {
 
-            Notify.warn( 'You did not provided any glTF file' );
+            console.warn( 'You did not provided any glTF file' );
             return Promise.resolve( null );
 
         }
@@ -357,6 +356,7 @@ GLTFLoader.prototype = {
         var self = this;
 
         return filePromise.then( function ( data ) {
+                console.warn( '\'' + buffer.uri + '\' binary file not found' );
 
             if ( !data )
                 return Promise.resolve( null );
@@ -1092,9 +1092,6 @@ GLTFLoader.prototype = {
 
             self._loadedFiles.glTF = JSON.parse( glTFFile );
             var json = self._loadedFiles.glTF;
-
-            if ( !json )
-                return Promise.resolve( null );
 
             var promisesArray = [];
 
