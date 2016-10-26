@@ -13,35 +13,55 @@
     var GLTF_FILES = {};
 
     var COMPONENT_TYPE_TABLE = {
-        5120: 'BYTE',
-        5121: 'UNSIGNED_BYTE',
-        5122: 'SHORT',
-        5123: 'UNSIGNED_SHORT',
-        5126: 'FLOAT',
+        5120: 1,
+        5121: 1,
+        5122: 2,
+        5123: 2,
+        5126: 4,
     };
 
-    var loadGeometry = function ( meshId ) {
-        var geometry = new osg.Geometry();
+    var TYPE_TABLE = {
+        SCALAR: 1,
+        VEC2: 2,
+        VEC3: 3,
+        VEC4: 4,
+        MAT2: 4,
+        MAT3: 9,
+        MAT4: 16
+    };
 
+    var extractData = function ( accessorId ) {
+        var json = GLTF_FILES[ 'glTF' ];
+        var accessor = json.accessors[ accessorId ];
+
+        var bufferView = json.bufferViews[ accessor.bufferView ];
+        var buffer = json.buffers[ bufferView.buffer ];
+
+        var offset = accessor.byteOffset + bufferView.byteOffset;
+        var end = offset + accessor.count * COMPONENT_TYPE_TABLE[ accessor.componentType ] * TYPE_TABLE[ accessor.type ];
+
+        var tmp = new Int8Array( GLTF_FILES[ buffer.uri ] );
+
+        return tmp.subarray( offset, end );
+    };
+
+    var loadGeometry = function ( meshId, resultMeshNode ) {
         var json = GLTF_FILES[ 'glTF' ];
         var mesh = json.meshes[ meshId ];
+        console.log( mesh.name );
 
         var primitives = mesh.primitives;
-        for ( var j = 0; j < primitives.length; ++j ) {
-            var normalAccessor = json.accessors[ primitives[ j ].attributes.NORMAL ];
-            var positionAccessor = json.accessors[ primitives[ j ].attributes.POSITION ];
-            // texCoords accessors
-
-            //var normalBufferView = json.bufferViews[normalAccessor.bufferView];
-            var positionBufferView = json.bufferViews[ positionAccessor.bufferView ];
-            var positionBuffer = json.buffers[ positionBufferView.buffer ];
-
+        for ( var i = 0; i < primitives.length; ++i ) {
+            var normals = extractData( primitives[ i ].attributes.NORMAL );
+            var indices = extractData( primitives[ i ].indices );
+            console.log( indices );
+            console.log( normals );
         }
-
-        return geometry;
     };
 
     var loadGLTFNode = function ( nodeId ) {
+        var resultNode = new osg.Node();
+
         var json = GLTF_FILES[ 'glTF' ];
         var node = json.nodes[ nodeId ];
 
@@ -50,10 +70,16 @@
         // Geometry
         if ( node.hasOwnProperty( 'meshes' ) ) {
 
-            for ( var i = 0; i < node.meshes.length; ++i )
-            // Creates the geometry associated to the mesh
-                var geometry = loadGeometry( node.meshes[ i ] );
+            for ( var i = 0; i < node.meshes.length; ++i ) {
+                var meshNode = new osg.Node();
+
+                // Creates the geometry associated to the mesh
+                loadGeometry( node.meshes[ i ], meshNode );
+                resultNode.addChild( meshNode );
+            }
         }
+
+        return resultNode;
 
         // MatrixTransform
     };
@@ -62,7 +88,7 @@
         var root = new osg.Node();
 
         var json = GLTF_FILES[ 'glTF' ];
-        //console.log( json );
+        console.log( json );
 
         // Loops through each scene
         var scenes = json.scenes;
@@ -90,11 +116,15 @@
 
         // Gets the glTF files
         $.get( "scenes/box-animated/BoxAnimated.gltf", function ( glTF ) {
-            $.get( "scenes/box-animated/BoxAnimated.bin", function ( bin ) {
+            var xhr = new XMLHttpRequest();
+            xhr.open( 'GET', "scenes/box-animated/BoxAnimated.bin", true );
+            xhr.responseType = 'arraybuffer';
+            xhr.send( null );
+            xhr.onload = function () {
                 GLTF_FILES[ 'glTF' ] = JSON.parse( glTF );
-                GLTF_FILES[ 'BoxAnimated.bin' ] = bin;
+                GLTF_FILES[ 'BoxAnimated.bin' ] = xhr.response;
                 viewer.setSceneData( loadGLTF() );
-            } );
+            };
         } );
     };
 
