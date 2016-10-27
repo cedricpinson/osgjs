@@ -3,9 +3,9 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
-    //var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
-    //var osgDB = OSG.osgDB;
+    var osgAnimation = OSG.osgAnimation;
+
     var $ = window.$;
 
     // Mappers to extract data correctly
@@ -41,6 +41,13 @@
 
     var visitedNodes_ = {};
 
+    /**
+     * Loads a osg.BufferArray from a TypeArray obtained by using a glTF accessor.
+     * No memory allocation is done, the result is a subarray obtained from a glTF binary file
+     * @param  {Object} accessor
+     * @param  {osg.BufferArray.ARRAY_BUFFER | osg.BufferArray.ELEMENT_ARRAY_BUFFER} type WebGL buffer type
+     * @return {osg.BufferArray} OSG readable buffer contaning the extracted data
+     */
     var loadAccessorBuffer = function ( accessor, type ) {
         var json = GLTF_FILES[ 'glTF' ];
 
@@ -53,9 +60,18 @@
 
         var typedArray = new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
 
-        return new osg.BufferArray( type, typedArray, TYPE_TABLE[ accessor.type ] );
+        if (type)
+            return new osg.BufferArray( type, typedArray, TYPE_TABLE[ accessor.type ] );
+
+        return typedArray;
     };
 
+    /**
+     * Creates a MatrixTransform node by using
+     * glTF node's properties (matrix, translation, rotation, scale)
+     * @param  {Object} glTFNode glTF node
+     * @return {OSG.MatrixTransform} MatrixTransform node containing the glTF node transform 
+     */
     var loadTransform = function ( glTFNode ) {
 
         var node = new osg.MatrixTransform();
@@ -75,6 +91,37 @@
 
         osg.mat4.fromRotationTranslationScale( node.getMatrix(), rot, trans, scale );
         return node;
+    };
+
+    var loadAnimations = function ( root ) {
+
+        var json = GLTF_FILES[ 'glTF' ];
+
+        //var animationManager = new osgAnimation.BasicAnimationManager();
+
+        var animationsObjectKeys = window.Object.keys( json.animations );
+        for ( var i = 0; i < animationsObjectKeys.length; ++i ) {
+
+            var glTFAnim = json.animations[ animationsObjectKeys[ i ] ];
+
+            // Creates each OSGJS channel
+            for ( var j = 0; j < glTFAnim.channels; ++j ) {
+
+                var glTFchannel = glTFAnim.channels[j];
+
+                var osgChannel = null;
+                var osgChannelName = animationsObjectKeys[ i ] + '_channel' + j;
+                if (glTFchannel.target.path === 'rotation')
+                    osgChannel = osgAnimation.Animation.createQuatChannel(osgChannelName);
+
+            }
+
+            var osgAnim = osgAnimation.Animation.createAnimation( [], animationsObjectKeys[ i ] );
+
+        }
+
+        //root.addChild(animationManager);
+
     };
 
     var loadGeometry = function ( meshId, resultMeshNode ) {
@@ -171,8 +218,8 @@
         for ( i = 0; i < children.length; ++i )
             loadGLTFNode( children[ i ], parentNode );
 
-        // Geometry
-        if ( glTFNode.hasOwnProperty( 'meshes' ) ) {
+        // Loads geometry
+        if ( glTFNode.meshes ) {
 
             for ( i = 0; i < glTFNode.meshes.length; ++i ) {
                 var meshNode = new osg.Node();
@@ -195,22 +242,45 @@
         osg.mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI / 2.0 );
 
         var json = GLTF_FILES[ 'glTF' ];
+        console.log( json );
+
+
+        // Creates OSG animations from glTF animations
+        if ( Object.keys( json.animations ).length > 0 )
+            loadAnimations( root );
 
         // Loops through each scene
         var scenes = json.scenes;
         for ( var sceneId in scenes ) {
 
-            if ( !scenes.hasOwnProperty( sceneId ) )
+            if ( !scenes[ sceneId ] )
                 continue;
 
             var scene = scenes[ sceneId ];
-            // Loop through each node in current scene
-            for ( var i = 0; i < scene.nodes.length; ++i ) {
+
+            // Creates OSG nodes from glTF nodes
+            for ( var i = 0; i < scene.nodes.length; ++i )
+            // Loads node information (geometry, material)
                 loadGLTFNode( scene.nodes[ i ], root );
-            }
         }
 
         return root;
+    };
+
+    var loadSample = function ( path, sampleName, callback ) {
+
+        $.get( path + '/' + sampleName + '.gltf', function ( glTF ) {
+            var xhr = new XMLHttpRequest();
+            xhr.open( 'GET', path + '/' + sampleName + '.bin', true );
+            xhr.responseType = 'arraybuffer';
+            xhr.send( null );
+            xhr.onload = function () {
+                GLTF_FILES[ 'glTF' ] = JSON.parse( glTF );
+                GLTF_FILES[ sampleName + '.bin' ] = xhr.response;
+
+                callback( loadGLTF() );
+            };
+        } );
     };
 
     var onLoad = function () {
@@ -221,32 +291,12 @@
         viewer.setupManipulator();
         viewer.run();
 
-        // Gets the glTF files
-        /*$.get( "scenes/box-animated/BoxAnimated.gltf", function ( glTF ) {
-            var xhr = new XMLHttpRequest();
-            xhr.open( 'GET', "scenes/box-animated/BoxAnimated.bin", true );
-            xhr.responseType = 'arraybuffer';
-            xhr.send( null );
-            xhr.onload = function () {
-                GLTF_FILES[ 'glTF' ] = JSON.parse( glTF );
-                GLTF_FILES[ 'BoxAnimated.bin' ] = xhr.response;
-                viewer.setSceneData( loadGLTF() );
-            };
-        } );*/
-
-        $.get( 'scenes/brain-stem/BrainStem.gltf', function ( glTF ) {
-            var xhr = new XMLHttpRequest();
-            xhr.open( 'GET', 'scenes/brain-stem/BrainStem.bin', true );
-            xhr.responseType = 'arraybuffer';
-            xhr.send( null );
-            xhr.onload = function () {
-                GLTF_FILES[ 'glTF' ] = JSON.parse( glTF );
-                GLTF_FILES[ 'BrainStem.bin' ] = xhr.response;
-                viewer.setSceneData( loadGLTF() );
-            };
+        loadSample( 'scenes/box-animated', 'BoxAnimated', function ( scene ) {
+            viewer.setSceneData( scene );
         } );
 
     };
+
 
     window.addEventListener( 'load', onLoad, true );
 } )();
