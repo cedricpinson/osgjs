@@ -12,6 +12,15 @@
     // glTF files (.gltf, .bin, etc...)
     var GLTF_FILES = {};
 
+    var WEBGL_COMPONENT_TYPES = {
+        5120: Int8Array,
+        5121: Uint8Array,
+        5122: Int16Array,
+        5123: Uint16Array,
+        5125: Uint32Array,
+        5126: Float32Array
+    };
+
     var COMPONENT_TYPE_TABLE = {
         5120: 1,
         5121: 1,
@@ -38,11 +47,9 @@
         var buffer = json.buffers[ bufferView.buffer ];
 
         var offset = accessor.byteOffset + bufferView.byteOffset;
-        var end = offset + accessor.count * COMPONENT_TYPE_TABLE[ accessor.componentType ] * TYPE_TABLE[ accessor.type ];
 
-        var tmp = new Int8Array( GLTF_FILES[ buffer.uri ] );
-
-        return tmp.subarray( offset, end );
+        var TypedArray = WEBGL_COMPONENT_TYPES[accessor.componentType];
+        return new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type] );
     };
 
     var loadGeometry = function ( meshId, resultMeshNode ) {
@@ -53,9 +60,20 @@
         var primitives = mesh.primitives;
         for ( var i = 0; i < primitives.length; ++i ) {
             var normals = extractData( primitives[ i ].attributes.NORMAL );
-            var indices = extractData( primitives[ i ].indices );
-            console.log( indices );
-            console.log( normals );
+            var indices = new osg.Float32Array(extractData( primitives[ i ].indices ));
+            var vertices = new osg.Float32Array(extractData( primitives[ i ].attributes.POSITION ));
+
+            var g = new osg.Geometry();
+            g.getAttributes().Vertex = new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, vertices, 3 );
+            g.getAttributes().Normal = new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, normals, 3 );
+            //g.getAttributes().Normal = new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, normals, 3 );
+            var primitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, new osg.BufferArray( osg.BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) );
+            g.getPrimitives().push( primitive );
+
+            resultMeshNode.addChild(g);
+
+            //console.log( indices );
+            //console.log( vertices );
         }
     };
 
@@ -65,7 +83,7 @@
         var json = GLTF_FILES[ 'glTF' ];
         var node = json.nodes[ nodeId ];
 
-        //console.log( node );
+        console.log( node );
 
         // Geometry
         if ( node.hasOwnProperty( 'meshes' ) ) {
@@ -100,7 +118,7 @@
             var scene = scenes[ sceneId ];
             // Loop through each node in current scene
             for ( var i = 0; i < scene.nodes.length; ++i )
-                loadGLTFNode( scene.nodes[ i ] );
+                root.addChild(loadGLTFNode( scene.nodes[ i ] ));
         }
 
         return root;
