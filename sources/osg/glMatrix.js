@@ -148,6 +148,8 @@ vec4.NEGATIVE_INFINITY = vec4.fromValues( -Infinity, -Infinity, -Infinity, -Infi
 
 // quat
 
+quat.IDENTITY = quat.create();
+
 quat.zeroRotation = function ( q ) {
     return q[ 0 ] === 0.0 && q[ 1 ] === 0.0 && q[ 2 ] === 0.0 && q[ 3 ] === 1.0;
 };
