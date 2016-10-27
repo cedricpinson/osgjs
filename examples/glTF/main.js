@@ -27,13 +27,13 @@
     };
 
     var TYPE_TABLE = {
-        'SCALAR': 1,
-        'VEC2': 2,
-        'VEC3': 3,
-        'VEC4': 4,
-        'MAT2': 4,
-        'MAT3': 9,
-        'MAT4': 16
+        SCALAR: 1,
+        VEC2: 2,
+        VEC3: 3,
+        VEC4: 4,
+        MAT2: 4,
+        MAT3: 9,
+        MAT4: 16
     };
 
     // Contains all the needed glTF files (.gltf, .bin, etc...)
@@ -60,23 +60,17 @@
         // The transform is given under a matrix form
         if ( glTFNode.hasOwnProperty( 'matrix' ) ) {
 
-            osg.mat4.copy(node.getMatrix(), glTFNode.matrix);
+            osg.mat4.copy( node.getMatrix(), glTFNode.matrix );
             return node;
         }
 
         // The transform is given under the form
         // translation, rotation, scale
-        var scale = glTFNode.scale || osg.Vec3.one;
-        var rot = [0,0,0,1];
-        var trans = glTFNode.scale || osg.Vec3.zero;
+        var scale = glTFNode.scale || osg.vec3.ONE;
+        var rot = glTFNode.rotation || osg.quat.IDENTITY;
+        var trans = glTFNode.translation || osg.vec3.ZERO;
 
-        if (!glTFNode.scale) scale = glTFNode.scale;
-        if (glTFNode.hasOwnProperty('rotation'))
-            rot = glTFNode.rotation;
-        if (glTFNode.hasOwnProperty('translation'))
-            trans = glTFNode.translation;
-
-        osg.mat4.fromRotationTranslationScale(node.getMatrix(), rot, trans, scale);
+        osg.mat4.fromRotationTranslationScale( node.getMatrix(), rot, trans, scale );
         return node;
     };
 
@@ -92,8 +86,11 @@
             if ( processedPrimitives[ i ] )
                 continue;
 
-            var vertexAccessor = json.accessors[ primitives[ i ].attributes.POSITION ];
-            var normalAccessor = json.accessors[ primitives[ i ].attributes.NORMAL ];
+            console.log( primitives[ i ] );
+            var primitiveAttributes = primitives[ i ].attributes;
+
+            var vertexAccessor = json.accessors[ primitiveAttributes.POSITION ];
+            var normalAccessor = json.accessors[ primitiveAttributes.NORMAL ];
             var indexAccessor = json.accessors[ primitives[ i ].indices ];
 
             // Builds the geometry from the extracted vertices & normals
@@ -104,15 +101,34 @@
             var p = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, new osg.BufferArray( osg.BufferArray.ELEMENT_ARRAY_BUFFER, loadAccessorBuffer( indexAccessor ), 1 ) );
             g.getPrimitives().push( p );
 
+            var attributesKeys = window.Object.keys( primitiveAttributes );
             // Checks whether there are other primitives using
             // the same vertices and normals
             for ( var ii = 0; ii < primitives.length; ++ii ) {
 
-                if ( ii === i || processedPrimitives[ ii ] )
+                if ( ii === i || processedPrimitives[ ii ])
                     continue;
 
-                if ( primitives[ i ].attributes.NORMAL !== primitives[ ii ].attributes.NORMAL ||
-                    primitives[ i ].attributes.POSITION !== primitives[ ii ].attributes.POSITION )
+                var targetAttributeKeys = window.Object.keys( primitives[ ii ].attributes );
+
+                // Primitives are non-mergeable if the materials or the
+                // attributes are different among them
+                if ( primitives[ ii ].material !== primitives[ i ].material ||
+                    targetAttributeKeys.length !== attributesKeys.length )
+                    continue;
+
+                var mergePossible = true;
+                for ( var j = 0; j < attributesKeys.length; ++j ) {
+
+                    if ( attributesKeys[ j ] !== targetAttributeKeys[ j ] ||
+                        primitives[ i ].attributes[ attributesKeys[ j ] ] !== primitives[ ii ].attributes[ attributesKeys[ j ] ] ) {
+                        mergePossible = false;
+                        break;
+                    }
+
+                }
+
+                if ( !mergePossible )
                     continue;
 
                 var indices = loadAccessorBuffer( json.accessors[ primitives[ ii ].indices ] );
@@ -162,7 +178,10 @@
 
     var loadGLTF = function () {
 
-        var root = new osg.Node();
+        // Creates the root node
+        // adding a PI / 2 rotation arround the X-axis
+        var root = new osg.MatrixTransform();
+        osg.mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI / 2.0 );
 
         var json = GLTF_FILES[ 'glTF' ];
 
@@ -204,9 +223,9 @@
             };
         } );*/
 
-        $.get( "scenes/brain-stem/BrainStem.gltf", function ( glTF ) {
+        $.get( 'scenes/brain-stem/BrainStem.gltf', function ( glTF ) {
             var xhr = new XMLHttpRequest();
-            xhr.open( 'GET', "scenes/brain-stem/BrainStem.bin", true );
+            xhr.open( 'GET', 'scenes/brain-stem/BrainStem.bin', true );
             xhr.responseType = 'arraybuffer';
             xhr.send( null );
             xhr.onload = function () {
