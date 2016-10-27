@@ -41,7 +41,7 @@
 
     var visitedNodes_ = {};
 
-    var loadAccessorBuffer = function ( accessor ) {
+    var loadAccessorBuffer = function ( accessor, type ) {
         var json = GLTF_FILES[ 'glTF' ];
 
         var bufferView = json.bufferViews[ accessor.bufferView ];
@@ -50,7 +50,10 @@
         var offset = accessor.byteOffset + bufferView.byteOffset;
 
         var TypedArray = WEBGL_COMPONENT_TYPES[ accessor.componentType ];
-        return new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
+
+        var typedArray = new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
+
+        return new osg.BufferArray( type, typedArray, TYPE_TABLE[ accessor.type ] );
     };
 
     var loadTransform = function ( glTFNode ) {
@@ -77,7 +80,8 @@
     var loadGeometry = function ( meshId, resultMeshNode ) {
         var json = GLTF_FILES[ 'glTF' ];
         var mesh = json.meshes[ meshId ];
-        //console.log( mesh );
+
+        var ii = 0;
 
         var primitives = mesh.primitives;
         var processedPrimitives = new Array( primitives.length );
@@ -86,42 +90,48 @@
             if ( processedPrimitives[ i ] )
                 continue;
 
-            console.log( primitives[ i ] );
-            var primitiveAttributes = primitives[ i ].attributes;
+            var primitive = primitives[ i ];
+            var attributesKeys = window.Object.keys( primitive.attributes );
 
-            var vertexAccessor = json.accessors[ primitiveAttributes.POSITION ];
-            var normalAccessor = json.accessors[ primitiveAttributes.NORMAL ];
-            var indexAccessor = json.accessors[ primitives[ i ].indices ];
+            var vertexAccessor = json.accessors[ primitive.attributes.POSITION ];
+            var normalAccessor = json.accessors[ primitive.attributes.NORMAL ];
 
             // Builds the geometry from the extracted vertices & normals
             var g = new osg.Geometry();
-            g.getAttributes().Vertex = new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, loadAccessorBuffer( vertexAccessor ), TYPE_TABLE[ vertexAccessor.type ] );
-            g.getAttributes().Normal = new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, loadAccessorBuffer( normalAccessor ), TYPE_TABLE[ normalAccessor.type ] );
+            g.getAttributes().Vertex = loadAccessorBuffer( vertexAccessor, osg.BufferArray.ARRAY_BUFFER );
+            g.getAttributes().Normal = loadAccessorBuffer( normalAccessor, osg.BufferArray.ARRAY_BUFFER );
+            // Adds each TexCoords to the geometry
+            for ( ii = 0; ii < attributesKeys.length; ++ii ) {
 
-            var p = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, new osg.BufferArray( osg.BufferArray.ELEMENT_ARRAY_BUFFER, loadAccessorBuffer( indexAccessor ), 1 ) );
-            g.getPrimitives().push( p );
-
-            var attributesKeys = window.Object.keys( primitiveAttributes );
-            // Checks whether there are other primitives using
-            // the same vertices and normals
-            for ( var ii = 0; ii < primitives.length; ++ii ) {
-
-                if ( ii === i || processedPrimitives[ ii ])
+                if ( !/^TEXCOORD/.test( attributesKeys[ ii ] ) )
                     continue;
 
-                var targetAttributeKeys = window.Object.keys( primitives[ ii ].attributes );
+                var texCoordId = attributesKeys[ ii ].split( '_' )[ 1 ];
+                var textCoordAccessor = json.accessors[ primitive.attributes[ attributesKeys[ ii ] ] ];
+                g.getAttributes()[ 'TexCoord' + texCoordId ] = loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
+            }
+
+            // Checks whether there are other primitives using
+            // the same vertices and normals
+            for ( ii = 0; ii < primitives.length; ++ii ) {
+
+                if ( processedPrimitives[ ii ] )
+                    continue;
+
+                var targetPrimitive = primitives[ ii ];
+                var targetAttributesKeys = window.Object.keys( targetPrimitive.attributes );
 
                 // Primitives are non-mergeable if the materials or the
                 // attributes are different among them
-                if ( primitives[ ii ].material !== primitives[ i ].material ||
-                    targetAttributeKeys.length !== attributesKeys.length )
+                if ( targetPrimitive.material !== primitive.material ||
+                    targetAttributesKeys.length !== attributesKeys.length )
                     continue;
 
                 var mergePossible = true;
                 for ( var j = 0; j < attributesKeys.length; ++j ) {
 
-                    if ( attributesKeys[ j ] !== targetAttributeKeys[ j ] ||
-                        primitives[ i ].attributes[ attributesKeys[ j ] ] !== primitives[ ii ].attributes[ attributesKeys[ j ] ] ) {
+                    if ( attributesKeys[ j ] !== targetAttributesKeys[ j ] ||
+                        primitive.attributes[ attributesKeys[ j ] ] !== targetPrimitive.attributes[ targetAttributesKeys[ j ] ] ) {
                         mergePossible = false;
                         break;
                     }
@@ -131,9 +141,9 @@
                 if ( !mergePossible )
                     continue;
 
-                var indices = loadAccessorBuffer( json.accessors[ primitives[ ii ].indices ] );
-                var primitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, new osg.BufferArray( osg.BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) );
-                g.getPrimitives().push( primitive );
+                var indicesAccessor = json.accessors[ primitives[ ii ].indices ];
+                var osgPrimitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, loadAccessorBuffer( indicesAccessor, osg.BufferArray.ELEMENT_ARRAY_BUFFER ) );
+                g.getPrimitives().push( osgPrimitive );
 
                 processedPrimitives[ ii ] = true;
             }
@@ -151,6 +161,8 @@
         var json = GLTF_FILES[ 'glTF' ];
         var glTFNode = json.nodes[ nodeId ];
 
+        // Node parent containing the [children]
+        // of the glTF nodes
         var parentNode = loadTransform( glTFNode );
 
         var i = 0;
@@ -171,7 +183,6 @@
             }
         }
 
-        // MatrixTransform
         root.addChild( parentNode );
         visitedNodes_[ nodeId ] = true;
     };
