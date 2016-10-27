@@ -53,6 +53,33 @@
         return new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
     };
 
+    var loadTransform = function ( glTFNode ) {
+
+        var node = new osg.MatrixTransform();
+
+        // The transform is given under a matrix form
+        if ( glTFNode.hasOwnProperty( 'matrix' ) ) {
+
+            osg.mat4.copy(node.getMatrix(), glTFNode.matrix);
+            return node;
+        }
+
+        // The transform is given under the form
+        // translation, rotation, scale
+        var scale = glTFNode.scale || osg.Vec3.one;
+        var rot = [0,0,0,1];
+        var trans = glTFNode.scale || osg.Vec3.zero;
+
+        if (!glTFNode.scale) scale = glTFNode.scale;
+        if (glTFNode.hasOwnProperty('rotation'))
+            rot = glTFNode.rotation;
+        if (glTFNode.hasOwnProperty('translation'))
+            trans = glTFNode.translation;
+
+        osg.mat4.fromRotationTranslationScale(node.getMatrix(), rot, trans, scale);
+        return node;
+    };
+
     var loadGeometry = function ( meshId, resultMeshNode ) {
         var json = GLTF_FILES[ 'glTF' ];
         var mesh = json.meshes[ meshId ];
@@ -102,44 +129,42 @@
 
     var loadGLTFNode = function ( nodeId, root ) {
 
-        var json = GLTF_FILES[ 'glTF' ];
-        var node = json.nodes[ nodeId ];
-
-        //console.log( visitedNodes_.get(node) );
         if ( visitedNodes_[ nodeId ] )
             return;
 
-        var parentNode = new osg.Node();
+        var json = GLTF_FILES[ 'glTF' ];
+        var glTFNode = json.nodes[ nodeId ];
+
+        var parentNode = loadTransform( glTFNode );
 
         var i = 0;
         // Recurses on children before processing the current node
-        var children = node.children;
-        for ( i = 0; i < children.length; ++i ) {
+        var children = glTFNode.children;
+        for ( i = 0; i < children.length; ++i )
             loadGLTFNode( children[ i ], parentNode );
-        }
 
         // Geometry
-        if ( node.hasOwnProperty( 'meshes' ) ) {
+        if ( glTFNode.hasOwnProperty( 'meshes' ) ) {
 
-            for ( i = 0; i < node.meshes.length; ++i ) {
+            for ( i = 0; i < glTFNode.meshes.length; ++i ) {
                 var meshNode = new osg.Node();
 
                 // Creates the geometry associated to the mesh
-                loadGeometry( node.meshes[ i ], meshNode );
+                loadGeometry( glTFNode.meshes[ i ], meshNode );
                 root.addChild( meshNode );
             }
         }
 
         // MatrixTransform
-        root.addChild(parentNode);
+        root.addChild( parentNode );
         visitedNodes_[ nodeId ] = true;
     };
 
     var loadGLTF = function () {
+
         var root = new osg.Node();
 
         var json = GLTF_FILES[ 'glTF' ];
-        //console.log( json );
 
         // Loops through each scene
         var scenes = json.scenes;
