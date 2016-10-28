@@ -39,7 +39,10 @@
     // Contains all the needed glTF files (.gltf, .bin, etc...)
     var GLTF_FILES = {};
 
+    var basicAnimationManager_ = null;
+
     var visitedNodes_ = {};
+    var animatedNodes_ = {};
 
     /**
      * Loads a osg.BufferArray from a TypeArray obtained by using a glTF accessor.
@@ -60,7 +63,7 @@
 
         var typedArray = new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
 
-        if (type)
+        if ( type )
             return new osg.BufferArray( type, typedArray, TYPE_TABLE[ accessor.type ] );
 
         return typedArray;
@@ -93,35 +96,49 @@
         return node;
     };
 
-    var loadAnimations = function ( root ) {
+    var loadAnimations = function () {
 
         var json = GLTF_FILES[ 'glTF' ];
 
-        //var animationManager = new osgAnimation.BasicAnimationManager();
+        var animationManager = new osgAnimation.BasicAnimationManager();
+        var animations = [];
 
         var animationsObjectKeys = window.Object.keys( json.animations );
         for ( var i = 0; i < animationsObjectKeys.length; ++i ) {
 
             var glTFAnim = json.animations[ animationsObjectKeys[ i ] ];
+            var glTFAnimParams = glTFAnim.parameters;
+
+            var osgChannels = [];
 
             // Creates each OSGJS channel
-            for ( var j = 0; j < glTFAnim.channels; ++j ) {
+            for ( var j = 0; j < glTFAnim.channels.length; ++j ) {
 
-                var glTFchannel = glTFAnim.channels[j];
+                var glTFChannel = glTFAnim.channels[ j ];
+                var glTFSampler = glTFAnim.samplers[ glTFChannel.sampler ];
+
+                var timeAccessor = json.accessors[ glTFAnimParams[ glTFSampler.input ] ];
+                var valueAccessor = json.accessors[ glTFAnimParams[ glTFSampler.output ] ];
+
+                var timeKeys = loadAccessorBuffer( timeAccessor, null );
+                var valueKeys = loadAccessorBuffer( valueAccessor, null );
 
                 var osgChannel = null;
-                var osgChannelName = animationsObjectKeys[ i ] + '_channel' + j;
-                if (glTFchannel.target.path === 'rotation')
-                    osgChannel = osgAnimation.Animation.createQuatChannel(osgChannelName);
 
+                if ( TYPE_TABLE[ valueAccessor.type ] === 4 )
+                    osgChannel = osgAnimation.Channel.createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                else if ( TYPE_TABLE[ valueAccessor.type ] === 3 )
+                    osgChannel = osgAnimation.Channel.createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+
+                animatedNodes_[ glTFChannel.target.id ] = true;
+                osgChannels.push( osgChannel );
             }
 
-            var osgAnim = osgAnimation.Animation.createAnimation( [], animationsObjectKeys[ i ] );
-
+            animations.push( osgAnimation.Animation.createAnimation( osgChannels, animationsObjectKeys[ i ] ) );
         }
 
-        //root.addChild(animationManager);
-
+        animationManager.init( animations );
+        return animationManager;
     };
 
     var loadGeometry = function ( meshId, resultMeshNode ) {
@@ -226,8 +243,35 @@
 
                 // Creates the geometry associated to the mesh
                 loadGeometry( glTFNode.meshes[ i ], meshNode );
-                root.addChild( meshNode );
+                parentNode.addChild( meshNode );
             }
+        }
+
+        // Loads animations
+        // by adding an update callback
+        if ( animatedNodes_[ nodeId ] ) {
+
+            var animationCallback = new osgAnimation.UpdateMatrixTransform();
+            animationCallback.setName( nodeId );
+
+            var translation = osg.vec3.create();
+            osg.mat4.getTranslation( translation, parentNode.getMatrix() );
+
+            var rotationQuat = osg.quat.create();
+            osg.mat4.getRotation( rotationQuat, parentNode.getMatrix() );
+
+            var scale = osg.vec3.create();
+            osg.mat4.getScale( scale, parentNode.getMatrix() );
+
+            var stackedTranslate = new osgAnimation.StackedTranslate( 'translation', translation );
+            var stackedRotate = new osgAnimation.StackedQuaternion( 'rotation', rotationQuat );
+            var stackedScale = new osgAnimation.StackedScale( 'scale', scale );
+
+            animationCallback.getStackedTransforms().push( stackedTranslate );
+            animationCallback.getStackedTransforms().push( stackedRotate );
+            animationCallback.getStackedTransforms().push( stackedScale );
+
+            parentNode.addUpdateCallback( animationCallback );
         }
 
         root.addChild( parentNode );
@@ -247,9 +291,10 @@
 
         // Creates OSG animations from glTF animations
         if ( Object.keys( json.animations ).length > 0 )
-            loadAnimations( root );
+            basicAnimationManager_ = loadAnimations();
 
         // Loops through each scene
+        // loading geometry nodes, transform nodes, etc...s
         var scenes = json.scenes;
         for ( var sceneId in scenes ) {
 
@@ -260,8 +305,16 @@
 
             // Creates OSG nodes from glTF nodes
             for ( var i = 0; i < scene.nodes.length; ++i )
-            // Loads node information (geometry, material)
                 loadGLTFNode( scene.nodes[ i ], root );
+        }
+
+        if ( basicAnimationManager_ ) {
+
+            /*basicAnimationManager._findAnimationUpdateCallback( root );
+            basicAnimationManager._registerTargetFoundInAnimationCallback();
+            basicAnimationManager._registerAnimations();*/
+
+            root.addUpdateCallback( basicAnimationManager_ );
         }
 
         return root;
@@ -289,10 +342,12 @@
         var viewer = new osgViewer.Viewer( canvas );
         viewer.init();
         viewer.setupManipulator();
-        viewer.run();
 
         loadSample( 'scenes/box-animated', 'BoxAnimated', function ( scene ) {
             viewer.setSceneData( scene );
+            viewer.run();
+
+            basicAnimationManager_.playAnimation( 'animation_1', true );
         } );
 
     };
