@@ -69,6 +69,27 @@
         return typedArray;
     };
 
+    var registerUpdateCallback = function ( callbackName, node ) {
+
+        var animationCallback = new osgAnimation.UpdateMatrixTransform();
+        animationCallback.setName( callbackName );
+
+        var translation = osg.vec3.create();
+        osg.mat4.getTranslation( translation, node.getMatrix() );
+
+        var rotationQuat = osg.quat.create();
+        osg.mat4.getRotation( rotationQuat, node.getMatrix() );
+
+        var scale = osg.vec3.create();
+        osg.mat4.getScale( scale, node.getMatrix() );
+
+        animationCallback.getStackedTransforms().push( new osgAnimation.StackedTranslate( 'translation', translation ) );
+        animationCallback.getStackedTransforms().push( new osgAnimation.StackedQuaternion( 'rotation', rotationQuat ) );
+        animationCallback.getStackedTransforms().push( new osgAnimation.StackedScale( 'scale', scale ) );
+
+        node.addUpdateCallback( animationCallback );
+    };
+
     /**
      * Creates a MatrixTransform node by using
      * glTF node's properties (matrix, translation, rotation, scale)
@@ -96,6 +117,11 @@
         return node;
     };
 
+    /**
+     * Loads all the solid animations registering
+     * them in a BasicAnimationManager instance
+     * @return {BasicAnimationManager} the animation manager containing the animations
+     */
     var loadAnimations = function () {
 
         var json = GLTF_FILES[ 'glTF' ];
@@ -139,6 +165,52 @@
 
         animationManager.init( animations );
         return animationManager;
+    };
+
+    var loadBoneHierarchy = function ( boneRootId, parentNode, inverseBindMatrices, skin ) {
+
+        var json = GLTF_FILES[ 'glTF' ];
+        var node = json.nodes[ boneRootId ];
+
+        var i;
+
+        // Creates the current bone
+        // initializing it with initial pose
+        for ( i = 0; i < skin.jointNames.length; ++i )
+            if ( skin.jointNames[ i ] === node.jointName )
+                break;
+
+        var inverseBindMat = osg.mat4.create();
+        osg.mat4.copy( inverseBindMat, inverseBindMatrices.subarray( i * 16, 16 ) );
+
+        var currentBoneNode = new osgAnimation.Bone();
+
+        var children = node.children;
+        for ( i = 0; i < children.length; ++i )
+            loadBoneHierarchy( children[ i ], currentBoneNode, inverseBindMatrices, skin );
+
+        parentNode.addChild( currentBoneNode );
+    };
+
+    var loadSkin = function ( skinId, boneRootId, skeletonNode ) {
+
+        var json = GLTF_FILES[ 'glTF' ];
+        var skin = json.skins[ skinId ];
+
+        var bindShapeMatrix = osg.mat4.create();
+        osg.mat4.copy( bindShapeMatrix, skin.bindShapeMatrix );
+
+        var inverseBindMatricesAccessor = json.accessors[ skin.inverseBindMatrices ];
+        var inverseBindMatrices = loadAccessorBuffer( inverseBindMatricesAccessor, null );
+
+        // Inits the skeleton with the base pos
+        osg.mat4.copy( skeletonNode.getMatrix(), skin.bindShapeMatrix );
+
+        // Loads bone hierarchy
+        loadBoneHierarchy( boneRootId, skeletonNode, inverseBindMatrices, skin );
+
+        //console.log( inverseBindMatrices );
+
     };
 
     var loadGeometry = function ( meshId, resultMeshNode ) {
@@ -227,54 +299,47 @@
 
         // Node parent containing the [children]
         // of the glTF nodes
-        var parentNode = loadTransform( glTFNode );
+        var currentNode = loadTransform( glTFNode );
 
         var i = 0;
         // Recurses on children before processing the current node
         var children = glTFNode.children;
         for ( i = 0; i < children.length; ++i )
-            loadGLTFNode( children[ i ], parentNode );
+            loadGLTFNode( children[ i ], currentNode );
 
         // Loads geometry
         if ( glTFNode.meshes ) {
 
             for ( i = 0; i < glTFNode.meshes.length; ++i ) {
+
                 var meshNode = new osg.Node();
 
                 // Creates the geometry associated to the mesh
                 loadGeometry( glTFNode.meshes[ i ], meshNode );
-                parentNode.addChild( meshNode );
+                currentNode.addChild( meshNode );
             }
         }
 
-        // Loads animations
+        // Loads solid animations
         // by adding an update callback
-        if ( animatedNodes_[ nodeId ] ) {
+        if ( animatedNodes_[ nodeId ] )
+            registerUpdateCallback( nodeId, currentNode );
 
-            var animationCallback = new osgAnimation.UpdateMatrixTransform();
-            animationCallback.setName( nodeId );
+        // Loads skin animations data
+        if ( glTFNode.skin ) {
 
-            var translation = osg.vec3.create();
-            osg.mat4.getTranslation( translation, parentNode.getMatrix() );
+            var skeletonNode = new osgAnimation.Skeleton();
+            // Loads skeleton hierarchy
+            if ( glTFNode.skeletons ) {
 
-            var rotationQuat = osg.quat.create();
-            osg.mat4.getRotation( rotationQuat, parentNode.getMatrix() );
+                for ( i = 0; i < glTFNode.skeletons.length; ++i )
+                    loadSkin( glTFNode.skin, glTFNode.skeletons[ i ], skeletonNode );
 
-            var scale = osg.vec3.create();
-            osg.mat4.getScale( scale, parentNode.getMatrix() );
-
-            var stackedTranslate = new osgAnimation.StackedTranslate( 'translation', translation );
-            var stackedRotate = new osgAnimation.StackedQuaternion( 'rotation', rotationQuat );
-            var stackedScale = new osgAnimation.StackedScale( 'scale', scale );
-
-            animationCallback.getStackedTransforms().push( stackedTranslate );
-            animationCallback.getStackedTransforms().push( stackedRotate );
-            animationCallback.getStackedTransforms().push( stackedScale );
-
-            parentNode.addUpdateCallback( animationCallback );
+            }
         }
 
-        root.addChild( parentNode );
+
+        root.addChild( currentNode );
         visitedNodes_[ nodeId ] = true;
     };
 
@@ -308,14 +373,10 @@
                 loadGLTFNode( scene.nodes[ i ], root );
         }
 
-        if ( basicAnimationManager_ ) {
-
-            /*basicAnimationManager._findAnimationUpdateCallback( root );
-            basicAnimationManager._registerTargetFoundInAnimationCallback();
-            basicAnimationManager._registerAnimations();*/
-
+        // Register the animation manager
+        // if the glTF file contains animations
+        if ( basicAnimationManager_ )
             root.addUpdateCallback( basicAnimationManager_ );
-        }
 
         return root;
     };
@@ -343,11 +404,11 @@
         viewer.init();
         viewer.setupManipulator();
 
-        loadSample( 'scenes/box-animated', 'BoxAnimated', function ( scene ) {
+        loadSample( 'scenes/rigged-simple', 'RiggedSimple', function ( scene ) {
             viewer.setSceneData( scene );
             viewer.run();
 
-            basicAnimationManager_.playAnimation( 'animation_1', true );
+            //basicAnimationManager_.playAnimation( 'animation_1', true );
         } );
 
     };
