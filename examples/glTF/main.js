@@ -43,6 +43,25 @@
 
     var visitedNodes_ = {};
     var animatedNodes_ = {};
+    var boneToSkin_ = {};
+    var skeletons_ = {};
+
+    var convertibleToSkeleton = function ( node ) {
+
+        var json = GLTF_FILES[ 'glTF' ];
+
+        for ( var i = 0; i < node.children.length; ++i ) {
+
+            var child = json.nodes[ node.children[ i ] ];
+
+            if ( child.jointName )
+                return true;
+
+        }
+
+        return false;
+
+    };
 
     /**
      * Loads a osg.BufferArray from a TypeArray obtained by using a glTF accessor.
@@ -167,53 +186,67 @@
         return animationManager;
     };
 
-    var loadBoneHierarchy = function ( boneRootId, parentNode, inverseBindMatrices, skin ) {
+    var loadBone = function ( boneId ) {
 
         var json = GLTF_FILES[ 'glTF' ];
-        var node = json.nodes[ boneRootId ];
+        var node = json.nodes[ boneId ];
 
-        var i;
-
-        // Creates the current bone
-        // initializing it with initial pose
-        for ( i = 0; i < skin.jointNames.length; ++i )
-            if ( skin.jointNames[ i ] === node.jointName )
-                break;
-
-        var inverseBindMat = osg.mat4.create();
-        osg.mat4.copy( inverseBindMat, inverseBindMatrices.subarray( i * 16, 16 ) );
-
-        var currentBoneNode = new osgAnimation.Bone();
-
-        var children = node.children;
-        for ( i = 0; i < children.length; ++i )
-            loadBoneHierarchy( children[ i ], currentBoneNode, inverseBindMatrices, skin );
-
-        parentNode.addChild( currentBoneNode );
-    };
-
-    var loadSkin = function ( skinId, boneRootId, skeletonNode ) {
-
-        var json = GLTF_FILES[ 'glTF' ];
-        var skin = json.skins[ skinId ];
-
-        var bindShapeMatrix = osg.mat4.create();
-        osg.mat4.copy( bindShapeMatrix, skin.bindShapeMatrix );
-
+        var skin = json.skins[ boneToSkin_[ boneId ] ];
         var inverseBindMatricesAccessor = json.accessors[ skin.inverseBindMatrices ];
         var inverseBindMatrices = loadAccessorBuffer( inverseBindMatricesAccessor, null );
 
-        // Inits the skeleton with the base pos
-        osg.mat4.copy( skeletonNode.getMatrix(), skin.bindShapeMatrix );
+        // Creates the current bone
+        // initializing it with initial pose
+        for ( var i = 0; i < skin.jointNames.length; ++i )
+            if ( skin.jointNames[ i ] === node.jointName )
+                break;
 
-        // Loads bone hierarchy
-        loadBoneHierarchy( boneRootId, skeletonNode, inverseBindMatrices, skin );
+        var boneNode = new osgAnimation.Bone( node.jointName );
+        boneNode.setInvBindMatrixInSkeletonSpace( inverseBindMatrices.subarray( i * 16, 16 ) );
 
-        //console.log( inverseBindMatrices );
-
+        return boneNode;
     };
 
-    var loadGeometry = function ( meshId, resultMeshNode ) {
+    var createGeometry = function ( primitive, isRiggedGeometry ) {
+
+        var json = GLTF_FILES[ 'glTF' ];
+
+        // Builds the geometry from the extracted vertices & normals
+        var g = null;
+        if ( !isRiggedGeometry )
+            g = new osg.Geometry();
+        else {
+            g = new osgAnimation.RigGeometry();
+
+            var jointAccessor = json.accessors[ primitive.attributes.JOINT ];
+            var weightAccessor = json.accessors[ primitive.attributes.WEIGHT ];
+
+            g.getAttributes().Bones = loadAccessorBuffer( jointAccessor, osg.BufferArray.ARRAY_BUFFER );
+            g.getAttributes().Weights = loadAccessorBuffer( weightAccessor, osg.BufferArray.ARRAY_BUFFER );
+        }
+
+        var vertexAccessor = json.accessors[ primitive.attributes.POSITION ];
+        var normalAccessor = json.accessors[ primitive.attributes.NORMAL ];
+
+        g.getAttributes().Vertex = loadAccessorBuffer( vertexAccessor, osg.BufferArray.ARRAY_BUFFER );
+        g.getAttributes().Normal = loadAccessorBuffer( normalAccessor, osg.BufferArray.ARRAY_BUFFER );
+
+        var attributesKeys = window.Object.keys( primitive.attributes );
+        // Adds each TexCoords to the geometry
+        for ( var i = 0; i < attributesKeys.length; ++i ) {
+
+            if ( !/^TEXCOORD/.test( attributesKeys[ i ] ) )
+                continue;
+
+            var texCoordId = attributesKeys[ i ].split( '_' )[ 1 ];
+            var textCoordAccessor = json.accessors[ primitive.attributes[ attributesKeys[ i ] ] ];
+            g.getAttributes()[ 'TexCoord' + texCoordId ] = loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
+        }
+
+        return g;
+    };
+
+    var loadGeometry = function ( meshId, resultMeshNode, isRiggedGeometry ) {
         var json = GLTF_FILES[ 'glTF' ];
         var mesh = json.meshes[ meshId ];
 
@@ -229,23 +262,9 @@
             var primitive = primitives[ i ];
             var attributesKeys = window.Object.keys( primitive.attributes );
 
-            var vertexAccessor = json.accessors[ primitive.attributes.POSITION ];
-            var normalAccessor = json.accessors[ primitive.attributes.NORMAL ];
-
-            // Builds the geometry from the extracted vertices & normals
-            var g = new osg.Geometry();
-            g.getAttributes().Vertex = loadAccessorBuffer( vertexAccessor, osg.BufferArray.ARRAY_BUFFER );
-            g.getAttributes().Normal = loadAccessorBuffer( normalAccessor, osg.BufferArray.ARRAY_BUFFER );
-            // Adds each TexCoords to the geometry
-            for ( ii = 0; ii < attributesKeys.length; ++ii ) {
-
-                if ( !/^TEXCOORD/.test( attributesKeys[ ii ] ) )
-                    continue;
-
-                var texCoordId = attributesKeys[ ii ].split( '_' )[ 1 ];
-                var textCoordAccessor = json.accessors[ primitive.attributes[ attributesKeys[ ii ] ] ];
-                g.getAttributes()[ 'TexCoord' + texCoordId ] = loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
-            }
+            var g = createGeometry( primitive, isRiggedGeometry );
+            if ( isRiggedGeometry )
+                g.setSkeleton( resultMeshNode );
 
             // Checks whether there are other primitives using
             // the same vertices and normals
@@ -271,7 +290,6 @@
                         mergePossible = false;
                         break;
                     }
-
                 }
 
                 if ( !mergePossible )
@@ -297,47 +315,55 @@
         var json = GLTF_FILES[ 'glTF' ];
         var glTFNode = json.nodes[ nodeId ];
 
-        // Node parent containing the [children]
-        // of the glTF nodes
-        var currentNode = loadTransform( glTFNode );
-
         var i = 0;
-        // Recurses on children before processing the current node
+
+        // Creates either a bone or a matrix transform
+        // according to the glTF node
+        var currentNode = null;
+        if ( glTFNode.jointName ) {
+
+            currentNode = loadBone( nodeId );
+
+        } else if ( glTFNode.skeletons ) {
+
+            currentNode = new osgAnimation.Skeleton();
+            for ( i = 0; i < glTFNode.skeletons.length; ++i ) {
+
+                var skeletonId = glTFNode.skeletons[ i ];
+
+                if ( !skeletons_[ skeletonId ] ) {
+                    loadGLTFNode( skeletonId, currentNode );
+                    skeletons_[ skeletonId ] = currentNode.children[ currentNode.children.length - 1 ];
+                } else
+                    currentNode.addChild( skeletons_[ glTFNode.skeletons[ i ] ] );
+            }
+
+        } else {
+
+            if ( !convertibleToSkeleton( glTFNode ) )
+                currentNode = loadTransform( glTFNode );
+            else
+                currentNode = new osgAnimation.Skeleton();
+        }
+        currentNode.setName( nodeId );
+
         var children = glTFNode.children;
+        // Recurses on children before processing the current node
         for ( i = 0; i < children.length; ++i )
             loadGLTFNode( children[ i ], currentNode );
 
         // Loads geometry
-        if ( glTFNode.meshes ) {
+        if ( glTFNode.meshes && !glTFNode.skeletons ) {
 
-            for ( i = 0; i < glTFNode.meshes.length; ++i ) {
+            for ( i = 0; i < glTFNode.meshes.length; ++i )
+                loadGeometry( glTFNode.meshes[ i ], currentNode );
 
-                var meshNode = new osg.Node();
-
-                // Creates the geometry associated to the mesh
-                loadGeometry( glTFNode.meshes[ i ], meshNode );
-                currentNode.addChild( meshNode );
-            }
         }
 
         // Loads solid animations
         // by adding an update callback
         if ( animatedNodes_[ nodeId ] )
             registerUpdateCallback( nodeId, currentNode );
-
-        // Loads skin animations data
-        if ( glTFNode.skin ) {
-
-            var skeletonNode = new osgAnimation.Skeleton();
-            // Loads skeleton hierarchy
-            if ( glTFNode.skeletons ) {
-
-                for ( i = 0; i < glTFNode.skeletons.length; ++i )
-                    loadSkin( glTFNode.skin, glTFNode.skeletons[ i ], skeletonNode );
-
-            }
-        }
-
 
         root.addChild( currentNode );
         visitedNodes_[ nodeId ] = true;
@@ -348,13 +374,27 @@
         // Creates the root node
         // adding a PI / 2 rotation arround the X-axis
         var root = new osg.MatrixTransform();
+        root.setName( 'root' );
+
         osg.mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI / 2.0 );
 
         var json = GLTF_FILES[ 'glTF' ];
         console.log( json );
 
+        var i;
 
-        // Creates OSG animations from glTF animations
+        // Preprocesses skin animations if any
+        if ( json.skins ) {
+
+            var skinsKeys = Object.keys( json.skins );
+            for ( i = 0; i < skinsKeys.length; ++i ) {
+                var skin = json.skins[ skinsKeys[ i ] ];
+                for ( var j = 0; j < skin.jointNames.length; ++j )
+                    boneToSkin_[ skin.jointNames[ j ] ] = skinsKeys[ i ];
+            }
+        }
+
+        // Preprocesses animations
         if ( Object.keys( json.animations ).length > 0 )
             basicAnimationManager_ = loadAnimations();
 
@@ -369,7 +409,7 @@
             var scene = scenes[ sceneId ];
 
             // Creates OSG nodes from glTF nodes
-            for ( var i = 0; i < scene.nodes.length; ++i )
+            for ( i = 0; i < scene.nodes.length; ++i )
                 loadGLTFNode( scene.nodes[ i ], root );
         }
 
