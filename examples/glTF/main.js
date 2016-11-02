@@ -43,25 +43,9 @@
 
     var visitedNodes_ = {};
     var animatedNodes_ = {};
-    var boneToSkin_ = {};
     var skeletons_ = {};
-
-    var convertibleToSkeleton = function ( node ) {
-
-        var json = GLTF_FILES[ 'glTF' ];
-
-        for ( var i = 0; i < node.children.length; ++i ) {
-
-            var child = json.nodes[ node.children[ i ] ];
-
-            if ( child.jointName )
-                return true;
-
-        }
-
-        return false;
-
-    };
+    var boneToSkin_ = {};
+    var skeletonToInfluenceMap_ = {};
 
     /**
      * Loads a osg.BufferArray from a TypeArray obtained by using a glTF accessor.
@@ -186,12 +170,11 @@
         return animationManager;
     };
 
-    var loadBone = function ( boneId ) {
+    var loadBone = function ( boneId, skin ) {
 
         var json = GLTF_FILES[ 'glTF' ];
         var node = json.nodes[ boneId ];
 
-        var skin = json.skins[ boneToSkin_[ boneId ] ];
         var inverseBindMatricesAccessor = json.accessors[ skin.inverseBindMatrices ];
         var inverseBindMatrices = loadAccessorBuffer( inverseBindMatricesAccessor, null );
 
@@ -202,21 +185,96 @@
                 break;
 
         var boneNode = new osgAnimation.Bone( node.jointName );
-        boneNode.setInvBindMatrixInSkeletonSpace( inverseBindMatrices.subarray( i * 16, 16 ) );
+        boneNode.setInvBindMatrixInSkeletonSpace( inverseBindMatrices.subarray( i * 16, i * 16 + 16 ) );
 
         return boneNode;
     };
 
-    var createGeometry = function ( primitive, isRiggedGeometry ) {
+    var preprocessSkeletons = function () {
+
+        var json = GLTF_FILES[ 'glTF' ];
+
+        var i;
+        var nodeId;
+        var node;
+        var skin;
+
+        // Maps each bone ID to its skin
+        for ( var skinId in json.skins ) {
+
+            skin = json.skins[ skinId ];
+
+            for ( i = 0; i < skin.jointNames.length; ++i ) {
+                var jName = skin.jointNames[ i ];
+
+                for ( nodeId in json.nodes ) {
+
+                    node = json.nodes[ nodeId ];
+
+                    if ( node.jointName && node.jointName === jName ) {
+                        boneToSkin_[ nodeId ] = skin;
+                    }
+                }
+            }
+
+        }
+
+        // Saves each skeleton in the skeleton map
+        for ( nodeId in json.nodes ) {
+
+            node = json.nodes[ nodeId ];
+
+            if ( !node.skeletons )
+                continue;
+
+            for ( i = 0; i < node.skeletons.length; ++i ) {
+
+                var rootBoneId;
+                var rootJointId = node.skeletons[ i ];
+                for ( var subnodeId in json.nodes ) {
+
+                    var subnode = json.nodes[ subnodeId ];
+                    if ( !subnode.jointName )
+                        continue;
+
+                    if ( subnode.jointName === rootJointId ) {
+                        rootBoneId = subnodeId;
+                        break;
+                    }
+
+                }
+
+                if ( rootBoneId && !skeletons_[ rootBoneId ] ) {
+                    skeletons_[ rootBoneId ] = new osgAnimation.Skeleton();
+
+                    skin = json.skins[ node.skin ];
+                    boneToSkin_[ rootBoneId ] = skin;
+
+                    // Builds influence map
+                    skeletonToInfluenceMap_[ rootJointId ] = {};
+                    for ( var j = 0; j < skin.jointNames.length; j++ )
+                        skeletonToInfluenceMap_[ rootJointId ][ skin.jointNames[ j ] ] = j;
+                }
+
+            }
+
+        }
+
+    };
+
+
+    var createGeometry = function ( primitive, skeletonJointId ) {
 
         var json = GLTF_FILES[ 'glTF' ];
 
         // Builds the geometry from the extracted vertices & normals
-        var g = null;
-        if ( !isRiggedGeometry )
-            g = new osg.Geometry();
-        else {
+        var riggedGeom = null;
+        var g = new osg.Geometry();
+
+        if ( skeletonJointId ) {
+
             g = new osgAnimation.RigGeometry();
+            g._boneNameID = skeletonToInfluenceMap_[ skeletonJointId ];
 
             var jointAccessor = json.accessors[ primitive.attributes.JOINT ];
             var weightAccessor = json.accessors[ primitive.attributes.WEIGHT ];
@@ -243,10 +301,16 @@
             g.getAttributes()[ 'TexCoord' + texCoordId ] = loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
         }
 
+        /*if ( riggedGeom ) {
+
+            riggedGeom.setSourceGeometry( g );
+            return riggedGeom;
+        }*/
+
         return g;
     };
 
-    var loadGeometry = function ( meshId, resultMeshNode, isRiggedGeometry ) {
+    var loadGeometry = function ( meshId, resultMeshNode, skeletonJointId ) {
         var json = GLTF_FILES[ 'glTF' ];
         var mesh = json.meshes[ meshId ];
 
@@ -262,9 +326,9 @@
             var primitive = primitives[ i ];
             var attributesKeys = window.Object.keys( primitive.attributes );
 
-            var g = createGeometry( primitive, isRiggedGeometry );
-            if ( isRiggedGeometry )
-                g.setSkeleton( resultMeshNode );
+            var g = createGeometry( primitive, skeletonJointId );
+            /*if ( skeletonJointId )
+                g.setSkeleton( resultMeshNode );*/
 
             // Checks whether there are other primitives using
             // the same vertices and normals
@@ -320,31 +384,21 @@
         // Creates either a bone or a matrix transform
         // according to the glTF node
         var currentNode = null;
-        if ( glTFNode.jointName ) {
-
-            currentNode = loadBone( nodeId );
-
-        } else if ( glTFNode.skeletons ) {
-
-            currentNode = new osgAnimation.Skeleton();
-            for ( i = 0; i < glTFNode.skeletons.length; ++i ) {
-
-                var skeletonId = glTFNode.skeletons[ i ];
-
-                if ( !skeletons_[ skeletonId ] ) {
-                    loadGLTFNode( skeletonId, currentNode );
-                    skeletons_[ skeletonId ] = currentNode.children[ currentNode.children.length - 1 ];
-                } else
-                    currentNode.addChild( skeletons_[ glTFNode.skeletons[ i ] ] );
-            }
-
+        if ( skeletons_[ nodeId ] ) {
+            // Creates the root bone and adds it
+            // to the previously created skeleton
+            var skeleton = skeletons_[ nodeId ];
+            currentNode = loadBone( nodeId, boneToSkin_[ nodeId ] );
+            skeleton.addChild( currentNode );
+            // Adds the skeleton and the bone hierarchy
+            // to the local parent node
+            root.addChild( skeleton );
+        } else if ( glTFNode.jointName ) {
+            currentNode = loadBone( nodeId, boneToSkin_[ nodeId ] );
         } else {
-
-            if ( !convertibleToSkeleton( glTFNode ) )
-                currentNode = loadTransform( glTFNode );
-            else
-                currentNode = new osgAnimation.Skeleton();
+            currentNode = loadTransform( glTFNode );
         }
+
         currentNode.setName( nodeId );
 
         var children = glTFNode.children;
@@ -353,10 +407,31 @@
             loadGLTFNode( children[ i ], currentNode );
 
         // Loads geometry
-        if ( glTFNode.meshes && !glTFNode.skeletons ) {
+        if ( glTFNode.meshes ) {
 
-            for ( i = 0; i < glTFNode.meshes.length; ++i )
-                loadGeometry( glTFNode.meshes[ i ], currentNode );
+            for ( i = 0; i < glTFNode.meshes.length; ++i ) {
+
+                if ( !glTFNode.skeletons ) {
+                    loadGeometry( glTFNode.meshes[ i ], currentNode, null );
+                    continue;
+                }
+
+                for ( var j = 0; j < glTFNode.skeletons.length; ++j ) {
+
+                    var skeletonNode = skeletons_[ glTFNode.skeletons[ j ] ];
+                    osg.mat4.copy( skeletonNode.getMatrix(), currentNode.getMatrix() );
+
+                    var skin = boneToSkin_[ glTFNode.skeletons[ j ] ];
+
+                    var bindMatrix = new osg.MatrixTransform();
+                    osg.mat4.copy( bindMatrix.getMatrix(), skin.bindShapeMatrix );
+
+                    loadGeometry( glTFNode.meshes[ i ], bindMatrix, glTFNode.skeletons[ j ] );
+
+                    skeletonNode.addChild(bindMatrix);
+                }
+
+            }
 
         }
 
@@ -365,7 +440,9 @@
         if ( animatedNodes_[ nodeId ] )
             registerUpdateCallback( nodeId, currentNode );
 
-        root.addChild( currentNode );
+        if ( !skeletons_[ nodeId ] )
+            root.addChild( currentNode );
+
         visitedNodes_[ nodeId ] = true;
     };
 
@@ -384,15 +461,8 @@
         var i;
 
         // Preprocesses skin animations if any
-        if ( json.skins ) {
-
-            var skinsKeys = Object.keys( json.skins );
-            for ( i = 0; i < skinsKeys.length; ++i ) {
-                var skin = json.skins[ skinsKeys[ i ] ];
-                for ( var j = 0; j < skin.jointNames.length; ++j )
-                    boneToSkin_[ skin.jointNames[ j ] ] = skinsKeys[ i ];
-            }
-        }
+        if ( json.skins )
+            preprocessSkeletons();
 
         // Preprocesses animations
         if ( Object.keys( json.animations ).length > 0 )
@@ -448,7 +518,7 @@
             viewer.setSceneData( scene );
             viewer.run();
 
-            //basicAnimationManager_.playAnimation( 'animation_1', true );
+            basicAnimationManager_.playAnimation( 'animation_1', true );
         } );
 
     };
