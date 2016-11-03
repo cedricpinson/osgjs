@@ -68,28 +68,30 @@
         if ( !BufferType ) {
 
             var TypedArray = WEBGL_COMPONENT_TYPES[ accessor.componentType ];
-            typedArray = new TypedArray( GLTF_FILES[ buffer.uri ],
-                offset, accessor.count * TYPE_TABLE[ accessor.type ]
-            );
+            typedArray = new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
 
         } else {
 
-            typedArray = new BufferType( GLTF_FILES[ buffer.uri ],
-                offset, accessor.count * TYPE_TABLE[ accessor.type ]
-            );
+            typedArray = new BufferType( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
 
         }
 
         if ( type )
-            return new osg.BufferArray( type, typedArray, TYPE_TABLE[
-                accessor.type ] );
+            return new osg.BufferArray( type, typedArray, TYPE_TABLE[ accessor.type ] );
 
         return typedArray;
     };
 
     var registerUpdateCallback = function ( callbackName, node ) {
 
-        var animationCallback = new osgAnimation.UpdateMatrixTransform();
+        var json = GLTF_FILES.glTF;
+
+        var animationCallback = null;
+        if ( json.nodes[ callbackName ].jointName )
+            animationCallback = new osgAnimation.UpdateBone();
+        else
+            animationCallback = new osgAnimation.UpdateMatrixTransform();
+
         animationCallback.setName( callbackName );
 
         var translation = osg.vec3.create();
@@ -330,7 +332,7 @@
 
     var createGeometry = function ( primitive, skeletonJointId ) {
 
-        var json = GLTF_FILES[ 'glTF' ];
+        var json = GLTF_FILES.glTF;
 
         // Builds the geometry from the extracted vertices & normals
         var g = new osg.Geometry();
@@ -344,40 +346,33 @@
             var jointAccessor = json.accessors[ primitive.attributes.JOINT ];
             var weightAccessor = json.accessors[ primitive.attributes.WEIGHT ];
 
-            r.getAttributes().Bones = loadAccessorBuffer( jointAccessor,
-                osg.BufferArray.ARRAY_BUFFER, Uint16Array );
-            r.getAttributes().Weights = loadAccessorBuffer(
-                weightAccessor, osg.BufferArray.ARRAY_BUFFER );
-
+            r.getAttributes().Bones = loadAccessorBuffer( jointAccessor, osg.BufferArray.ARRAY_BUFFER );
+            r.getAttributes().Weights = loadAccessorBuffer( weightAccessor, osg.BufferArray.ARRAY_BUFFER );
         }
 
         var vertexAccessor = json.accessors[ primitive.attributes.POSITION ];
         var normalAccessor = json.accessors[ primitive.attributes.NORMAL ];
 
-        g.getAttributes().Vertex = loadAccessorBuffer( vertexAccessor,
-            osg.BufferArray.ARRAY_BUFFER );
-        g.getAttributes().Normal = loadAccessorBuffer( normalAccessor,
-            osg.BufferArray.ARRAY_BUFFER );
+        g.getAttributes().Vertex = loadAccessorBuffer( vertexAccessor, osg.BufferArray.ARRAY_BUFFER );
+        g.getAttributes().Normal = loadAccessorBuffer( normalAccessor, osg.BufferArray.ARRAY_BUFFER );
 
         var attributesKeys = window.Object.keys( primitive.attributes );
         // Adds each TexCoords to the geometry
         for ( var i = 0; i < attributesKeys.length; ++i ) {
 
-            if ( !/^TEXCOORD/.test( attributesKeys[ i ] ) )
+            if ( attributesKeys[ i ].indexOf( 'TEXCOORD' ) === -1 )
                 continue;
 
-            var texCoordId = attributesKeys[ i ].split( '_' )[ 1 ];
-            var textCoordAccessor = json.accessors[ primitive.attributes[
-                attributesKeys[ i ] ] ];
-            g.getAttributes()[ 'TexCoord' + texCoordId ] =
-                loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
+            var texCoordId = attributesKeys[ i ].substr( 8 );
+            var textCoordAccessor = json.accessors[ primitive.attributes[ attributesKeys[ i ] ] ];
+            g.getAttributes()[ 'TexCoord' + texCoordId ] = loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
         }
 
         if ( skeletonJointId ) {
 
             r.setSourceGeometry( g );
             r.mergeChildrenData();
-            
+
             return r;
         }
 
@@ -533,8 +528,7 @@
         var root = new osg.MatrixTransform();
         root.setName( 'root' );
 
-        osg.mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI /
-            2.0 );
+        osg.mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI / 2.0 );
 
         var json = GLTF_FILES[ 'glTF' ];
         console.log( json );
@@ -608,8 +602,11 @@
             displayGraph.setDisplayGraphRenderer( true );
             displayGraph.createGraph( scene );
 
-            basicAnimationManager_.playAnimation( 'animation_0',
-                true );
+            for ( var i = 0; i <= 18; ++i ) {
+                basicAnimationManager_.playAnimation( 'animation_' + i, true );
+            }
+
+            basicAnimationManager_.setTimeFactor( 0.5 );
         } );
 
     };
