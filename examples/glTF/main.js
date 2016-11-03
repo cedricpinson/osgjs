@@ -3,6 +3,7 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
     var osgAnimation = OSG.osgAnimation;
     var createQuatChannel = osgAnimation.Channel.createQuatChannel;
@@ -195,7 +196,7 @@
         var boneNode = new osgAnimation.Bone( node.jointName );
         var invMat = inverseBindMatrices.subarray( i * 16, i * 16 + 16 );
         boneNode.setInvBindMatrixInSkeletonSpace( invMat );
-        boneNode.setMatrixInSkeletonSpace( skin.bindShapeMatrix );
+        //boneNode.setMatrixInSkeletonSpace( skin.bindShapeMatrix );
 
         return boneNode;
     };
@@ -331,6 +332,16 @@
 
             rigGeom.getAttributes().Bones = loadAccessorBuffer( jointAccessor, osg.BufferArray.ARRAY_BUFFER );
             rigGeom.getAttributes().Weights = loadAccessorBuffer( weightAccessor, osg.BufferArray.ARRAY_BUFFER );
+
+            var elts = rigGeom.getAttributes().Weights.getElements();
+            for ( var i = 0; i < elts.length / 4; ++i ) {
+                var sum = elts[ i * 4 ] + elts[ i * 4 + 1 ] + elts[ i * 4 + 2 ] + elts[ i * 4 + 3 ];
+                var correc = 1.0 / sum;
+                elts[ i * 4 ] *= correc;
+                elts[ i * 4 + 1 ] *= correc;
+                elts[ i * 4 + 2 ] *= correc;
+                elts[ i * 4 + 3 ] *= correc;
+           }
         }
 
         var vertexAccessor = json.accessors[ primitive.attributes.POSITION ];
@@ -355,6 +366,9 @@
 
             rigGeom.setSourceGeometry( geom );
             rigGeom.mergeChildrenData();
+
+            // TODO remove blabla
+            rigGeom.computeBoundingBox = geom.computeBoundingBox;
 
             return rigGeom;
         }
@@ -584,26 +598,32 @@
         viewer.init();
         viewer.setupManipulator();
 
-        //loadSample( 'scenes/brain-stem', 'BrainStem', function ( scene ) {
-        loadSample( 'scenes/rigged-simple', 'RiggedSimple', function ( scene ) {
+        loadSample( 'scenes/brain-stem', 'BrainStem', function ( scene ) {
+        //loadSample( 'scenes/rigged-simple', 'RiggedSimple', function ( scene ) {
         //loadSample( 'scenes/box-animated', 'BoxAnimated', function ( scene ) {
         //loadSample( 'scenes/cesium-man', 'CesiumMan', function ( scene ) {
         //loadSample( 'scenes/rigged-figure', 'RiggedFigure', function ( scene ) {
             console.log( scene );
+
             viewer.setSceneData( scene );
             viewer.run();
 
-            var displayGraph = OSG.osgUtil.DisplayGraph.instance();
-            displayGraph.setDisplayGraphRenderer( true );
-            displayGraph.createGraph( scene );
-
             for ( var i = 0; i <= 18; ++i ) {
-
                 basicAnimationManager_.playAnimation( 'animation_' + i, true );
-
             }
 
             basicAnimationManager_.setTimeFactor( 0.5 );
+
+            window.setTimeout( function () {
+
+                /*var displayGraph = OSG.osgUtil.DisplayGraph.instance();
+                displayGraph.setDisplayGraphRenderer( true );
+                displayGraph.createGraph( scene );
+
+                var visitor = new osgUtil.DisplayGeometryVisitor();
+                visitor.setSkinningDebug( scene );*/
+
+            }, 0 );
         } );
 
     };
