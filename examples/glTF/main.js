@@ -5,6 +5,8 @@
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
     var osgAnimation = OSG.osgAnimation;
+    var createQuatChannel = osgAnimation.Channel.createQuatChannel;
+    var createVec3Channel = osgAnimation.Channel.createVec3Channel;
 
     var $ = window.$;
 
@@ -16,14 +18,6 @@
         5123: Uint16Array,
         5125: Uint32Array,
         5126: Float32Array
-    };
-
-    var COMPONENT_TYPE_TABLE = {
-        5120: 1,
-        5121: 1,
-        5122: 2,
-        5123: 2,
-        5126: 4,
     };
 
     var TYPE_TABLE = {
@@ -55,26 +49,15 @@
      * @param  {TypedArray} BufferType specific TypedArray type used for extraction
      * @return {osg.BufferArray} OSG readable buffer contaning the extracted data
      */
-    var loadAccessorBuffer = function ( accessor, type, BufferType ) {
+    var loadAccessorBuffer = function ( accessor, type ) {
         var json = GLTF_FILES[ 'glTF' ];
 
         var bufferView = json.bufferViews[ accessor.bufferView ];
         var buffer = json.buffers[ bufferView.buffer ];
         var offset = accessor.byteOffset + bufferView.byteOffset;
 
-
-        var typedArray = null;
-
-        if ( !BufferType ) {
-
-            var TypedArray = WEBGL_COMPONENT_TYPES[ accessor.componentType ];
-            typedArray = new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
-
-        } else {
-
-            typedArray = new BufferType( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
-
-        }
+        var TypedArray = WEBGL_COMPONENT_TYPES[ accessor.componentType ];
+        var typedArray = new TypedArray( GLTF_FILES[ buffer.uri ], offset, accessor.count * TYPE_TABLE[ accessor.type ] );
 
         if ( type )
             return new osg.BufferArray( type, typedArray, TYPE_TABLE[ accessor.type ] );
@@ -103,12 +86,9 @@
         var scale = osg.vec3.create();
         osg.mat4.getScale( scale, node.getMatrix() );
 
-        animationCallback.getStackedTransforms().push( new osgAnimation
-            .StackedTranslate( 'translation', translation ) );
-        animationCallback.getStackedTransforms().push( new osgAnimation
-            .StackedQuaternion( 'rotation', rotationQuat ) );
-        animationCallback.getStackedTransforms().push( new osgAnimation
-            .StackedScale( 'scale', scale ) );
+        animationCallback.getStackedTransforms().push( new osgAnimation.StackedTranslate( 'translation', translation ) );
+        animationCallback.getStackedTransforms().push( new osgAnimation.StackedQuaternion( 'rotation', rotationQuat ) );
+        animationCallback.getStackedTransforms().push( new osgAnimation.StackedScale( 'scale', scale ) );
 
         node.addUpdateCallback( animationCallback );
     };
@@ -176,21 +156,21 @@
 
                 var osgChannel = null;
 
-                if ( TYPE_TABLE[ valueAccessor.type ] === 4 )
-                    osgChannel = osgAnimation.Channel.createQuatChannel(
-                        valueKeys, timeKeys, glTFChannel.target.id,
-                        glTFSampler.output, null );
-                else if ( TYPE_TABLE[ valueAccessor.type ] === 3 )
-                    osgChannel = osgAnimation.Channel.createVec3Channel(
-                        valueKeys, timeKeys, glTFChannel.target.id,
-                        glTFSampler.output, null );
+                if ( TYPE_TABLE[ valueAccessor.type ] === 4 ) {
+
+                    osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+
+                } else if ( TYPE_TABLE[ valueAccessor.type ] === 3 ) {
+
+                    osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+
+                }
 
                 animatedNodes_[ glTFChannel.target.id ] = true;
                 osgChannels.push( osgChannel );
             }
 
-            animations.push( osgAnimation.Animation.createAnimation(
-                osgChannels, animationsObjectKeys[ i ] ) );
+            animations.push( osgAnimation.Animation.createAnimation( osgChannels, animationsObjectKeys[ i ] ) );
         }
 
         animationManager.init( animations );
@@ -231,6 +211,7 @@
 
             var jointName = skin.jointNames[ j ];
             skeletonToInfluenceMap_[ rootBoneId ][ jointName ] = j;
+
         }
 
     };
@@ -307,8 +288,10 @@
                         continue;
 
                     if ( subnode.jointName === rootJointId ) {
+
                         rootBoneId = subnodeId;
                         break;
+
                     }
 
                 }
@@ -335,26 +318,26 @@
         var json = GLTF_FILES.glTF;
 
         // Builds the geometry from the extracted vertices & normals
-        var g = new osg.Geometry();
-        var r = null;
+        var geom = new osg.Geometry();
+        var rigGeom = null;
 
         if ( skeletonJointId ) {
 
-            r = new osgAnimation.RigGeometry();
-            r._boneNameID = skeletonToInfluenceMap_[ skeletonJointId ];
+            rigGeom = new osgAnimation.RigGeometry();
+            rigGeom._boneNameID = skeletonToInfluenceMap_[ skeletonJointId ];
 
             var jointAccessor = json.accessors[ primitive.attributes.JOINT ];
             var weightAccessor = json.accessors[ primitive.attributes.WEIGHT ];
 
-            r.getAttributes().Bones = loadAccessorBuffer( jointAccessor, osg.BufferArray.ARRAY_BUFFER );
-            r.getAttributes().Weights = loadAccessorBuffer( weightAccessor, osg.BufferArray.ARRAY_BUFFER );
+            rigGeom.getAttributes().Bones = loadAccessorBuffer( jointAccessor, osg.BufferArray.ARRAY_BUFFER );
+            rigGeom.getAttributes().Weights = loadAccessorBuffer( weightAccessor, osg.BufferArray.ARRAY_BUFFER );
         }
 
         var vertexAccessor = json.accessors[ primitive.attributes.POSITION ];
         var normalAccessor = json.accessors[ primitive.attributes.NORMAL ];
 
-        g.getAttributes().Vertex = loadAccessorBuffer( vertexAccessor, osg.BufferArray.ARRAY_BUFFER );
-        g.getAttributes().Normal = loadAccessorBuffer( normalAccessor, osg.BufferArray.ARRAY_BUFFER );
+        geom.getAttributes().Vertex = loadAccessorBuffer( vertexAccessor, osg.BufferArray.ARRAY_BUFFER );
+        geom.getAttributes().Normal = loadAccessorBuffer( normalAccessor, osg.BufferArray.ARRAY_BUFFER );
 
         var attributesKeys = window.Object.keys( primitive.attributes );
         // Adds each TexCoords to the geometry
@@ -363,31 +346,32 @@
             if ( attributesKeys[ i ].indexOf( 'TEXCOORD' ) === -1 )
                 continue;
 
-            var texCoordId = attributesKeys[ i ].substr( 8 );
+            var texCoordId = attributesKeys[ i ].substr( 9 );
             var textCoordAccessor = json.accessors[ primitive.attributes[ attributesKeys[ i ] ] ];
-            g.getAttributes()[ 'TexCoord' + texCoordId ] = loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
+            geom.getAttributes()[ 'TexCoord' + texCoordId ] = loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
         }
 
         if ( skeletonJointId ) {
 
-            r.setSourceGeometry( g );
-            r.mergeChildrenData();
+            rigGeom.setSourceGeometry( geom );
+            rigGeom.mergeChildrenData();
 
-            return r;
+            return rigGeom;
         }
 
 
-        return g;
+        return geom;
     };
 
     var loadGeometry = function ( meshId, resultMeshNode, skeletonJointId ) {
-        var json = GLTF_FILES[ 'glTF' ];
-        var mesh = json.meshes[ meshId ];
 
-        var ii = 0;
+        var json = GLTF_FILES.glTF;
+        var mesh = json.meshes[ meshId ];
 
         var primitives = mesh.primitives;
         var processedPrimitives = new Array( primitives.length );
+
+        var ii = 0;
         for ( var i = 0; i < primitives.length; ++i ) {
 
             if ( processedPrimitives[ i ] )
@@ -406,26 +390,27 @@
                     continue;
 
                 var targetPrimitive = primitives[ ii ];
-                var targetAttributesKeys = window.Object.keys(
-                    targetPrimitive.attributes );
+                var targetAttributesKeys = window.Object.keys( targetPrimitive.attributes );
 
                 // Primitives are non-mergeable if the materials or the
                 // attributes are different among them
                 if ( targetPrimitive.material !== primitive.material ||
-                    targetAttributesKeys.length !== attributesKeys.length
-                )
+                    targetAttributesKeys.length !== attributesKeys.length ) {
+
                     continue;
+
+                }
 
                 var mergePossible = true;
                 for ( var j = 0; j < attributesKeys.length; ++j ) {
 
-                    if ( attributesKeys[ j ] !== targetAttributesKeys[
-                            j ] ||
-                        primitive.attributes[ attributesKeys[ j ] ] !==
-                        targetPrimitive.attributes[
-                            targetAttributesKeys[ j ] ] ) {
+                    if ( attributesKeys[ j ] !== targetAttributesKeys[ j ] ||
+
+                        primitive.attributes[ attributesKeys[ j ] ] !== targetPrimitive.attributes[ targetAttributesKeys[ j ] ] ) {
+
                         mergePossible = false;
                         break;
+
                     }
                 }
 
@@ -433,9 +418,7 @@
                     continue;
 
                 var indicesAccessor = json.accessors[ primitives[ ii ].indices ];
-                var osgPrimitive = new osg.DrawElements( osg.PrimitiveSet
-                    .TRIANGLES, loadAccessorBuffer( indicesAccessor,
-                        osg.BufferArray.ELEMENT_ARRAY_BUFFER ) );
+                var osgPrimitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, loadAccessorBuffer( indicesAccessor, osg.BufferArray.ELEMENT_ARRAY_BUFFER ) );
                 g.getPrimitives().push( osgPrimitive );
 
                 processedPrimitives[ ii ] = true;
@@ -459,36 +442,47 @@
 
         var currentNode = null;
 
-        if ( glTFNode.jointName )
+        if ( glTFNode.jointName ) {
+
             currentNode = bones_[ nodeId ];
-        else
+
+        } else {
+
             currentNode = new osg.MatrixTransform();
 
+        }
+
         if ( glTFNode.jointName && skeletons_[ glTFNode.jointName ] ) {
-            // Creates the root bone and adds it
-            // to the previously created skeleton
+
             var skeleton = skeletons_[ glTFNode.jointName ];
             skeleton.addChild( currentNode );
-            // Adds the skeleton and the bone hierarchy
-            // to the local parent node
             root.addChild( skeleton );
+
         }
+
         currentNode.setName( nodeId );
         osg.mat4.copy( currentNode.getMatrix(), loadTransform( glTFNode ) );
 
-        // Recurses on children before processing the current node
-        for ( i = 0; i < children.length; ++i )
+        // Recurses on children before 
+        // processing the current node
+        for ( i = 0; i < children.length; ++i ) {
+
             loadGLTFNode( children[ i ], currentNode );
 
-        // Loads geometry
+        }
+
+        // Loads meshes contained in the node
+        // Adds RigGeometry to corresponding skeleton if any
         if ( glTFNode.meshes ) {
 
             for ( i = 0; i < glTFNode.meshes.length; ++i ) {
 
                 var meshId = glTFNode.meshes[ i ];
                 if ( !glTFNode.skeletons ) {
+
                     loadGeometry( meshId, currentNode, null );
                     continue;
+
                 }
 
                 for ( var j = 0; j < glTFNode.skeletons.length; ++j ) {
@@ -497,11 +491,9 @@
                     var skeletonNode = skeletons_[ rootJointId ];
 
                     var meshTransformNode = new osg.MatrixTransform();
-                    osg.mat4.copy( meshTransformNode.getMatrix(),
-                        currentNode.getMatrix() );
+                    osg.mat4.copy( meshTransformNode.getMatrix(), currentNode.getMatrix() );
 
-                    loadGeometry( meshId, meshTransformNode,
-                        rootJointId );
+                    loadGeometry( meshId, meshTransformNode, rootJointId );
 
                     skeletonNode.addChild( meshTransformNode );
                 }
@@ -548,14 +540,16 @@
         var scenes = json.scenes;
         for ( var sceneId in scenes ) {
 
-            if ( !scenes[ sceneId ] )
-                continue;
-
             var scene = scenes[ sceneId ];
 
-            // Creates OSG nodes from glTF nodes
-            for ( i = 0; i < scene.nodes.length; ++i )
+            if ( !scene )
+                continue;
+
+            for ( i = 0; i < scene.nodes.length; ++i ) {
+
                 loadGLTFNode( scene.nodes[ i ], root );
+
+            }
         }
 
         // Register the animation manager
@@ -590,10 +584,11 @@
         viewer.init();
         viewer.setupManipulator();
 
-        //loadSample( 'scenes/rigged-simple', 'RiggedSimple', function (
-        //  scene ) {
-        loadSample( 'scenes/brain-stem', 'BrainStem', function ( scene ) {
-            //loadSample( 'scenes/box-animated', 'BoxAnimated', function ( scene ) {
+        //loadSample( 'scenes/brain-stem', 'BrainStem', function ( scene ) {
+        loadSample( 'scenes/rigged-simple', 'RiggedSimple', function ( scene ) {
+        //loadSample( 'scenes/box-animated', 'BoxAnimated', function ( scene ) {
+        //loadSample( 'scenes/cesium-man', 'CesiumMan', function ( scene ) {
+        //loadSample( 'scenes/rigged-figure', 'RiggedFigure', function ( scene ) {
             console.log( scene );
             viewer.setSceneData( scene );
             viewer.run();
@@ -603,7 +598,9 @@
             displayGraph.createGraph( scene );
 
             for ( var i = 0; i <= 18; ++i ) {
+
                 basicAnimationManager_.playAnimation( 'animation_' + i, true );
+
             }
 
             basicAnimationManager_.setTimeFactor( 0.5 );
