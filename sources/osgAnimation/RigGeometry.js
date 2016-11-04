@@ -169,6 +169,14 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         this._geometry = geometry;
     },
 
+    getBoneNameID: function () {
+        return this._boneNameID;
+    },
+
+    setBoneNameID: function ( boneMap ) {
+        this._boneNameID = boneMap;
+    },
+
     mergeChildrenVertexAttributeList: function () {
 
         if ( this._geometry instanceof MorphGeometry )
