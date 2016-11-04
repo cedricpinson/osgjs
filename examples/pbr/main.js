@@ -10,9 +10,9 @@
     var osgShader = OSG.osgShader;
     var $ = window.$;
 
-
     var Environment = window.Environment;
     var ModelLoader = window.ModelLoader;
+    var GLTFLoader = window.GLTFLoader;
 
     var PredefinedMaterials = {
         Silver: [ 0.971519, 0.959915, 0.915324 ],
@@ -73,7 +73,6 @@
 
     };
 
-
     var optionsURL = {};
     ( function ( options ) {
         var vars = [],
@@ -130,6 +129,8 @@
 
     var Example = function () {
 
+        this._gui = new window.dat.GUI();
+
         this._shaderPath = 'shaders/';
 
         if ( optionsURL.colorEncoding )
@@ -168,6 +169,8 @@
         this._materialDefines = [];
         this._shaderDefines = [];
         this._modelDefines = [];
+
+        this._modelsLoaded = {};
 
         this._modelsPBR = [];
         this._modelPBRConfig = [];
@@ -208,6 +211,87 @@
     };
 
     Example.prototype = {
+
+        loadFiles: function () {
+
+            var self = this;
+
+            var loadFromReader = null;
+            var loadedFileData = null;
+
+            loadFromReader = function ( files, index ) {
+
+                var f = files[ index ];
+
+                var reader = new FileReader();
+
+                reader.onload = function ( data ) {
+
+                    loadedFileData( data, files, index );
+
+                };
+
+                if ( f.name.indexOf( '.bin' ) !== -1 ) {
+                    reader.readAsArrayBuffer( f );
+                } else if ( f.name.indexOf( '.gltf' ) !== -1 ) {
+                    reader.readAsText( f );
+                }
+
+            };
+
+            loadedFileData = function ( data, files, index ) {
+
+                self._glTFFiles[ files[ index ].name ] = data.target.result;
+
+                // All files are loaded
+                if ( index >= files.length - 1 ) {
+
+                    var loader = new GLTFLoader();
+                    var scene = loader.loadGLTF( self._glTFFiles );
+
+                    for ( var i = 0; i < files.length; ++i ) {
+
+                        if ( files[ i ].name.indexOf( '.gltf' ) !== -1 ) {
+                            var gltfFileName = files[ i ].name;
+                            modelList.push( gltfFileName );
+                            self._modelsLoaded[ gltfFileName ] = scene;
+                        }
+
+                    }
+
+                    // Adds the model to the proxy node
+                    scene.setNodeMask( 0xFF );
+                    self._proxyModel.addChild( scene );
+                    osg.mat4.scale( scene.getMatrix(), scene.getMatrix(), [ 10, 10, 10 ] );
+
+                    // Updates the dropdown list
+                    var controllers = self._gui.__controllers;
+                    controllers[ controllers.length - 1 ].remove();
+
+                    self._gui.add( self._config, 'model', modelList ).onChange( self.updateModel.bind( self ) );
+
+                    return;
+
+                }
+
+                loadFromReader( files, ++index );
+
+            };
+
+            var input = $( document.createElement( 'input' ) );
+            input.attr( 'type', 'file' );
+            input.attr( 'multiple', '' );
+            input.trigger( 'click' );
+            input.on( 'change', function () {
+
+                self._glTFFiles = {};
+                loadFromReader( this.files, 0 );
+
+            } );
+
+
+            return false;
+        },
 
         setMaterial: function ( stateSet, albedo, roughness, specular ) {
 
@@ -544,12 +628,18 @@
             this._modelSphere.setNodeMask( 0x0 );
             this._modelMaterial.setNodeMask( 0x0 );
             this._proxyRealModel.setNodeMask( 0x0 );
+            for ( var modelId in this._modelsLoaded ) {
+                var model = this._modelsLoaded[ modelId ];
+                model.setNodeMask( 0x0 );
+            }
 
             var node;
             if ( this._config.model === 'sphere' ) {
                 node = this._modelSphere;
             } else if ( this._config.model === 'model' ) {
                 node = this._modelMaterial;
+            } else if ( this._config.model.indexOf( '.gltf' ) !== -1 ) {
+                node = this._modelsLoaded[ this._config.model ];
             } else {
 
                 var index = modelsPBR.indexOf( this._config.model );
@@ -1145,7 +1235,9 @@
                 osg.mat4.perspective( viewer.getCamera().getProjectionMatrix(), Math.PI / 180 * 30, canvas.width / canvas.height, 0.1, 1000 );
 
 
-                var gui = new window.dat.GUI();
+                //var gui = new window.dat.GUI();
+                var gui = this._gui;
+
                 var controller;
 
                 controller = gui.add( this._config, 'envRotation', -Math.PI, Math.PI ).step( 0.1 );
@@ -1195,8 +1287,12 @@
                 controller = gui.addColor( this._config, 'albedo' );
                 controller.onChange( this.updateAlbedo.bind( this ) );
 
+                controller = gui.add( {
+                    loadModel: function () {}
+                }, 'loadModel' );
+                controller.onChange( this.loadFiles.bind( this ) );
 
-                controller = gui.add( this._config, 'model', modelList );
+                controller = gui.add( this._config, 'model', modelList ).listen();
                 controller.onChange( this.updateModel.bind( this ) );
 
                 if ( !hasTextureLod )
