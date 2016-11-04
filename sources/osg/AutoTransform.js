@@ -36,6 +36,7 @@ var AutoTransform = function () {
     this._previousWidth = 0.0;
     this._previousHeight = 0.0;
     this._previousProjection = mat4.create();
+    this._previousModelView = mat4.create();
     this._previousPosition = vec3.create();
 };
 
@@ -220,13 +221,15 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
                 var width = visitor.getViewport().width();
                 var height = visitor.getViewport().height();
                 var projMat = visitor.getCurrentProjectionMatrix();
+                var modelViewMat = visitor.getCurrentModelViewMatrix();
                 var position = this._position;
                 var doUpdate = this._firstTimeToInitEyePoint;
-
                 if ( !this._firstTimeToInitEyePoint ) {
                     if ( width !== this._previousWidth || height !== this._previousHeight ) {
                         doUpdate = true;
                     } else if ( !mat4.exactEquals( projMat, this._previousProjection ) ) {
+                        doUpdate = true;
+                    } else if ( !mat4.exactEquals( modelViewMat, this._previousModelView ) ) {
                         doUpdate = true;
                     } else if ( !vec3.exactEquals( position, this._previousPosition ) ) {
                         doUpdate = true;
@@ -235,7 +238,6 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
                 this._firstTimeToInitEyePoint = false;
                 if ( doUpdate ) {
                     if ( this._autoScaleToScreen ) {
-                        var modelViewMat = visitor.getCurrentModelViewMatrix();
                         var viewport = visitor.getViewport();
                         var psvector = this.computePixelSizeVector( viewport, projMat, modelViewMat );
                         var v = vec4.fromValues( this._position[ 0 ], this._position[ 1 ], this._position[ 2 ], 1.0 );
@@ -274,14 +276,14 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
                     }
                     if ( this._autoRotateToScreen ) {
                         var rotation = quat.create();
-                        var modelView = visitor.getCurrentModelViewMatrix();
-                        mat4.getRotation( rotation, modelView );
+                        mat4.getRotation( rotation, modelViewMat );
                         this.setRotation( quat.invert( rotation, rotation ) );
                     }
                     this._previousWidth = width;
                     this._previousHeight = height;
                     vec3.copy( this._previousPosition, position );
                     mat4.copy( this._previousProjection, projMat );
+                    mat4.copy( this._previousModelView, modelViewMat );
                 }
             }
 
