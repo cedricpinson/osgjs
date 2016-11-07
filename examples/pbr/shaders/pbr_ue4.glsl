@@ -19,7 +19,6 @@ vec3 prefilterEnvMap( float roughnessLinear, const in vec3 R )
 #ifdef CUBEMAP_LOD
 
     float lod = linRoughnessToMipmap(roughnessLinear) * uEnvironmentLodRange[1]; //( uEnvironmentMaxLod - 1.0 );
-    //return textureCubeLodEXT( uEnvironmentCube, R, lod ).rgb;
     return textureCubeLodEXTFixed( uEnvironmentCube, R, lod );
 
 #else

@@ -20,13 +20,9 @@ uniform float uLod;
 
 uniform float uBrightness;
 
-#ifdef UE4
 uniform sampler2D uIntegrateBRDF; // ue4
-#endif
 
 uniform vec3 uEnvironmentSphericalHarmonics[9];
-
-//uniform vec2 uHammersleySamples[NB_SAMPLES];
 
 varying vec3 vViewVertex;
 varying vec3 vViewNormal;
@@ -84,23 +80,9 @@ float occlusionHorizon( const in vec3 R, const in vec3 normal)
 
 vec3 evaluateDiffuseSphericalHarmonics( const in vec3 N,
                                         const in vec3 V ) {
-
     return sphericalHarmonics( uEnvironmentSphericalHarmonics, environmentTransform * N );
 }
 
-
-// I dont know where it comes from, it's from substance shaders
-float distortion(vec3 Wn)
-{
-    // Computes the inverse of the solid angle of the (differential) pixel in
-    // the environment map pointed at by Wn
-    float sinT = sqrt(1.0-Wn.y*Wn.y);
-    return sinT;
-}
-float computeLODPanorama(const in vec3 Ln, float p, const in int nbSamples, const in float maxLod )
-{
-    return max(0.0, (maxLod) - 0.5*(log(float(nbSamples)) + log( p * distortion(Ln) )) * INV_LOG2);
-}
 
 #ifdef CUBEMAP_LOD
 #pragma include "cubemapSampler.glsl"
@@ -109,59 +91,10 @@ float computeLODPanorama(const in vec3 Ln, float p, const in int nbSamples, cons
 
 #ifdef PANORAMA
 #pragma include "panoramaSampler.glsl"
-
-vec3 getTexelPanorama( const in vec3 dir, const in float lod ) {
-    vec2 uvBase = normalToPanoramaUV( dir );
-    vec3 texel = texturePanoramaLod( uEnvironment,
-                                     uEnvironmentSize,
-                                     dir,
-                                     lod,
-                                     uEnvironmentLodRange[0] );
-    return texel;
-}
-
-vec3 getReferenceTexelEnvironment( const in vec3 dirLocal, const in float lod ) {
-    vec3 direction = environmentTransform * dirLocal;
-    return getTexelPanorama( direction, lod );
-}
-
 #endif
 
-vec3 getReferenceTexelEnvironmentLod( const in vec3 dirLocal, const in float pdf ) {
-
-    vec3 direction = environmentTransform * dirLocal;
-
-#ifdef CUBEMAP_LOD
-
-    // from sebastien lagarde - frosbite paper
-    // and https://placeholderart.wordpress.com/2015/07/28/implementation-notes-runtime-environment-map-filtering-for-image-based-lighting/
-    float maxLod = float(uEnvironmentLodRange[1]);
-    float textureSize = float(uEnvironmentSize[0]);
-    float ds = 1.0/ ( float(NB_SAMPLES) * pdf );
-    float dp = 4.0 * PI / ( 6.0 * textureSize * textureSize );
-
-    // Original paper suggest biasing the mip to improve the results
-    const float mipmapBias = 1.0;
-    float lod = max( 0.5 * log2(ds/dp) + mipmapBias, 0.0 );
-
-    //return textureCubeLodEXTFixed(uEnvironmentCube, direction, lod );
-    return textureCubemapLod( uEnvironmentCube, direction, lod ).rgb;
-#else
-    return vec3(1.0,0.0,1.0);
-#endif
-
-}
-
-#ifdef UE4
 #pragma include "pbr_ue4.glsl"
-#endif
 
-
-
-
-#ifdef IMPORTANCE_SAMPLING
-#pragma include "pbr.glsl"
-#endif
 
 mat3 getEnvironmentTransfrom( mat4 transform ) {
     vec3 x = vec3(transform[0][0], transform[1][0], transform[2][0]);
@@ -225,7 +158,6 @@ void main(void) {
 #endif
 
     float roughness = texture2D( roughnessMap, uv ).r;
-    //roughness = 0.142857;
 #ifdef GLOSSINESS
     roughness = 1.0 - roughness;
 #endif
@@ -254,12 +186,7 @@ void main(void) {
     albedo = albedoReduced;
 #endif
 
-    vec3 resultIBL;
-#ifdef IMPORTANCE_SAMPLING
-    resultIBL = computeIBL( tangent, normal, -eye, albedo, roughness, specular );
-#else
-    resultIBL = computeIBL_UE4( normal, -eye, albedo, roughness, specular );
-#endif
+    vec3 resultIBL = computeIBL_UE4( normal, -eye, albedo, roughness, specular );
     vec4 result = vec4( resultIBL, 1.0);
 
     gl_FragColor = linearTosRGB(result, DefaultGamma );

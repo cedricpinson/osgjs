@@ -140,7 +140,6 @@
             envRotation: Math.PI,
             lod: 0.01,
             albedo: '#c8c8c8',
-            nbSamples: 8,
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
             normalAA: Boolean( optionsURL.normalAA ),
@@ -151,7 +150,6 @@
             roughness: 0.5,
             material: 'Gold',
 
-            pbr: 'ImportanceSampling',
             format: window.formatList[ 0 ],
             model: modelList[ 0 ],
             mobile: isMobileDevice()
@@ -229,7 +227,7 @@
                 reader.onload = function ( data ) {
 
                     var result = data.target.result;
-                    if (fileType === 'img') {
+                    if ( fileType === 'img' ) {
                         var image = new Image();
                         image.src = data.target.result;
                         result = image;
@@ -371,16 +369,12 @@
                 'cubemapSampler.glsl',
                 'panoramaVertex.glsl',
                 'panoramaFragment.glsl',
-                'tangentVertex.glsl',
-                'tangentFragment.glsl',
                 'panoramaSampler.glsl',
-                'panoramaDebugFragment.glsl',
 
                 'pbrReferenceFragment.glsl',
                 'pbrReferenceVertex.glsl',
                 'colorSpace.glsl',
 
-                'pbr.glsl',
                 'pbr_ue4.glsl',
 
                 'sphericalHarmonics.glsl',
@@ -450,11 +444,6 @@
             if ( config && config.aoMap === true )
                 defines.push( '#define AO' );
 
-            if ( config && config.nbSamples !== undefined )
-                defines.push( '#define NB_SAMPLES ' + config.nbSamples );
-            else
-                defines.push( '#define NB_SAMPLES 8' );
-
             if ( config && config.environmentType === 'cubemapSeamless' ) {
                 defines.push( '#define CUBEMAP_LOD ' );
             } else {
@@ -462,12 +451,6 @@
             }
 
             defines.push( '#define ' + config.format );
-
-            if ( config && config.pbr === 'UE4' ) {
-                defines.push( '#define UE4 ' );
-            } else {
-                defines.push( '#define IMPORTANCE_SAMPLING ' );
-            }
 
             if ( config && config.mobile ) {
                 defines.push( '#define MOBILE' );
@@ -697,8 +680,6 @@
 
             mt.addChild( this._proxyModel );
 
-            //mt.addChild( osg.createTexturedSphereGeometry( 20 / 2, 40, 40 ) );
-
             return mt;
         },
 
@@ -766,48 +747,26 @@
             var metalTexture, roughnessTexture;
             var sample;
 
-            if ( false ) {
+            for ( var i = 0; i < 2; i++ ) {
 
-                metal = 1;
-                roughness = 0.3;
-
+                metal = i;
                 metalTexture = this.createTextureFromColor( metal, false );
 
-                sample = this.getModelTestInstance();
+                for ( var j = 0; j < nb; j++ ) {
+                    roughness = j / ( nb - 1 );
 
-                osg.mat4.fromTranslation( sample.getMatrix(), [ 0, 0, 0 ] );
+                    sample = this.getModelTestInstance();
 
-                roughnessTexture = this.createTextureFromColor( roughness, false );
+                    var x = roughness * offset;
+                    var y = metal * offset * 0.2;
+                    osg.mat4.fromTranslation( sample.getMatrix(), [ x, -y * 1.2, 0 ] );
 
-                this.setMaterial( sample.getOrCreateStateSet(), albedo, roughnessTexture, metalTexture );
+                    roughnessTexture = this.createTextureFromColor( roughness, false );
 
-                group.addChild( sample );
+                    this.setMaterial( sample.getOrCreateStateSet(), albedo, roughnessTexture, metalTexture );
 
-
-            } else {
-
-                for ( var i = 0; i < 2; i++ ) {
-
-                    metal = i;
-                    metalTexture = this.createTextureFromColor( metal, false );
-
-                    for ( var j = 0; j < nb; j++ ) {
-                        roughness = j / ( nb - 1 );
-
-                        sample = this.getModelTestInstance();
-
-                        var x = roughness * offset;
-                        var y = metal * offset * 0.2;
-                        osg.mat4.fromTranslation( sample.getMatrix(), [ x, -y * 1.2, 0 ] );
-
-                        roughnessTexture = this.createTextureFromColor( roughness, false );
-
-                        this.setMaterial( sample.getOrCreateStateSet(), albedo, roughnessTexture, metalTexture );
-
-                        group.addChild( sample );
-                    }
+                    group.addChild( sample );
                 }
-
             }
 
             return group;
@@ -834,9 +793,6 @@
             this._shaders.push( config );
             group.addChild( rowRoughness );
             osg.mat4.fromTranslation( rowRoughness.getMatrix(), [ 0, 0, 0 ] );
-
-            if ( false )
-                return group;
 
             var rowMetalic = this.createRowModelsMetalic( nb, offset );
             stateSet = rowMetalic.getOrCreateStateSet();
@@ -929,21 +885,7 @@
 
             var texture;
 
-            if ( this._config.pbr !== 'UE4' ) {
-                this.setCubemapSeamless();
-                osg.warn( 'Importance sampling works only with cubemap' );
-                return;
-            }
-
             texture = this._currentEnvironment.getPanoramaUE4()[ this._config.format ].getTexture();
-
-            if ( false ) {
-                var shader = this.createShaderPanorama( [
-                    '#define PANORAMA',
-                    '#define ' + this._config.format
-                ] );
-                this._environmentStateSet.setAttributeAndModes( shader );
-            }
 
             var stateSet = this._mainSceneNode.getOrCreateStateSet();
             var w = texture.getWidth();
@@ -970,21 +912,7 @@
 
             this.setSphericalEnv();
 
-            // if importance sampling use only float
-            if ( this._config.pbr !== 'UE4' ) {
-                osg.warn( 'Importance sampling only use FLOAT format' );
-                this._config.format = 'FLOAT';
-            }
-
-
-            var texture;
-            if ( this._config.pbr === 'UE4' ) {
-                texture = this._currentEnvironment.getCubemapUE4()[ this._config.format ].getTexture();
-            } else {
-                texture = this._currentEnvironment.getCubemapMipMapped().getTexture();
-            }
-
-            console.log( texture );
+            var texture = this._currentEnvironment.getCubemapUE4()[ this._config.format ].getTexture();
 
             var stateSet = this._mainSceneNode.getOrCreateStateSet();
             var w = texture.getWidth();
@@ -1009,85 +937,22 @@
 
         setBackgroundEnvironment: function () {
 
-            if ( true ) {
-                // set the stateSet of the environment geometry
-                this._environmentStateSet.setAttributeAndModes(
-                    this.createShaderCubemap( [
-                        '#define ' + this._config.format
-                    ] ) );
+            // set the stateSet of the environment geometry
+            this._environmentStateSet.setAttributeAndModes(
+                this.createShaderCubemap( [
+                    '#define ' + this._config.format
+                ] ) );
 
-                var textureBackground = this._currentEnvironment.getBackgroundCubemap()[ this._config.format ].getTexture();
-                var w = textureBackground.getWidth();
-                this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w ], 'uEnvironmentSize' ) );
-                this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironmentCube' ) );
-                this._environmentStateSet.setTextureAttributeAndModes( 0, textureBackground );
-            }
-            return;
-
-            // if ( false ) {
-            //     // set the stateSet of the environment geometry
-            //     this._environmentStateSet.setAttributeAndModes(
-            //         this.createShaderCubemap( [
-            //             '#define ' + this._config.format
-            //         ] ) );
-            // }
-
-            // this._environmentStateSet.setAttributeAndModes(
-            //     this.createShaderPanorama( [
-            //         '#define PANORAMA',
-            //         '#define BACKGROUND'
-            //     ] ) );
-
-            // var url = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].getFile();
-            // var img = osgDB.readImageURL( url, {
-            //     imageLoadingUsePromise: true
-            // } );
-
-            // img.then( function ( image ) {
-
-            //     var texture = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].createRGB( image );
-            //     this._environmentStateSet.setTextureAttributeAndModes( 0, texture );
-            //     var w = texture.getWidth();
-            //     this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w / 2 ], 'uEnvironmentSize' ) );
-            //     this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironment' ) );
-
-            // }.bind( this ) );
+            var textureBackground = this._currentEnvironment.getBackgroundCubemap()[ this._config.format ].getTexture();
+            var w = textureBackground.getWidth();
+            this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w ], 'uEnvironmentSize' ) );
+            this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironmentCube' ) );
+            this._environmentStateSet.setTextureAttributeAndModes( 0, textureBackground );
 
         },
 
         setSphericalEnv: function () {
             this._environmentStateSet.addUniform( this._currentEnvironment.getSpherical()._uniformSpherical );
-        },
-
-        testSphericalHarmonics: function ( offset, offsety ) {
-
-            var y = ( offsety !== undefined ) ? offsety : 0;
-            var group = new osg.MatrixTransform();
-            osg.mat4.fromTranslation( group.getMatrix(), [ offset, y, 0 ] );
-
-            group.addChild( this._currentEnvironment.getSpherical().createDebugGeometry() );
-            return group;
-        },
-
-
-        testCubemapIrradiance: function ( offset, offsety ) {
-
-            var y = ( offsety !== undefined ) ? offsety : 0;
-            var group = new osg.MatrixTransform();
-            osg.mat4.fromTranslation( group.getMatrix(), [ offset, y, 0 ] );
-
-            group.addChild( this._currentEnvironment.getCubemapIrradiance().createDebugGeometry() );
-            return group;
-        },
-
-        testCubemapFloatPacked: function ( offset, offsety ) {
-
-            var y = ( offsety !== undefined ) ? offsety : 0;
-            var group = new osg.MatrixTransform();
-            osg.mat4.fromTranslation( group.getMatrix(), [ offset, y, 0 ] );
-
-            group.addChild( this._currentEnvironment.getCubemapMipMapped().createFloatCubeMapPackedDebugGeometry() );
-            return group;
         },
 
         createScene: function () {
@@ -1118,17 +983,6 @@
                 group.addChild( this.createSampleScene() );
 
                 this.updateEnvironment();
-
-                if ( false ) {
-
-                    var offsetX = -60;
-                    group.addChild( this.testSphericalHarmonics( offsetX - 30, 30 ) );
-
-                    group.addChild( this.testCubemapFloatPacked( offsetX - 60, -60 ) );
-
-                    //                    group.addChild( this.testCubemapIrradiance( offsetX -60, 30 ) );
-
-                }
 
 
                 //group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
@@ -1278,16 +1132,8 @@
                     this._lod.dirty();
                 }.bind( this ) );
 
-                controller = gui.add( this._config, 'pbr', [ this._config.pbr, 'UE4' ] );
-                controller.onChange( this.updateEnvironment.bind( this ) );
-
                 controller = gui.add( this._config, 'format', window.formatList );
                 controller.onChange( this.updateEnvironment.bind( this ) );
-
-
-                controller = gui.add( this._config, 'nbSamples', [ 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 ] );
-                var updateShaderCallback = this.updateShaderPBR.bind( this );
-                controller.onChange( updateShaderCallback );
 
                 controller = gui.add( this._config, 'environmentType', [ 'cubemapSeamless', 'panorama' ] );
                 controller.onChange( this.updateEnvironment.bind( this ) );
@@ -1306,7 +1152,7 @@
                 }, 'loadModel' );
                 controller.onChange( this.loadFiles.bind( this ) );
 
-                controller = gui.add( this._config, 'model', modelList ).listen();
+                controller = gui.add( this._config, 'model', modelList );
                 controller.onChange( this.updateModel.bind( this ) );
 
                 if ( !hasTextureLod )
@@ -1315,7 +1161,6 @@
                 if ( !hasFloatLinear )
                     this._config.format = 'LUV';
 
-                this._config.pbr = 'UE4';
                 this.updateModel();
 
                 // Iterate over all controllers
@@ -1327,51 +1172,18 @@
 
         },
 
-        // http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
-        computeHammersleyReverse: function ( b ) {
-            var a = b;
-            a = ( a << 16 | a >>> 16 ) >>> 0;
-            a = ( ( a & 1431655765 ) << 1 | ( a & 2863311530 ) >>> 1 ) >>> 0;
-            a = ( ( a & 858993459 ) << 2 | ( a & 3435973836 ) >>> 2 ) >>> 0;
-            a = ( ( a & 252645135 ) << 4 | ( a & 4042322160 ) >>> 4 ) >>> 0;
-            return ( ( ( a & 16711935 ) << 8 | ( a & 4278255360 ) >>> 8 ) >>> 0 ) / 4294967296;
-        },
-
-        computeHammersleySequence: function ( size ) {
-            var hammersley = [];
-            for ( var i = 0; i < size; i++ ) {
-                var u = i / size;
-                var v = this.computeHammersleyReverse( i );
-                hammersley.push( u );
-                hammersley.push( v );
-            }
-            //console.log( this._hammersley );
-            return hammersley;
-        },
-
         updateAlbedo: function () {
             this._albedoTexture = this.createTextureFromColor( this.convertColor( this._config.albedo ), true, this._albedoTexture );
         },
 
         updateShaderPBR: function () {
 
-            var nbSamples = this._config.nbSamples;
-            if ( !this._uniformHammersleySequence[ nbSamples ] ) {
-                var sequence = this.computeHammersleySequence( nbSamples );
-                var uniformHammersley = osg.Uniform.createFloat2Array( sequence, 'uHammersleySamples' );
-                this._uniformHammersleySequence[ nbSamples ] = uniformHammersley;
-            }
-            var uniformHammerslay = this._uniformHammersleySequence[ nbSamples ];
-
-
             this._shaders.forEach( function ( config ) {
 
                 var stateSet = config.stateSet;
 
                 var shaderConfig = osg.objectMix( {
-                    nbSamples: nbSamples,
                     environmentType: this._config.environmentType,
-                    pbr: this._config.pbr,
                     format: this._config.format,
                     mobile: this._config.mobile
                 }, config.config );
@@ -1379,7 +1191,6 @@
                 var program = this.createShaderPBR( shaderConfig );
 
                 stateSet.setAttributeAndModes( program );
-                stateSet.addUniform( uniformHammerslay );
 
             }.bind( this ) );
 
@@ -1421,99 +1232,11 @@
             result[ 0 ] = r / 255.0;
             result[ 1 ] = g / 255.0;
             result[ 2 ] = b / 255.0;
-            //console.log( result );
             return result;
         }
 
 
     };
-
-    // convert rgbe image to float texture
-    var TextureRGBEToFloatTexture = function ( texture, dest, textureTarget ) {
-        osg.Node.call( this );
-        this._texture = texture;
-        this._finalTexture = dest;
-        this._textureTarget = textureTarget;
-        this._defer = P.defer();
-
-        var self = this;
-        var UpdateCallback = function () {
-            this._done = false;
-            this.update = function ( node, nodeVisitor ) {
-
-                if ( nodeVisitor.getVisitorType() === osg.NodeVisitor.UPDATE_VISITOR ) {
-                    if ( this._done ) {
-                        self._defer.resolve( self._finalTexture );
-                        self._finalTexture.dirtyMipmap();
-                        node.setNodeMask( 0 );
-                    } else {
-                        this._done = true;
-                    }
-                }
-            };
-        };
-        this.addUpdateCallback( new UpdateCallback() );
-
-    };
-
-    TextureRGBEToFloatTexture.prototype = osg.objectInherit( osg.Node.prototype, {
-
-        getPromise: function () {
-            return this._defer.promise;
-        },
-
-        createSubGraph: function ( sourceTexture, destinationTexture, textureTarget ) {
-            var composer = new osgUtil.Composer();
-            var reduce = new osgUtil.Composer.Filter.Custom( [
-                '#ifdef GL_ES',
-                'precision highp float;',
-                '#endif',
-
-                'uniform sampler2D source;',
-                'varying vec2 vTexCoord0;',
-
-                'vec4 textureRGBE(const in sampler2D texture, const in vec2 uv) {',
-                '    vec4 rgbe = texture2D(texture, uv );',
-
-                '    float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));',
-                '    return vec4(rgbe.rgb * 255.0 * f, 1.0);',
-                '}',
-
-                'void main() {',
-                '  vec3 decode = textureRGBE(source, vTexCoord0).rgb;',
-                '  //gl_FragColor = vec4(vec3(1.0,0.0,1.0), 1.0);',
-                '  gl_FragColor = vec4(decode, 1.0);',
-                '}',
-                ''
-            ].join( '\n' ), {
-                source: sourceTexture
-            } );
-
-            composer.addPass( reduce, destinationTexture, textureTarget );
-            composer.build();
-            return composer;
-        },
-
-
-        init: function () {
-
-            var sourceTexture = this._texture;
-            if ( !this._finalTexture ) {
-                var finalTexture = new osg.Texture();
-                finalTexture.setTextureSize( sourceTexture.getImage().getWidth(), sourceTexture.getImage().getHeight() );
-                finalTexture.setType( 'FLOAT' );
-                finalTexture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
-                finalTexture.setMagFilter( 'LINEAR' );
-
-                this._finalTexture = finalTexture;
-            }
-            var composer = this.createSubGraph( sourceTexture, this._finalTexture, this._textureTarget );
-            this.addChild( composer );
-        }
-
-
-    } );
-
 
     window.addEventListener( 'load', function () {
         var example = new Example();

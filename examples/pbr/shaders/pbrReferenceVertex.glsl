@@ -17,7 +17,6 @@ void main(void) {
 
     vViewVertex = vec3(uModelViewMatrix * vec4(Vertex, 1.0));
     vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 0.0));
-    //vViewNormal = (ModelViewNormalMatrix * vec4( normalize( Vertex ), 0.0 )).xyz;
     vViewTangent = uModelViewNormalMatrix * Tangent;
     vTexCoord0 = TexCoord0;
 
