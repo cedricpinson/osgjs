@@ -222,26 +222,38 @@
             loadFromReader = function ( files, index ) {
 
                 var f = files[ index ];
-
                 var reader = new FileReader();
+
+                var fileType = null;
 
                 reader.onload = function ( data ) {
 
-                    loadedFileData( data, files, index );
+                    var result = data.target.result;
+                    if (fileType === 'img') {
+                        var image = new Image();
+                        image.src = data.target.result;
+                        result = image;
+                    }
 
+                    loadedFileData( result, files, index );
                 };
 
                 if ( f.name.indexOf( '.bin' ) !== -1 ) {
                     reader.readAsArrayBuffer( f );
+                    fileType = 'binary';
                 } else if ( f.name.indexOf( '.gltf' ) !== -1 ) {
                     reader.readAsText( f );
+                    fileType = 'gltf';
+                } else {
+                    reader.readAsDataURL( f );
+                    fileType = 'img';
                 }
 
             };
 
             loadedFileData = function ( data, files, index ) {
 
-                self._glTFFiles[ files[ index ].name ] = data.target.result;
+                self._glTFFiles[ files[ index ].name ] = data;
 
                 // All files are loaded
                 if ( index >= files.length - 1 ) {
@@ -260,7 +272,7 @@
                     }
 
                     // Adds the model to the proxy node
-                    scene.setNodeMask( 0xFF );
+                    scene.setNodeMask( 0x0 );
                     self._proxyModel.addChild( scene );
                     osg.mat4.scale( scene.getMatrix(), scene.getMatrix(), [ 10, 10, 10 ] );
 
@@ -971,6 +983,8 @@
             } else {
                 texture = this._currentEnvironment.getCubemapMipMapped().getTexture();
             }
+
+            console.log( texture );
 
             var stateSet = this._mainSceneNode.getOrCreateStateSet();
             var w = texture.getWidth();

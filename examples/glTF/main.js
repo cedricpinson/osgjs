@@ -33,6 +33,26 @@
             MAT4: 16
         };
 
+        this.TEXTURE_FORMAT = {
+            6406: osg.Texture.ALPHA,
+            6407: osg.Texture.RGB,
+            6408: osg.Texture.RGBA,
+            6409: osg.Texture.LUMINANCE,
+            6410: osg.Texture.LUMINANCE_ALPHA
+        };
+
+        this.PBR_EXTENSION = 'FRAUNHOFER_materials_pbr';
+        this.PBR_METAL_MODE = 'PBR_metal_roughness';
+        this.PBR_SPEC_MODE = 'PBR_specular_glossiness';
+
+        this.ALBEDO_TEXTURE_UNIT = 2;
+        this.DIFFUSE_TEXTURE_UNIT = 2;
+        this.ROUGHNESS_TEXTURE_UNIT = 3;
+        this.METALNESS_TEXTURE_UNIT = 4;
+        this.SPECULAR_TEXTURE_UNIT = 4;
+        this.NORMAL_TEXTURE_UNIT = 5;
+        this.AO_TEXTURE_UNIT = 6;
+
         // Contains all the needed glTF files (.gltf, .bin, etc...)
         this.GLTF_FILES = {};
 
@@ -100,6 +120,26 @@
             node.addUpdateCallback( animationCallback );
         },
 
+        createTextureAndSetAttrib: function ( glTFTextureId, osgStateSet, location, uniform ) {
+            var texture = new osg.Texture();
+
+            var json = this.GLTF_FILES.glTF;
+            var glTFTexture = json.textures[ glTFTextureId ];
+            var image = json.images[ glTFTexture.source ];
+
+            if ( !glTFTexture || !image ) return;
+
+            texture.setImage( this.GLTF_FILES[ image.uri ], this.TEXTURE_FORMAT[ glTFTexture.format ] );
+            if ( glTFTexture.flipY )
+                texture.setFlipY( glTFTexture.flipY );
+
+            osgStateSet.setTextureAttributeAndModes( location, texture );
+
+            if ( uniform )
+                osgStateSet.addUniform( osg.Uniform.createInt( location, uniform ) );
+
+        },
+
         /**
          * Creates a MatrixTransform node by using
          * glTF node's properties (matrix, translation, rotation, scale)
@@ -132,7 +172,7 @@
          * them in a BasicAnimationManager instance
          * @return {BasicAnimationManager} the animation manager containing the animations
          */
-        loadAnimations: function () {
+        preprocessAnimations: function () {
 
             var json = this.GLTF_FILES[ 'glTF' ];
 
@@ -153,10 +193,8 @@
                     var glTFChannel = glTFAnim.channels[ j ];
                     var glTFSampler = glTFAnim.samplers[ glTFChannel.sampler ];
 
-                    var timeAccessor = json.accessors[ glTFAnimParams[
-                        glTFSampler.input ] ];
-                    var valueAccessor = json.accessors[ glTFAnimParams[
-                        glTFSampler.output ] ];
+                    var timeAccessor = json.accessors[ glTFAnimParams[ glTFSampler.input ] ];
+                    var valueAccessor = json.accessors[ glTFAnimParams[ glTFSampler.output ] ];
 
                     var timeKeys = this.loadAccessorBuffer( timeAccessor, null );
                     var valueKeys = this.loadAccessorBuffer( valueAccessor, null );
@@ -181,7 +219,7 @@
             }
 
             animationManager.init( animations );
-            return animationManager;
+            this.basicAnimationManager_ = animationManager;
         },
 
         loadBone: function ( boneId, skin ) {
@@ -318,6 +356,71 @@
 
         },
 
+        loadPBRMaterial: function ( glTFmaterial, geometryNode ) {
+
+            var model = glTFmaterial.materialModel;
+            var values = glTFmaterial.values;
+
+            if ( !values ) return;
+
+            var osgStateSet = geometryNode.getOrCreateStateSet();
+
+            if ( model === this.PBR_METAL_MODE ) {
+
+                this.createTextureAndSetAttrib( values.baseColorTexture, osgStateSet, this.ALBEDO_TEXTURE_UNIT, 'albedoMap' );
+                this.createTextureAndSetAttrib( values.roughnessTexture, osgStateSet, this.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' );
+                this.createTextureAndSetAttrib( values.metallicTexture, osgStateSet, this.METALNESS_TEXTURE_UNIT, 'specularMap' );
+                this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, this.NORMAL_TEXTURE_UNIT, 'normalMap' );
+                this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, this.AO_TEXTURE_UNIT, 'aoMap' );
+
+            }
+
+            geometryNode.stateset = osgStateSet;
+
+        },
+
+        loadMaterial: function ( materialId, geometryNode ) {
+
+            var json = this.GLTF_FILES.glTF;
+
+            var glTFmaterial = json.materials[ materialId ];
+
+            if ( glTFmaterial.extensions ) {
+
+                for ( var ext in glTFmaterial.extensions ) {
+
+                    if ( ext === this.PBR_EXTENSION )
+                        this.loadPBRMaterial( glTFmaterial.extensions[ ext ], geometryNode );
+
+                }
+
+            }
+
+            var values = glTFmaterial.values;
+            if ( !values ) return;
+
+            // Handles basic material attributes
+            var osgStateSet = geometryNode.getOrCreateStateSet();
+            var osgMaterial = new osg.Material();
+
+            if ( values.ambient )
+                osgMaterial.setAmbient( values.ambient );
+            if ( values.emission )
+                osgMaterial.setEmission( values.emission );
+            if ( values.shininess )
+                osgMaterial.setShininess( values.shininess );
+            if ( values.specular )
+                osgMaterial.setSpecular( values.specular );
+
+            osgStateSet.setAttribute( osgMaterial );
+
+            // Create a texture for the diffuse, if any
+            if ( values.diffuse )
+                this.createTextureAndSetAttrib( values.diffuse, osgStateSet, 0 );
+
+            geometryNode.stateset = osgStateSet;
+        },
+
         createGeometry: function ( primitive, skeletonJointId ) {
 
             var json = this.GLTF_FILES.glTF;
@@ -401,6 +504,10 @@
                 var attributesKeys = window.Object.keys( primitive.attributes );
 
                 var g = this.createGeometry( primitive, skeletonJointId );
+
+                if ( primitive.material )
+                    this.loadMaterial( primitive.material, g );
+
 
                 // Checks whether there are other primitives using
                 // the same vertices and normals
@@ -570,7 +677,7 @@
 
             // Preprocesses animations
             if ( json.animations && Object.keys( json.animations ).length > 0 )
-                this.basicAnimationManager_ = this.loadAnimations();
+                this.preprocessAnimations();
 
             // Loops through each scene
             // loading geometry nodes, transform nodes, etc...s
@@ -600,65 +707,4 @@
     };
 
     window.GLTFLoader = GLTFLoader;
-
-    /*var loadSample = function ( path, sampleName, callback ) {
-
-        var loader = new GLTFLoader();
-
-        $.get( path + '/' + sampleName + '.gltf', function ( glTF ) {
-            var xhr = new XMLHttpRequest();
-            xhr.open( 'GET', path + '/' + sampleName + '.bin',
-                true );
-            xhr.responseType = 'arraybuffer';
-            xhr.send( null );
-            xhr.onload = function () {
-
-                var files = {};
-                files[ path + '/' + sampleName + '.gltf' ] = glTF;
-                files[ sampleName + '.bin' ] = xhr.response;
-
-                callback( loader, loader.loadGLTF( files ) );
-            };
-        } );
-    };
-
-    var onLoad = function () {
-        var canvas = document.getElementById( 'View' );
-
-        var viewer = new osgViewer.Viewer( canvas );
-        viewer.init();
-        viewer.setupManipulator();
-
-        //loadSample( 'scenes/brain-stem', 'BrainStem', function ( loader, scene ) {
-        loadSample( 'scenes/helmet', 'Helmet', function ( loader, scene ) {
-            //loadSample( 'scenes/rigged-simple', 'RiggedSimple', function ( scene ) {
-            //loadSample( 'scenes/box-animated', 'BoxAnimated', function ( scene ) {
-            //loadSample( 'scenes/cesium-man', 'CesiumMan', function ( scene ) {
-            //loadSample( 'scenes/rigged-figure', 'RiggedFigure', function ( scene ) {
-            console.log( scene );
-
-            viewer.setSceneData( scene );
-            viewer.run();
-
-            for ( var i = 0; i <= 18; ++i ) {
-                loader.basicAnimationManager_.playAnimation( 'animation_' + i, true );
-            }
-
-            loader.basicAnimationManager_.setTimeFactor( 0.5 );
-
-            window.setTimeout( function () {
-
-                var displayGraph = OSG.osgUtil.DisplayGraph.instance();
-                displayGraph.setDisplayGraphRenderer( true );
-                displayGraph.createGraph( scene );
-
-                var visitor = new osgUtil.DisplayGeometryVisitor();
-                visitor.setSkinningDebug( scene );
-
-            }, 0 );
-        } );
-
-    };
-
-    window.addEventListener( 'load', onLoad, true );*/
 } )();
