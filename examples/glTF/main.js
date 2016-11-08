@@ -92,6 +92,23 @@
             return typedArray;
         },
 
+        findByKey: function ( obj, key ) {
+
+            if ( !obj )
+                return null;
+
+            var keys = window.Object.keys( obj );
+            for ( var i = 0; i < keys.length; ++i ) {
+
+                if ( keys[ i ] === key )
+                    return obj[ keys[ i ] ];
+
+            }
+
+            return null;
+
+        },
+
         registerUpdateCallback: function ( callbackName, node ) {
 
             var json = this.GLTF_FILES.glTF;
@@ -232,9 +249,11 @@
 
             // Creates the current bone
             // initializing it with initial pose
-            for ( var i = 0; i < skin.jointNames.length; ++i )
-                if ( skin.jointNames[ i ] === node.jointName )
-                    break;
+            for ( var i = 0; i < skin.jointNames.length; ++i ) {
+
+                if ( skin.jointNames[ i ] === node.jointName ) break;
+
+            }
 
             var boneNode = new osgAnimation.Bone( node.jointName );
             var invMat = inverseBindMatrices.subarray( i * 16, i * 16 + 16 );
@@ -267,20 +286,22 @@
             var boneToSkin = {};
 
             // Maps each bone ID to its skin
-            for ( var skinId in json.skins ) {
+            var skinsKeys = window.Object.keys( json.skins );
+            for ( var i = 0; i < skinsKeys.length; ++i ) {
 
-                var skin = json.skins[ skinId ];
+                var skin = json.skins[ skinsKeys[ i ] ];
 
-                for ( var i = 0; i < skin.jointNames.length; ++i ) {
+                for ( var j = 0; j < skin.jointNames.length; ++j ) {
 
-                    var jName = skin.jointNames[ i ];
+                    var jName = skin.jointNames[ j ];
 
-                    for ( var nodeId in json.nodes ) {
+                    var nodesKeys = window.Object.keys( json.nodes );
+                    for ( var k = 0; k < nodesKeys.length; ++k ) {
 
-                        var node = json.nodes[ nodeId ];
+                        var node = json.nodes[ nodesKeys[ k ] ];
 
                         if ( node.jointName && node.jointName === jName )
-                            boneToSkin[ nodeId ] = skin;
+                            boneToSkin[ nodesKeys[ k ] ] = skin;
                     }
                 }
 
@@ -294,9 +315,12 @@
 
             var json = this.GLTF_FILES.glTF;
 
-            for ( var boneId in json.nodes ) {
+            var nodesKeys = window.Object.keys( json.nodes );
+            for ( var i = 0; i < nodesKeys.length; ++i ) {
 
+                var boneId = nodesKeys[ i ];
                 var boneNode = json.nodes[ boneId ];
+
                 if ( !boneNode.jointName )
                     continue;
 
@@ -312,9 +336,11 @@
 
             var bonesToSkin = this.mapBonesToSkin();
 
-            // Saves each skeleton in the skeleton map
-            for ( var nodeId in json.nodes ) {
+            // Saves each skeleton in the skeleton maprep
+            var nodesKeys = window.Object.keys( json.nodes );
+            for ( var j = 0; j < nodesKeys.length; ++j ) {
 
+                var nodeId = nodesKeys[ j ];
                 var node = json.nodes[ nodeId ];
                 var skin = json.skins[ node.skin ];
 
@@ -325,9 +351,12 @@
 
                     var rootBoneId = null;
                     var rootJointId = node.skeletons[ i ];
-                    for ( var subnodeId in json.nodes ) {
 
+                    for ( var k = 0; k < nodesKeys.length; ++k ) {
+
+                        var subnodeId = nodesKeys[ k ];
                         var subnode = json.nodes[ subnodeId ];
+
                         if ( !subnode.jointName )
                             continue;
 
@@ -382,19 +411,11 @@
         loadMaterial: function ( materialId, geometryNode ) {
 
             var json = this.GLTF_FILES.glTF;
-
             var glTFmaterial = json.materials[ materialId ];
 
-            if ( glTFmaterial.extensions ) {
-
-                for ( var ext in glTFmaterial.extensions ) {
-
-                    if ( ext === this.PBR_EXTENSION )
-                        this.loadPBRMaterial( glTFmaterial.extensions[ ext ], geometryNode );
-
-                }
-
-            }
+            var extension = this.findByKey( glTFmaterial.extensions, this.PBR_EXTENSION );
+            if ( extension )
+                this.loadPBRMaterial( extension, geometryNode );
 
             var values = glTFmaterial.values;
             if ( !values ) return;
@@ -497,8 +518,7 @@
             var ii = 0;
             for ( var i = 0; i < primitives.length; ++i ) {
 
-                if ( processedPrimitives[ i ] )
-                    continue;
+                if ( processedPrimitives[ i ] ) continue;
 
                 var primitive = primitives[ i ];
                 var attributesKeys = window.Object.keys( primitive.attributes );
@@ -508,13 +528,11 @@
                 if ( primitive.material )
                     this.loadMaterial( primitive.material, g );
 
-
                 // Checks whether there are other primitives using
                 // the same vertices and normals
                 for ( ii = 0; ii < primitives.length; ++ii ) {
 
-                    if ( processedPrimitives[ ii ] )
-                        continue;
+                    if ( processedPrimitives[ ii ] ) continue;
 
                     var targetPrimitive = primitives[ ii ];
                     var targetAttributesKeys = window.Object.keys( targetPrimitive.attributes );
@@ -532,7 +550,6 @@
                     for ( var j = 0; j < attributesKeys.length; ++j ) {
 
                         if ( attributesKeys[ j ] !== targetAttributesKeys[ j ] ||
-
                             primitive.attributes[ attributesKeys[ j ] ] !== targetPrimitive.attributes[ targetAttributesKeys[ j ] ] ) {
 
                             mergePossible = false;
@@ -541,11 +558,12 @@
                         }
                     }
 
-                    if ( !mergePossible )
-                        continue;
+                    if ( !mergePossible ) continue;
 
                     var indicesAccessor = json.accessors[ primitives[ ii ].indices ];
-                    var osgPrimitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, this.loadAccessorBuffer( indicesAccessor, osg.BufferArray.ELEMENT_ARRAY_BUFFER ) );
+                    var indicesBuffer = this.loadAccessorBuffer( indicesAccessor, osg.BufferArray.ELEMENT_ARRAY_BUFFER );
+                    var osgPrimitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, indicesBuffer );
+
                     g.getPrimitives().push( osgPrimitive );
 
                     processedPrimitives[ ii ] = true;
@@ -660,7 +678,6 @@
 
             }
 
-
             // Creates the root node
             // adding a PI / 2 rotation arround the X-axis
             var root = new osg.MatrixTransform();
@@ -669,7 +686,6 @@
             osg.mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI / 2.0 );
 
             var json = this.GLTF_FILES.glTF;
-            console.log( json );
 
             // Preprocesses skin animations if any
             if ( json.skins )
@@ -681,10 +697,11 @@
 
             // Loops through each scene
             // loading geometry nodes, transform nodes, etc...s
-            var scenes = json.scenes;
-            for ( var sceneId in scenes ) {
+            //var scenes = json.scenes;
+            var sceneKeys = Object.keys( json.scenes );
+            for ( i = 0; i < sceneKeys.length; ++i ) {
 
-                var scene = scenes[ sceneId ];
+                var scene = json.scenes[ sceneKeys[ i ] ];
 
                 if ( !scene )
                     continue;

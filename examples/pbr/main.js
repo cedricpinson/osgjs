@@ -429,11 +429,11 @@
                 defines.push( d );
             } );
 
-            if ( config && config.noTangent === true )
-                defines.push( '#define NO_TANGENT' );
+            /*if ( config && config.noTangent === true )
+                defines.push( '#define NO_TANGENT' );*/
 
-            if ( config && config.normalMap === true )
-                defines.push( '#define NORMAL' );
+            //if ( config && config.normalMap === true )
+            defines.push( '#define NORMAL' );
 
             if ( config && config.glossinessMap === true )
                 defines.push( '#define GLOSSINESS' );
@@ -443,6 +443,7 @@
 
             if ( config && config.aoMap === true )
                 defines.push( '#define AO' );
+
 
             if ( config && config.environmentType === 'cubemapSeamless' ) {
                 defines.push( '#define CUBEMAP_LOD ' );
