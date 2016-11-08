@@ -214,88 +214,41 @@
 
             var self = this;
 
-            var loadFromReader = null;
-            var loadedFileData = null;
-
-            loadFromReader = function ( files, index ) {
-
-                var f = files[ index ];
-                var reader = new FileReader();
-
-                var fileType = null;
-
-                reader.onload = function ( data ) {
-
-                    var result = data.target.result;
-                    if ( fileType === 'img' ) {
-                        var image = new Image();
-                        image.src = data.target.result;
-                        result = image;
-                    }
-
-                    loadedFileData( result, files, index );
-                };
-
-                if ( f.name.indexOf( '.bin' ) !== -1 ) {
-                    reader.readAsArrayBuffer( f );
-                    fileType = 'binary';
-                } else if ( f.name.indexOf( '.gltf' ) !== -1 ) {
-                    reader.readAsText( f );
-                    fileType = 'gltf';
-                } else {
-                    reader.readAsDataURL( f );
-                    fileType = 'img';
-                }
-
-            };
-
-            loadedFileData = function ( data, files, index ) {
-
-                self._glTFFiles[ files[ index ].name ] = data;
-
-                // All files are loaded
-                if ( index >= files.length - 1 ) {
-
-                    var loader = new GLTFLoader();
-                    var scene = loader.loadGLTF( self._glTFFiles );
-
-                    for ( var i = 0; i < files.length; ++i ) {
-
-                        if ( files[ i ].name.indexOf( '.gltf' ) !== -1 ) {
-                            var gltfFileName = files[ i ].name;
-                            modelList.push( gltfFileName );
-                            self._modelsLoaded[ gltfFileName ] = scene;
-                        }
-
-                    }
-
-                    // Adds the model to the proxy node
-                    scene.setNodeMask( 0x0 );
-                    self._proxyModel.addChild( scene );
-                    osg.mat4.scale( scene.getMatrix(), scene.getMatrix(), [ 10, 10, 10 ] );
-
-                    // Updates the dropdown list
-                    var controllers = self._gui.__controllers;
-                    controllers[ controllers.length - 1 ].remove();
-
-                    self._gui.add( self._config, 'model', modelList ).onChange( self.updateModel.bind( self ) );
-
-                    return;
-
-                }
-
-                loadFromReader( files, ++index );
-
-            };
-
             var input = $( document.createElement( 'input' ) );
             input.attr( 'type', 'file' );
             input.attr( 'multiple', '' );
             input.trigger( 'click' );
             input.on( 'change', function () {
 
-                self._glTFFiles = {};
-                loadFromReader( this.files, 0 );
+                var gltfFileName = null;
+                for ( var i = 0; i < this.files.length; ++i ) {
+
+                    if ( this.files[ i ].name.indexOf( '.gltf' ) !== -1 ) {
+                        gltfFileName = this.files[ i ].name;
+                        modelList.push( gltfFileName );
+                    }
+
+                }
+
+                var loader = new GLTFLoader();
+
+                var promise = loader.loadGLTF( this.files );
+                promise.then(function(r) {
+
+                    //loadFromReader( this.files, 0 );
+                    r.setNodeMask( 0x0 );
+                    self._proxyModel.addChild( r );
+                    self._modelsLoaded[ gltfFileName ] = r;
+
+                    self._viewer.getManipulator().computeHomePosition();
+
+                    // Updates the dropdown list
+                    var controllers = self._gui.__controllers;
+                    controllers[ controllers.length - 1 ].remove();
+
+                    self._gui.add( self._config, 'model', modelList ).onChange( self.updateModel.bind( self ) );
+                    
+                });
 
             } );
 
