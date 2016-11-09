@@ -3,71 +3,67 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
-    var osgUtil = OSG.osgUtil;
-    var osgViewer = OSG.osgViewer;
     var osgAnimation = OSG.osgAnimation;
     var createQuatChannel = osgAnimation.Channel.createQuatChannel;
     var createVec3Channel = osgAnimation.Channel.createVec3Channel;
 
-    //var $ = window.$;
-
     var GLTFLoader = function () {
 
-        // Mappers to extract data correctly
-        this.WEBGL_COMPONENT_TYPES = {
-            5120: Int8Array,
-            5121: Uint8Array,
-            5122: Int16Array,
-            5123: Uint16Array,
-            5125: Uint32Array,
-            5126: Float32Array
-        };
-
-        this.TYPE_TABLE = {
-            SCALAR: 1,
-            VEC2: 2,
-            VEC3: 3,
-            VEC4: 4,
-            MAT2: 4,
-            MAT3: 9,
-            MAT4: 16
-        };
-
-        this.TEXTURE_FORMAT = {
-            6406: osg.Texture.ALPHA,
-            6407: osg.Texture.RGB,
-            6408: osg.Texture.RGBA,
-            6409: osg.Texture.LUMINANCE,
-            6410: osg.Texture.LUMINANCE_ALPHA
-        };
-
-        this.PBR_EXTENSION = 'FRAUNHOFER_materials_pbr';
-        this.PBR_METAL_MODE = 'PBR_metal_roughness';
-        this.PBR_SPEC_MODE = 'PBR_specular_glossiness';
-
-        this.ALBEDO_TEXTURE_UNIT = 2;
-        this.DIFFUSE_TEXTURE_UNIT = 2;
-        this.ROUGHNESS_TEXTURE_UNIT = 3;
-        this.METALNESS_TEXTURE_UNIT = 4;
-        this.SPECULAR_TEXTURE_UNIT = 4;
-        this.NORMAL_TEXTURE_UNIT = 5;
-        this.AO_TEXTURE_UNIT = 6;
-
         // Contains all the needed glTF files (.gltf, .bin, etc...)
-        this.FILES = null;
-        this.LOADED_GLTF_FILES = {};
+        this._files = null;
+        this._loadedFiles = {};
+        this._localPath = null;
 
-        this.basicAnimationManager_ = null;
+        this._basicAnimationManager = null;
 
-        this.visitedNodes_ = {};
-        this.animatedNodes_ = {};
-        this.skeletons_ = {};
-        this.bones_ = {};
-        this.skeletonToInfluenceMap_ = {};
+        this._visitedNodes = {};
+        this._animatedNodes = {};
+        this._skeletons = {};
+        this._bones = {};
+        this._skeletonToInfluenceMap = {};
 
-        this.cachepromise = {};
+        this._cachepromise = {};
 
     };
+
+    GLTFLoader.WEBGL_COMPONENT_TYPES = {
+        5120: Int8Array,
+        5121: Uint8Array,
+        5122: Int16Array,
+        5123: Uint16Array,
+        5125: Uint32Array,
+        5126: Float32Array
+    };
+
+    GLTFLoader.TYPE_TABLE = {
+        SCALAR: 1,
+        VEC2: 2,
+        VEC3: 3,
+        VEC4: 4,
+        MAT2: 4,
+        MAT3: 9,
+        MAT4: 16
+    };
+
+    GLTFLoader.TEXTURE_FORMAT = {
+        6406: osg.Texture.ALPHA,
+        6407: osg.Texture.RGB,
+        6408: osg.Texture.RGBA,
+        6409: osg.Texture.LUMINANCE,
+        6410: osg.Texture.LUMINANCE_ALPHA
+    };
+
+    GLTFLoader.PBR_EXTENSION = 'FRAUNHOFER_materials_pbr';
+    GLTFLoader.PBR_METAL_MODE = 'PBR_metal_roughness';
+    GLTFLoader.PBR_SPEC_MODE = 'PBR_specular_glossiness';
+
+    GLTFLoader.ALBEDO_TEXTURE_UNIT = 2;
+    GLTFLoader.DIFFUSE_TEXTURE_UNIT = 2;
+    GLTFLoader.ROUGHNESS_TEXTURE_UNIT = 3;
+    GLTFLoader.METALNESS_TEXTURE_UNIT = 4;
+    GLTFLoader.SPECULAR_TEXTURE_UNIT = 4;
+    GLTFLoader.NORMAL_TEXTURE_UNIT = 5;
+    GLTFLoader.AO_TEXTURE_UNIT = 6;
 
     GLTFLoader.prototype = {
 
@@ -86,6 +82,8 @@
 
         findFileFromURI: function ( urlOrFiles, uri ) {
 
+            if ( typeof ( urlOrFiles ) === 'string' ) return uri;
+
             for ( var i = 0; i < urlOrFiles.length; ++i ) {
 
                 var fileName = this.getFileName( urlOrFiles[ i ] );
@@ -98,30 +96,10 @@
             return null;
         },
 
-        findGLTFFile: function ( urlOrFiles ) {
-
-            for ( var i = 0; i < urlOrFiles.length; ++i ) {
-
-                var fileName = this.getFileName( urlOrFiles[ i ] );
-
-                if ( fileName ) {
-
-                    var ext = fileName.split( '.' ).pop();
-                    if ( ext === 'gltf' )
-                        return urlOrFiles[ i ];
-
-                }
-
-            }
-
-        },
-
         getFileType: function ( urlOrFile ) {
 
             var fileName = this.getFileName( urlOrFile );
-
-            if ( !fileName )
-                return null;
+            if ( !fileName ) return null;
 
             var ext = fileName.split( '.' ).pop();
             if ( ext === 'bin' )
@@ -132,24 +110,98 @@
             return 'blob';
         },
 
+        loadGLTFJson: function ( urlOrFiles ) {
+
+            var glTFFileOrUrl = null;
+            if ( typeof ( urlOrFiles ) === 'string' ) {
+
+                var ext = urlOrFiles.split( '.' ).pop();
+                if ( ext !== 'gltf' ) {
+
+                    console.warn( 'The given URL does not point toward a valid glTF file' );
+                    return Promise.resolve( null );
+
+                }
+
+                var index = urlOrFiles.lastIndexOf( '/' );
+                this._localPath = ( index === -1 ) ? '' : urlOrFiles.substr( 0, index + 1 );
+
+                glTFFileOrUrl = urlOrFiles;
+
+            } else {
+
+                if ( !( urlOrFiles instanceof FileList ) ) {
+
+                    console.warn( 'The provided argument is neither a files array nor a valid URL' );
+                    return Promise.resolve( null );
+
+                }
+
+                for ( var i = 0; i < urlOrFiles.length; ++i ) {
+
+                    var fileName = this.getFileName( urlOrFiles[ i ] );
+
+                    if ( fileName.split( '.' ).pop() === 'gltf' ) {
+
+                        glTFFileOrUrl = urlOrFiles[ i ];
+                        break;
+
+                    }
+
+                }
+
+            }
+
+            if ( !glTFFileOrUrl ) {
+
+                console.warn( 'You did not provided any glTF file' );
+                return Promise.resolve( null );
+
+            }
+
+            return this.loadFile( glTFFileOrUrl, 'gltf' );
+
+        },
+
         loadFile: function ( urlOrFile, uri ) {
 
-            if ( this.cachepromise[ uri ] )
-                return this.cachepromise[ uri ];
+            if ( this._cachepromise[ uri ] )
+                return this._cachepromise[ uri ];
 
             var defer = Promise.defer();
-            this.cachepromise[ uri ] = defer.promise;
+            this._cachepromise[ uri ] = defer.promise;
 
             var fileType = this.getFileType( urlOrFile );
 
             if ( typeof ( urlOrFile ) === 'string' ) {
+
+                // Checks whether the url is relative or absolute
+                if ( uri !== 'gltf' ) {
+
+                    if ( urlOrFile.indexOf( 'http://' ) !== 0 && urlOrFile.indexOf( 'https://' ) !== 0 ||
+                        urlOrFile.indexOf( 'www.' ) !== 0 ) {
+
+                        urlOrFile = this._localPath + uri;
+
+                    }
+                }
 
                 var xhr = new XMLHttpRequest();
                 xhr.open( 'GET', urlOrFile, true );
                 xhr.responseType = fileType;
                 xhr.onload = function () {
 
-                    defer.resolve( xhr.response );
+                    if ( fileType !== 'blob' ) {
+
+                        defer.resolve( xhr.response );
+
+                    } else {
+
+                        var img = new Image();
+                        img.src = window.URL.createObjectURL( xhr.response );
+                        defer.resolve( img );
+
+                    }
 
                 };
 
@@ -200,22 +252,32 @@
          * @return {osg.BufferArray} OSG readable buffer contaning the extracted data
          */
         loadAccessorBuffer: function ( accessor, type ) {
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
 
             var bufferView = json.bufferViews[ accessor.bufferView ];
             var buffer = json.buffers[ bufferView.buffer ];
             var offset = accessor.byteOffset + bufferView.byteOffset;
 
-            var filePromise = this.loadFile( this.findFileFromURI( this.FILES, buffer.uri ), buffer.uri );
+            var urlOrFile = this.findFileFromURI( this._files, buffer.uri );
+            if ( !urlOrFile ) {
 
-            var self = this;
+                return Promise.reject( 'ooops' ).catch( function () {
+
+                    console.warn( '\'' + buffer.uri + '\' binary file not found' );
+
+                } );
+
+            }
+
+            var filePromise = this.loadFile( urlOrFile, buffer.uri );
+
             return filePromise.then( function ( data ) {
 
-                var TypedArray = self.WEBGL_COMPONENT_TYPES[ accessor.componentType ];
-                var typedArray = new TypedArray( data, offset, accessor.count * self.TYPE_TABLE[ accessor.type ] );
+                var TypedArray = GLTFLoader.WEBGL_COMPONENT_TYPES[ accessor.componentType ];
+                var typedArray = new TypedArray( data, offset, accessor.count * GLTFLoader.TYPE_TABLE[ accessor.type ] );
 
                 if ( type )
-                    return Promise.resolve( new osg.BufferArray( type, typedArray, self.TYPE_TABLE[ accessor.type ] ) );
+                    return Promise.resolve( new osg.BufferArray( type, typedArray, GLTFLoader.TYPE_TABLE[ accessor.type ] ) );
 
                 return Promise.resolve( typedArray );
             } );
@@ -240,7 +302,7 @@
 
         registerUpdateCallback: function ( callbackName, node ) {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
 
             var animationCallback = null;
             if ( json.nodes[ callbackName ].jointName )
@@ -272,18 +334,24 @@
 
             var texture = new osg.Texture();
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
             var glTFTexture = json.textures[ glTFTextureId ];
             var image = json.images[ glTFTexture.source ];
 
             if ( !glTFTexture || !image ) return defer.promise;
 
-            var self = this;
-            this.loadFile( this.findFileFromURI( this.FILES, image.uri ), image.uri ).then( function ( data ) {
+            var urlOrFile = this.findFileFromURI( this._files, image.uri );
+            if ( !urlOrFile ) {
 
-                texture.setImage( data, self.TEXTURE_FORMAT[ glTFTexture.format ] );
-                if ( glTFTexture.flipY )
-                    texture.setFlipY( glTFTexture.flipY );
+                console.warn( '\'' + image.uri + '\': was not provided as a File, or the associated URL was not found' );
+                return defer.resolve();
+
+            }
+
+            this.loadFile( urlOrFile, image.uri ).then( function ( data ) {
+
+                texture.setImage( data, GLTFLoader.TEXTURE_FORMAT[ glTFTexture.format ] );
+                texture.setFlipY( glTFTexture.flipY );
 
                 osgStateSet.setTextureAttributeAndModes( location, texture );
 
@@ -327,29 +395,53 @@
 
         preprocessChannel: function ( glTFChannel, glTFAnim, glTFAnimParams ) {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
+            var promisesArray = [];
 
             var glTFSampler = glTFAnim.samplers[ glTFChannel.sampler ];
 
             var timeAccessor = json.accessors[ glTFAnimParams[ glTFSampler.input ] ];
             var valueAccessor = json.accessors[ glTFAnimParams[ glTFSampler.output ] ];
 
-            var timeKeys = this.loadAccessorBuffer( timeAccessor, null );
-            var valueKeys = this.loadAccessorBuffer( valueAccessor, null );
+            var timePromise = this.loadAccessorBuffer( timeAccessor, null );
+            var valuePromise = this.loadAccessorBuffer( valueAccessor, null );
 
-            var osgChannel = null;
+            promisesArray.push( timePromise, valuePromise );
 
-            if ( this.TYPE_TABLE[ valueAccessor.type ] === 4 ) {
+            var self = this;
 
-                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+            return Promise.all( promisesArray ).then( function ( timeAndValue ) {
 
-            } else if ( this.TYPE_TABLE[ valueAccessor.type ] === 3 ) {
+                var timeKeys = timeAndValue[ 0 ];
+                var valueKeys = timeAndValue[ 1 ];
 
-                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                var osgChannel = null;
 
-            }
+                if ( GLTFLoader.TYPE_TABLE[ valueAccessor.type ] === 4 ) {
 
-            return osgChannel;
+                    osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+
+                } else if ( GLTFLoader.TYPE_TABLE[ valueAccessor.type ] === 3 ) {
+
+                    osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+
+                }
+
+                self._animatedNodes[ glTFChannel.target.id ] = true;
+
+                return osgChannel;
+
+            } );
+        },
+
+        createAnimationFromChannels: function ( channelsPromiseArray, animName ) {
+
+            return Promise.all( channelsPromiseArray ).then( function ( channels ) {
+
+                return osgAnimation.Animation.createAnimation( channels, animName );
+
+            } );
+
         },
 
         /**
@@ -359,10 +451,12 @@
          */
         preprocessAnimations: function () {
 
-            var json = this.LOADED_GLTF_FILES[ 'glTF' ];
+            var json = this._loadedFiles.glTF;
 
-            var animationManager = new osgAnimation.BasicAnimationManager();
-            var animations = [];
+            if ( !json.animations )
+                return Promise.resolve();
+
+            var animPromiseArray = [];
 
             var animationsObjectKeys = window.Object.keys( json.animations );
             for ( var i = 0; i < animationsObjectKeys.length; ++i ) {
@@ -370,33 +464,42 @@
                 var glTFAnim = json.animations[ animationsObjectKeys[ i ] ];
                 var glTFAnimParams = glTFAnim.parameters;
 
-                var osgChannels = [];
-
+                var channelsPromiseArray = [];
                 // Creates each OSGJS channel
                 for ( var j = 0; j < glTFAnim.channels.length; ++j ) {
 
                     var glTFChannel = glTFAnim.channels[ j ];
-                    var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim, glTFAnimParams );
 
-                    this.animatedNodes_[ glTFChannel.target.id ] = true;
-                    osgChannels.push( osgChannel );
+                    var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim, glTFAnimParams );
+                    channelsPromiseArray.push( osgChannel );
                 }
 
-                animations.push( osgAnimation.Animation.createAnimation( osgChannels, animationsObjectKeys[ i ] ) );
+                var animPromise = this.createAnimationFromChannels( channelsPromiseArray, animationsObjectKeys[ i ] );
+                animPromiseArray.push( animPromise );
             }
 
-            animationManager.init( animations );
-            this.basicAnimationManager_ = animationManager;
+            var self = this;
+            return Promise.all( animPromiseArray ).then( function ( animations ) {
+
+                var animationManager = new osgAnimation.BasicAnimationManager();
+                animationManager.init( animations );
+
+                self._basicAnimationManager = animationManager;
+
+            } );
+
         },
 
         loadBone: function ( boneId, skin ) {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
             var node = json.nodes[ boneId ];
+
+            var self = this;
 
             var inverseBindMatricesAccessor = json.accessors[ skin.inverseBindMatrices ];
             var bonePromise = this.loadAccessorBuffer( inverseBindMatricesAccessor, null );
-            bonePromise.then(function(data) {
+            return bonePromise.then( function ( data ) {
 
                 // Creates the current bone
                 // initializing it with initial pose
@@ -410,23 +513,24 @@
                 var invMat = data.subarray( i * 16, i * 16 + 16 );
                 boneNode.setInvBindMatrixInSkeletonSpace( invMat );
 
-                return boneNode;
-            });
+                self._bones[ boneId ] = boneNode;
 
-            return bonePromise;
+                return boneNode;
+            } );
+
         },
 
         buildInfluenceMap: function ( rootBoneId, skin ) {
 
-            if ( this.skeletonToInfluenceMap_[ rootBoneId ] )
+            if ( this._skeletonToInfluenceMap[ rootBoneId ] )
                 return;
 
-            this.skeletonToInfluenceMap_[ rootBoneId ] = {};
+            this._skeletonToInfluenceMap[ rootBoneId ] = {};
 
             for ( var j = 0; j < skin.jointNames.length; j++ ) {
 
                 var jointName = skin.jointNames[ j ];
-                this.skeletonToInfluenceMap_[ rootBoneId ][ jointName ] = j;
+                this._skeletonToInfluenceMap[ rootBoneId ][ jointName ] = j;
 
             }
 
@@ -434,7 +538,7 @@
 
         mapBonesToSkin: function () {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
 
             var boneToSkin = {};
 
@@ -466,7 +570,7 @@
 
         preprocessBones: function ( bonesToSkin ) {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
             var nodesKeys = window.Object.keys( json.nodes );
 
             var promises = [];
@@ -479,26 +583,23 @@
                 if ( !boneNode.jointName )
                     continue;
 
-                var bonePromise = this.loadBone( boneId, bonesToSkin[ boneId ] ).then(function(boneNode) {
-
-                    this.bones_[ boneId ] = boneNode;
-
-                });
-                promises.push(bonePromise);
+                var bonePromise = this.loadBone( boneId, bonesToSkin[ boneId ] );
+                promises.push( bonePromise );
 
             }
 
-            return Promise.all(promises);
+            return Promise.all( promises );
 
         },
 
         preprocessSkeletons: function () {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
+
+            if ( !json.skins )
+                return Promise.resolve();
 
             var bonesToSkin = this.mapBonesToSkin();
-
-            var promises = [];
 
             // Saves each skeleton in the skeleton maprep
             var nodesKeys = window.Object.keys( json.nodes );
@@ -533,9 +634,9 @@
 
                     }
 
-                    if ( rootBoneId && !this.skeletons_[ rootBoneId ] ) {
+                    if ( rootBoneId && !this._skeletons[ rootBoneId ] ) {
 
-                        this.skeletons_[ rootJointId ] = new osgAnimation.Skeleton();
+                        this._skeletons[ rootJointId ] = new osgAnimation.Skeleton();
 
                         // Adds missing bone to the boneMap
                         bonesToSkin[ rootBoneId ] = skin;
@@ -546,9 +647,8 @@
             }
 
             var bonesPromise = this.preprocessBones( bonesToSkin );
-            promises.push(bonesPromise);
 
-            return Promise.all(promises);
+            return bonesPromise;
         },
 
         loadPBRMaterial: function ( glTFmaterial, geometryNode ) {
@@ -561,13 +661,13 @@
             var osgStateSet = geometryNode.getOrCreateStateSet();
 
             var promises = [];
-            if ( model === this.PBR_METAL_MODE ) {
+            if ( model === GLTFLoader.PBR_METAL_MODE ) {
 
-                promises.push( this.createTextureAndSetAttrib( values.baseColorTexture, osgStateSet, this.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.roughnessTexture, osgStateSet, this.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.metallicTexture, osgStateSet, this.METALNESS_TEXTURE_UNIT, 'specularMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, this.NORMAL_TEXTURE_UNIT, 'normalMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, this.AO_TEXTURE_UNIT, 'aoMap' ) );
+                promises.push( this.createTextureAndSetAttrib( values.baseColorTexture, osgStateSet, GLTFLoader.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
+                promises.push( this.createTextureAndSetAttrib( values.roughnessTexture, osgStateSet, GLTFLoader.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' ) );
+                promises.push( this.createTextureAndSetAttrib( values.metallicTexture, osgStateSet, GLTFLoader.METALNESS_TEXTURE_UNIT, 'specularMap' ) );
+                promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, GLTFLoader.NORMAL_TEXTURE_UNIT, 'normalMap' ) );
+                promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, GLTFLoader.AO_TEXTURE_UNIT, 'aoMap' ) );
             }
 
             geometryNode.stateset = osgStateSet;
@@ -577,10 +677,10 @@
 
         loadMaterial: function ( materialId, geometryNode ) {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
             var glTFmaterial = json.materials[ materialId ];
 
-            var extension = this.findByKey( glTFmaterial.extensions, this.PBR_EXTENSION );
+            var extension = this.findByKey( glTFmaterial.extensions, GLTFLoader.PBR_EXTENSION );
             if ( extension )
                 return this.loadPBRMaterial( extension, geometryNode );
 
@@ -604,92 +704,85 @@
                 osgMaterial.setSpecular( values.specular );
 
             // Create a texture for the diffuse, if any
-            if ( values.diffuse )
-                return this.createTextureAndSetAttrib( values.diffuse, osgStateSet, 0 );
+            if ( values.diffuse ) {
+
+                if ( typeof ( values.diffuse ) !== 'string' )
+                    osgMaterial.setDiffuse( values.diffuse );
+                else
+                    return this.createTextureAndSetAttrib( values.diffuse, osgStateSet, 0 );
+            }
 
             return Promise.resolve();
         },
 
         createGeometry: function ( primitive, skeletonJointId ) {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
+            var promisesArray = [];
 
             // Builds the geometry from the extracted vertices & normals
             var geom = new osg.Geometry();
             var rigOrGeom = geom;
 
-            var i = 0;
-
             var cbSetBuffer = function ( name, buffer ) {
+
                 this.getVertexAttributeList()[ name ] = buffer;
+
             };
 
-            var promisesArray = [];
             if ( skeletonJointId ) {
 
                 rigOrGeom = new osgAnimation.RigGeometry();
-                rigOrGeom._boneNameID = this.skeletonToInfluenceMap_[ skeletonJointId ];
-
-                var jointAccessor = json.accessors[ primitive.attributes.JOINT ];
-                var weightAccessor = json.accessors[ primitive.attributes.WEIGHT ];
-
-                var jointPromise = this.loadAccessorBuffer( jointAccessor, osg.BufferArray.ARRAY_BUFFER );
-                jointPromise.then( cbSetBuffer.bind( rigOrGeom, 'Bones' ) );
-
-                var weightPromise = this.loadAccessorBuffer( weightAccessor, osg.BufferArray.ARRAY_BUFFER );
-                weightPromise.then( function ( data ) {
-
-                    rigOrGeom.getAttributes().Weights = data;
-
-                    var elts = rigOrGeom.getAttributes().Weights.getElements();
-                    for ( i = 0; i < elts.length / 4; ++i ) {
-                        var sum = elts[ i * 4 ] + elts[ i * 4 + 1 ] + elts[ i * 4 + 2 ] + elts[ i * 4 + 3 ];
-                        var correc = 1.0 / sum;
-                        elts[ i * 4 ] *= correc;
-                        elts[ i * 4 + 1 ] *= correc;
-                        elts[ i * 4 + 2 ] *= correc;
-                        elts[ i * 4 + 3 ] *= correc;
-                    }
-                } );
-
-                promisesArray.push( jointPromise, weightPromise );
+                rigOrGeom._boneNameID = this._skeletonToInfluenceMap[ skeletonJointId ];
 
             }
 
-            var vertexAccessor = json.accessors[ primitive.attributes.POSITION ];
-            var normalAccessor = json.accessors[ primitive.attributes.NORMAL ];
-
-            var vertexPromise = this.loadAccessorBuffer( vertexAccessor, osg.BufferArray.ARRAY_BUFFER );
-            vertexPromise.then( cbSetBuffer.bind( geom, 'Vertex' ) );
-
-            var normalPromise = this.loadAccessorBuffer( normalAccessor, osg.BufferArray.ARRAY_BUFFER );
-            normalPromise.then( cbSetBuffer.bind( geom, 'Normal' ) );
-
-            promisesArray.push( vertexPromise, normalPromise );
-
+            // Registers each glTF primitive attributes
+            // into a respective geometry attribute
             var attributesKeys = window.Object.keys( primitive.attributes );
-            // Adds each TexCoords to the geometry
-            for ( i = 0; i < attributesKeys.length; ++i ) {
+            for ( var i = 0; i < attributesKeys.length; ++i ) {
 
-                if ( attributesKeys[ i ].indexOf( 'TEXCOORD' ) === -1 )
-                    continue;
+                var accessor = json.accessors[ primitive.attributes[ attributesKeys[ i ] ] ];
+                var promise = this.loadAccessorBuffer( accessor, osg.BufferArray.ARRAY_BUFFER );
 
-                var texCoordId = attributesKeys[ i ].substr( 9 );
-                var textCoordAccessor = json.accessors[ primitive.attributes[ attributesKeys[ i ] ] ];
+                if ( attributesKeys[ i ].indexOf( 'POSITION' ) !== -1 ) {
 
-                var texCoordPromise = this.loadAccessorBuffer( textCoordAccessor, osg.BufferArray.ARRAY_BUFFER );
-                texCoordPromise.then( cbSetBuffer.bind( geom, 'TexCoord' + texCoordId ) );
+                    promise.then( cbSetBuffer.bind( geom, 'Vertex' ) );
 
-                promisesArray.push( texCoordPromise );
-            }
+                } else if ( attributesKeys[ i ].indexOf( 'NORMAL' ) !== -1 ) {
 
-            if ( skeletonJointId ) {
+                    promise.then( cbSetBuffer.bind( geom, 'Normal' ) );
 
-                rigOrGeom.setSourceGeometry( geom );
-                rigOrGeom.mergeChildrenData();
+                } else if ( attributesKeys[ i ].indexOf( 'JOINT' ) !== -1 ) {
 
-                // TODO remove blabla
-                rigOrGeom.computeBoundingBox = geom.computeBoundingBox;
+                    promise.then( cbSetBuffer.bind( rigOrGeom, 'Bones' ) );
+
+                } else if ( attributesKeys[ i ].indexOf( 'WEIGHT' ) !== -1 ) {
+
+                    promise.then( function ( data ) {
+
+                        rigOrGeom.getAttributes().Weights = data;
+
+                        var elts = rigOrGeom.getAttributes().Weights.getElements();
+                        for ( i = 0; i < elts.length / 4; ++i ) {
+                            var sum = elts[ i * 4 ] + elts[ i * 4 + 1 ] + elts[ i * 4 + 2 ] + elts[ i * 4 + 3 ];
+                            var correc = 1.0 / sum;
+                            elts[ i * 4 ] *= correc;
+                            elts[ i * 4 + 1 ] *= correc;
+                            elts[ i * 4 + 2 ] *= correc;
+                            elts[ i * 4 + 3 ] *= correc;
+                        }
+                    } );
+
+                } else if ( attributesKeys[ i ].indexOf( 'TEXCOORD' ) !== -1 ) {
+
+                    var texCoordId = attributesKeys[ i ].substr( 9 );
+                    promise.then( cbSetBuffer.bind( geom, 'TexCoord' + texCoordId ) );
+
+                }
+
+                promisesArray.push( promise );
+
             }
 
             var indicesAccessor = json.accessors[ primitive.indices ];
@@ -697,17 +790,24 @@
             indicesPromise.then( function ( data ) {
 
                 var osgPrimitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, data );
-                rigOrGeom.getPrimitives().push( osgPrimitive );
+                geom.getPrimitives().push( osgPrimitive );
 
             } );
 
             promisesArray.push( indicesPromise );
 
             if ( primitive.material )
-                promisesArray.push( this.loadMaterial( primitive.material, rigOrGeom ) );
-
+                promisesArray.push( this.loadMaterial( primitive.material, geom ) );
 
             return Promise.all( promisesArray ).then( function () {
+
+                if ( skeletonJointId ) {
+
+                    rigOrGeom.setSourceGeometry( geom );
+                    rigOrGeom.mergeChildrenData();
+
+                    rigOrGeom.computeBoundingBox = geom.computeBoundingBox;
+                }
 
                 return rigOrGeom;
 
@@ -716,7 +816,7 @@
 
         loadGLTFPrimitives: function ( meshId, resultMeshNode, skeletonJointId ) {
 
-            var json = this.LOADED_GLTF_FILES.glTF;
+            var json = this._loadedFiles.glTF;
             var mesh = json.meshes[ meshId ];
 
             var primitives = mesh.primitives;
@@ -744,10 +844,10 @@
 
         loadGLTFNode: function ( nodeId, root ) {
 
-            if ( this.visitedNodes_[ nodeId ] )
+            if ( this._visitedNodes[ nodeId ] )
                 return;
 
-            var json = this.LOADED_GLTF_FILES[ 'glTF' ];
+            var json = this._loadedFiles[ 'glTF' ];
             var glTFNode = json.nodes[ nodeId ];
             var children = glTFNode.children;
 
@@ -757,7 +857,7 @@
 
             if ( glTFNode.jointName ) {
 
-                currentNode = this.bones_[ nodeId ];
+                currentNode = this._bones[ nodeId ];
 
             } else {
 
@@ -765,9 +865,9 @@
 
             }
 
-            if ( glTFNode.jointName && this.skeletons_[ glTFNode.jointName ] ) {
+            if ( glTFNode.jointName && this._skeletons[ glTFNode.jointName ] ) {
 
-                var skeleton = this.skeletons_[ glTFNode.jointName ];
+                var skeleton = this._skeletons[ glTFNode.jointName ];
                 skeleton.addChild( currentNode );
                 root.addChild( skeleton );
 
@@ -808,7 +908,7 @@
                     for ( var j = 0; j < glTFNode.skeletons.length; ++j ) {
 
                         var rootJointId = glTFNode.skeletons[ j ];
-                        var skeletonNode = this.skeletons_[ rootJointId ];
+                        var skeletonNode = this._skeletons[ rootJointId ];
 
                         var meshTransformNode = new osg.MatrixTransform();
                         osg.mat4.copy( meshTransformNode.getMatrix(), currentNode.getMatrix() );
@@ -826,13 +926,13 @@
 
             // Loads solid animations
             // by adding an update callback
-            if ( this.animatedNodes_[ nodeId ] )
+            if ( this._animatedNodes[ nodeId ] )
                 this.registerUpdateCallback( nodeId, currentNode );
 
-            if ( !this.skeletons_[ nodeId ] )
+            if ( !this._skeletons[ nodeId ] )
                 root.addChild( currentNode );
 
-            this.visitedNodes_[ nodeId ] = true;
+            this._visitedNodes[ nodeId ] = true;
 
             return Promise.all( promises );
         },
@@ -840,13 +940,11 @@
         loadGLTF: function ( files ) {
 
             var self = this;
-            this.FILES = files;
-            this.LOADED_GLTF_FILES = {};
 
-            var i;
+            this._files = files;
+            this._loadedFiles = {};
 
-            var glTFFileOrUrl = this.findGLTFFile( this.FILES );
-            var glTFFilePromise = this.loadFile( glTFFileOrUrl, 'gltf' );
+            var glTFFilePromise = this.loadGLTFJson( this._files );
 
             // Creates the root node
             // adding a PI / 2 rotation arround the X-axis
@@ -857,52 +955,58 @@
 
             return glTFFilePromise.then( function ( glTFFile ) {
 
-                self.LOADED_GLTF_FILES.glTF = JSON.parse( glTFFile );
-                var json = self.LOADED_GLTF_FILES.glTF;
+                self._loadedFiles.glTF = JSON.parse( glTFFile );
+                var json = self._loadedFiles.glTF;
 
-                // Preprocesses skin animations if any
-                var skeletonPromise = null;
-                if ( json.skins )
-                    skeletonPromise = self.preprocessSkeletons();
+                var promisesArray = [];
 
                 // Preprocesses animations
-                //if ( json.animations && Object.keys( json.animations ).length > 0 )
-                //  self.preprocessAnimations();
+                var animPromise = self.preprocessAnimations();
 
-                // Loops through each scene
-                // loading geometry nodes, transform nodes, etc...s
-                //var scenes = json.scenes;
-                var sceneKeys = Object.keys( json.scenes );
-                var promises = [];
+                // Preprocesses skin animations if any
+                var skeletonPromise = self.preprocessSkeletons();
 
-                for ( i = 0; i < sceneKeys.length; ++i ) {
+                promisesArray.push( skeletonPromise, animPromise );
+                return Promise.all( promisesArray ).then( function () {
 
-                    var scene = json.scenes[ sceneKeys[ i ] ];
+                    var promises = [];
+                    // Loops through each scene
+                    // loading geometry nodes, transform nodes, etc...s
+                    var sceneKeys = Object.keys( json.scenes );
 
-                    if ( !scene )
-                        continue;
+                    for ( var i = 0; i < sceneKeys.length; ++i ) {
 
-                    for ( i = 0; i < scene.nodes.length; ++i ) {
+                        var scene = json.scenes[ sceneKeys[ i ] ];
 
-                        var p = self.loadGLTFNode( scene.nodes[ i ], root );
-                        promises.push( p );
+                        if ( !scene )
+                            continue;
 
+                        for ( var j = 0; j < scene.nodes.length; ++j ) {
+
+                            var p = self.loadGLTFNode( scene.nodes[ j ], root );
+                            promises.push( p );
+
+                        }
                     }
-                }
 
-                return Promise.all( promises ).then( function () {
+                    // Register the animation manager
+                    // if the glTF file contains animations
+                    if ( self._basicAnimationManager )
+                        root.addUpdateCallback( self._basicAnimationManager );
 
-                    return root;
+                    return Promise.all( promises ).then( function () {
+
+                        return root;
+
+                    } );
 
                 } );
-                // Register the animation manager
-                // if the glTF file contains animations
-                //if ( self.basicAnimationManager_ )
-                //  root.addUpdateCallback( self.basicAnimationManager_ );
+
             } );
         }
 
     };
 
     window.GLTFLoader = GLTFLoader;
+
 } )();

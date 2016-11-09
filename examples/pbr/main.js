@@ -233,12 +233,18 @@
                 var loader = new GLTFLoader();
 
                 var promise = loader.loadGLTF( this.files );
-                promise.then(function(r) {
+                promise.then( function ( root ) {
+
+                    if ( !root )
+                        return;
 
                     //loadFromReader( this.files, 0 );
-                    r.setNodeMask( 0x0 );
-                    self._proxyModel.addChild( r );
-                    self._modelsLoaded[ gltfFileName ] = r;
+                    root.setNodeMask( 0x0 );
+                    osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 5, 5, 5 ] );
+
+                    self._proxyModel.addChild( root );
+
+                    self._modelsLoaded[ gltfFileName ] = root;
 
                     self._viewer.getManipulator().computeHomePosition();
 
@@ -247,8 +253,8 @@
                     controllers[ controllers.length - 1 ].remove();
 
                     self._gui.add( self._config, 'model', modelList ).onChange( self.updateModel.bind( self ) );
-                    
-                });
+
+                } );
 
             } );
 
