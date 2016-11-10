@@ -229,7 +229,7 @@
 
                 }
 
-                var promise = osgDB.registry().getReaderWriterMap().gltf.readNodeURL( this.files );
+                var promise = osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' ).readNodeURL( this.files );
                 promise.then( function ( root ) {
 
                     if ( !root )

@@ -1,6 +1,6 @@
 'use strict';
 
-
+var Registry = require( 'osgDB/Registry' );
 var animation = require( 'osgAnimation/animation' );
 var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
 var Skeleton = require( 'osgAnimation/Skeleton' );
@@ -207,11 +207,11 @@ GLTFLoader.prototype = {
             if ( uri !== 'gltf' ) {
 
                 if ( urlOrFile.indexOf( 'http://' ) !== 0 && urlOrFile.indexOf( 'https://' ) !== 0 ||
-                     urlOrFile.indexOf( 'www.' ) !== 0 ) {
+                    urlOrFile.indexOf( 'www.' ) !== 0 ) {
 
-                         urlOrFile = this._localPath + uri;
+                    urlOrFile = this._localPath + uri;
 
-                     }
+                }
             }
 
             var xhr = new XMLHttpRequest();
@@ -965,7 +965,7 @@ GLTFLoader.prototype = {
         return Promise.all( promises );
     },
 
-    loadGLTF: function ( files ) {
+    readNodeURL: function ( files ) {
 
         var self = this;
 
@@ -1034,5 +1034,7 @@ GLTFLoader.prototype = {
     }
 
 };
+
+Registry.instance().addReaderWriter( 'gltf', new GLTFLoader() );
 
 module.exports = GLTFLoader;
