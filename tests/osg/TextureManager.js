@@ -18,7 +18,8 @@ module.exports = function () {
                     Texture.TEXTURE_2D,
                     Texture.RGBA,
                     1024,
-                    1024 );
+                    1024,
+                    1 );
                 batch0.push( to );
             }
         } )();
@@ -29,16 +30,16 @@ module.exports = function () {
                     Texture.TEXTURE_2D,
                     Texture.ALPHA,
                     512,
-                    1024 );
+                    1024, 1 );
                 batch1.push( to );
             }
         } )();
 
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getUsedTextureObjects().length, 4, 'check nb texture 1024x1024 created' );
-        assert.equal( tm._textureSetMap[ '355364065121024' ].getUsedTextureObjects().length, 2, 'check nb texture 512x1024 created' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getUsedTextureObjects().length, 4, 'check nb texture 1024x1024 created' );
+        assert.equal( tm._textureSetMap[ '3553640651210241' ].getUsedTextureObjects().length, 2, 'check nb texture 512x1024 created' );
 
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 0, 'check orphan texture 1024x1024 null' );
-        assert.equal( tm._textureSetMap[ '355364065121024' ].getOrphanedTextureObjects().length, 0, 'check orphan texture 512x1024 null' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getOrphanedTextureObjects().length, 0, 'check orphan texture 1024x1024 null' );
+        assert.equal( tm._textureSetMap[ '3553640651210241' ].getOrphanedTextureObjects().length, 0, 'check orphan texture 512x1024 null' );
 
         batch1.forEach( function ( to ) {
             tm.releaseTextureObject( to );
@@ -48,16 +49,16 @@ module.exports = function () {
             tm.releaseTextureObject( to );
         } );
 
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 4, 'check orphan 1024x1024 after release' );
-        assert.equal( tm._textureSetMap[ '355364065121024' ].getOrphanedTextureObjects().length, 2, 'check orphan 512x1024 after release' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getOrphanedTextureObjects().length, 4, 'check orphan 1024x1024 after release' );
+        assert.equal( tm._textureSetMap[ '3553640651210241' ].getOrphanedTextureObjects().length, 2, 'check orphan 512x1024 after release' );
 
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getUsedTextureObjects().length, 0, 'check used 1024x1024 empty after release' );
-        assert.equal( tm._textureSetMap[ '355364065121024' ].getUsedTextureObjects().length, 0, 'check used 512x1024 empty after release' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getUsedTextureObjects().length, 0, 'check used 1024x1024 empty after release' );
+        assert.equal( tm._textureSetMap[ '3553640651210241' ].getUsedTextureObjects().length, 0, 'check used 512x1024 empty after release' );
 
         tm.flushAllDeletedTextureObjects( gl );
 
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 0, 'check orphan 1024x1024 empty delete' );
-        assert.equal( tm._textureSetMap[ '355364065121024' ].getOrphanedTextureObjects().length, 0, 'check orphan 512x1024 empty after delete' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getOrphanedTextureObjects().length, 0, 'check orphan 1024x1024 empty delete' );
+        assert.equal( tm._textureSetMap[ '3553640651210241' ].getOrphanedTextureObjects().length, 0, 'check orphan 512x1024 empty after delete' );
 
     } );
 
@@ -72,7 +73,8 @@ module.exports = function () {
                     Texture.TEXTURE_2D,
                     Texture.RGBA,
                     1024,
-                    1024 );
+                    1024,
+                    1 );
                 batch0.push( to );
             }
         } )();
@@ -82,16 +84,16 @@ module.exports = function () {
             tm.releaseTextureObject( to );
         } );
 
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 40, 'check orphan 1024x1024 after release' );
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getUsedTextureObjects().length, 0, 'check used 1024x1024 empty after release' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getOrphanedTextureObjects().length, 40, 'check orphan 1024x1024 after release' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getUsedTextureObjects().length, 0, 'check used 1024x1024 empty after release' );
 
         // flush TO's in 0.001 seconds
         tm.flushDeletedTextureObjects( gl, 0.00001 );
         // There is no time to flush all the released texture objects
-        assert.isOk( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length > 0, 'check orphan 1024x1024 delete not empty' );
+        assert.isOk( tm._textureSetMap[ '35536408102410241' ].getOrphanedTextureObjects().length > 0, 'check orphan 1024x1024 delete not empty' );
         // flush all TO's
         tm.flushAllDeletedTextureObjects( gl );
         // now all the TO's should be flushed.
-        assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 0, 'check orphan 1024x1024 empty delete' );
+        assert.equal( tm._textureSetMap[ '35536408102410241' ].getOrphanedTextureObjects().length, 0, 'check orphan 1024x1024 empty delete' );
     } );
 };

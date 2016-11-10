@@ -159,6 +159,7 @@ WebGLCaps.prototype = {
             this._checkRTT[ Texture.FLOAT + ',' + Texture.LINEAR ] = true;
             this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.LINEAR ] = true;
 
+            return;
             var nativeExtension = [
                 'OES_element_index_uint',
                 'EXT_sRGB',

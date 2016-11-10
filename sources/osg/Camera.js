@@ -195,21 +195,19 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
         },
 
-        attachTexture: function ( bufferComponent, texture, textureTarget ) {
+        attachTexture: function ( bufferComponent, texture, textureTargetOrLevel, layer ) {
             if ( this.frameBufferObject ) {
                 this.frameBufferObject.dirty();
             }
 
-            // because before the argument was level and the spec says
-            // it must always be 0 ! is valid for 0 or undefined
-            if ( !textureTarget ) {
-                textureTarget = Texture.TEXTURE_2D;
-            }
-
             this._attachments[ bufferComponent ] = {
-                'attachment': bufferComponent,
-                'texture': texture,
-                'textureTarget': textureTarget
+                attachment: bufferComponent,
+                texture: texture,
+                // because before the argument was level and the spec says
+                // it must always be 0 in webgl1
+                textureTarget: textureTargetOrLevel || Texture.TEXTURE_2D,
+                level: textureTargetOrLevel || 0,
+                layer: layer || 0
             };
         },
 
@@ -218,8 +216,8 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
                 this.frameBufferObject.dirty();
             }
             this._attachments[ bufferComponent ] = {
-                'format': internalFormat,
-                'attachment': bufferComponent
+                format: internalFormat,
+                attachment: bufferComponent
             };
         },
 

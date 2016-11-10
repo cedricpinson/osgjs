@@ -34,7 +34,7 @@ var Texture = function () {
     this.setDefaultParameters();
     this._dirty = true;
     this._dirtyMipmap = true;
-    this._applyTexImage2DCallbacks = [];
+    this._applyTexImageCallbacks = [];
     this._textureObject = undefined;
 
     this._textureNull = true;
@@ -124,6 +124,11 @@ Texture.UNSIGNED_SHORT_5_6_5 = 0x8363;
 Texture.FLOAT = 0x1406;
 Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
+
+Texture.TEXTURE_3D = 0x806F;
+Texture.TEXTURE_2D_ARRAY = 0x8C1A;
+
+
 Texture._sTextureManager = new window.Map();
 
 // Getter for textureManager
@@ -203,6 +208,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         this._maxAnisotropy = 1.0;
         this._wrapS = Texture.CLAMP_TO_EDGE;
         this._wrapT = Texture.CLAMP_TO_EDGE;
+        this._wrapR = Texture.CLAMP_TO_EDGE;
         this._textureWidth = 0;
         this._textureHeight = 0;
         this._unrefImageDataAfterApply = false;
@@ -272,7 +278,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 this._textureTarget,
                 this._internalFormat,
                 this._textureWidth,
-                this._textureHeight );
+                this._textureHeight, 1 );
 
             this.dirty();
             this._dirtyTextureObject = false;
@@ -280,19 +286,19 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         }
     },
 
-    addApplyTexImage2DCallback: function ( callback ) {
+    addApplyTexImageCallback: function ( callback ) {
 
-        var index = this._applyTexImage2DCallbacks.indexOf( callback );
+        var index = this._applyTexImageCallbacks.indexOf( callback );
         if ( index < 0 ) {
-            this._applyTexImage2DCallbacks.push( callback );
+            this._applyTexImageCallbacks.push( callback );
         }
     },
 
-    removeApplyTexImage2DCallback: function ( callback ) {
+    removeApplyTexImageCallback: function ( callback ) {
 
-        var index = this._applyTexImage2DCallbacks.indexOf( callback );
+        var index = this._applyTexImageCallbacks.indexOf( callback );
         if ( index >= 0 ) {
-            this._applyTexImage2DCallbacks.splice( index, 1 );
+            this._applyTexImageCallbacks.splice( index, 1 );
         }
     },
 
@@ -320,6 +326,10 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         return this._wrapS;
     },
 
+    getWrapR: function () {
+        return this._wrapR;
+    },
+
     setWrapS: function ( value ) {
 
         if ( typeof value === 'string' ) {
@@ -338,6 +348,17 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             this._wrapT = checkAndFixEnum( value, Texture.CLAMP_TO_EDGE );
         } else {
             this._wrapT = value;
+        }
+
+        this.dirtyTextureParameters();
+    },
+
+    setWrapR: function ( value ) {
+
+        if ( typeof value === 'string' ) {
+            this._wrapR = checkAndFixEnum( value, Texture.CLAMP_TO_EDGE );
+        } else {
+            this._wrapR = value;
         }
 
         this.dirtyTextureParameters();
@@ -560,7 +581,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             for ( var level = 1, nbLevel = mips.length; level < nbLevel; level++ ) {
                 var imi = mips[ level ];
                 if ( this._isCompressed )
-                    this.applyTexImage2D( gl, this._textureTarget, level, this._internalFormat, imi.getWidth(), imi.getHeight(), 0, imi.getImage() );
+                    this.applyTexImage2D( gl, this._textureTarget, level, internalFormat, imi.getWidth(), imi.getHeight(), 0, imi.getImage() );
                 else
                     this.applyTexImage2D( gl, this._textureTarget, level, internalFormat, imi.getWidth(), imi.getHeight(), 0, internalFormat, this._type, imi.getImage() );
             }
@@ -593,10 +614,10 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         else gl.texImage2D.apply( gl, args );
 
         // call a callback when upload is done if there is one
-        var numCallback = this._applyTexImage2DCallbacks.length;
+        var numCallback = this._applyTexImageCallbacks.length;
         if ( numCallback > 0 ) {
             for ( var i = 0, l = numCallback; i < l; i++ ) {
-                this._applyTexImage2DCallbacks[ i ].call( this );
+                this._applyTexImageCallbacks[ i ].call( this );
             }
         }
     },
@@ -726,6 +747,9 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 MACROUTILS.setTypeID( Texture );
 
 Texture.textureNull = new Texture();
+
+Texture.prototype.removeApplyTexImage2DCallback = Texture.prototype.removeApplyTexImageCallback;
+Texture.prototype.addApplyTexImage2DCallback = Texture.prototype.addApplyTexImageCallback;
 
 Texture.createFromImage = function ( image, format ) {
     var a = new Texture();
