@@ -12,7 +12,6 @@
 
     var Environment = window.Environment;
     var ModelLoader = window.ModelLoader;
-    var GLTFLoader = window.GLTFLoader;
 
     var PredefinedMaterials = {
         Silver: [ 0.971519, 0.959915, 0.915324 ],
@@ -230,9 +229,7 @@
 
                 }
 
-                var loader = new GLTFLoader();
-
-                var promise = loader.loadGLTF( this.files );
+                var promise = osgDB.registry().getReaderWriterMap().gltf.readNodeURL( this.files );
                 promise.then( function ( root ) {
 
                     if ( !root )

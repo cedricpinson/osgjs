@@ -15,6 +15,12 @@ var MatrixTransform = require( 'osg/MatrixTransform' );
 var Projection = require( 'osg/Projection' );
 
 
+var readNodeURLGLTF = function ( url, options ) {
+    var ReaderWriterGLTF = require( 'osgPlugins/ReaderWriterGLTF' );
+    var loader = new ReaderWriterGLTF();
+    return loader.loadGLTF( url );
+};
+
 var ReaderParser = {};
 
 ReaderParser.ObjectWrapper = {};
@@ -30,6 +36,11 @@ ReaderParser.readBinaryArrayURL = function ( url, options ) {
 };
 
 ReaderParser.readNodeURL = function ( url, options ) {
+
+    if ( url.search( '.gltf' ) !== -1 ) {
+        return readNodeURLGLTF( url, options );
+    }
+
     return ReaderParser.registry().readNodeURL( url, options );
 };
 
@@ -37,7 +48,24 @@ ReaderParser.registry = function () {
     var Input = require( 'osgDB/Input' );
     if ( ReaderParser.registry._input === undefined ) {
         ReaderParser.registry._input = new Input();
+
+        // populate in a dirty way, later we need to refactore
+        // to use a registry system like in osg
+        var readerWriterList = {
+            osgjs: {
+                readNodeURL : ReaderParser.readNodeURL
+            },
+            gltf: {
+                readNodeURL : readNodeURLGLTF
+            }
+        };
+
+        ReaderParser.registry._input.getReaderWriterMap = function () {
+            return readerWriterList;
+        };
+
     }
+
     return ReaderParser.registry._input;
 };
 
