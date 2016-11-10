@@ -240,7 +240,8 @@
 
                     //loadFromReader( this.files, 0 );
                     root.setNodeMask( 0x0 );
-                    osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 5, 5, 5 ] );
+                    //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 5, 5, 5 ] );
+                    osg.mat4.fromRotation( root.getMatrix(), Math.PI / 2, [ -1, 0, 0 ] );
 
                     self._proxyModel.addChild( root );
 

@@ -65,6 +65,12 @@
     GLTFLoader.NORMAL_TEXTURE_UNIT = 5;
     GLTFLoader.AO_TEXTURE_UNIT = 6;
 
+    GLTFLoader.ALBEDO_UNIFORM = 'albedoMap';
+    GLTFLoader.ROUGHNESS_UNIFORM = 'roughnessMap';
+    GLTFLoader.SPECULAR_UNIFORM = 'specularMap';
+    GLTFLoader.NORMAL_UNIFORM = 'normalMap';
+    GLTFLoader.AO_UNIFORM = 'aoMap';
+
     GLTFLoader.prototype = {
 
         getFileName: function ( urlOrFile ) {
@@ -663,11 +669,11 @@
             var promises = [];
             if ( model === GLTFLoader.PBR_METAL_MODE ) {
 
-                promises.push( this.createTextureAndSetAttrib( values.baseColorTexture, osgStateSet, GLTFLoader.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.roughnessTexture, osgStateSet, GLTFLoader.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.metallicTexture, osgStateSet, GLTFLoader.METALNESS_TEXTURE_UNIT, 'specularMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, GLTFLoader.NORMAL_TEXTURE_UNIT, 'normalMap' ) );
-                promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, GLTFLoader.AO_TEXTURE_UNIT, 'aoMap' ) );
+                promises.push( this.createTextureAndSetAttrib( values.baseColorTexture, osgStateSet, GLTFLoader.ALBEDO_TEXTURE_UNIT, GLTFLoader.ALBEDO_UNIFORM ) );
+                promises.push( this.createTextureAndSetAttrib( values.roughnessTexture, osgStateSet, GLTFLoader.ROUGHNESS_TEXTURE_UNIT, GLTFLoader.ROUGHNESS_UNIFORM ) );
+                promises.push( this.createTextureAndSetAttrib( values.metallicTexture, osgStateSet, GLTFLoader.METALNESS_TEXTURE_UNIT, GLTFLoader.SPECULAR_UNIFORM ) );
+                promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, GLTFLoader.NORMAL_TEXTURE_UNIT, GLTFLoader.NORMAL_UNIFORM ) );
+                promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, GLTFLoader.AO_TEXTURE_UNIT, GLTFLoader.AO_UNIFORM ) );
             }
 
             geometryNode.stateset = osgStateSet;
