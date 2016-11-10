@@ -256,10 +256,11 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
                         attach.texture = a.texture;
                         attach.textureTarget = a.textureTarget;
+                        if ( a.layer !== undefined ) attach.layer = a.layer;
+                        if ( a.level !== undefined ) attach.level = a.level;
 
-                        if ( a.format ) {
-                            attach.format = a.format;
-                        }
+                        if ( a.format ) attach.format = a.format;
+
                     }
 
                     fbo.setAttachment( attach );

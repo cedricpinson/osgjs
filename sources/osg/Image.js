@@ -12,6 +12,7 @@ var ImageObject = function ( image ) {
     this._url = undefined;
     this._width = undefined;
     this._height = undefined;
+    this._depth = 1;
     this._dirty = true;
     this._mipmap = [];
 
@@ -106,6 +107,10 @@ ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         this._height = h;
     },
 
+    setDepth: function ( d ) {
+        this._depth = d;
+    },
+
     getWidth: function () {
         var img = this.getImage();
         if ( this.isImage() ) {
@@ -128,6 +133,10 @@ ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             return img.height;
         }
         return this._height;
+    },
+
+    getDepth: function () {
+        return this._depth;
     },
 
     isGreyscale: function ( nbSamples ) {

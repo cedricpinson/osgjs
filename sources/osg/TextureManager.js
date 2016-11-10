@@ -3,11 +3,12 @@ var Notify = require( 'osg/notify' );
 var Timer = require( 'osg/Timer' );
 
 
-var TextureProfile = function ( target, internalFormat, width, height ) {
+var TextureProfile = function ( target, internalFormat, width, height, depth ) {
     this._target = target;
     this._internalFormat = internalFormat;
     this._width = width;
     this._height = height;
+    this._depth = depth;
     this._size = 0;
     this.computeSize();
 };
@@ -17,7 +18,8 @@ TextureProfile.prototype = {
         return textureProfile._target === this._target &&
             textureProfile._internalFormat === this._internalFormat &&
             textureProfile._width === this._width &&
-            textureProfile._height === this._height;
+            textureProfile._height === this._height &&
+            textureProfile._depth === this._depth;
     },
     computeSize: function () {
         var Texture = require( 'osg/Texture' );
@@ -56,7 +58,7 @@ TextureProfile.prototype = {
             break;
 
         }
-        var size = ( Math.ceil( this._width * this._height * numBitsPerTexel ) / 8.0 );
+        var size = ( Math.ceil( this._width * this._height * this._depth * numBitsPerTexel ) / 8.0 );
 
         if ( this._target === Texture.TEXTURE_CUBE_MAP )
             size *= 6.0;
@@ -197,16 +199,11 @@ var TextureManager = function () {
 
 TextureManager.prototype = {
 
-    generateTextureObject: function ( gl,
-        texture,
-        target,
-        internalFormat,
-        width,
-        height ) {
-        var hash = TextureProfile.getHash( target, internalFormat, width, height );
+    generateTextureObject: function ( gl, texture, target, internalFormat, width, height, depth ) {
+        var hash = TextureProfile.getHash( target, internalFormat, width, height, depth );
 
         if ( this._textureSetMap[ hash ] === undefined ) {
-            this._textureSetMap[ hash ] = new TextureObjectSet( new TextureProfile( target, internalFormat, width, height ) );
+            this._textureSetMap[ hash ] = new TextureObjectSet( new TextureProfile( target, internalFormat, width, height, depth ) );
         }
 
         var textureSet = this._textureSetMap[ hash ];
@@ -240,7 +237,7 @@ TextureManager.prototype = {
             var nb = this._textureSetMap[ key ].getUsedTextureObjects().length;
             size *= nb;
             total += size;
-            Notify.notice( String( size ) + ' MB with ' + nb + ' texture of ' + profile._width + 'x' + profile._height + ' ' + profile._internalFormat );
+            Notify.notice( String( size ) + ' MB with ' + nb + ' texture of ' + profile._width + 'x' + profile._height + ' ' + profile._depth + ' ' + profile._internalFormat );
         }, this );
         Notify.notice( String( total ) + ' MB in total' );
     },

@@ -150,7 +150,7 @@ var WebGLUtils = function () {
 
         // only try to enable if URl options ?webgl2=1
         var names = [];
-        if ( opt_attribs && opt_attribs.webgl2 ) {
+        if ( opt_attribs && Boolean(opt_attribs.webgl2) ) {
             names = names.concat( [ "webgl2", "experimental-webgl2" ] );
         }
         names = names.concat( [ "webgl", "experimental-webgl", "webkit-3d", "moz-webgl" ] );

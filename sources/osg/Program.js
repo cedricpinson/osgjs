@@ -44,11 +44,23 @@ var Program = function ( vShader, fShader ) {
 var getAttributeList = function ( vertexShader ) {
     var attributeMap = {};
 
+    var i, l, attr;
     var r = vertexShader.match( /attribute\s+\w+\s+\w+/g );
     if ( r !== null ) {
-        for ( var i = 0, l = r.length; i < l; i++ ) {
-            var attr = r[ i ].match( /attribute\s+\w+\s+(\w+)/ )[ 1 ];
+        for ( i = 0, l = r.length; i < l; i++ ) {
+            attr = r[ i ].match( /attribute\s+\w+\s+(\w+)/ )[ 1 ];
             attributeMap[ attr ] = true;
+        }
+    } else {
+
+        // try webgl2 regexp layout(location = 0) in vec3 Vertex;
+        // http://txt2re.com/index-javascript.php3?s=layout(location%20=%200)%20in%20vec3%20Vertex;&-5&1&4&13&9
+        r = vertexShader.match( /(layout)(\(.*\)).*?(\w+).*?(\w+).*?(\w+)/g );
+        if ( r !== null ) {
+            for ( i = 0, l = r.length; i < l; i++ ) {
+                attr = r[ i ].match( /(layout)(\(.*\)).*?(\w+).*?(\w+).*?(\w+)/ )[ 5 ];
+                attributeMap[ attr ] = true;
+            }
         }
     }
 

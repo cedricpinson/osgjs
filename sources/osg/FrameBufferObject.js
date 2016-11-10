@@ -4,6 +4,8 @@ var MACROUTILS = require( 'osg/Utils' );
 var GLObject = require( 'osg/GLObject' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Timer = require( 'osg/Timer' );
+var Texture3D = require( 'osg/Texture3D' );
+var Texture2DArray = require( 'osg/Texture2DArray' );
 var WebglCaps = require( 'osg/WebGLCaps' );
 
 /**
@@ -240,6 +242,33 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         return true;
     },
 
+    framebufferTextureLayer: function ( state, attachment, texture, level, layer ) {
+
+        var gl = this._gl;
+
+        // apply on unit 1 to init it
+        // make sure we do bind it whatever state stack
+        // texture is cached
+        state.applyTextureAttribute( 1, texture );
+
+        if ( texture.isDirty() || !texture.getTextureObject() ) {
+            // image wasn't ready, texture not allocated due to lack of gpu MEM
+            return false;
+        }
+
+        gl.framebufferTextureLayer( gl.FRAMEBUFFER, attachment, texture.getTextureObject().id(), level || 0 , layer || 0 );
+
+        /* develblock:start */
+        // only visible with webgl-insector enabled
+        // allow trace debug (fb<->texture link)
+        if ( gl.rawgl !== undefined ) {
+            Notify.log( 'FBO: texture: ' + texture.getName() + ' : ' + texture.getTextureObject().id().trackedObject.defaultName + ' fbo: ' + this._fbo.trackedObject.defaultName );
+        }
+        /* develblock:end */
+
+        return true;
+    },
+
     bindFrameBufferObject: function () {
         var gl = this._gl;
         gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
@@ -249,7 +278,7 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
         var gl = this._gl;
         var status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
-        if ( status !== 0x8CD5 ) {
+        if ( status !== gl.FRAMEBUFFER_COMPLETE ) {
             this._reportFrameBufferError( status );
         }
 
@@ -286,7 +315,7 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                 this.bindFrameBufferObject();
 
                 var hasRenderBuffer = false;
-
+                var buffers = [];
                 for ( var i = 0, l = attachments.length; i < l; ++i ) {
 
                     var attachment = attachments[ i ];
@@ -313,16 +342,26 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                             return;
                         }
 
-                        if ( !this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture ) ) {
+                        var result;
+                        if ( texture instanceof Texture3D || texture instanceof Texture2DArray )
+                            result = this.framebufferTextureLayer( state, attachment.attachment, texture, attachment.level, attachment.layer );
+                        else
+                            result = this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture );
+
+                        if ( !result ) {
                             this.releaseGLObjects();
                             return;
-
                         }
 
+                        buffers.push( attachment.attachment );
 
                     }
 
                 }
+
+
+                if ( gl.drawBuffers )
+                    gl.drawBuffers( buffers );
 
                 this.checkStatus();
 

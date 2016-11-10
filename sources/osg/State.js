@@ -959,7 +959,9 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             }
 
             vertexAttribMap[ attrib ] = array;
-            gl.vertexAttribPointer( attrib, array.getItemSize(), array.getType(), normalize, 0, 0 );
+            var type = array.getType();
+            if ( type === 0x1406 ) gl.vertexAttribPointer( attrib, array.getItemSize(), type, normalize, 0, 0 );
+            else gl.vertexAttribIPointer( attrib, array.getItemSize(), type, normalize, 0, 0 );
         }
     },
 
