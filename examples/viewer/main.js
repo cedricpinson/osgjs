@@ -46,9 +46,12 @@
         this._animController = {
             anim: null,
             timeFactor: 1.0,
+            loop: true,
             play: function () {},
-            pause: function () {},
-            playAll: function() {}
+            stop: function () {},
+            playAll: function () {},
+            stopAll: function () {},
+            pause: function () {}
         };
 
         this._modelList = [];
@@ -80,13 +83,20 @@
 
         switchModel: function () {
 
-            // Hides every models previously added
-            // to the proxy root node
+            var i = 0;
+            var animationManager = null;
+
+            // Processes every model by hiding them
+            // and stopping every running animations
             var nodeKeys = window.Object.keys( this._modelNodeMap );
-            for ( var i = 0; i < nodeKeys.length; ++i ) {
+            for ( i = 0; i < nodeKeys.length; ++i ) {
 
                 var node = this._modelNodeMap[ nodeKeys[ i ] ];
                 node.setNodeMask( 0x0 );
+
+                animationManager = this._modelAnimationManager[ nodeKeys[ i ] ];
+                if ( animationManager )
+                    animationManager.stopAllAnimation();
 
             }
 
@@ -95,10 +105,63 @@
             var newNode = this._modelNodeMap[ modelKey ];
             newNode.setNodeMask( ~0x0 );
 
-            /*if ( !this._modelAnimationManager[ modelKey ] ) {
+            this._animList = [];
+            this._animController.anim = null;
+            animationManager = this._modelAnimationManager[ modelKey ];
+            if ( animationManager ) {
 
+                var animationsKeys = window.Object.keys( animationManager.getAnimations() );
 
-            }*/
+                for ( i = 0; i < animationsKeys.length; ++i ) {
+
+                    this._animList.push( animationsKeys[ i ] );
+
+                }
+
+            }
+
+            var animationFolder = this._gui.__folders.Animation;
+            var controllers = animationFolder.__controllers;
+            controllers[ controllers.length - 1 ].remove();
+            animationFolder.add( this._animController, 'anim', this._animList );
+
+        },
+
+        playAnimation: function ( playAll ) {
+
+            var animationManager = this._modelAnimationManager[ this._config.model ];
+            if ( !animationManager ) return;
+
+            var config = {
+                name: this._animController.anim,
+                loop: this._animController.loop
+            };
+
+            if ( !playAll && this._animController.anim ) {
+
+                animationManager.playAnimation( config );
+                return;
+
+            }
+
+            for ( var i = 0; i < this._animList.length; ++i ) {
+
+                config.name = this._animList[ i ];
+                animationManager.playAnimation( config );
+
+            }
+
+        },
+
+        stopAnimation: function ( stopAll ) {
+
+            var animationManager = this._modelAnimationManager[ this._config.model ];
+            if ( !animationManager ) return;
+
+            if ( !stopAll && this._animController.anim )
+                animationManager.stopAnimation( this._animController.anim );
+            else if ( stopAll )
+                animationManager.stopAllAnimation();
 
         },
 
@@ -110,11 +173,21 @@
             modelFolder.add( this._config, 'model', this._modelList )
                 .onChange( this.switchModel.bind( this ) );
 
+            animationFolder.add( this._animController, 'loop' ).listen();
             animationFolder.add( this._animController, 'timeFactor', 0.0, 10.0 );
-            animationFolder.add( this._animController, 'play' );
+
+            animationFolder.add( this._animController, 'playAll' )
+                .onChange( this.playAnimation.bind( this, true ) );
+            animationFolder.add( this._animController, 'stopAll' )
+                .onChange( this.stopAnimation.bind( this, true ) );
+            animationFolder.add( this._animController, 'play' )
+                .onChange( this.playAnimation.bind( this ) );
+            animationFolder.add( this._animController, 'stop' )
+                .onChange( this.stopAnimation.bind( this ) );
+
             animationFolder.add( this._animController, 'pause' );
-            animationFolder.add( this._animController, 'playAll' );
             animationFolder.add( this._animController, 'anim', this._animList );
+
         },
 
         dragOverEvent: function ( evt ) {
