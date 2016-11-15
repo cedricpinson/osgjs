@@ -9,6 +9,7 @@
     var osgUtil = OSG.osgUtil;
     var osgShader = OSG.osgShader;
     var $ = window.$;
+    var JSZip = window.JSZip;
 
     var Environment = window.Environment;
     var ModelLoader = window.ModelLoader;
@@ -170,7 +171,7 @@
         this._modelsLoaded = {};
         this._configGLTFModel = {
             normalMap: true,
-            noTangent: true
+            noTangeant: false
         };
 
         this._modelsPBR = [];
@@ -213,6 +214,137 @@
 
     Example.prototype = {
 
+        loadGLTFModel: function ( files, gltfFileName, loaded ) {
+
+            var self = this;
+            var promise = osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' )
+                .readNodeURL( files, {
+                    preloaded: loaded
+                } );
+
+            promise.then( function ( root ) {
+
+                if ( !root )
+                    return;
+
+                osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
+
+                self._modelsLoaded[ gltfFileName ] = root;
+
+                self._config.model = gltfFileName;
+                self.updateModel();
+
+                // Updates the dropdown list
+                modelList.push( gltfFileName );
+
+                var controllers = self._gui.__controllers;
+                controllers[ controllers.length - 1 ].remove();
+                self._gui.add( self._config, 'model', modelList ).onChange( self.updateModel.bind( self ) );
+
+            } );
+
+        },
+
+        loadZipFile: function ( file ) {
+
+            return JSZip.loadAsync( file ).then( function ( zip ) {
+
+                var promisesArray = [];
+
+                Object.keys( zip.files ).forEach( function ( filename ) {
+
+                    var ext = filename.split( '.' ).pop();
+                    var type = null;
+
+                    if ( ext === 'gltf' )
+                        type = 'string';
+                    else if ( ext === 'bin' )
+                        type = 'arraybuffer';
+                    else if ( ext === 'png' || ext === 'jpg' || ext === 'jpeg' )
+                        type = 'base64';
+
+                    if ( !type ) {
+
+                        osg.warn( 'Camera preset not found, use default' );
+                        return;
+                    }
+
+                    var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
+
+                        var data = fileData;
+
+                        if ( type === 'base64' ) {
+
+                            data = new window.Image();
+                            data.src = 'data:image/' + ext + ';base64,' + fileData;
+
+                        }
+
+                        return {
+                            name: filename,
+                            data: data
+                        };
+
+                    } );
+
+                    promisesArray.push( p );
+
+                } );
+
+                return P.all( promisesArray );
+
+            } );
+
+        },
+
+        handleDroppedFiles: function ( files ) {
+
+            var gltfFileName = null;
+            var self = this;
+
+            if ( files.length === 1 && files[ 0 ].name.indexOf( '.zip' ) !== -1 ) {
+
+                var loadedFiles = {};
+
+                var p = self.loadZipFile( files[ 0 ] );
+                p.then( function ( dataList ) {
+
+                    for ( var i = 0; i < dataList.length; ++i ) {
+
+                        var name = dataList[ i ].name;
+                        var data = dataList[ i ].data;
+
+                        if ( name.indexOf( '.gltf' ) !== -1 )
+                            gltfFileName = dataList[ i ].name;
+
+                        loadedFiles[ dataList[ i ].name ] = data;
+
+                    }
+
+                    self.loadGLTFModel( loadedFiles, gltfFileName, true );
+
+                } );
+
+                return;
+
+            }
+
+            for ( var i = 0; i < files.length; ++i ) {
+
+                if ( files[ i ].name.indexOf( '.gltf' ) !== -1 ) {
+
+                    gltfFileName = files[ i ].name;
+                    break;
+
+                }
+
+            }
+
+            self.loadGLTFModel( files, gltfFileName, false );
+
+            return false;
+        },
+
         loadFiles: function () {
 
             var self = this;
@@ -223,31 +355,7 @@
             input.trigger( 'click' );
             input.on( 'change', function () {
 
-                var gltfFileName = null;
-                for ( var i = 0; i < this.files.length; ++i ) {
-
-                    if ( this.files[ i ].name.indexOf( '.gltf' ) !== -1 ) {
-                        gltfFileName = this.files[ i ].name;
-                        modelList.push( gltfFileName );
-                    }
-
-                }
-
-                var promise = osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' ).readNodeURL( this.files );
-                promise.then( function ( root ) {
-
-                    if ( !root )
-                        return;
-
-                    osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
-
-                    // Updates the dropdown list
-                    var controllers = self._gui.__controllers;
-                    controllers[ controllers.length - 1 ].remove();
-                    self._gui.add( self._config, 'model', modelList ).onChange( self.updateModel.bind( self ) );
-
-                    self._modelsLoaded[ gltfFileName ] = root;
-                } );
+                self.handleDroppedFiles( this.files );
 
             } );
 
@@ -1208,10 +1316,34 @@
 
     };
 
+    var dragOverEvent = function ( evt ) {
+
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'copy';
+
+    };
+
+    var dropEvent = function ( evt ) {
+
+        evt.stopPropagation();
+        evt.preventDefault();
+
+        var files = evt.dataTransfer.files;
+
+        this.handleDroppedFiles( files );
+
+    };
+
     window.addEventListener( 'load', function () {
+
         var example = new Example();
         var canvas = $( '#View' )[ 0 ];
         example.run( canvas );
+
+        window.addEventListener( 'dragover', dragOverEvent.bind( example ), false );
+        window.addEventListener( 'drop', dropEvent.bind( example ), false );
+
     }, true );
 
 } )();

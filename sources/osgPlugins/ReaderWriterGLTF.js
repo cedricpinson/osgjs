@@ -163,6 +163,21 @@ GLTFLoader.prototype = {
 
     loadGLTFJson: function ( urlOrFiles ) {
 
+        if ( this._preloaded ) {
+
+            var keys = window.Object.keys( this._loadedFiles );
+            for ( var j = 0; j < keys.length; ++j ) {
+
+                if ( keys[ j ].indexOf( '.gltf' ) !== -1 )
+                    return Promise.resolve( this._loadedFiles[ keys[ j ] ] );
+
+            }
+
+            Notify.warn( 'You did not provide any glTF file' );
+            return Promise.resolve( null );
+
+        }
+
         var glTFFileOrUrl = null;
         if ( typeof ( urlOrFiles ) === 'string' ) {
 
@@ -181,7 +196,7 @@ GLTFLoader.prototype = {
 
         } else {
 
-            if ( !( urlOrFiles instanceof FileList ) ) {
+            if ( !( urlOrFiles instanceof FileList ) && !this._preloaded ) {
 
                 Notify.warn( 'The provided argument is neither a FileList nor a valid URL' );
                 return Promise.resolve( null );
@@ -250,6 +265,13 @@ GLTFLoader.prototype = {
         if ( this._cachepromise[ uri ] )
             return this._cachepromise[ uri ];
 
+        if ( !urlOrFile ) {
+
+            Notify.warn( '\'' + uri + '\' file not found' );
+            return Promise.resolve( null );
+
+        }
+
         var fileType = this.getFileType( urlOrFile );
 
         if ( typeof ( urlOrFile ) === 'string' ) {
@@ -296,6 +318,18 @@ GLTFLoader.prototype = {
         return promiseFile;
     },
 
+
+    preloadFiles: function ( files ) {
+
+        var keys = window.Object.keys( files );
+        for ( var i = 0; i < keys.length; ++i ) {
+            this._cachepromise[ keys[ i ] ] = Promise.resolve( files[ keys[ i ] ] );
+        }
+
+        this._loadedFiles = files;
+
+    },
+
     /**
      * Loads a osg.BufferArray from a TypeArray obtained by using a glTF accessor.
      * No memory allocation is done, the result is a subarray obtained from a glTF binary file
@@ -312,19 +346,12 @@ GLTFLoader.prototype = {
         var offset = accessor.byteOffset + bufferView.byteOffset;
 
         var urlOrFile = this.findFileFromURI( this._files, buffer.uri );
-        if ( !urlOrFile ) {
-
-            return Promise.reject( 'ooops' ).catch( function () {
-
-                Notify.warn( '\'' + buffer.uri + '\' binary file not found' );
-
-            } );
-
-        }
-
         var filePromise = this.loadFile( urlOrFile, buffer.uri );
 
         return filePromise.then( function ( data ) {
+
+            if ( !data )
+                return Promise.resolve( null );
 
             var TypedArray = GLTFLoader.WEBGL_COMPONENT_TYPES[ accessor.componentType ];
             var typedArray = new TypedArray( data, offset, accessor.count * GLTFLoader.TYPE_TABLE[ accessor.type ] );
@@ -389,19 +416,18 @@ GLTFLoader.prototype = {
 
         var json = this._loadedFiles.glTF;
         var glTFTexture = json.textures[ glTFTextureId ];
+
+        if ( !glTFTexture ) return defer.resolve();
+
         var image = json.images[ glTFTexture.source ];
 
-        if ( !glTFTexture || !image ) return defer.promise;
+        if ( !image ) return defer.resolve();
 
         var urlOrFile = this.findFileFromURI( this._files, image.uri );
-        if ( !urlOrFile ) {
-
-            Notify.warn( '\'' + image.uri + '\': was not provided as a File, or the associated URL was not found' );
-            return defer.resolve();
-
-        }
 
         this.loadFile( urlOrFile, image.uri ).then( function ( data ) {
+
+            if ( !data ) return defer.resolve();
 
             texture.setImage( data, GLTFLoader.TEXTURE_FORMAT[ glTFTexture.format ] );
             texture.setFlipY( glTFTexture.flipY );
@@ -411,7 +437,7 @@ GLTFLoader.prototype = {
             if ( uniform )
                 osgStateSet.addUniform( Uniform.createInt( location, uniform ) );
 
-            defer.resolve();
+            return defer.resolve();
 
         } );
 
@@ -779,6 +805,9 @@ GLTFLoader.prototype = {
 
         var cbSetBuffer = function ( name, buffer ) {
 
+            if ( !buffer )
+                return;
+
             this.getVertexAttributeList()[ name ] = buffer;
 
         };
@@ -791,6 +820,9 @@ GLTFLoader.prototype = {
         }
 
         var attributeWeight = function ( data ) {
+
+            if ( !data )
+                return;
 
             rigOrGeom.getAttributes().Weights = data;
 
@@ -822,6 +854,10 @@ GLTFLoader.prototype = {
 
                 promise.then( cbSetBuffer.bind( geom, 'Normal' ) );
 
+            } else if ( attributesKeys[ i ].indexOf( 'TANGENT' ) !== -1 ) {
+
+                promise.then( cbSetBuffer.bind( geom, 'Tangent' ) );
+
             } else if ( attributesKeys[ i ].indexOf( 'JOINT' ) !== -1 ) {
 
                 promise.then( cbSetBuffer.bind( rigOrGeom, 'Bones' ) );
@@ -844,6 +880,9 @@ GLTFLoader.prototype = {
         var indicesAccessor = json.accessors[ primitive.indices ];
         var indicesPromise = this.loadAccessorBuffer( indicesAccessor, BufferArray.ELEMENT_ARRAY_BUFFER );
         indicesPromise.then( function ( data ) {
+
+            if ( !data )
+                return;
 
             var osgPrimitive = new DrawElements( primitiveSet.TRIANGLES, data );
             geom.getPrimitives().push( osgPrimitive );
@@ -993,13 +1032,16 @@ GLTFLoader.prototype = {
         return Promise.all( promises );
     },
 
-    readNodeURL: function ( files ) {
+    readNodeURL: function ( files, options ) {
 
         var self = this;
 
         this.init();
-
+        this._preloaded = options.preloaded;
         this._files = files;
+
+        if ( this._preloaded )
+            this.preloadFiles( files );
 
         var glTFFilePromise = this.loadGLTFJson( this._files );
 
@@ -1007,8 +1049,6 @@ GLTFLoader.prototype = {
         // adding a PI / 2 rotation arround the X-axis
         var root = new MatrixTransform();
         root.setName( 'root' );
-
-        mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI / 2.0 );
 
         return glTFFilePromise.then( function ( glTFFile ) {
 
