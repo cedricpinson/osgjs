@@ -331,6 +331,7 @@ PolytopePrimitiveIntersector.prototype = {
 
             var lines = this.getPolytopeLines();
             this._candidates = [];
+            this._candidatesMasks = [];
             // check all polytope lines against the triangle
             // use algorithm from "Real-time rendering" (second edition) pp.580
             //var e1= vec3.create();
