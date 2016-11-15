@@ -11,20 +11,19 @@
       }
       #DropContainer {
         border: 2px solid #bbb;
-        text-align: center;
         width: 240px;
         background-color: #ffffff
       }
       #DropZone {
+        text-align: center;
         border: 2px dashed #bbb;
         border-radius: 5px;
         color: #bbb;
         margin: 20px 10px 20px 10px;
         padding: 10px;
+        outline: none;
       }
-      #DropZone: hover {
-        color: #ffffff;
-      }
+
      </style>
 
     <!-- Javascript -->
@@ -47,9 +46,7 @@
 <body class="osgjs-theme-dark">
 
   <div id="DropContainer">
-    <div id="DropZone">
-      Drop model files here
-    </div>
+    <input id="DropZone" type="text" placeholder="Drop files / Paste URL" />
   </div>
 
   <div id="ViewContainer" class="osgjs-fullpage">

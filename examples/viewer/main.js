@@ -37,6 +37,22 @@
 
     } );
 
+    var FindSkeletonVisitor = function () {
+        osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+    };
+
+    FindSkeletonVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+
+        apply: function ( node ) {
+            if ( node instanceof osgAnimation.Skeleton ) {
+                this.skl = node;
+                return;
+            }
+            this.traverse( node );
+        }
+
+    } );
+
     var Example = function () {
 
         this._config = {
@@ -158,10 +174,34 @@
             var animationManager = this._modelAnimationManager[ this._config.model ];
             if ( !animationManager ) return;
 
-            if ( !stopAll && this._animController.anim )
-                animationManager.stopAnimation( this._animController.anim );
-            else if ( stopAll )
+            if ( stopAll ) {
+
                 animationManager.stopAllAnimation();
+
+                var skletonFinder = new FindSkeletonVisitor();
+                this._modelNodeMap[ this._config.model ].accept( skletonFinder );
+
+                var skl = skletonFinder.skl;
+                skl.setRestPose();
+
+            } else if ( !stopAll && this._animController.anim ) {
+
+                animationManager.stopAnimation( this._animController.anim );
+
+            }
+
+        },
+
+        pauseAnimation: function () {
+
+            var animationManager = this._modelAnimationManager[ this._config.model ];
+            animationManager.togglePause();
+        },
+
+        updateAnimationTimeFactor: function ( value ) {
+
+            var animationManager = this._modelAnimationManager[ this._config.model ];
+            animationManager.setTimeFactor( value );
 
         },
 
@@ -174,7 +214,9 @@
                 .onChange( this.switchModel.bind( this ) );
 
             animationFolder.add( this._animController, 'loop' ).listen();
-            animationFolder.add( this._animController, 'timeFactor', 0.0, 10.0 );
+
+            animationFolder.add( this._animController, 'timeFactor', 0.0, 10.0 )
+                .onFinishChange( this.updateAnimationTimeFactor.bind( this ) );
 
             animationFolder.add( this._animController, 'playAll' )
                 .onChange( this.playAnimation.bind( this, true ) );
@@ -184,9 +226,73 @@
                 .onChange( this.playAnimation.bind( this ) );
             animationFolder.add( this._animController, 'stop' )
                 .onChange( this.stopAnimation.bind( this ) );
+            animationFolder.add( this._animController, 'pause' )
+                .onChange( this.pauseAnimation.bind( this ) );
 
-            animationFolder.add( this._animController, 'pause' );
             animationFolder.add( this._animController, 'anim', this._animList );
+
+        },
+
+        loadModel: function ( urlOrFiles ) {
+
+            var self = this;
+            var promise = null;
+            var fileName = null;
+
+            if ( typeof ( urlOrFiles ) === 'string' ) {
+
+                promise = osgDB.readNodeURL( urlOrFiles );
+                fileName = urlOrFiles.split( '/' ).pop();
+
+            } else if ( urlOrFiles instanceof FileList ) {
+
+                promise = osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' ).readNodeURL( urlOrFiles );
+                for ( var i = 0; i < urlOrFiles.length; ++i ) {
+
+                    if ( urlOrFiles[ i ].name.indexOf( '.gltf' ) !== -1 ) {
+                        fileName = urlOrFiles[ i ].name;
+                        break;
+                    }
+
+                }
+
+            } else {
+
+                return;
+
+            }
+
+            this._modelList.push( fileName );
+
+            promise.then( function ( root ) {
+
+                if ( !root )
+                    return;
+
+                //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
+
+                var animationFinder = new FindAnimationManagerVisitor();
+                root.accept( animationFinder );
+
+                var animationManager = animationFinder.getManager();
+                if ( animationManager ) {
+
+                    self._modelAnimationManager[ fileName ] = animationManager;
+                    console.log( animationManager.getAnimations() );
+
+                }
+
+                root.setNodeMask( 0x0 );
+                self._modelNodeMap[ fileName ] = root;
+                self._proxyModel.addChild( root );
+
+                // Updates the models dropdown list
+                var modelFolder = self._gui.__folders.Model;
+                var controllers = modelFolder.__controllers;
+                controllers[ controllers.length - 1 ].remove();
+                modelFolder.add( self._config, 'model', self._modelList ).onChange( self.switchModel.bind( self ) );
+            } );
+
 
         },
 
@@ -201,51 +307,9 @@
             evt.stopPropagation();
             evt.preventDefault();
 
-            var self = this;
             var files = evt.dataTransfer.files;
 
-            var gltfFileName = null;
-            for ( var i = 0; i < files.length; ++i ) {
-
-                if ( files[ i ].name.indexOf( '.gltf' ) !== -1 ) {
-                    gltfFileName = files[ i ].name;
-                    break;
-                }
-
-            }
-
-            this._modelList.push( gltfFileName );
-
-
-            var promise = osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' ).readNodeURL( files );
-            promise.then( function ( root ) {
-
-                if ( !root )
-                    return;
-
-                //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
-
-                var animationFinder = new FindAnimationManagerVisitor();
-                root.accept( animationFinder );
-
-                var animationManager = animationFinder.getManager();
-                if ( animationManager ) {
-
-                    self._modelAnimationManager[ gltfFileName ] = animationManager;
-                    console.log( animationManager.getAnimations() );
-
-                }
-
-                root.setNodeMask( 0x0 );
-                self._modelNodeMap[ gltfFileName ] = root;
-                self._proxyModel.addChild( root );
-
-                // Updates the models dropdown list
-                var modelFolder = self._gui.__folders.Model;
-                var controllers = modelFolder.__controllers;
-                controllers[ controllers.length - 1 ].remove();
-                modelFolder.add( self._config, 'model', self._modelList ).onChange( self.switchModel.bind( self ) );
-            } );
+            this.loadModel( files );
 
         }
 
