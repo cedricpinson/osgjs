@@ -175,7 +175,7 @@
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
             normalAA: Boolean( optionsURL.normalAA ),
-            flipY: false,
+            flipY: true,
             specularPeak: Boolean( optionsURL.specularPeak ),
             occlusionHorizon: Boolean( optionsURL.occlusionHorizon ),
             cameraPreset: optionsURL.camera ? Object.keys( CameraPresets )[ optionsURL.camera ] : 'CameraCenter',
@@ -293,15 +293,12 @@
                     else if ( ext === 'png' || ext === 'jpg' || ext === 'jpeg' )
                         type = 'base64';
 
-                    if ( !type ) {
-
-                        osg.warn( 'Camera preset not found, use default' );
-                        return;
-                    }
+                    if ( !type ) return;
 
                     var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
 
                         var data = fileData;
+                        var name = filename.split( '/' ).pop();
 
                         if ( type === 'base64' ) {
 
@@ -311,7 +308,7 @@
                         }
 
                         return {
-                            name: filename,
+                            name: name,
                             data: data
                         };
 
@@ -1236,7 +1233,9 @@
                 // this.addModel( model );
 
                 viewer.setupManipulator();
+                viewer.getManipulator()._boundStrategy = OSG.osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
                 viewer.getManipulator().computeHomePosition();
+                viewer.getManipulator().setComputeBoundNodeMaskOverride( 0x0 );
 
                 viewer.run();
 
@@ -1413,14 +1412,13 @@
             x: 0,
         };
 
-        $( window ).mousemove( function ( evt ) {
-            example.setEnableInput( false );
+        window.addEventListener( 'mousemove', function ( evt ) {
 
             var button = evt.which || evt.button;
 
             if ( evt.altKey && button ) {
 
-
+                evt.stopPropagation();
                 var deltaX = evt.clientX - lastMousePosition.x;
                 example._config.envRotation += deltaX * 0.01;
                 example.updateEnvironmentRotation();
@@ -1429,10 +1427,7 @@
 
             lastMousePosition.x = evt.clientX;
 
-            if ( !evt.altKey )
-                example.setEnableInput( true );
-
-        } );
+        }, true );
 
     }, true );
 
