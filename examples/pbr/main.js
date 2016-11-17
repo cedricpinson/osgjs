@@ -107,6 +107,36 @@
         return result;
     };
 
+    var PBRWorklowVisitor = function () {
+
+        this._workflow = [];
+        osg.NodeVisitor.call( this );
+
+    };
+
+    PBRWorklowVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+
+        apply: function ( node ) {
+            var data = node.getUserData();
+
+            if ( data && data.pbrWorklow ) {
+
+                var stateSetWorkflow = {
+                    stateSet: node.getOrCreateStateSet(),
+                    workflow: data.pbrWorklow
+                };
+                this._workflow.push( stateSetWorkflow );
+            }
+
+            this.traverse( node );
+        },
+
+        getWorkflows: function () {
+            return this._workflow;
+        }
+
+    } );
+
     var shaderProcessor = new osgShader.ShaderProcessor();
 
     window.ALBEDO_TEXTURE_UNIT = 2;
@@ -116,6 +146,8 @@
     window.NORMAL_TEXTURE_UNIT = 5;
     window.SPECULAR_TEXTURE_UNIT = 4;
 
+    window.GLTF_PBR_METAL_MODE = 'PBR_metal_roughness';
+    window.GLTF_PBR_SPEC_MODE = 'PBR_specular_glossiness';
 
     window.formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
 
@@ -143,6 +175,7 @@
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
             normalAA: Boolean( optionsURL.normalAA ),
+            flipY: false,
             specularPeak: Boolean( optionsURL.specularPeak ),
             occlusionHorizon: Boolean( optionsURL.occlusionHorizon ),
             cameraPreset: optionsURL.camera ? Object.keys( CameraPresets )[ optionsURL.camera ] : 'CameraCenter',
@@ -169,10 +202,6 @@
         this._modelDefines = [];
 
         this._modelsLoaded = {};
-        this._configGLTFModel = {
-            normalMap: true,
-            noTangeant: false
-        };
 
         this._modelsPBR = [];
         this._modelPBRConfig = [];
@@ -195,6 +224,7 @@
         this._envBrightnessUniform = osg.Uniform.createFloat1( 1.0, 'uBrightness' );
 
         this._normalAA = osg.Uniform.createInt1( 0, 'uNormalAA' );
+        this._flipYUniform = osg.Uniform.createInt1( 0, 'uFlipNormalY' );
         this._specularPeak = osg.Uniform.createInt1( this._config.specularPeak ? 1 : 0, 'uSpecularPeak' );
 
         this._occlusionHorizon = osg.Uniform.createInt1( 0, 'uOcclusionHorizon' );
@@ -549,6 +579,13 @@
             this._normalAA.setInt( aa );
         },
 
+        updateFlipY: function () {
+
+            var flip = this._config.flipY ? 1 : 0;
+            this._flipYUniform.setInt( flip );
+
+        },
+
         updateSpecularPeak: function () {
             var aa = this._config.specularPeak ? 1 : 0;
             this._specularPeak.setInt( aa );
@@ -698,13 +735,31 @@
                 if ( this._config.model.indexOf( '.gltf' ) !== -1 ) {
 
                     model = this._modelsLoaded[ this._config.model ];
-                    var config = {
-                        stateSet: model.getOrCreateStateSet(),
-                        config: this._configGLTFModel
-                    };
 
-                    this._shaders.push( config );
-                    this.updateShaderPBR();
+                    var visitorWorkflow = new PBRWorklowVisitor();
+                    model.accept( visitorWorkflow );
+
+                    var workflows = visitorWorkflow.getWorkflows();
+                    for ( var i = 0; i < workflows.length; ++i ) {
+
+                        var specularWorkflow = ( workflows[ i ].workflow === window.GLTF_PBR_SPEC_MODE );
+
+                        var shaderConfig = {
+                            normalMap: true,
+                            noTangeant: false,
+                            glossinessMap: specularWorkflow,
+                            specularMap: specularWorkflow
+                        };
+
+                        var config = {
+                            stateSet: workflows[ i ].stateSet,
+                            config: shaderConfig
+                        };
+
+                        this._shaders.push( config );
+                        this.updateShaderPBR();
+
+                    }
 
                 } else if ( index !== -1 ) {
 
@@ -952,6 +1007,7 @@
             stateSet.addUniform( this._environmentTransformUniform );
             stateSet.addUniform( this._envBrightnessUniform );
             stateSet.addUniform( this._normalAA );
+            stateSet.addUniform( this._flipYUniform );
             stateSet.addUniform( this._specularPeak );
             stateSet.addUniform( this._occlusionHorizon );
         },
@@ -1043,9 +1099,9 @@
 
             // add lod controller to debug
             this._lod = osg.Uniform.createFloat1( 0.0, 'uLod' );
-            var flipNormalY = osg.Uniform.createInt1( 0, 'uFlipNormalY' );
             group.getOrCreateStateSet().addUniform( this._lod );
-            group.getOrCreateStateSet().addUniform( flipNormalY );
+            //var flipNormalY = osg.Uniform.createInt1( 0, 'uFlipNormalY' );
+            //group.getOrCreateStateSet().addUniform( flipNormalY );
 
             if ( !isMobileDevice() ) {
                 var integrateBRDFUniform = osg.Uniform.createInt1( this._integrateBRDFTextureUnit, 'uIntegrateBRDF' );
@@ -1194,6 +1250,9 @@
 
                 controller = gui.add( this._config, 'normalAA' );
                 controller.onChange( this.updateNormalAA.bind( this ) );
+
+                controller = gui.add( this._config, 'flipY' );
+                controller.onChange( this.updateFlipY.bind( this ) );
 
                 controller = gui.add( this._config, 'specularPeak' );
                 controller.onChange( this.updateSpecularPeak.bind( this ) );

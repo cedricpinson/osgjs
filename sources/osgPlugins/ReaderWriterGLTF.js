@@ -38,6 +38,7 @@ var GLTFLoader = function () {
     this._files = null;
     this._loadedFiles = null;
     this._localPath = null;
+    this._bufferViewCache = null;
 
     this._basicAnimationManager = null;
 
@@ -86,6 +87,7 @@ GLTFLoader.PBR_SPEC_MODE = 'PBR_specular_glossiness';
 GLTFLoader.ALBEDO_TEXTURE_UNIT = 2;
 GLTFLoader.DIFFUSE_TEXTURE_UNIT = 2;
 GLTFLoader.ROUGHNESS_TEXTURE_UNIT = 3;
+GLTFLoader.GLOSSINESS_TEXTURE_UNIT = 3;
 GLTFLoader.METALNESS_TEXTURE_UNIT = 4;
 GLTFLoader.SPECULAR_TEXTURE_UNIT = 4;
 GLTFLoader.NORMAL_TEXTURE_UNIT = 5;
@@ -104,6 +106,9 @@ GLTFLoader.prototype = {
         this._files = null;
         this._loadedFiles = {};
         this._localPath = null;
+
+        this._bufferViewCache = {};
+
 
         this._basicAnimationManager = null;
 
@@ -339,14 +344,16 @@ GLTFLoader.prototype = {
      * @return {osg.BufferArray} OSG readable buffer contaning the extracted data
      */
     loadAccessorBuffer: function ( accessor, type ) {
+
         var json = this._loadedFiles.glTF;
 
         var bufferView = json.bufferViews[ accessor.bufferView ];
         var buffer = json.buffers[ bufferView.buffer ];
-        var offset = accessor.byteOffset + bufferView.byteOffset;
 
         var urlOrFile = this.findFileFromURI( this._files, buffer.uri );
         var filePromise = this.loadFile( urlOrFile, buffer.uri );
+
+        var self = this;
 
         return filePromise.then( function ( data ) {
 
@@ -354,7 +361,13 @@ GLTFLoader.prototype = {
                 return Promise.resolve( null );
 
             var TypedArray = GLTFLoader.WEBGL_COMPONENT_TYPES[ accessor.componentType ];
-            var typedArray = new TypedArray( data, offset, accessor.count * GLTFLoader.TYPE_TABLE[ accessor.type ] );
+            var typedArray = null;
+
+            if ( !self._bufferViewCache[ accessor.bufferView ] )
+                self._bufferViewCache[ accessor.bufferView ] = data.slice( bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength );
+
+            var bufferViewArray = self._bufferViewCache[ accessor.bufferView ];
+            typedArray = new TypedArray( bufferViewArray, accessor.byteOffset, accessor.count * GLTFLoader.TYPE_TABLE[ accessor.type ] );
 
             if ( type )
                 return Promise.resolve( new BufferArray( type, typedArray, GLTFLoader.TYPE_TABLE[ accessor.type ] ) );
@@ -747,7 +760,20 @@ GLTFLoader.prototype = {
             promises.push( this.createTextureAndSetAttrib( values.metallicTexture, osgStateSet, GLTFLoader.METALNESS_TEXTURE_UNIT, GLTFLoader.SPECULAR_UNIFORM ) );
             promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, GLTFLoader.NORMAL_TEXTURE_UNIT, GLTFLoader.NORMAL_UNIFORM ) );
             promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, GLTFLoader.AO_TEXTURE_UNIT, GLTFLoader.AO_UNIFORM ) );
+
+        } else if ( model === GLTFLoader.PBR_SPEC_MODE ) {
+
+            promises.push( this.createTextureAndSetAttrib( values.diffuseTexture, osgStateSet, GLTFLoader.DIFFUSE_TEXTURE_UNIT, GLTFLoader.ALBEDO_UNIFORM ) );
+            promises.push( this.createTextureAndSetAttrib( values.glossinessTexture, osgStateSet, GLTFLoader.GLOSSINESS_TEXTURE_UNIT, GLTFLoader.ROUGHNESS_UNIFORM ) );
+            promises.push( this.createTextureAndSetAttrib( values.specularTexture, osgStateSet, GLTFLoader.SPECULAR_TEXTURE_UNIT, GLTFLoader.SPECULAR_UNIFORM ) );
+            promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, GLTFLoader.NORMAL_TEXTURE_UNIT, GLTFLoader.NORMAL_UNIFORM ) );
+            promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, GLTFLoader.AO_TEXTURE_UNIT, GLTFLoader.AO_UNIFORM ) );
+
         }
+
+        geometryNode.setUserData( {
+            pbrWorklow: model
+        } );
 
         geometryNode.stateset = osgStateSet;
 
