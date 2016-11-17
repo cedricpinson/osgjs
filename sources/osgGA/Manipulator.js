@@ -15,6 +15,7 @@ var Manipulator = function ( boundStrategy ) {
     this._camera = undefined;
     this._node = undefined;
     this._frustum = {};
+    this._computeBoundNodeMaskOverride = ~0x0;
 };
 
 Manipulator.prototype = {
@@ -26,6 +27,12 @@ Manipulator.prototype = {
     },
     setNode: function ( node ) {
         this._node = node;
+    },
+    setComputeBoundNodeMaskOverride: function ( mask ) {
+        this._computeBoundNodeMaskOverride = mask;
+    },
+    getComputeBoundNodeMaskOverride: function () {
+        return this._computeBoundNodeMaskOverride;
     },
     getHomeBound: function ( overrideStrat ) {
         var node = this._node;
@@ -41,7 +48,20 @@ Manipulator.prototype = {
 
         if ( type & Manipulator.COMPUTE_HOME_USING_BBOX ) {
             var bs = new BoundingSphere();
-            var bb = node.getBoundingBox();
+
+            var bb = null;
+            if ( this._computeBoundNodeMaskOverride === ~0x0 ) {
+                bb = node.getBoundingBox();
+            } else {
+                var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
+                var cbv = new ComputeBoundsVisitor();
+                cbv.setNodeMaskOverride( this._computeBoundNodeMaskOverride );
+                cbv.reset();
+
+                cbv.apply( node );
+                bb = cbv.getBoundingBox();
+            }
+
             if ( bb.valid() )
                 bs.expandByBoundingBox( bb );
 

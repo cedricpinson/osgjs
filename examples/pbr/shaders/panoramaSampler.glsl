@@ -1,7 +1,6 @@
 #pragma include "math.glsl"
 #pragma include "colorSpace.glsl"
 
-
 vec2 computeUVForMipmap( const in float level, const in vec2 uv, const in float size, const in float maxLOD ) {
 
     // width for level
@@ -122,4 +121,19 @@ vec3 texturePanoramaLod(const in sampler2D texture,
     vec3 texel1 = texturePanorama( texture, uv1.xy);
 
     return mix(texel0, texel1, fract( lod ) );
+}
+
+vec3 getTexelPanorama( const in vec3 dir, const in float lod ) {
+    vec2 uvBase = normalToPanoramaUV( dir );
+    vec3 texel = texturePanoramaLod( uEnvironment,
+                                     uEnvironmentSize,
+                                     dir,
+                                     lod,
+                                     uEnvironmentLodRange[0] );
+    return texel;
+}
+
+vec3 getReferenceTexelEnvironment( const in vec3 dirLocal, const in float lod ) {
+    vec3 direction = environmentTransform * dirLocal;
+    return getTexelPanorama( direction, lod );
 }

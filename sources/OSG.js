@@ -10,6 +10,7 @@ var osgShader = require( 'osgShader/osgShader' );
 var osgShadow = require( 'osgShadow/osgShadow' );
 var osgText = require( 'osgText/osgText' );
 var osgWrappers = require( 'osgWrappers/osgWrappers' );
+var osgPlugins = require( 'osgPlugins/osgPlugins' );
 
 
 var openSceneGraph = osgNameSpace;
@@ -24,8 +25,9 @@ openSceneGraph.osgShader = osgShader;
 openSceneGraph.osgShadow = osgShadow;
 openSceneGraph.osgText = osgText;
 openSceneGraph.osgWrappers = osgWrappers;
+openSceneGraph.osgPlugins = osgPlugins;
 
-var namespaces = [ 'osg', 'osgAnimation', 'osgDB', 'osgGA', 'osgUtil', 'osgViewer', 'osgShader', 'osgShadow', 'osgText', 'osgWrappers' ];
+var namespaces = [ 'osg', 'osgAnimation', 'osgDB', 'osgGA', 'osgUtil', 'osgViewer', 'osgShader', 'osgShadow', 'osgText', 'osgWrappers', 'osgPlugins' ];
 
 
 // for backward compatibility

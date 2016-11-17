@@ -13,7 +13,7 @@ var Node = require( 'osg/Node' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Projection = require( 'osg/Projection' );
-
+var Registry = require( 'osgDB/Registry' );
 
 var ReaderParser = {};
 
@@ -30,6 +30,12 @@ ReaderParser.readBinaryArrayURL = function ( url, options ) {
 };
 
 ReaderParser.readNodeURL = function ( url, options ) {
+    var extension = url.substr( url.lastIndexOf( '.' ) + 1 );
+    var readerWriter = Registry.instance().getReaderWriterForExtension( extension );
+    if ( readerWriter !== undefined )
+        return readerWriter.readNodeURL( url, options );
+    // If we don't have a registered plugin go through the osgjs
+    // FIXME: we should have osgjs also as a plugin in the future
     return ReaderParser.registry().readNodeURL( url, options );
 };
 
