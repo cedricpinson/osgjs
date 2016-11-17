@@ -117,6 +117,7 @@ GLTFLoader.prototype = {
         this._skeletons = {};
         this._bones = {};
         this._skeletonToInfluenceMap = {};
+        this._stateSetMap = {};
 
         this._cachepromise = {};
         this._inputImgReader = new Input();
@@ -743,7 +744,7 @@ GLTFLoader.prototype = {
         return bonesPromise;
     },
 
-    loadPBRMaterial: function ( glTFmaterial, geometryNode ) {
+    loadPBRMaterial: function ( materialId, glTFmaterial, geometryNode ) {
 
         var model = glTFmaterial.materialModel;
         var values = glTFmaterial.values;
@@ -776,6 +777,7 @@ GLTFLoader.prototype = {
         } );
 
         geometryNode.stateset = osgStateSet;
+        this._stateSetMap[ materialId ] = osgStateSet;
 
         return Promise.all( promises );
     },
@@ -785,19 +787,22 @@ GLTFLoader.prototype = {
         var json = this._loadedFiles.glTF;
         var glTFmaterial = json.materials[ materialId ];
 
+        if ( this._stateSetMap[ materialId ] ) {
+            geometryNode.stateset = this._stateSetMap[ materialId ];
+            return Promise.resolve();
+        }
+
         var extension = this.findByKey( glTFmaterial.extensions, GLTFLoader.PBR_EXTENSION );
         if ( extension )
-            return this.loadPBRMaterial( extension, geometryNode );
+            return this.loadPBRMaterial( materialId, extension, geometryNode );
 
         var values = glTFmaterial.values;
         if ( !values ) return Promise.resolve();
 
         // Handles basic material attributes
-        var osgStateSet = geometryNode.getOrCreateStateSet();
         var osgMaterial = new Material();
-
+        var osgStateSet = geometryNode.getOrCreateStateSet();
         osgStateSet.setAttribute( osgMaterial );
-        geometryNode.stateset = osgStateSet;
 
         if ( values.ambient )
             osgMaterial.setAmbient( values.ambient );
@@ -816,6 +821,9 @@ GLTFLoader.prototype = {
             else
                 return this.createTextureAndSetAttrib( values.diffuse, osgStateSet, 0 );
         }
+
+        geometryNode.stateset = osgStateSet;
+        this._stateSetMap[ materialId ] = osgStateSet;
 
         return Promise.resolve();
     },
