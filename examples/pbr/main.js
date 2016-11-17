@@ -257,7 +257,7 @@
                 if ( !root )
                     return;
 
-                osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
+                //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
 
                 self._modelsLoaded[ gltfFileName ] = root;
 
@@ -1155,6 +1155,12 @@
             return d.promise;
         },
 
+        setEnableInput: function ( enable ) {
+
+            this._viewer.getEventProxy().StandardMouseKeyboard.setEnable( enable );
+
+        },
+
         run: function ( canvas ) {
 
             //osgGA.Manipulator.DEFAULT_SETTINGS = osgGA.Manipulator.DEFAULT_SETTINGS | osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
@@ -1402,6 +1408,31 @@
 
         window.addEventListener( 'dragover', dragOverEvent.bind( example ), false );
         window.addEventListener( 'drop', dropEvent.bind( example ), false );
+
+        var lastMousePosition = {
+            x: 0,
+        };
+
+        $( window ).mousemove( function ( evt ) {
+            example.setEnableInput( false );
+
+            var button = evt.which || evt.button;
+
+            if ( evt.altKey && button ) {
+
+
+                var deltaX = evt.clientX - lastMousePosition.x;
+                example._config.envRotation += deltaX * 0.01;
+                example.updateEnvironmentRotation();
+
+            }
+
+            lastMousePosition.x = evt.clientX;
+
+            if ( !evt.altKey )
+                example.setEnableInput( true );
+
+        } );
 
     }, true );
 
