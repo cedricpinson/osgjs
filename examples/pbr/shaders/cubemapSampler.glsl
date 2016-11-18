@@ -18,7 +18,11 @@ vec3 scaleDirection(const in float scale, const in vec3 dirIn)
 
 vec3 textureCubemapLod(const in samplerCube texture, const in vec3 dir, const in float lod )
 {
+#ifdef CUBEMAP_LOD
     vec4 rgba = textureCubeLodEXT( texture, dir, lod );
+#else
+    vec4 rgba = textureCube( texture, dir );
+#endif
 #ifdef FLOAT
     return rgba.rgb;
 #endif

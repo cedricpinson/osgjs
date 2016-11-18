@@ -4,7 +4,9 @@ uniform mat4 uEnvironmentTransform;
 uniform float uLod;
 uniform float uBrightness;
 uniform vec2 uEnvironmentLodRange;
+#ifdef CUBEMAP_LOD
 #extension GL_EXT_shader_texture_lod : enable
+#endif
 uniform vec2 uEnvironmentSize;
 
 varying vec3 vViewVertex;
