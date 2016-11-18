@@ -1,3 +1,4 @@
+set -x
 path="$(dirname $(realpath $0) )"
 build_dir="$(realpath ${path}/../builds/web)"
 
@@ -20,10 +21,10 @@ rsync -avh \
       "${build_dir}/"
 
 
-cd ${path}
-cp CNAME "${build_dir}/"
 
 npm install wintersmith wintersmith-nunjucks
+cd website
+cp CNAME "${build_dir}"
 node build-wintersmith.js "${build_dir}"
 # node build-wintersmith.js build --chdir web -o "${build_dir}" --force
 echo "you can test the website with the following commmand"
