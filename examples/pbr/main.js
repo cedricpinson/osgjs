@@ -254,6 +254,8 @@
 
             promise.then( function ( root ) {
 
+                $( '#loading' ).hide();
+
                 if ( !root )
                     return;
 
@@ -328,6 +330,8 @@
 
             var gltfFileName = null;
             var self = this;
+
+            $( '#loading' ).show();
 
             if ( files.length === 1 && files[ 0 ].name.indexOf( '.zip' ) !== -1 ) {
 
@@ -1404,6 +1408,8 @@
         var example = new Example();
         var canvas = $( '#View' )[ 0 ];
         example.run( canvas );
+
+        $( '#loading' ).hide();
 
         window.addEventListener( 'dragover', dragOverEvent.bind( example ), false );
         window.addEventListener( 'drop', dropEvent.bind( example ), false );

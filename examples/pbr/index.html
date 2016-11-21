@@ -9,7 +9,26 @@
     <style type="text/css">
     /* Custom CSS goes here */
     #loading {
-    position: absolute;
+      display : block;
+      position : fixed;
+      z-index: 100;
+      background-color:#666;
+      opacity : 0.4;
+      background-repeat : no-repeat;
+      background-position : center;
+      left : 0;
+      bottom : 0;
+      right : 0;
+      top : 0;
+    }
+    #loadingMessage {
+      left : 50%;
+      top : 50%;
+      font-size: 40px;
+      position : absolute;
+      margin-left : -40px;
+      margin-top : -40px;
+      z-index : 101;
     }
     </style>
 
@@ -40,7 +59,9 @@
 
 
 <body class="osgjs-theme-dark">
-  <!-- <div id="loading">Loading</div> -->
+  <div id="loading">
+    <div id="loadingMessage">Loading...</div>
+  </div>
   <div id="ViewContainer" class="osgjs-fullpage">
     <!-- very important change the size of the parent element instead-->
     <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
