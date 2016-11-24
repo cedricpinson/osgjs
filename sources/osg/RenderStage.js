@@ -274,11 +274,17 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
         this.applyCamera( state );
 
+        // projection clipping
         if ( this.viewport === undefined ) {
             Notify.log( 'RenderStage does not have a valid viewport' );
         }
-
         state.applyAttribute( this.viewport );
+
+        // fragment clipping
+        if ( this.camera ) {
+            var scissor = this.camera.getStateSet() && this.camera.getStateSet().getAttribute( 'Scissor' );
+            if ( scissor ) state.applyAttribute( scissor );
+        }
 
         /*jshint bitwise: false */
         if ( this.clearMask !== 0x0 ) {
