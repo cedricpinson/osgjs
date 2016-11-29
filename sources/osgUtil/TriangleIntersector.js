@@ -1,7 +1,10 @@
 'use strict';
+
 var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
 var Notify = require( 'osg/notify' );
+var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
 
 var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
     this.normal = normal;
@@ -85,6 +88,23 @@ TriangleIntersector.prototype = {
         };
     } )(),
 
+    isBackFace: ( function () {
+
+        var mat = mat4.create();
+
+        return function ( det, nodepath ) {
+            mat4.identity( mat );
+            // http://gamedev.stackexchange.com/questions/54505/negative-scale-in-matrix-4x4
+            // https://en.wikipedia.org/wiki/Determinant#Orientation_of_a_basis
+            // you can't exactly extract scale of a matrix but the determinant will tell you
+            // if the orientation is preserved
+            ComputeMatrixFromNodePath.computeLocalToWorld( nodepath, true, mat );
+            var detMat = mat4.determinant( mat );
+            return detMat * det < 0.0;
+        };
+
+    } )(),
+
     intersect: ( function () {
 
         var normal = vec3.create();
@@ -140,7 +160,7 @@ TriangleIntersector.prototype = {
             // GC TriangleIntersection & Point
             this._intersections.push( {
                 ratio: r,
-                backface: det < 0.0,
+                backface: this.isBackFace( det, this._nodePath ),
                 nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
                 TriangleIntersection: new TriangleIntersection( vec3.clone( normal ), i0, i1, i2, r0, r1, r2 ),
                 point: vec3.fromValues( interX, interY, interZ )
