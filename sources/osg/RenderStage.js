@@ -220,12 +220,24 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         if ( fbo.isDirty() ) {
 
             var attachments = this.camera.getAttachments();
+
+            // framebuffer texture and renderbuffer must be same dimension
+            // otherwise framebuffer is incomplete
+            var framebufferWidth, framebufferHeight;
+            var colorAttachment = attachments[ FrameBufferObject.COLOR_ATTACHMENT0 ];
+            if ( colorAttachment && colorAttachment.texture ) {
+                framebufferWidth = colorAttachment.texture.getWidth();
+                framebufferHeight = colorAttachment.texture.getHeight();
+            }
+
             // we should use a map in camera to avoid to regenerate the keys
             // each time. But because we dont have a lot of camera I guess
             // it does not change a lot
             var keys = window.Object.keys( attachments );
 
             if ( keys.length ) {
+
+                // texture and renderbuffer must be same size.
 
                 for ( var i = 0, l = keys.length; i < l; i++ ) {
                     var key = keys[ i ];
@@ -237,8 +249,8 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
                     if ( a.texture === undefined ) { //renderbuffer
 
                         attach.format = a.format;
-                        attach.width = viewport.width();
-                        attach.height = viewport.height();
+                        attach.width = framebufferWidth !== undefined ? framebufferWidth : viewport.width();
+                        attach.height = framebufferHeight !== undefined ? framebufferHeight : viewport.height();
 
                     } else if ( a.texture !== undefined ) {
 
@@ -262,11 +274,17 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
         this.applyCamera( state );
 
+        // projection clipping
         if ( this.viewport === undefined ) {
             Notify.log( 'RenderStage does not have a valid viewport' );
         }
-
         state.applyAttribute( this.viewport );
+
+        // fragment clipping
+        if ( this.camera ) {
+            var scissor = this.camera.getStateSet() && this.camera.getStateSet().getAttribute( 'Scissor' );
+            if ( scissor ) state.applyAttribute( scissor );
+        }
 
         /*jshint bitwise: false */
         if ( this.clearMask !== 0x0 ) {
