@@ -17,212 +17,388 @@
     Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
         createRTT: function ( scene ) {
-
-            var getShader = function () {
-                var vertexshader = [
-                    '',
-                    '#ifdef GL_ES',
-                    'precision highp float;',
-                    '#endif',
-                    'attribute vec3 Vertex;',
-                    'uniform mat4 uModelViewMatrix;',
-                    'uniform mat4 uProjectionMatrix;',
-                    'void main(void) {',
-                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
-                    '}'
-                ].join( '\n' );
-
-                var fragmentshader = [
-                    '',
-                    '#ifdef GL_ES',
-                    'precision highp float;',
-                    '#endif',
-
-                    'void main(void) {',
-                    '  vec4 color = vec4(0.0, 1.0, 0.0, 1.0);',
-                    '  if ( gl_FragCoord[0] <= 1.0 || gl_FragCoord[0] >= 127.0 || gl_FragCoord[1] <= 0.0 || gl_FragCoord[2] <= 0.0 )',
-                    '       color = vec4(0.0, 0.0, 1.0, 1.0);',
-                    '  gl_FragColor = color;',
-                    '}',
-                    ''
-                ].join( '\n' );
-
-                var program = new osg.Program(
-                    new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-                    new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
-
-                return program;
-            };
-
-
+            var self = this;
             var maxDrawBuffer = 8;
+            var root = new osg.Node();
+            var texture3D = [ new osg.Texture3D(), new osg.Texture3D(), new osg.Texture3D() ];
+            var finalTexture3D = new osg.Texture3D();
+            var voxelSize = this._voxelSize;
+            var viewport = new osg.Viewport( 0, 0, voxelSize, voxelSize );
 
-            var getShader2 = function () {
-                var vertexshader = [
-                    '#version 300 es',
-                    'precision highp float;',
-                    'layout(location = 0) in vec3 Vertex;',
-                    'uniform mat4 uModelViewMatrix;',
-                    'uniform mat4 uProjectionMatrix;',
-                    'void main(void) {',
-                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
-                    '}'
-                ].join( '\n' );
+            var createEachAxisTexture3D = function ( group ) {
+
+                var getShader = function () {
+                    var vertexshader = [
+                        '#version 300 es',
+                        'precision highp float;',
+                        'layout(location = 0) in vec3 Vertex;',
+                        'uniform mat4 uModelViewMatrix;',
+                        'uniform mat4 uProjectionMatrix;',
+                        'void main(void) {',
+                        '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                        '}'
+                    ].join( '\n' );
 
 
-                var declarationOutput = ' layout(location = 0) out vec4 rtt[' + maxDrawBuffer + '];';
+                    var i;
+                    var output = '';
+                    for ( i = 0; i < maxDrawBuffer; i++ ) {
+                        output += '';
+                        output += 'rtt[' + i + '] = vec4(0.0, 1.0,0.0,1.0);\n';
+                    }
 
-                var i;
-                var output = '';
-                for ( i = 0; i < maxDrawBuffer; i++ ) {
-                    output += '';
-                    output += 'rtt[' + i + '] = vec4(0.0, 1.0,0.0,1.0);\n';
+                    var fragmentshader = [
+                        '#version 300 es',
+                        'precision highp float;',
+                        'uniform vec4 uColor;',
+                        'uniform float sliceStart;',
+                        'layout(location = 0) out vec4 rtt[' + maxDrawBuffer + '];',
+                        'void main(void) {',
+                        'int index = int(7.0 * gl_FragCoord[2]);',
+                        '//vec4 color = vec4(gl_FragCoord[2], gl_FragCoord[2], gl_FragCoord[2], 1.0 );',
+                        'vec4 color = uColor; //vec4(0.0, 1.0, 0.0, 1.0 );',
+                        ' //if ( gl_FragCoord.z <= 0.1 ) color = vec4(0.0, 1.0, 0.0, 1.0 );',
+                        'switch ( index ) {',
+                        'case 0:',
+                        '    rtt[ 0 ] = color;',
+                        '    break;',
+                        'case 1:',
+                        '    rtt[ 1 ] = color;',
+                        '    break;',
+                        'case 2:',
+                        '    rtt[ 2 ] = color;',
+                        '    break;',
+                        'case 3:',
+                        '    rtt[ 3 ] = color;',
+                        '    break;',
+                        'case 4:',
+                        '    rtt[ 4 ] = color;',
+                        '    break;',
+                        'case 5:',
+                        '    rtt[ 5 ] = color;',
+                        '    break;',
+                        'case 6:',
+                        '    rtt[ 6 ] = color;',
+                        '    break;',
+                        'case 7:',
+                        '    rtt[ 7 ] = color;',
+                        '    break;',
+                        '}',
+                        '}',
+                        ''
+                    ].join( '\n' );
+
+                    var program = new osg.Program(
+                        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+                        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+
+                    return program;
+                };
+
+                var sceneBoundingBox = scene.getBoundingBox();
+
+                var shader = getShader();
+                var stateSet = new osg.StateSet();
+                stateSet.setAttributeAndModes( shader );
+
+                var sceneSize = osg.vec3.sub( osg.vec3.create(), sceneBoundingBox.getMax(), sceneBoundingBox.getMin() );
+                var sceneCenter = sceneBoundingBox.center( osg.vec3.create() );
+
+                var maxAxis = sceneSize[ 0 ] > sceneSize[ 1 ] ? 0 : 1;
+                maxAxis = sceneSize[ maxAxis ] < sceneSize[ 2 ] ? 2 : maxAxis;
+
+                var sceneVoxelSize = sceneSize[ maxAxis ] / voxelSize;
+                var maxSize = sceneSize[ maxAxis ];
+
+                var node = new osg.Node();
+                node.setStateSet( stateSet );
+                node.addChild( scene );
+                node.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
+
+
+                var createCameraRTTSlice = function ( view, texture, sliceIndex ) {
+                    // needs handle the scene bbox and adjust near/far to clip
+                    var near = sliceIndex * sceneVoxelSize - 1e-4;
+                    var far = ( sliceIndex + maxDrawBuffer ) * sceneVoxelSize;
+                    var projection = osg.mat4.ortho( osg.mat4.create(), -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, near, far );
+                    var camera = new osg.Camera();
+                    camera.setComputeNearFar( false ); //_clampProjectionMatrix = false;
+                    camera.setViewport( viewport );
+                    camera.setProjectionMatrix( projection );
+                    camera.setViewMatrix( view );
+                    camera.setClearColor( osg.vec4.fromValues( 0, 0, 0, 0 ) );
+                    for ( var i = 0, l = maxDrawBuffer; i < l; i++ ) {
+                        camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0 + i, texture, 0, ( voxelSize - 1 ) - ( sliceIndex + i ) );
+                    }
+
+                    camera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+                    camera.addChild( node );
+                    camera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
+                    return camera;
+                };
+
+
+                var nbPasses = voxelSize / maxDrawBuffer;
+                var i,l;
+                var viewMatrix = [ osg.mat4.create(), osg.mat4.create(), osg.mat4.create() ];
+                var nodeComputing = [ new osg.Node(), new osg.Node(), new osg.Node() ];
+                for ( var a = 0; a < 3; a++ ) {
+                    // if ( a !== 2 ) continue;
+
+                    texture3D[ a ].setTextureSize( voxelSize, voxelSize, voxelSize );
+                    texture3D[ a ].setFlipY( false );
+
+                    var view = osg.vec3.clone( sceneCenter );
+                    view[ a ] += maxSize * 0.5;
+
+                    var up = osg.vec3.create();
+
+                    // use up as axis + 1 index
+                    up[ ( a + 1 ) % 3 ] = 1.0;
+
+                    osg.mat4.lookAt( viewMatrix[ a ], view, sceneCenter, up );
+
+                    for ( i = 0, l = nbPasses; i < l; i++ ) {
+                        var cameraSlice = createCameraRTTSlice( viewMatrix[ a ], texture3D[ a ], i * maxDrawBuffer );
+                        nodeComputing[ a ].addChild( cameraSlice );
+                    }
+
+                    group.addChild( nodeComputing[ a ] );
                 }
 
-                var fragmentshader = [
-                    '#version 300 es',
-                    'precision highp float;',
-                    'uniform float sliceStart;',
-                    declarationOutput,
-                    'void main(void) {',
-                    'int index = int(7.0 * gl_FragCoord[2]);',
-                    '//vec4 color = vec4(gl_FragCoord[2], gl_FragCoord[2], gl_FragCoord[2], 1.0 );',
-                    'vec4 color = vec4(0.0, 1.0, 0.0, 1.0 );',
-                    'switch ( index ) {',
-                    'case 0:',
-                    '    rtt[ 7 ] = color;',
-                    '    break;',
-                    'case 1:',
-                    '    rtt[ 6 ] = color;',
-                    '    break;',
-                    'case 2:',
-                    '    rtt[ 5 ] = color;',
-                    '    break;',
-                    'case 3:',
-                    '    rtt[ 4 ] = color;',
-                    '    break;',
-                    'case 4:',
-                    '    rtt[ 3 ] = color;',
-                    '    break;',
-                    'case 5:',
-                    '    rtt[ 2 ] = color;',
-                    '    break;',
-                    'case 6:',
-                    '    rtt[ 1 ] = color;',
-                    '    break;',
-                    'case 7:',
-                    '    rtt[ 0 ] = color;',
-                    '    break;',
-                    '}',
-                    '}',
-                    ''
-                ].join( '\n' );
+                if ( false ) {
 
-                var program = new osg.Program(
-                    new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-                    new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+                    var getShaderDebug = function () {
 
-                return program;
-            };
+                        var vertexshader = [
+                            '',
+                            '#ifdef GL_ES',
+                            'precision highp float;',
+                            '#endif',
+                            'attribute vec3 Vertex;',
+                            'uniform mat4 uModelViewMatrix;',
+                            'uniform mat4 uProjectionMatrix;',
+                            'void main(void) {',
+                            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                            '}'
+                        ].join( '\n' );
 
+                        var fragmentshader = [
+                            '',
+                            '#ifdef GL_ES',
+                            'precision highp float;',
+                            '#endif',
+                            'uniform vec4 uColor;',
 
-            var group = new osg.Node();
+                            'void main(void) {',
+                            '  //vec4 color = vec4(0.0, 1.0, 0.0, 1.0);',
+                            '  //if ( gl_FragCoord[0] <= 1.0 || gl_FragCoord[0] >= 127.0 || gl_FragCoord[1] <= 0.0 || gl_FragCoord[2] <= 0.0 )',
+                            '  //     color = vec4(0.0, 0.0, 1.0, 1.0);',
+                            '  gl_FragColor = uColor;',
+                            '}',
+                            ''
+                        ].join( '\n' );
 
-            var texture = new osg.Texture3D();
-            var image = new osg.Image();
-            var data = new Uint8Array( this._voxelSize * this._voxelSize * this._voxelSize * 4 );
-            for ( var j = 0; j < this._voxelSize * this._voxelSize * this._voxelSize; j += 4 ) {
-                data[ j + 0 ] = 0;
-                data[ j + 1 ] = 0;
-                data[ j + 2 ] = 0;
-                data[ j + 3 ] = 0.2;
-            }
-            image.setWidth( this._voxelSize );
-            image.setHeight( this._voxelSize );
-            image.setDepth( this._voxelSize );
-            image.setImage( data );
-            // texture.setTextureSize( this._voxelSize, this._voxelSize, this._voxelSize );
-            texture.setImage( image );
-            var viewport = new osg.Viewport( 0, 0, this._voxelSize, this._voxelSize );
+                        var program = new osg.Program(
+                            new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+                            new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
-            var sceneBoundingBox = scene.getBoundingBox();
+                        return program;
+                    };
 
-            var shader = getShader2();
-            // var shader = getShader();
+                    // check view from camera for debug without 3d texture
+                    var camera2d = new osg.Camera();
+                    camera2d.setViewport( viewport );
 
+                    var projection = osg.mat4.create();
+                    osg.mat4.ortho( projection, -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, -10, 10 );
+                    camera2d.setProjectionMatrix( projection );
+                    camera2d.setViewMatrix( viewMatrix[ 0 ] );
 
-            var stateSet = new osg.StateSet();
-            stateSet.setAttributeAndModes( shader );
-
-            var sceneSize = osg.vec3.sub( osg.vec3.create(), sceneBoundingBox.getMax(), sceneBoundingBox.getMin() );
-            var sceneCenter = sceneBoundingBox.center( osg.vec3.create() );
-
-            var maxAxis = sceneSize[ 0 ] > sceneSize[ 1 ] ? 0 : 1;
-            maxAxis = sceneSize[ maxAxis ] < sceneSize[ 2 ] ? 2 : maxAxis;
-
-            var sceneVoxelSize = sceneSize[ maxAxis ] / this._voxelSize;
-            var maxSize = sceneSize[ maxAxis ];
-
-            var viewPosition = osg.vec3.fromValues( sceneCenter[ 0 ], sceneCenter[ 1 ], sceneCenter[ 2 ] + maxSize / 2 );
-            var view = osg.mat4.lookAt( osg.mat4.create(), viewPosition, sceneCenter, osg.vec3.fromValues( 0, 1, 0 ) );
-
-            var node = new osg.Node();
-            node.setStateSet( stateSet );
-            node.addChild( scene );
-            node.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
-            var createCameraRTTSlice = function ( sliceIndex ) {
-                // needs handle the scene bbox and adjust near/far to clip
-                var near = sliceIndex * sceneVoxelSize - 1e-4;
-                var far = ( sliceIndex + maxDrawBuffer ) * sceneVoxelSize;
-                var projection = osg.mat4.ortho( osg.mat4.create(), -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, near, far );
-                var camera = new osg.Camera();
-                camera._clampProjectionMatrix = false;
-                camera.setViewport( viewport );
-                camera.setProjectionMatrix( projection );
-                camera.setViewMatrix( view );
-                camera.setClearColor( osg.vec4.fromValues( 0, 0, 0, 0 ) );
-                for ( var i = 0, l = maxDrawBuffer; i < l; i++ ) {
-                    camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0 + i, texture, 0, sliceIndex + i );
+                    var texture2d = new osg.Texture();
+                    texture2d.setTextureSize( voxelSize, voxelSize );
+                    camera2d.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, texture2d, 0, 0 );
+                    camera2d.getOrCreateStateSet().setAttributeAndModes( getShaderDebug() );
+                    camera2d.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+                    camera2d.addChild( scene );
+                    camera2d.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
+                    self.createDebugTextureList( [ texture2d ] );
+                    root.addChild( camera2d );
                 }
 
-                camera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
-                camera.addChild( node );
-                camera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
-                return camera;
             };
 
-            this._voxelTexture = texture;
+            var mergeFinalTexture3D = function ( grp ) {
 
-            var nbPasses = this._voxelSize / maxDrawBuffer;
-            for ( var i = 0, l = nbPasses; i < l; i++ ) {
-                var cameraSlice = createCameraRTTSlice( i * maxDrawBuffer );
-                group.addChild( cameraSlice );
-            }
+                // merge different 3d texture into one final
+                finalTexture3D.setTextureSize( voxelSize, voxelSize, voxelSize );
 
-            if ( false ) {
-                // check view from camera for debug without 3d texture
-                var camera2d = new osg.Camera();
-                camera2d.setViewport( viewport );
+                // stop here, needs to check how many planes we need to merge axis texture
+                // into the final because of the number of maxDrawBuffer
+                var nbQuads = voxelSize / maxDrawBuffer;
 
-                var near = 0 * sceneVoxelSize;
-                var far = this._voxelSize * sceneVoxelSize;
-                var projection = osg.mat4.create();
-                osg.mat4.ortho( projection, -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, -10, 10 );
-                camera2d.setProjectionMatrix( projection );
-                camera2d.setViewMatrix( view );
+                var geom = new osg.Geometry();
+                var vertexArray = new Float32Array( 6 * nbQuads * 3 );
+                geom.setVertexAttribArray( 'Vertex', new osg.BufferArray( 'ARRAY_BUFFER', vertexArray, 3 ) );
+                geom.getPrimitiveSetList().push( new osg.DrawArrays( 'TRIANGLES', 0, 6 * nbQuads ) );
 
-                var texture2d = new osg.Texture();
-                texture2d.setTextureSize( this._voxelSize, this._voxelSize );
-                camera2d.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, texture2d, 0, 0 );
-                camera2d.getOrCreateStateSet().setAttributeAndModes( getShader() );
-                camera2d.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
-                camera2d.addChild( scene );
-                camera2d.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
-                this.createDebugTextureList( [ texture2d ] );
-                group.addChild( camera2d );
-            }
+                for ( var a = 0, al = nbQuads; a < al; a++ ) {
+                    var idx = a * 18;
+                    var z = -a * maxDrawBuffer;
+                    vertexArray[ idx + 0 ] = 0.0;
+                    vertexArray[ idx + 1 ] = 0.0;
+                    vertexArray[ idx + 2 ] = z;
 
-            return group;
+                    vertexArray[ idx + 3 ] = 0.0;
+                    vertexArray[ idx + 4 ] = voxelSize;
+                    vertexArray[ idx + 5 ] = z;
+
+                    vertexArray[ idx + 6 ] = voxelSize;
+                    vertexArray[ idx + 7 ] = voxelSize;
+                    vertexArray[ idx + 8 ] = z;
+
+
+                    vertexArray[ idx + 9 ] = 0.0;
+                    vertexArray[ idx + 10 ] = 0.0;
+                    vertexArray[ idx + 11 ] = z;
+
+                    vertexArray[ idx + 12 ] = voxelSize;
+                    vertexArray[ idx + 13 ] = voxelSize;
+                    vertexArray[ idx + 14 ] = z;
+
+                    vertexArray[ idx + 15 ] = voxelSize;
+                    vertexArray[ idx + 16 ] = 0.0;
+                    vertexArray[ idx + 17 ] = z;
+                }
+
+                var center = osg.vec3.fromValues( voxelSize/2, voxelSize/2, -voxelSize/2 );
+                var view = osg.vec3.fromValues( voxelSize/2, voxelSize/2, 0.0 );
+                var up = osg.vec3.fromValues( 1, 0, 0 );
+                var matrixView = osg.mat4.create();
+                osg.mat4.lookAt( matrixView , view, center, up );
+
+                var maxSize = voxelSize;
+
+                var createCameraMergeTexture3D = function ( sliceIndex ) {
+
+                    // needs handle the scene bbox and adjust near/far to clip
+                    var near = sliceIndex - 1e-4;
+                    var far = ( sliceIndex + maxDrawBuffer );
+                    var projection = osg.mat4.ortho( osg.mat4.create(), -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, near, far );
+                    var camera = new osg.Camera();
+                    camera.setComputeNearFar( false );
+                    camera.setViewport( viewport );
+                    camera.setProjectionMatrix( projection );
+                    camera.setViewMatrix( matrixView );
+                    camera.setClearColor( osg.vec4.fromValues( 0, 0, 0, 0 ) );
+                    camera.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( sliceIndex, 'sliceStart' ) );
+                    for ( var i = 0, l = maxDrawBuffer; i < l; i++ ) {
+                        camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0 + i, finalTexture3D, 0, ( voxelSize - 1 ) - ( sliceIndex + i ) );
+                    }
+
+                    camera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+                    camera.addChild( geom );
+                    camera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
+                    return camera;
+                };
+
+                var getShader = function () {
+                    var vertexshader = [
+                        '#version 300 es',
+                        'precision highp float;',
+                        'layout(location = 0) in vec3 Vertex;',
+                        'uniform mat4 uModelViewMatrix;',
+                        'uniform mat4 uProjectionMatrix;',
+                        'void main(void) {',
+                        '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                        '}'
+                    ].join( '\n' );
+
+
+                    var i;
+                    var output = '';
+                    for ( i = 0; i < maxDrawBuffer; i++ ) {
+                        output += '';
+                        output += 'rtt[' + i + '] = vec4(0.0, 1.0,0.0,1.0);\n';
+                    }
+
+                    var maxVoxelIndex = voxelSize - 1.0;
+                    var unroll = [];
+                    for ( var m = 0; m < maxDrawBuffer; m++ ) {
+                        unroll.push( 'pos = ivec3(gl_FragCoord.x, gl_FragCoord.y, ' + maxVoxelIndex + ' - ( ' + m + ' + sliceStart ) );' );
+                        unroll.push( 'x = getTextureX( pos );' );
+                        unroll.push( 'y = getTextureY( pos );' );
+                        unroll.push( 'z = getTextureZ( pos );' );
+                        unroll.push( 'result = x + y + z;' );
+                        unroll.push( 'if ( result.w > 0.0 ) result;// /= result.w;' );
+                        unroll.push( 'rtt[ ' + m + '] = result;' );
+                    }
+                    var str = unroll.join( '\n' );
+
+                    var fragmentshader = [
+                        '#version 300 es',
+                        'precision highp float;',
+                        'uniform int sliceStart;',
+                        'precision highp sampler3D;',
+                        'uniform sampler3D TextureX;',
+                        'uniform sampler3D TextureY;',
+                        'uniform sampler3D TextureZ;',
+                        'layout(location = 0) out vec4 rtt[' + maxDrawBuffer + '];',
+                        '',
+                        'vec4 getTextureX( ivec3 pos ) {',
+                        '    ivec3 rotPos = ivec3( pos.y, pos.z, pos.x );',
+                        '    vec4 p = texelFetch(TextureX, rotPos, 0 );',
+                        '    return p;',
+                        '}',
+                        '',
+                        'vec4 getTextureY( ivec3 pos ) {',
+                        '    ivec3 rotPos = ivec3( pos.x, pos.z, pos.y );',
+                        '    vec4 p = texelFetch(TextureY, rotPos, 0 );',
+                        '    return p;',
+                        '}',
+                        '',
+                        'vec4 getTextureZ( ivec3 pos ) {',
+                        '    vec4 p = texelFetch(TextureZ, pos, 0 );',
+                        '    return p;',
+                        '}',
+                        'void main(void) {',
+                        'ivec3 pos;',
+                        'vec4 x,y,z,result;',
+                        '',
+                        str,
+                        '}'
+                    ].join( '\n' );
+
+                    var program = new osg.Program(
+                        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+                        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+
+                    return program;
+                };
+
+                var node = new osg.Node();
+                node.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
+                node.getOrCreateStateSet().setAttributeAndModes( getShader() );
+                node.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture3D[ 0 ] );
+                node.getOrCreateStateSet().setTextureAttributeAndModes( 1, texture3D[ 1 ] );
+                node.getOrCreateStateSet().setTextureAttributeAndModes( 2, texture3D[ 2 ] );
+
+                var nbPasses = voxelSize / maxDrawBuffer;
+                for ( var i = 0, l = nbPasses; i < l; i++ ) {
+                    var cameraSlice = createCameraMergeTexture3D( i * maxDrawBuffer );
+                    node.addChild( cameraSlice );
+                }
+
+                grp.addChild( node );
+                //grp.addChild( geom );
+            };
+
+            createEachAxisTexture3D( root );
+            this._voxelTexture = finalTexture3D;//texture3D[ 2 ];
+
+            mergeFinalTexture3D( root );
+
+            return root;
         },
 
 
@@ -255,7 +431,7 @@
                     'out vec4 color;',
                     'void main(void) {',
                     '  vec4 c = texelFetch(Texture0, vVertex, 0 );',
-                    '  if ( c[3] == 0.0 ) discard; //c = vec4(0.0,0.0,0.0,1.0);',
+                    '  if ( c[3] == 0.0 ) discard; //c = vec4(0.0,0.0,0.0,0.2);',
                     '  color = c;',
                     '}',
                     ''
@@ -298,6 +474,18 @@
         },
 
         createScene: function () {
+
+            var UpdateCallback = function () {
+                this.update = function ( node, nv ) {
+                    var fn = nv.getFrameStamp().getFrameNumber();
+                    if ( fn === this._frameNumber ) return false;
+
+                    this._frameNumber = fn;
+                    osg.mat4.fromRotation( node.getMatrix(), 0.01 * this._frameNumber, [ 0, 1, 0 ] );
+                    return false;
+                };
+            };
+
             // the root node
             var scene = new osg.Node();
             scene.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 0 ) );
@@ -312,9 +500,26 @@
             mt.addChild( osg.createAxisGeometry() );
             scene.addChild( mt );
 
-            var sceneCube = new osg.Node();
-            sceneCube.addChild( osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 ) );
-            sceneCube.addChild( osg.createTexturedBoxGeometry( 4, 4, 4, 1, 1, 1 ) );
+            var geom, material, color;
+            var sceneCube = new osg.MatrixTransform();
+            geom = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
+            color = [ 0.0, 0.0, 1.0, 1.0 ];
+            material = new osg.Material();
+            material.setDiffuse( color );
+            geom.getOrCreateStateSet().setAttributeAndModes( material );
+            geom.getOrCreateStateSet().addUniform( osg.Uniform.createFloat4( color, 'uColor' ) );
+            var mtg = new osg.MatrixTransform();
+            mtg.addUpdateCallback( new UpdateCallback() );
+            mtg.addChild( geom );
+            sceneCube.addChild( mtg );
+
+            geom = osg.createTexturedBoxGeometry( 4, 4, 4, 1, 1, 1 );
+            color = [ 1.0, 0.0, 0.0, 1.0 ];
+            material = new osg.Material();
+            material.setDiffuse( color );
+            geom.getOrCreateStateSet().setAttributeAndModes( material );
+            geom.getOrCreateStateSet().addUniform( osg.Uniform.createFloat4( color, 'uColor' ) );
+            sceneCube.addChild( geom );
 
             // osgDB.readNodeURL( '../media/models/raceship.osgjs' ).then( function ( model ) {
             //     scene.addChild( model );
