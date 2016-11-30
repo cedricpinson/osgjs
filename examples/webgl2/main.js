@@ -25,6 +25,9 @@
             var voxelSize = this._voxelSize;
             var viewport = new osg.Viewport( 0, 0, voxelSize, voxelSize );
 
+            var viewMatrix = [ osg.mat4.create(), osg.mat4.create(), osg.mat4.create() ];
+            var invViewMatrix = [ osg.mat4.create(), osg.mat4.create(), osg.mat4.create() ];
+
             var createEachAxisTexture3D = function ( group ) {
 
                 var getShader = function () {
@@ -35,7 +38,7 @@
                         'uniform mat4 uModelViewMatrix;',
                         'uniform mat4 uProjectionMatrix;',
                         'void main(void) {',
-                        '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                        '  gl_Position = (uProjectionMatrix * uModelViewMatrix) * vec4(Vertex,1.0);',
                         '}'
                     ].join( '\n' );
 
@@ -51,12 +54,14 @@
                         '#version 300 es',
                         'precision highp float;',
                         'uniform vec4 uColor;',
+                        'uniform vec3 uColorTextureAxis;',
                         'uniform float sliceStart;',
                         'layout(location = 0) out vec4 rtt[' + maxDrawBuffer + '];',
                         'void main(void) {',
                         'int index = int(7.0 * gl_FragCoord[2]);',
                         '//vec4 color = vec4(gl_FragCoord[2], gl_FragCoord[2], gl_FragCoord[2], 1.0 );',
                         'vec4 color = uColor; //vec4(0.0, 1.0, 0.0, 1.0 );',
+                        '//color = vec4( uColorTextureAxis, 1.0 );',
                         ' //if ( gl_FragCoord.z <= 0.1 ) color = vec4(0.0, 1.0, 0.0, 1.0 );',
                         'switch ( index ) {',
                         'case 0:',
@@ -107,8 +112,8 @@
                 var maxAxis = sceneSize[ 0 ] > sceneSize[ 1 ] ? 0 : 1;
                 maxAxis = sceneSize[ maxAxis ] < sceneSize[ 2 ] ? 2 : maxAxis;
 
-                var sceneVoxelSize = sceneSize[ maxAxis ] / voxelSize;
                 var maxSize = sceneSize[ maxAxis ];
+                var sceneVoxelSize = maxSize / voxelSize;
 
                 var node = new osg.Node();
                 node.setStateSet( stateSet );
@@ -140,7 +145,6 @@
 
                 var nbPasses = voxelSize / maxDrawBuffer;
                 var i,l;
-                var viewMatrix = [ osg.mat4.create(), osg.mat4.create(), osg.mat4.create() ];
                 var nodeComputing = [ new osg.Node(), new osg.Node(), new osg.Node() ];
                 for ( var a = 0; a < 3; a++ ) {
                     // if ( a !== 2 ) continue;
@@ -157,10 +161,18 @@
                     up[ ( a + 1 ) % 3 ] = 1.0;
 
                     osg.mat4.lookAt( viewMatrix[ a ], view, sceneCenter, up );
+                    osg.mat4.copy( invViewMatrix[ a ], viewMatrix[ a ] );
+                    osg.mat4.setTranslation( invViewMatrix[ a ], [ 0, 0, 0 ] );
+                    // osg.mat4.invert( invViewMatrix[ a ], invViewMatrix[ a ] );
 
+                    osg.logMatrix( viewMatrix[ a ] );
                     for ( i = 0, l = nbPasses; i < l; i++ ) {
-                        var cameraSlice = createCameraRTTSlice( viewMatrix[ a ], texture3D[ a ], i * maxDrawBuffer );
+                        var cameraSlice = createCameraRTTSlice( viewMatrix[ a ], texture3D[ a ], i * maxDrawBuffer, a );
                         nodeComputing[ a ].addChild( cameraSlice );
+                        var axisColor = osg.vec3.create();
+                        axisColor[ a ] = 1.0;
+                        cameraSlice.getOrCreateStateSet().addUniform( osg.Uniform.createFloat3( axisColor, 'uColorTextureAxis' ) );
+
                     }
 
                     group.addChild( nodeComputing[ a ] );
@@ -213,7 +225,7 @@
                     var projection = osg.mat4.create();
                     osg.mat4.ortho( projection, -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, -10, 10 );
                     camera2d.setProjectionMatrix( projection );
-                    camera2d.setViewMatrix( viewMatrix[ 0 ] );
+                    camera2d.setViewMatrix( viewMatrix[ 2 ] );
 
                     var texture2d = new osg.Texture();
                     texture2d.setTextureSize( voxelSize, voxelSize );
@@ -310,7 +322,7 @@
                         'uniform mat4 uModelViewMatrix;',
                         'uniform mat4 uProjectionMatrix;',
                         'void main(void) {',
-                        '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                        '  gl_Position = (uProjectionMatrix * uModelViewMatrix) * vec4(Vertex,1.0);',
                         '}'
                     ].join( '\n' );
 
@@ -343,22 +355,33 @@
                         'uniform sampler3D TextureX;',
                         'uniform sampler3D TextureY;',
                         'uniform sampler3D TextureZ;',
+                        'uniform mat4 invViewX;',
+                        'uniform mat4 invViewY;',
+                        'uniform mat4 invViewZ;',
+                        'float size = float(' + voxelSize + ')/2.0;',
                         'layout(location = 0) out vec4 rtt[' + maxDrawBuffer + '];',
                         '',
                         'vec4 getTextureX( ivec3 pos ) {',
-                        '    ivec3 rotPos = ivec3( pos.y, pos.z, pos.x );',
+                        '    vec3 pp =  vec3(pos) - vec3(size);',
+                        '    pp =  vec3(size) + vec3( invViewX * vec4(pp,1.0) );',
+                        '    ivec3 rotPos = ivec3(pp);',
                         '    vec4 p = texelFetch(TextureX, rotPos, 0 );',
                         '    return p;',
                         '}',
                         '',
                         'vec4 getTextureY( ivec3 pos ) {',
-                        '    ivec3 rotPos = ivec3( pos.x, pos.z, pos.y );',
+                        '    vec3 pp =  vec3(pos) - vec3(size);',
+                        '    pp =  vec3(size) + vec3( invViewY * vec4(pp,1.0) );',
+                        '    ivec3 rotPos = ivec3(pp);',
                         '    vec4 p = texelFetch(TextureY, rotPos, 0 );',
                         '    return p;',
                         '}',
                         '',
                         'vec4 getTextureZ( ivec3 pos ) {',
-                        '    vec4 p = texelFetch(TextureZ, pos, 0 );',
+                        '    vec3 pp =  vec3(pos) - vec3(size);',
+                        '    pp =  vec3(size) + vec3( invViewZ * vec4(pp,1.0) );',
+                        '    ivec3 rotPos = ivec3(pp);',
+                        '    vec4 p = texelFetch(TextureZ, rotPos, 0 );',
                         '    return p;',
                         '}',
                         'void main(void) {',
@@ -382,6 +405,13 @@
                 node.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture3D[ 0 ] );
                 node.getOrCreateStateSet().setTextureAttributeAndModes( 1, texture3D[ 1 ] );
                 node.getOrCreateStateSet().setTextureAttributeAndModes( 2, texture3D[ 2 ] );
+
+                node.getOrCreateStateSet().addUniform( osg.Uniform.createMat4( invViewMatrix[ 0 ], 'invViewX' ) );
+                node.getOrCreateStateSet().addUniform( osg.Uniform.createMat4( invViewMatrix[ 1 ], 'invViewY' ) );
+                node.getOrCreateStateSet().addUniform( osg.Uniform.createMat4( invViewMatrix[ 2 ], 'invViewZ' ) );
+                node.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'TextureX' ) );
+                node.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 1, 'TextureY' ) );
+                node.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 2, 'TextureZ' ) );
 
                 var nbPasses = voxelSize / maxDrawBuffer;
                 for ( var i = 0, l = nbPasses; i < l; i++ ) {
@@ -481,7 +511,7 @@
                     if ( fn === this._frameNumber ) return false;
 
                     this._frameNumber = fn;
-                    osg.mat4.fromRotation( node.getMatrix(), 0.01 * this._frameNumber, [ 0, 1, 0 ] );
+                    osg.mat4.fromRotation( node.getMatrix(), 0.005 * this._frameNumber, [ 0, 1, 0 ] );
                     return false;
                 };
             };
@@ -508,10 +538,21 @@
             material.setDiffuse( color );
             geom.getOrCreateStateSet().setAttributeAndModes( material );
             geom.getOrCreateStateSet().addUniform( osg.Uniform.createFloat4( color, 'uColor' ) );
+            sceneCube.addChild( geom );
+
+            geom = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
+            color = [ 0.0, 1.0, 0.0, 1.0 ];
+            material = new osg.Material();
+            material.setDiffuse( color );
+            geom.getOrCreateStateSet().setAttributeAndModes( material );
+            geom.getOrCreateStateSet().addUniform( osg.Uniform.createFloat4( color, 'uColor' ) );
             var mtg = new osg.MatrixTransform();
             mtg.addUpdateCallback( new UpdateCallback() );
             mtg.addChild( geom );
-            sceneCube.addChild( mtg );
+            var mm = new osg.MatrixTransform();
+            osg.mat4.fromTranslation( mm.getMatrix(), [ 2, 2, 2 ] );
+            mm.addChild( mtg );
+            sceneCube.addChild( mm );
 
             geom = osg.createTexturedBoxGeometry( 4, 4, 4, 1, 1, 1 );
             color = [ 1.0, 0.0, 0.0, 1.0 ];
@@ -521,10 +562,6 @@
             geom.getOrCreateStateSet().addUniform( osg.Uniform.createFloat4( color, 'uColor' ) );
             sceneCube.addChild( geom );
 
-            // osgDB.readNodeURL( '../media/models/raceship.osgjs' ).then( function ( model ) {
-            //     scene.addChild( model );
-            // } );
-
             var rtt = this.createRTT( sceneCube );
             scene.addChild( sceneCube );
 
@@ -532,7 +569,6 @@
             this.getRootNode().addChild( scene );
 
             this.getRootNode().addChild( this.createDebugTexture3D() );
-            // this.getRootNode().addChild( this.createDebugTexture3D2() );
 
             //this.getRootNode().addChild( this.createDebugTexture3DQuad() );
             this._viewer.getManipulator().setNode( scene );
