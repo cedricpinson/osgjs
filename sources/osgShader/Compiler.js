@@ -115,7 +115,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
     registerTextureAttributes: function ( tuTarget, tunit ) {
         var tType = tuTarget.className();
         if ( tType === 'Texture' ) return this.registerTexture( tuTarget, tunit );
-        if ( tType === 'ShadowTexture' ) return this.registerTextureShadow( tuTarget, tunit );
+        if ( tType.indexOf( 'ShadowTexture' ) !== -1 ) return this.registerTextureShadow( tuTarget, tunit );
     },
 
     registerTexture: function ( tuTarget, texUnit ) {

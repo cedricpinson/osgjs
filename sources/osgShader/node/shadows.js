@@ -10,7 +10,17 @@ var ShadowReceive = function () {
 
 ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
     type: 'ShadowReceiveNode',
-    validInputs: [ 'lighted', 'shadowTexture', 'shadowTextureMapSize', 'shadowTextureProjectionMatrix', 'shadowTextureViewMatrix', 'shadowTextureDepthRange', 'lightNDL', 'vertexWorld', 'shadowbias', /* 'shadowexponent0', 'shadowexponent1', 'shadowepsilonVSM' */ ],
+    validInputs: [ 'lighted',
+        'shadowTexture',
+        //'shadowTextureMapSize',
+        //'shadowTextureRenderSize',
+        'shadowTextureProjectionMatrix',
+        'shadowTextureViewMatrix',
+        'shadowTextureDepthRange',
+        'lightNDL',
+        'vertexWorld',
+        'shadowbias', /* 'shadowexponent0', 'shadowexponent1', 'shadowepsilonVSM' */
+    ],
     validOutputs: [ 'float' ],
 
     globalFunctionDeclaration: function () {
@@ -36,15 +46,21 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
         // common inputs
         var inputs = [
             inp.lighted,
-            inp.shadowTexture,
-            inp.shadowTextureMapSize,
+            inp.shadowTexture
+        ];
+
+        if ( this._shadow.getAtlas() )
+            inputs.push( inp.shadowTextureMapSize );
+
+        inputs = inputs.concat( [
+            inp.shadowTextureRenderSize,
             inp.shadowTextureProjectionMatrix,
             inp.shadowTextureViewMatrix,
             inp.shadowTextureDepthRange,
             inp.lightNDL,
             inp.vertexWorld,
             inp.shadowbias
-        ];
+        ] );
 
         var algo = this._shadow.getAlgorithm();
         if ( algo === 'ESM' ) {
