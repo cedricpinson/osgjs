@@ -41,7 +41,7 @@ var ShadowReceiveAttribute = function ( lightNum, disable ) {
     this._rotateOffset = false;
 
     this._enable = !disable;
-
+    this._isAtlasTexture = false;
 };
 
 ShadowReceiveAttribute.uniforms = {};
@@ -64,6 +64,13 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
     getUniformName: function ( name ) {
         var prefix = this.getType() + this.getLightNumber().toString();
         return 'u' + prefix + '_' + name;
+    },
+
+    getAtlas: function () {
+        return this._isAtlasTexture;
+    },
+    setAtlas: function ( v ) {
+        this._isAtlasTexture = v;
     },
 
     getRotateOffset: function () {
@@ -272,6 +279,10 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
         if ( this.getRotateOffset() ) {
             defines.push( '#define _ROTATE_OFFSET' );
+        }
+
+        if ( this.getAtlas() ) {
+            defines.push( '#define _ATLAS_SHADOW' );
         }
 
         return defines;

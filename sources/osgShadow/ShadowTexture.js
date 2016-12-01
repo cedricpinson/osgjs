@@ -16,10 +16,14 @@ var vec4 = require( 'osg/glMatrix' ).vec4;
  * @inherits StateAttribute
  */
 var ShadowTexture = function () {
+
     Texture.call( this );
+
     this._uniforms = {};
     this._mapSize = vec4.create();
+    this._renderSize = vec4.create();
     this._lightUnit = -1; // default for a valid cloneType
+
 };
 
 ShadowTexture.uniforms = {};
@@ -29,7 +33,9 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
     cloneType: function () {
         return new ShadowTexture();
     },
-
+    hasThisLight: function ( lightNum ) {
+        return this._lightUnit === lightNum;
+    },
     setLightUnit: function ( lun ) {
         this._lightUnit = lun;
     },
@@ -60,7 +66,8 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             ViewMatrix: Uniform.createMat4( this.getUniformName( 'viewMatrix' ) ),
             ProjectionMatrix: Uniform.createMat4( this.getUniformName( 'projectionMatrix' ) ),
             DepthRange: Uniform.createFloat4( this.getUniformName( 'depthRange' ) ),
-            MapSize: Uniform.createFloat4( this.getUniformName( 'mapSize' ) )
+            MapSize: Uniform.createFloat4( this.getUniformName( 'mapSize' ) ),
+            RenderSize: Uniform.createFloat4( this.getUniformName( 'renderSize' ) )
         };
 
         // Dual Uniform of texture, needs:
@@ -95,6 +102,11 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         this._mapSize[ 1 ] = h;
         this._mapSize[ 2 ] = 1.0 / w;
         this._mapSize[ 3 ] = 1.0 / h;
+
+        this._renderSize[ 0 ] = w;
+        this._renderSize[ 1 ] = h;
+        this._renderSize[ 2 ] = 1.0 / w;
+        this._renderSize[ 3 ] = 1.0 / h;
     },
 
     apply: function ( state, texUnit ) {
@@ -111,6 +123,7 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         uniformMap.ProjectionMatrix.setMatrix4( this._projectionMatrix );
         uniformMap.DepthRange.setFloat4( this._depthRange );
         uniformMap.MapSize.setFloat4( this._mapSize );
+        uniformMap.RenderSize.setFloat4( this._renderSize );
 
     },
 
