@@ -22,7 +22,6 @@ var ShadowTextureAtlas = function () {
     this._uniforms = {};
     this._lightUnit = -1; // default for a valid cloneType
     this._lightNumber = 0;
-    this._lightRange = 0;
 
     this._viewMatrices = [];
     this._projectionMatrices = [];
@@ -49,21 +48,19 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
     },
 
     hasThisLight: function ( lightNum ) {
-        return this._lightNumber <= lightNum && this._lightNumber + this._lightRange > lightNum;
+        return this._lightsIndexes.indexOf( lightNum ) !== -1;
     },
 
-    getLightRange: function () {
-        return this._lightRange;
-    },
+    setLightsIndexes: function ( lightsIndexes ) {
 
-    setLightRange: function ( range ) {
+        this._lightsIndexes = lightsIndexes;
 
-        this._lightRange = range;
+        var l = lightsIndexes.length;
+        this._viewMatrices.length = l;
+        this._projectionMatrices.length = l;
+        this._depthRanges.length = l;
+        this._mapSizes.length = l;
 
-        this._viewMatrices.length = range;
-        this._projectionMatrices.length = range;
-        this._depthRanges.length = range;
-        this._mapSizes.length = range;
     },
 
     setLightUnit: function ( lun ) {
@@ -110,7 +107,7 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
         var renderSizeUniform = Uniform.createFloat4( this.getUniformName( 'renderSize' ) );
         uniforms[ 'RenderSize' ] = renderSizeUniform;
 
-        for ( var i = 0; i < this._lightRange; i++ ) {
+        for ( var i = 0, l = this._lightsIndexes.length; i < l; i++ ) {
 
             uniforms[ 'ViewMatrix_' + i ] = Uniform.createMat4( this.getUniformName( 'viewMatrix', i ) );
             uniforms[ 'ProjectionMatrix_' + i ] = Uniform.createMat4( this.getUniformName( 'projectionMatrix', i ) );
@@ -158,7 +155,7 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
 
     },
 
-    setMapSize: function ( dimension, lightNumber ) {
+    setLightShadowMapSize: function ( lightNumber, dimension ) {
 
         this._mapSizes[ lightNumber ] = dimension;
 
@@ -175,7 +172,7 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
         // update Uniforms
         var uniformMap = this.getOrCreateUniforms( texUnit );
 
-        for ( var i = 0; i < this._lightRange; i++ ) {
+        for ( var i = 0, l = this._lightsIndexes.length; i < l; i++ ) {
 
             uniformMap[ 'ViewMatrix_' + i ].setMatrix4( this._viewMatrices[ i ] );
             uniformMap[ 'ProjectionMatrix_' + i ].setMatrix4( this._projectionMatrices[ i ] );

@@ -1133,15 +1133,26 @@
                 15 + 35 * num
             ];
 
-            var shadowSettings = new osgShadow.ShadowSettings( this._config );
 
-            var mapres = parseInt( this._config[ 'textureSize' ] );
-            shadowSettings.setTextureSize( mapres );
+            var shadowSettings;
+            if ( this._config[ 'atlas' ] ) {
 
-            shadowSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
-            shadowSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
+                shadowSettings = this._shadowSettings[ num ];
+                shadowMap = this._shadowMapAtlas.addLight( light, shadowSettings );
 
-            shadowSettings.setAlgorithm( this._config[ 'shadow' ] );
+            } else {
+
+                shadowSettings = new osgShadow.ShadowSettings( this._config );
+
+
+                var mapres = parseInt( this._config[ 'textureSize' ] );
+                shadowSettings.setTextureSize( mapres );
+
+                shadowSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
+                shadowSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
+
+                shadowSettings.setAlgorithm( this._config[ 'shadow' ] );
+            }
 
             // at three light you might burn...
             ////////////////// Light 0
@@ -1217,16 +1228,6 @@
 
             var shadowMap;
             if ( this._config[ 'atlas' ] ) {
-                if ( !this._shadowMapAtlas ) {
-
-                    shadowSettings.atlasSize = 2048;
-                    var shadowMapAtlas = new osgShadow.ShadowMapAtlas( shadowSettings );
-                    this._lightAndShadowScene.addShadowTechnique( shadowMapAtlas );
-                    shadowMapAtlas.setShadowSettings( shadowSettings );
-                    //this._shadowTechnique.push( shadowMapAtlas );
-                    this._shadowMapAtlas = shadowMapAtlas;
-
-                }
 
                 shadowMap = this._shadowMapAtlas.addLight( light, shadowSettings );
 
@@ -1292,8 +1293,43 @@
             var lightScale = 1.0 / numLights - 1e-4;
 
 
-            for ( var k = 0; k < numLights; k++ ) {
-                this.addShadowedLight( group, k, lightScale );
+            if ( this._config[ 'atlas' ] ) {
+
+                for ( var k = 0; k < numLights; k++ ) {
+
+                    var shadowSettings = new osgShadow.ShadowSettings( this._config );
+                    shadowSettings.atlasSize = 2048;
+                    var mapres = parseInt( this._config[ 'textureSize' ] );
+                    shadowSettings.setTextureSize( mapres );
+                    shadowSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
+                    shadowSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
+                    this._shadowSettings[ k ] = shadowSettings;
+
+                }
+
+                var shadowMapAtlas = new osgShadow.ShadowMapAtlas( this._shadowSettings[ 0 ] );
+                this._lightAndShadowScene.addShadowTechnique( shadowMapAtlas );
+                shadowMapAtlas.setShadowSettings( shadowSettings );
+                this._shadowMapAtlas = shadowMapAtlas;
+
+
+                for ( var k = 0; k < numLights; k++ ) {
+                    this.addShadowedLight( group, k, lightScale );
+                }
+
+                var lightNumbers = [];
+                for ( var k = 0; k < numLights; k++ ) {
+                    lightNumbers.push( this._lights[ k ].getLightNumber() );
+                }
+
+                var shadowTextureAtlas = this._shadowMapAtlas.getTexture();
+                shadowTextureAtlas.setLightsIndexes( lightNumbers );
+
+
+            } else {
+                for ( var k = 0; k < numLights; k++ ) {
+                    this.addShadowedLight( group, k, lightScale );
+                }
             }
 
 

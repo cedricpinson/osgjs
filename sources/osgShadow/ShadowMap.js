@@ -379,6 +379,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         var lightNumber = this._light.getLightNumber();
 
         if ( !atlasTexture ) {
+
             this.initTexture();
 
             this._textureUnit = this._textureUnitBase + lightNumber;
@@ -389,8 +390,9 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         } else {
 
             this._texture = atlasTexture;
+
             // allow indexing properties in the texture uniforms
-            this._lightNumber = lightIndex;
+            this._lightIndex = lightIndex;
             this._textureUnit = textureUnit;
             this._shadowReceiveAttribute.setAtlas( true );
         }
@@ -917,9 +919,9 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._depthRange[ 2 ] = this._depthRange[ 1 ] - this._depthRange[ 0 ];
         this._depthRange[ 3 ] = 1.0 / ( this._depthRange[ 2 ] );
 
-        this._texture.setViewMatrix( this._viewMatrix, this._lightNumber );
-        this._texture.setProjectionMatrix( this._projectionMatrix, this._lightNumber );
-        this._texture.setDepthRange( this._depthRange, this._lightNumber );
+        this._texture.setViewMatrix( this._viewMatrix, this._lightIndex );
+        this._texture.setProjectionMatrix( this._projectionMatrix, this._lightIndex );
+        this._texture.setDepthRange( this._depthRange, this._lightIndex );
 
     },
 
@@ -942,8 +944,8 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         mat4.copy( this._projectionMatrix, camera.getProjectionMatrix() );
         mat4.copy( this._viewMatrix, camera.getViewMatrix() );
 
-        this._texture.setViewMatrix( this._viewMatrix, this._lightNumber );
-        this._texture.setProjectionMatrix( this._projectionMatrix, this._lightNumber );
+        this._texture.setViewMatrix( this._viewMatrix, this._lightIndex );
+        this._texture.setProjectionMatrix( this._projectionMatrix, this._lightIndex );
 
         this._filledOnce = true;
     },

@@ -23,7 +23,6 @@ var ShadowMapAtlas = function ( settings ) {
 
     ShadowTechnique.apply( this, arguments );
 
-
     this._texture = new ShadowTextureAtlas();
     this._textureUnitBase = 4;
     this._textureUnit = this._textureUnitBase;
@@ -362,14 +361,14 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
         this._lights.push( light );
         lightNum = this._lights.length;
-        this._texture.setLightRange( lightNum );
+
         if ( lightNum === 1 ) {
             this._texture.setLightNumber( light.getLightNumber() );
+            this._texture.setLightUnit( light.getLightNumber() );
         }
 
         var shadowMap = new ShadowMap( settings, this._texture );
         this._shadowMaps.push( shadowMap );
-
 
         var mapSize = customMapSize !== undefined ? customMapSize : this._shadowMapSize;
 
@@ -419,16 +418,11 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
             this._viewportDimension[ i ] = vec4.fromValues( x, y, mapSize, mapSize );
             this._shadowMaps[ i ].init( this._texture, i, this._textureUnitBase );
-            this._texture.setMapSize( this._viewportDimension[ i ], i );
+            this._texture.setLightShadowMapSize( i, this._viewportDimension[ i ] );
 
             var st = this._shadowMaps[ i ].getCamera().getOrCreateStateSet();
             var scissor = new Scissor( x, y, mapSize, mapSize );
             st.setAttributeAndModes( scissor, StateAttribute.ON | StateAttribute.OVERRIDE );
-
-            //v0ar st = shadowMap.getCasterStateSet();
-            //var castUniforms = st.getUniformList();
-            //castUniforms.uShadowMapSize.getUniform().setVec4( this._depthRange );
-
 
         }
 
