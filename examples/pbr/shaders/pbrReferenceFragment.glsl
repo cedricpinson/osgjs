@@ -71,9 +71,9 @@ float occlusionHorizon( const in vec3 R, const in vec3 normal)
     if ( uOcclusionHorizon == 0)
         return 1.0;
 
-// http://marmosetco.tumblr.com/post/81245981087
-// TODO we set a min value (10%) to avoid pure blackness (in case of pure metal)
-    float factor = clamp( 1.0 + 1.3 * dot(R, normal), 0.1, 1.0 );
+    // http://marmosetco.tumblr.com/post/81245981087
+    // marmoset uses 1.3, we force it to 1.0
+    float factor = clamp( 1.0 + dot(R, normal), 0.0, 1.0 );
     return factor * factor;
 }
 
