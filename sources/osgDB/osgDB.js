@@ -18,4 +18,8 @@ osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
 osgDB.ObjectWrapper.serializers.osgText = osgTextWrappers;
 osgDB.Registry = Registry;
 osgDB.requestFile = require( 'osgDB/requestFile' );
+
+var zlib = require( 'osgDB/zlib' );
+MACROUTILS.objectMix( osgDB, zlib );
+
 module.exports = osgDB;

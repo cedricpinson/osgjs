@@ -4,6 +4,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var osgNameSpace = require( 'osgNameSpace' );
 var _requestFile = require( 'osgDB/requestFile' );
 var Options = require( 'osgDB/options' );
+var zlib = require( 'osgDB/zlib' );
 var Notify = require( 'osg/notify' );
 var Image = require( 'osg/Image' );
 var BufferArray = require( 'osg/BufferArray' );
@@ -251,7 +252,7 @@ Input.prototype = {
             } ).catch( defer.reject.bind( defer ) );
         };
 
-        var ungzipFile = function ( file ) {
+        var ungzipFile = function ( arrayBuffer ) {
 
             function pad( n ) {
                 return n.length < 2 ? '0' + n : n;
@@ -267,7 +268,10 @@ Input.prototype = {
             }
 
 
-            var unpacked = self._unzipTypedArray( file );
+            var unpacked = arrayBuffer;
+            if ( zlib.isGunzipBuffer( arrayBuffer ) ) {
+                unpacked = zlib.gunzip( arrayBuffer );
+            }
 
             var typedArray = new Uint8Array( unpacked );
             var str = uintToString( typedArray );
