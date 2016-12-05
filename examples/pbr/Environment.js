@@ -3,7 +3,10 @@
     var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgDB = OSG.osgDB;
 
+
+    var JSZip = window.JSZip;
 
     var EnvironmentPanorama = window.EnvironmentPanorama;
     var EnvironmentCubeMap = window.EnvironmentCubeMap;
@@ -17,9 +20,78 @@
         this._cubemapUE4 = {};
         this._backgroundCubemap = {};
         this._backgroundPanorama = {};
+        this._files = {};
     };
 
     Environment.prototype = {
+
+        loadPackage: function ( urlOfFile ) {
+
+            var loadZip = function ( file ) {
+                return this.loadZipFile( file ).then( function ( fileArray ) {
+
+                    fileArray.forEach( function ( entry ) {
+                        this._files[ entry.name ] = entry.data;
+                    }.bind( this ) );
+
+                    // STOP HERE, problem config.json is not in the file list
+                    // ???
+                    return this.init( null, this._files[ 'config.json' ] );
+
+                }.bind( this ) );
+            }.bind( this );
+
+            var file = urlOfFile;
+            if ( typeof urlOfFile === 'string' ) {
+                return osgDB.requestFile( urlOfFile, {
+                    responseType: 'blob'
+                } ).then( function ( blob ) {
+                    return loadZip( blob );
+                } );
+            }
+
+            return loadZip( file );
+        },
+
+        loadZipFile: function ( file ) {
+
+            return JSZip.loadAsync( file ).then( function ( zip ) {
+
+                var promisesArray = [];
+
+                Object.keys( zip.files ).forEach( function ( filename ) {
+
+                    var ext = filename.split( '.' ).pop();
+                    var type = null;
+
+                    if ( ext === 'json' ) type = 'string';
+                    if ( ext === 'bin' || ext === 'gz' ) type = 'arraybuffer';
+                    if ( !type ) return;
+
+                    var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
+
+                        var data = fileData;
+                        var name = filename.split( '/' ).pop();
+
+                        if ( name.split( '.' ).pop() === 'json' ) data = JSON.parse( data );
+
+                        return {
+                            name: name,
+                            data: data
+                        };
+
+                    } );
+
+                    promisesArray.push( p );
+
+                } );
+
+                return P.all( promisesArray );
+
+            } );
+
+        },
+
 
         getImage: function ( type, encoding, format ) {
 
@@ -41,27 +113,24 @@
             return results;
         },
 
-        init: function ( environment, config ) {
+        init: function ( url, config ) {
             var formatList = window.formatList;
 
             this._config = config;
 
             var ready = this._promises;
-            var size;
-            var cubemapPackedFloat;
             var mipmapTexture;
 
             //var spherical = environment + 'spherical';
             if ( formatList.FLOAT ) {
-                mipmapTexture = this.getImage( 'mipmap', 'float', 'cubemap' );
-                cubemapPackedFloat = environment + mipmapTexture.file;
-                size = mipmapTexture.width;
-                this._cubemapPackedFloat = new EnvironmentCubeMap( cubemapPackedFloat, size, config );
+                ( function () {
+                    mipmapTexture = this.getImage( 'mipmap', 'float', 'cubemap' );
+                    var file = mipmapTexture.file;
+                    var urlOrData = this._files[ file ] || ( url + file );
+                    var size = mipmapTexture.width;
+                    this._cubemapPackedFloat = new EnvironmentCubeMap( urlOrData, size, config );
+                }.bind( this ) )();
             }
-
-            var brdfTexture = this.getImage( 'brdf_ue4', 'rg16', 'lut' );
-            var integrateBRDF = environment + brdfTexture.file;
-
 
             // read all panorama format U4
             formatList.forEach( function ( key ) {
@@ -73,7 +142,8 @@
 
                 var file = texture.file;
                 var size = texture.width;
-                this._panoramaUE4[ key ] = new EnvironmentPanorama( environment + file, size, config );
+                var urlOrData = this._files[ file ] || ( url + file );
+                this._panoramaUE4[ key ] = new EnvironmentPanorama( urlOrData, size, config );
                 ready.push( this._panoramaUE4[ key ].loadPacked( key ) );
 
             }.bind( this ) );
@@ -87,12 +157,23 @@
 
                 var file = texture.file;
                 var size = texture.width;
-                this._cubemapUE4[ key ] = new EnvironmentCubeMap( environment + file, size, config );
+                var urlOrData = this._files[ file ] || ( url + file );
+                this._cubemapUE4[ key ] = new EnvironmentCubeMap( urlOrData, size, config );
                 ready.push( this._cubemapUE4[ key ].loadPacked( key ) );
 
             }.bind( this ) );
 
-            this._integrateBRDF = new IntegrateBRDFMap( integrateBRDF, brdfTexture.width );
+
+            ( function () {
+
+                var texture = this.getImage( 'brdf_ue4', 'rg16', 'lut' );
+
+                var file = texture.file;
+                var size = texture.width;
+                var urlOrData = this._files[ file ] || ( url + file );
+                this._integrateBRDF = new IntegrateBRDFMap( urlOrData, size );
+
+            }.bind( this ) )();
 
             // read all background cubemap
             formatList.forEach( function ( key ) {
@@ -101,9 +182,10 @@
                 if ( texture === undefined ) return;
                 var file = texture.file;
                 var size = texture.width;
-                this._backgroundCubemap[ key ] = new EnvironmentCubeMap( environment + file, size, {
-                    'minFilter': 'LINEAR',
-                    'magFilter': 'LINEAR'
+                var urlOrData = this._files[ file ] || ( url + file );
+                this._backgroundCubemap[ key ] = new EnvironmentCubeMap( urlOrData, size, {
+                    minFilter: 'LINEAR',
+                    magFilter: 'LINEAR'
                 } );
                 ready.push( this._backgroundCubemap[ key ].loadPacked( key ) );
 

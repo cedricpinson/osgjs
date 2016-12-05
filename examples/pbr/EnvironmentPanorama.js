@@ -4,17 +4,20 @@ window.EnvironmentPanorama = ( function () {
     var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgDB = OSG.osgDB;
     var osgShader = OSG.osgShader;
 
     var shaderProcessor = new osgShader.ShaderProcessor();
 
-    var PanoramaEnv = function ( file, size, options ) {
+    var PanoramaEnv = function ( urlOrData, size, options ) {
         this._options = options || {};
-        this._file = file;
         this._size = size;
+        if ( typeof urlOrData === 'string' ) this._file = urlOrData;
+        else this._data = urlOrData;
     };
 
     PanoramaEnv.prototype = {
+
         getFile: function () {
             return this._file;
         },
@@ -66,11 +69,10 @@ window.EnvironmentPanorama = ( function () {
         loadPacked: function ( type ) {
             var defer = P.defer();
 
-            var xhr = new XMLHttpRequest();
+            var readInputArray = function ( inputArray ) {
 
-            var error = function () {};
-            var load = function () {
-                var data = xhr.response;
+                var data = inputArray;
+                if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
 
                 var size = this._size;
 
@@ -100,19 +102,19 @@ window.EnvironmentPanorama = ( function () {
 
             }.bind( this );
 
-            xhr.addEventListener( 'error', error, false );
-            xhr.addEventListener( 'load', function ( event ) {
-                if ( xhr.status !== 200 ) {
-                    error( event );
-                    return;
-                }
-                load.call( event );
 
-            }, false );
+            if ( this._data ) {
 
-            xhr.open( 'GET', this._file, true );
-            xhr.responseType = 'arraybuffer';
-            xhr.send( null );
+                readInputArray( this._data );
+
+            } else {
+
+                var input = new osgDB.Input();
+                input.requestFile( this._file, {
+                    responseType: 'arraybuffer'
+                } ).then( readInputArray );
+
+            }
 
             return defer.promise;
         },

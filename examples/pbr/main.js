@@ -373,7 +373,7 @@
 
             self.loadGLTFModel( files, gltfFileName, false );
 
-            return false;
+            return;
         },
 
         loadFiles: function () {
@@ -1107,7 +1107,7 @@
             if ( !isMobileDevice() ) {
                 var integrateBRDFUniform = osg.Uniform.createInt1( this._integrateBRDFTextureUnit, 'uIntegrateBRDF' );
                 group.getOrCreateStateSet().addUniform( integrateBRDFUniform );
-                group.getOrCreateStateSet().setTextureAttributeAndModes( this._integrateBRDFTextureUnit, this._currentEnvironment.getIntegrateBRDF().getTexture() );
+                this._stateSetBRDF = group.getOrCreateStateSet();
             }
 
             var promises = [];
@@ -1128,7 +1128,6 @@
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' ) );
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.NORMAL_TEXTURE_UNIT, 'normalMap' ) );
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.METALNESS_TEXTURE_UNIT, 'specularMap' ) );
-                //                group.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.SPECULAR_TEXTURE_UNIT, 'specularMap' ) );
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
 
 
@@ -1350,6 +1349,9 @@
                 this.setPanorama();
             }
 
+            if ( !isMobileDevice() ) this._stateSetBRDF.setTextureAttributeAndModes( this._integrateBRDFTextureUnit, this._currentEnvironment.getIntegrateBRDF().getTexture() );
+
+
             this.setBackgroundEnvironment();
             this.updateEnvironmentRotation();
             this.updateShaderPBR();
@@ -1415,9 +1417,9 @@
         window.addEventListener( 'drop', dropEvent.bind( example ), false );
 
         var lastMousePosition = {
-            x: 0,
+            x: 0
         };
-
+        window.example = example;
         window.addEventListener( 'mousemove', function ( evt ) {
 
             var button = evt.which || evt.button;
@@ -1436,5 +1438,14 @@
         }, true );
 
     }, true );
+
+    // window.testEnv = function () {
+    //     var env = new Environment();
+    //     env.loadPackage( 'http://me/dev/osgjs/examples/pbr/textures/parking.zip' ).then( function () {
+    //         window.example._currentEnvironment = env;
+    //         window.example.updateEnvironment();
+    //     } );
+
+    // };
 
 } )();

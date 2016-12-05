@@ -9,10 +9,11 @@ window.EnvironmentCubeMap = ( function () {
 
     var shaderProcessor = new osgShader.ShaderProcessor();
 
-    var CubeMapEnv = function ( file, size, options ) {
+    var CubeMapEnv = function ( urlOrData, size, options ) {
         this._options = options || {};
         this._size = size;
-        this._file = file; // abandoned_sanatorium_staircase_%d.png
+        if ( typeof urlOrData === 'string' ) this._file = urlOrData;
+        else this._data = urlOrData;
     };
 
     CubeMapEnv.prototype = {
@@ -89,18 +90,16 @@ window.EnvironmentCubeMap = ( function () {
         },
 
         loadPacked: function ( type0 ) {
+
             var type = type0;
-            if ( type === undefined )
-                type = 'FLOAT';
+            if ( type === undefined ) type = 'FLOAT';
 
             var defer = P.defer();
 
-            var input = new osgDB.Input();
-            input.requestFile( this._file, {
-                responseType: 'arraybuffer'
-            } ).then( function ( inputArray ) {
+            var readInputArray = function ( inputArray ) {
 
-                var data = input._unzipTypedArray( inputArray );
+                var data = inputArray;
+                if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
 
                 var maxLevel = Math.log( this._size ) / Math.LN2;
                 var offset = 0;
@@ -153,17 +152,21 @@ window.EnvironmentCubeMap = ( function () {
 
                 defer.resolve();
 
-            }.bind( this ) );
+            }.bind( this );
 
-            // xhr.addEventListener( 'error', error, false );
-            // xhr.addEventListener( 'load', function ( event ) {
-            //     if ( xhr.status !== 200 ) {
-            //         error( event );
-            //         return;
-            //     }
-            //     load.call( event );
 
-            // }, false );
+            if ( this._data ) {
+
+                readInputArray( this._data );
+
+            } else {
+
+                var input = new osgDB.Input();
+                input.requestFile( this._file, {
+                    responseType: 'arraybuffer'
+                } ).then( readInputArray );
+
+            }
 
             return defer.promise;
 

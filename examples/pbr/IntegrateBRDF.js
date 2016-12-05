@@ -6,9 +6,10 @@ window.IntegrateBRDFMap = ( function () {
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
 
-    var IntegrateBRDFMap = function ( file, size ) {
-        this._file = file;
+    var IntegrateBRDFMap = function ( urlOrData, size ) {
         this._size = size;
+        if ( typeof urlOrData === 'string' ) this._file = urlOrData;
+        else this._data = urlOrData;
     };
 
     IntegrateBRDFMap.prototype = {
@@ -30,12 +31,10 @@ window.IntegrateBRDFMap = ( function () {
 
             var size = this._size;
 
-            var input = new osgDB.Input();
-            input.requestFile( this._file, {
-                responseType: 'arraybuffer'
-            } ).then( function ( inputArray ) {
+            var readInputArray = function ( inputArray ) {
 
-                var data = input._unzipTypedArray( inputArray );
+                var data = inputArray;
+                if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
 
                 var byteSize = size * size * 4;
 
@@ -51,7 +50,21 @@ window.IntegrateBRDFMap = ( function () {
 
                 defer.resolve( this._texture );
 
-            }.bind( this ) );
+            }.bind( this );
+
+
+            if ( this._data ) {
+
+                readInputArray( this._data );
+
+            } else {
+
+                var input = new osgDB.Input();
+                input.requestFile( this._file, {
+                    responseType: 'arraybuffer'
+                } ).then( readInputArray );
+
+            }
 
             return defer.promise;
 

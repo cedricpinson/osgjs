@@ -21,7 +21,7 @@ var requestFile = function ( url, options ) {
 
     req.addEventListener( 'load', function () {
 
-        if ( req.responseType === 'arraybuffer' )
+        if ( req.responseType === 'arraybuffer' || req.responseType === 'blob' )
             defer.resolve( req.response );
         else
             defer.resolve( req.responseText );
