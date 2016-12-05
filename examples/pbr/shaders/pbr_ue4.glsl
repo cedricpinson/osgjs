@@ -63,7 +63,7 @@ vec3 approximateSpecularIBL( const in vec3 specularColor,
                              const in vec3 V )
 {
     float roughnessLinear = max( rLinear, 0.0);
-    float NoV = clamp( dot( N, V ), 0.0, 1.0 );
+    float NoV = dot( N, V );
     vec3 R = normalize( (2.0 * NoV ) * N - V);
 
 
