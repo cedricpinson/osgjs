@@ -175,7 +175,7 @@
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
             normalAA: Boolean( optionsURL.normalAA === undefined ? true : optionsURL.normalAA ),
-            flipY: true,
+            flipY: false,
             specularPeak: Boolean( optionsURL.specularPeak === undefined ? true : optionsURL.specularPeak ),
             occlusionHorizon: Boolean( optionsURL.occlusionHorizon === undefined ? true : optionsURL.occlusionHorizon ),
             cameraPreset: optionsURL.camera ? Object.keys( CameraPresets )[ optionsURL.camera ] : 'CameraCenter',

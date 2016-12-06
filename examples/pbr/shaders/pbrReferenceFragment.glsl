@@ -110,7 +110,7 @@ vec3 computeNormalFromTangentSpaceNormalMap(const in vec4 tangent, const in vec3
     if (length(tangent.xyz) != 0.0) {
         tang = normalize(tangent.xyz);
     }
-    vec3 B = -tangent.w * cross(normal, tang);
+    vec3 B = tangent.w * cross(normal, tang);
     vec3 outnormal = texnormal.x*tang + texnormal.y*B + texnormal.z*normal;
     return normalize(outnormal);
 }
