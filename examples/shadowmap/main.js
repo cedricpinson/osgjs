@@ -788,9 +788,16 @@
                 // make sure we have latest one
                 this._RTT = [];
                 l = numLights;
-                while ( l-- ) {
-                    var shadowMap = this._shadowTechnique[ l ];
+                if ( this._config[ 'atlas' ] ) {
+
+                    var shadowMap = this._shadowTechnique[ 0 ];
                     this._RTT.push( shadowMap.getTexture() );
+
+                } else {
+                    while ( l-- ) {
+                        var shadowMap = this._shadowTechnique[ l ];
+                        this._RTT.push( shadowMap.getTexture() );
+                    }
                 }
                 this.showFrameBuffers( {
                     screenW: this._canvas.width,
@@ -836,10 +843,12 @@
 
             var l = this._lights.length;
 
-            while ( l-- ) {
-                var shadowMap = this._shadowTechnique[ l ];
-                shadowMap.setShadowSettings( this._shadowSettings[ l ] );
-                shadowMap.setDebug( this._config[ 'debugBounds' ] );
+            if ( !this._config[ 'atlas' ] ) {
+                while ( l-- ) {
+                    var shadowMap = this._shadowTechnique[ l ];
+                    shadowMap.setShadowSettings( this._shadowSettings[ l ] );
+                    shadowMap.setDebug( this._config[ 'debugBounds' ] );
+                }
             }
 
             // Iterate over all controllers
@@ -1135,12 +1144,7 @@
 
 
             var shadowSettings;
-            if ( this._config[ 'atlas' ] ) {
-
-                shadowSettings = this._shadowSettings[ num ];
-                shadowMap = this._shadowMapAtlas.addLight( light, shadowSettings );
-
-            } else {
+            if ( !this._config[ 'atlas' ] ) {
 
                 shadowSettings = new osgShadow.ShadowSettings( this._config );
 
@@ -1219,19 +1223,19 @@
             //light.setDirection( dir );
             lightSource.addUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode, position, dir, target ) );
 
-            // need to set lightSource rather than light pos
-            // as there is no link in Light to get current Matrix.
-            shadowSettings.setLight( light );
-            ///////////////////////////////
-
             this._shadowSettings.push( shadowSettings );
 
             var shadowMap;
             if ( this._config[ 'atlas' ] ) {
 
-                shadowMap = this._shadowMapAtlas.addLight( light, shadowSettings );
+                shadowMap = this._shadowMapAtlas.addLight( light );
 
             } else {
+
+                // need to set lightSource rather than light pos
+                // as there is no link in Light to get current Matrix.
+                shadowSettings.setLight( light );
+                ///////////////////////////////
 
                 shadowMap = new osgShadow.ShadowMap( shadowSettings );
                 this._lightAndShadowScene.addShadowTechnique( shadowMap );
@@ -1295,19 +1299,20 @@
 
             if ( this._config[ 'atlas' ] ) {
 
-                for ( var k = 0; k < numLights; k++ ) {
+                var shadowSettings = new osgShadow.ShadowSettings( this._config );
+                var mapres = parseInt( this._config[ 'textureSize' ] );
+                shadowSettings.atlasSize = 2048;
+                shadowSettings.setTextureSize( mapres );
+                shadowSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
+                shadowSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
 
-                    var shadowSettings = new osgShadow.ShadowSettings( this._config );
-                    shadowSettings.atlasSize = 2048;
-                    var mapres = parseInt( this._config[ 'textureSize' ] );
-                    shadowSettings.setTextureSize( mapres );
-                    shadowSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
-                    shadowSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
+                for ( var k = 0; k < numLights; k++ ) {
+                    // for consistency of other methods
                     this._shadowSettings[ k ] = shadowSettings;
 
                 }
 
-                var shadowMapAtlas = new osgShadow.ShadowMapAtlas( this._shadowSettings[ 0 ] );
+                var shadowMapAtlas = new osgShadow.ShadowMapAtlas( shadowSettings );
                 this._lightAndShadowScene.addShadowTechnique( shadowMapAtlas );
                 shadowMapAtlas.setShadowSettings( shadowSettings );
                 this._shadowMapAtlas = shadowMapAtlas;
@@ -1316,14 +1321,6 @@
                 for ( var k = 0; k < numLights; k++ ) {
                     this.addShadowedLight( group, k, lightScale );
                 }
-
-                var lightNumbers = [];
-                for ( var k = 0; k < numLights; k++ ) {
-                    lightNumbers.push( this._lights[ k ].getLightNumber() );
-                }
-
-                var shadowTextureAtlas = this._shadowMapAtlas.getTexture();
-                shadowTextureAtlas.setLightsIndexes( lightNumbers );
 
 
             } else {

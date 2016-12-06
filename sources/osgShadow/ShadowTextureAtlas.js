@@ -1,6 +1,6 @@
 'use strict';
 var Map = require( 'osg/Map' );
-var Notify = require( 'osg/notify' );
+var notify = require( 'osg/notify' );
 var Texture = require( 'osg/Texture' );
 var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
@@ -20,8 +20,7 @@ var ShadowTextureAtlas = function () {
     Texture.call( this );
 
     this._uniforms = {};
-    this._lightUnit = -1; // default for a valid cloneType
-    this._lightNumber = 0;
+    this._lightNumberArray = []; // default for a valid cloneType
 
     this._viewMatrices = [];
     this._projectionMatrices = [];
@@ -39,23 +38,19 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
         return new ShadowTextureAtlas();
     },
 
-    setLightNumber: function ( value ) {
-        this._lightNumber = value;
+    gettLightNumberArray: function () {
+        return this._lightNumberArray;
     },
 
-    getLightNumber: function () {
-        return this._lightNumber;
+    hasLightNumber: function ( lightNum ) {
+        return this._lightNumberArray.indexOf( lightNum ) !== -1;
     },
 
-    hasThisLight: function ( lightNum ) {
-        return this._lightsIndexes.indexOf( lightNum ) !== -1;
-    },
+    setLightNumberArray: function ( lightNumberArray ) {
 
-    setLightsIndexes: function ( lightsIndexes ) {
+        this._lightNumberArray = lightNumberArray;
 
-        this._lightsIndexes = lightsIndexes;
-
-        var l = lightsIndexes.length;
+        var l = lightNumberArray.length;
         this._viewMatrices.length = l;
         this._projectionMatrices.length = l;
         this._depthRanges.length = l;
@@ -63,28 +58,16 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
 
     },
 
-    setLightUnit: function ( lun ) {
+    getUniformName: function ( lightNumber, name ) {
 
-        this._lightUnit = lun;
-
-    },
-    getLightUnit: function () {
-
-        return this._lightUnit;
-
-    },
-
-    getUniformName: function ( name, lightNumber ) {
-
-        var prefix = 'Shadow_' + this.getType() + this._lightUnit.toString();
-        if ( lightNumber !== undefined ) prefix += '_' + lightNumber;
+        var prefix = 'Shadow_' + this.getType() + lightNumber.toString();
         return 'u' + prefix + '_' + name;
 
     },
 
-    getVaryingName: function ( name, lightNumber ) {
+    getVaryingName: function ( lightNumber, name ) {
 
-        var prefix = this.getType() + ( this._lightUnit + lightNumber ).toString();
+        var prefix = this.getType() + lightNumber.toString();
         return 'v' + prefix + '_' + name;
 
     },
@@ -93,8 +76,7 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
 
         // uniform are once per CLASS attribute, not per instance
         var obj = ShadowTextureAtlas;
-        console.assert( unit !== undefined );
-        Notify.assert( this._lightUnit !== -1 );
+        notify.assert( unit !== undefined || this._lightNumberArray.length !== 0 );
 
         if ( obj.uniforms[ unit ] !== undefined ) {
             return obj.uniforms[ unit ];
@@ -104,16 +86,17 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
 
 
         // shadowmap texture size used for texel space which is viewport independant
-        var renderSizeUniform = Uniform.createFloat4( this.getUniformName( 'renderSize' ) );
+        var renderSizeUniform = Uniform.createFloat4( this.getUniformName( 0, 'renderSize' ) );
         uniforms[ 'RenderSize' ] = renderSizeUniform;
 
-        for ( var i = 0, l = this._lightsIndexes.length; i < l; i++ ) {
+        for ( var i = 0, l = this._lightNumberArray.length; i < l; i++ ) {
 
-            uniforms[ 'ViewMatrix_' + i ] = Uniform.createMat4( this.getUniformName( 'viewMatrix', i ) );
-            uniforms[ 'ProjectionMatrix_' + i ] = Uniform.createMat4( this.getUniformName( 'projectionMatrix', i ) );
-            uniforms[ 'DepthRange_' + i ] = Uniform.createFloat4( this.getUniformName( 'depthRange', i ) );
-            uniforms[ 'MapSize_' + i ] = Uniform.createFloat4( this.getUniformName( 'mapSize', i ) );
-            uniforms[ 'RenderSize_' + i ] = renderSizeUniform;
+            var lightNumber = this._lightNumberArray[ i ];
+            uniforms[ 'ViewMatrix_' + lightNumber ] = Uniform.createMat4( this.getUniformName( lightNumber, 'viewMatrix' ) );
+            uniforms[ 'ProjectionMatrix_' + lightNumber ] = Uniform.createMat4( this.getUniformName( lightNumber, 'projectionMatrix' ) );
+            uniforms[ 'DepthRange_' + lightNumber ] = Uniform.createFloat4( this.getUniformName( lightNumber, 'depthRange' ) );
+            uniforms[ 'MapSize_' + lightNumber ] = Uniform.createFloat4( this.getUniformName( lightNumber, 'mapSize' ) );
+            uniforms[ 'RenderSize_' + lightNumber ] = renderSizeUniform;
 
         }
 
@@ -132,16 +115,16 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
         return obj.uniforms[ unit ];
     },
 
-    setViewMatrix: function ( viewMatrix, lightNumber ) {
-        this._viewMatrices[ lightNumber ] = viewMatrix;
+    setViewMatrix: function ( lighNumberArrayIndex, viewMatrix ) {
+        this._viewMatrices[ lighNumberArrayIndex ] = viewMatrix;
     },
 
-    setProjectionMatrix: function ( projectionMatrix, lightNumber ) {
-        this._projectionMatrices[ lightNumber ] = projectionMatrix;
+    setProjectionMatrix: function ( lighNumberArrayIndex, projectionMatrix ) {
+        this._projectionMatrices[ lighNumberArrayIndex ] = projectionMatrix;
     },
 
-    setDepthRange: function ( depthRange, lightNumber ) {
-        this._depthRanges[ lightNumber ] = depthRange;
+    setDepthRange: function ( lighNumberArrayIndex, depthRange ) {
+        this._depthRanges[ lighNumberArrayIndex ] = depthRange;
     },
 
     setTextureSize: function ( w, h ) {
@@ -155,9 +138,9 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
 
     },
 
-    setLightShadowMapSize: function ( lightNumber, dimension ) {
+    setLightShadowMapSize: function ( lighNumberArrayIndex, dimension ) {
 
-        this._mapSizes[ lightNumber ] = dimension;
+        this._mapSizes[ lighNumberArrayIndex ] = dimension;
 
     },
 
@@ -166,19 +149,21 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
         // Texture stuff: call parent class method
         Texture.prototype.apply.call( this, state, texUnit );
 
-        if ( this._lightUnit === -1 )
+        if ( this._lightNumberArray.length === 0 )
             return;
 
         // update Uniforms
         var uniformMap = this.getOrCreateUniforms( texUnit );
 
-        for ( var i = 0, l = this._lightsIndexes.length; i < l; i++ ) {
+        for ( var i = 0, l = this._lightNumberArray.length; i < l; i++ ) {
 
-            uniformMap[ 'ViewMatrix_' + i ].setMatrix4( this._viewMatrices[ i ] );
-            uniformMap[ 'ProjectionMatrix_' + i ].setMatrix4( this._projectionMatrices[ i ] );
-            uniformMap[ 'DepthRange_' + i ].setFloat4( this._depthRanges[ i ] );
-            uniformMap[ 'MapSize_' + i ].setFloat4( this._mapSizes[ i ] );
-            uniformMap[ 'RenderSize_' + i ].setFloat4( this._renderSize );
+            var lightNumber = this._lightNumberArray[ i ];
+            uniformMap[ 'ViewMatrix_' + lightNumber ].setMatrix4( this._viewMatrices[ i ] );
+            uniformMap[ 'ProjectionMatrix_' + lightNumber ].setMatrix4( this._projectionMatrices[ i ] );
+            uniformMap[ 'DepthRange_' + lightNumber ].setFloat4( this._depthRanges[ i ] );
+            uniformMap[ 'MapSize_' + lightNumber ].setFloat4( this._mapSizes[ i ] );
+            uniformMap[ 'RenderSize_' + lightNumber ].setFloat4( this._renderSize );
+
         }
 
         uniformMap[ 'RenderSize' ].setFloat4( this._renderSize );
@@ -186,7 +171,14 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
     },
 
     getHash: function () {
-        return this.getTypeMember() + '_' + this._lightUnit + '_' + this._lightNumber + '_' + this._type;
+
+        var hash = this.getTypeMember();
+        for ( var i = 0, l = this._lightNumberArray.length; i < l; i++ ) {
+            hash += '_' + this._lightNumberArray[ i ];
+        }
+        hash += '_' + this._type;
+        return hash;
+
     }
 
 } ), 'osgShadow', 'ShadowTextureAtlas' );

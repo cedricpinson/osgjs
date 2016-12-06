@@ -65,7 +65,7 @@ var ShadowMap = function ( settings, shadowTexture ) {
 
     this._projectionMatrix = mat4.create();
     this._viewMatrix = mat4.create();
-
+    this._lightNumberArrayIndex = -1;
     this._lightUp = vec3.fromValues( 0.0, 0.0, 1.0 );
 
     this._light = settings.light;
@@ -350,13 +350,14 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         Notify.assert( this._shadowReceiveAttribute.getTypeMember() === this._shadowReceiveAttribute.attributeType + lightNumber, 'TypeMember isnt reflecting light number' + this._shadowReceiveAttribute.getTypeMember() + ' !== ' + this._shadowReceiveAttribute.attributeType + lightNumber );
         /*develblock:end*/
 
-        /*
-                if ( this._texture && this._texture.getLightUnit() !== lightNumber ) {
-                    // remove this._texture, but not if it's not this._texture
-                    if ( this._receivingStateset.getTextureAttribute( this._textureUnit, this._texture.getTypeMember() ) === this._texture )
-                        this._receivingStateset.removeTextureAttribute( this._textureUnit, this._texture.getTypeMember() );
-                }
-        */
+
+        if ( this._texture && !this._texture.hasLightNumber( lightNumber ) ) {
+
+            // remove this._texture, but not if it's not this._texture
+            if ( this._receivingStateset.getTextureAttribute( this._textureUnit, this._texture.getTypeMember() ) === this._texture )
+                this._receivingStateset.removeTextureAttribute( this._textureUnit, this._texture.getTypeMember() );
+        }
+
     },
 
     /** initialize the ShadowedScene and local cached data structures.*/
@@ -383,7 +384,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             this.initTexture();
 
             this._textureUnit = this._textureUnitBase + lightNumber;
-            this._texture.setLightUnit( lightNumber );
+            this._texture.setLightNumber( lightNumber );
             this._texture.setName( 'ShadowTexture' + this._textureUnit );
             this._shadowReceiveAttribute.setAtlas( false );
 
@@ -392,9 +393,10 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             this._texture = atlasTexture;
 
             // allow indexing properties in the texture uniforms
-            this._lightIndex = lightIndex;
+            this._lightNumberArrayIndex = lightIndex;
             this._textureUnit = textureUnit;
             this._shadowReceiveAttribute.setAtlas( true );
+
         }
 
         this._cameraShadow.setName( 'light_shadow_camera' + this._light.getName() );
@@ -919,9 +921,15 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._depthRange[ 2 ] = this._depthRange[ 1 ] - this._depthRange[ 0 ];
         this._depthRange[ 3 ] = 1.0 / ( this._depthRange[ 2 ] );
 
-        this._texture.setViewMatrix( this._viewMatrix, this._lightIndex );
-        this._texture.setProjectionMatrix( this._projectionMatrix, this._lightIndex );
-        this._texture.setDepthRange( this._depthRange, this._lightIndex );
+        if ( this._lightNumberArrayIndex !== -1 ) {
+            this._texture.setViewMatrix( this._lightNumberArrayIndex, this._viewMatrix );
+            this._texture.setProjectionMatrix( this._lightNumberArrayIndex, this._projectionMatrix );
+            this._texture.setDepthRange( this._lightNumberArrayIndex, this._depthRange );
+        } else {
+            this._texture.setViewMatrix( this._viewMatrix );
+            this._texture.setProjectionMatrix( this._projectionMatrix );
+            this._texture.setDepthRange( this._depthRange );
+        }
 
     },
 
@@ -944,8 +952,14 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         mat4.copy( this._projectionMatrix, camera.getProjectionMatrix() );
         mat4.copy( this._viewMatrix, camera.getViewMatrix() );
 
-        this._texture.setViewMatrix( this._viewMatrix, this._lightIndex );
-        this._texture.setProjectionMatrix( this._projectionMatrix, this._lightIndex );
+        if ( this._lightNumberArrayIndex !== -1 ) {
+            this._texture.setViewMatrix( this._lightNumberArrayIndex, this._viewMatrix );
+            this._texture.setProjectionMatrix( this._lightNumberArrayIndex, this._projectionMatrix );
+
+        } else {
+            this._texture.setViewMatrix( this._viewMatrix );
+            this._texture.setProjectionMatrix( this._projectionMatrix );
+        }
 
         this._filledOnce = true;
     },

@@ -319,7 +319,7 @@ var CompilerFragment = {
             for ( var p = 0; p < this._shadowsTextures.length; p++ ) {
 
                 shadowTexture = this._shadowsTextures[ p ];
-                if ( shadowTexture && shadowTexture.hasThisLight( lightNum ) ) {
+                if ( shadowTexture && shadowTexture.hasLightNumber( lightNum ) ) {
                     shadowTextures[ p ] = shadowTexture;
                     hasShadows = true;
                 }

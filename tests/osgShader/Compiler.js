@@ -17,7 +17,7 @@ module.exports = function () {
             var light = new Light( 1 );
             var shadowReceiveAttribute = new ShadowReceiveAttribute( light.getLightNumber() );
             var shadowTexture = new ShadowTexture();
-            shadowTexture.setLightUnit( light.getLightNumber() );
+            shadowTexture.setLightNumber( light.getLightNumber() );
 
             var material = new Material();
             var compiler = new Compiler( [ light, material, shadowReceiveAttribute ], [

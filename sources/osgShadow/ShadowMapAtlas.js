@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/notify' );
+var notify = require( 'osg/notify' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Texture = require( 'osg/Texture' );
 var Uniform = require( 'osg/Uniform' );
@@ -22,7 +22,7 @@ var ShadowMapAtlas = function ( settings ) {
     this._viewportDimension = [];
 
     ShadowTechnique.apply( this, arguments );
-
+    this._shadowSettings = settings;
     this._texture = new ShadowTextureAtlas();
     this._textureUnitBase = 4;
     this._textureUnit = this._textureUnitBase;
@@ -62,17 +62,13 @@ var ShadowMapAtlas = function ( settings ) {
 /** @lends ShadowMapAtlas.prototype */
 ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( ShadowTechnique.prototype, {
 
-    getDepthRange: function ( numShadow ) {
-        return this._shadowMaps[ numShadow ].getDepthRange();
-    },
-
     getTexture: function () {
         return this._texture;
     },
 
-    isDirty: function ( numShadow ) {
-        if ( numShadow !== undefined ) {
-            return this._shadowMaps[ numShadow ].isDirty();
+    isDirty: function ( ligthtIndex ) {
+        if ( ligthtIndex !== undefined ) {
+            return this._shadowMaps[ ligthtIndex ].isDirty();
         } else {
             for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
                 if ( this._shadowMaps[ i ].isDirty() ) return true;
@@ -96,12 +92,12 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
      */
     setShadowSettings: function ( shadowSettings ) {
 
-        if ( !shadowSettings )
-            return;
+        if ( !shadowSettings ) return;
+        this._shadowSettings = shadowSettings;
 
-        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
+        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ )
             this._shadowMaps[ i ].setShadowSettings( shadowSettings );
-        }
+
         this.setTextureSize( shadowSettings.textureSize );
         this.setTexturePrecision( shadowSettings.textureType );
 
@@ -292,22 +288,6 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
     },
 
-    setShadowMapSize: function ( mapSize, lightNum ) {
-
-
-        this._shadowMapSize = mapSize;
-        this._numShadowWidth = this._textureSize / this._shadowMapSize;
-        this._numShadowHeight = this._textureSize / this._shadowMapSize;
-
-        if ( !lightNum ) {
-            for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-                this._shadowMaps[ i ].setTextureSize( mapSize );
-            }
-        } else {
-            this._shadowMaps[ lightNum ].setTextureSize( mapSize );
-        }
-
-    },
 
     setTextureSize: function ( mapSize ) {
 
@@ -350,45 +330,35 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         return this._shadowMaps[ lightNum ];
     },
 
-    addLight: function ( light, settings, customMapSize ) {
+    addLight: function ( light ) {
 
-        if ( !light )
+        if ( !light || this._lights.indexOf( light ) !== -1 ) {
+            notify.warn( 'no light or light arelady added' );
             return -1;
-
-        var lightNum = this._lights.indexOf( light );
-        if ( lightNum !== -1 )
-            return lightNum;
-
-        this._lights.push( light );
-        lightNum = this._lights.length;
-
-        if ( lightNum === 1 ) {
-            this._texture.setLightNumber( light.getLightNumber() );
-            this._texture.setLightUnit( light.getLightNumber() );
         }
 
-        var shadowMap = new ShadowMap( settings, this._texture );
+        var lightCount = this._lights.length;
+        if ( lightCount === ( this._numShadowWidth * this._numShadowHeight ) ) {
+            notify.warn( 'can\'t allocate shadow for light ' + light.getLightNumber() + ' ShadowAtlas already full ' );
+            return undefined;
+        }
+
+        this._lights.push( light );
+        this._shadowSettings.setLight( light );
+        var shadowMap = new ShadowMap( this._shadowSettings, this._texture );
         this._shadowMaps.push( shadowMap );
 
-        var mapSize = customMapSize !== undefined ? customMapSize : this._shadowMapSize;
-
-        var y = mapSize * ( lightNum % ( this._numShadowWidth ) );
-        var x = mapSize * ( Math.floor( lightNum / ( this._numShadowHeight ) ) );
+        var mapSize = this._shadowMapSize;
+        var y = mapSize * ( lightCount % ( this._numShadowWidth ) );
+        var x = mapSize * ( Math.floor( lightCount / ( this._numShadowHeight ) ) );
 
         shadowMap.setShadowedScene( this._shadowedScene );
         this._viewportDimension.push( vec4.fromValues( x, y, mapSize, mapSize ) );
 
         return shadowMap;
+
     },
 
-    setLight: function ( light, lightNum ) {
-
-        if ( !light || this._lights.indexOf( light ) !== -1 )
-            return;
-
-        this._lights[ lightNum ] = light;
-        this.dirty();
-    },
 
     /** initialize the ShadowedScene and local cached data structures.*/
     init: function () {
@@ -396,9 +366,13 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         if ( !this._shadowedScene ) return;
 
         this.initTexture();
+        var lightNumberArray = [];
+        for ( var k = 0; k < this._lights.length; k++ ) {
+            lightNumberArray.push( this._lights[ k ].getLightNumber() );
+        }
+        this._texture.setLightNumberArray( lightNumberArray );
 
         this._textureUnit = this._textureUnitBase;
-        this._texture.setLightUnit( this._textureUnit );
         this._texture.setName( 'ShadowTexture' + this._textureUnit );
 
         this._numShadowWidth = this._textureSize / this._shadowMapSize;
@@ -441,7 +415,7 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     },
 
     updateShadowTechnic: function ( /*nv*/) {
-        Notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
+        notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
         this.updateShadowTechnique();
     },
 

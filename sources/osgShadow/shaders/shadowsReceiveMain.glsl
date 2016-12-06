@@ -56,35 +56,33 @@ vec2 shadowBiasPCF = vec2(0.);
 
 #ifdef GL_OES_standard_derivatives
 
-shadowBiasPCF.x = clamp(dFdx(shadowReceiverZ)* shadowMapSize.z, -1.0, 1.0 );
-shadowBiasPCF.y = clamp(dFdy(shadowReceiverZ)* shadowMapSize.w, -1.0, 1.0 );
+shadowBiasPCF.x = clamp(dFdx(shadowReceiverZ)* shadowTextureSize.z, -1.0, 1.0 );
+shadowBiasPCF.y = clamp(dFdy(shadowReceiverZ)* shadowTextureSize.w, -1.0, 1.0 );
 
 #endif
 
 #endif
 
 
-    vec4 clampDimension;
+vec4 clampDimension;
 
 #ifdef _ATLAS_SHADOW
  
-    shadowUV.xy  = ((shadowUV.xy * shadowMapSize.zw ) + shadowMapSize.xy) / shadowTextureSize.xy;
+shadowUV.xy  = ((shadowUV.xy * shadowMapSize.zw ) + shadowMapSize.xy) / shadowTextureSize.xy;
 
-    // clamp uv bias/filters by half pixel to avoid point filter on border
-    clampDimension.xy = shadowMapSize.xy + vec2(0.5);
-    clampDimension.zw = (shadowMapSize.xy + shadowMapSize.zw) - vec2(0.5);
+// clamp uv bias/filters by half pixel to avoid point filter on border
+clampDimension.xy = shadowMapSize.xy + vec2(0.5);
+clampDimension.zw = (shadowMapSize.xy + shadowMapSize.zw) - vec2(0.5);
 
-    clampDimension = clampDimension / (shadowTextureSize.xyxy);
+clampDimension = clampDimension / (shadowTextureSize.xyxy);
 
 
 #else
 
-    clampDimension = vec4(0.0, 0.0, 1.0, 1.0);
+clampDimension = vec4(0.0, 0.0, 1.0, 1.0);
 
 #endif
 
-
-#ifdef _NONE
 
 // now that derivatives is done
 // and we don't access any mipmapped/texgrad texture
@@ -115,8 +113,6 @@ shadowReceiverZ -= shadowBias;
 
 // Now computes Shadow
 
-
-
 #ifdef _NONE
 
 float shadowDepth = getSingleFloatFromTex(tex, shadowUV.xy);
@@ -127,14 +123,11 @@ shadow = ( shadowReceiverZ > shadowDepth ) ? 0.0 : 1.0;
 
 #elif defined( _PCF )
 
-
-    shadow = getShadowPCF(tex, shadowTextureSize, shadowUV, shadowReceiverZ, shadowBiasPCF, clampDimension);
-
+shadow = getShadowPCF(tex, shadowTextureSize, shadowUV, shadowReceiverZ, shadowBiasPCF, clampDimension);
 
 #elif defined( _ESM )
 
-    shadow = fetchESM(tex, shadowTextureSize, shadowUV, shadowReceiverZ, exponent0, exponent1);
-
+shadow = fetchESM(tex, shadowTextureSize, shadowUV, shadowReceiverZ, exponent0, exponent1);
 
 #elif  defined( _VSM )
 
