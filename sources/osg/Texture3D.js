@@ -5,6 +5,18 @@ var Texture = require( 'osg/Texture' );
 var WebglCaps = require( 'osg/WebGLCaps' );
 var ImageOSG = require( 'osg/Image' );
 
+var checkAndFixEnum = function ( mode, fallback ) {
+
+    var value = Texture[ mode ];
+
+    if ( value === undefined ) {
+        notify.warn( 'bad Texture enum argument ' + mode + '\n fallback to ' + fallback );
+        return fallback;
+    }
+
+    return value;
+};
+
 /**
  * @class Texture3D
  * @inherits Texture

@@ -244,6 +244,11 @@
 
                 // merge different 3d texture into one final
                 finalTexture3D.setTextureSize( voxelSize, voxelSize, voxelSize );
+                finalTexture3D.setMagFilter( 'LINEAR' );
+                finalTexture3D.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
+                finalTexture3D.setWrapS( 'CLAMP_TO_EDGE' );
+                finalTexture3D.setWrapT( 'CLAMP_TO_EDGE' );
+                finalTexture3D.setWrapR( 'CLAMP_TO_EDGE' );
 
                 // stop here, needs to check how many planes we need to merge axis texture
                 // into the final because of the number of maxDrawBuffer
@@ -414,10 +419,17 @@
                 node.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 2, 'TextureZ' ) );
 
                 var nbPasses = voxelSize / maxDrawBuffer;
+                var cameraSlice;
                 for ( var i = 0, l = nbPasses; i < l; i++ ) {
-                    var cameraSlice = createCameraMergeTexture3D( i * maxDrawBuffer );
+                    cameraSlice = createCameraMergeTexture3D( i * maxDrawBuffer );
                     node.addChild( cameraSlice );
                 }
+
+                // a dirty mip map at in the last pass
+                cameraSlice.setFinalDrawCallback( function ( state ) {
+                    finalTexture3D.dirtyMipmap();
+                    //state.applyTextureAttribute( 1, finalTexture3D );
+                } );
 
                 grp.addChild( node );
                 //grp.addChild( geom );
@@ -434,6 +446,7 @@
 
         createDebugTexture3D: function () {
             // debug use resolution of the voxel and display it as pointcloud
+            var voxelSize = this._voxelSize;
             var getShader = function () {
                 var vertexshader = [
                     '#version 300 es',
@@ -442,9 +455,9 @@
 
                     'uniform mat4 uModelViewMatrix;',
                     'uniform mat4 uProjectionMatrix;',
-                    'flat out ivec3 vVertex;',
+                    'flat out vec3 vVertex;',
                     'void main(void) {',
-                    '  vVertex = ivec3(Vertex);',
+                    '  vVertex = vec3(Vertex) / float(' + voxelSize + ');',
                     '  gl_Position = (uProjectionMatrix * uModelViewMatrix) * vec4(vec3(Vertex),1.0);',
                     '}'
                 ].join( '\n' );
@@ -456,11 +469,13 @@
                     'precision highp int;',
                     'precision highp sampler3D;',
                     'uniform sampler3D Texture0;',
-                    'flat in ivec3 vVertex;',
+                    'uniform float lod;',
+                    'flat in vec3 vVertex;',
 
                     'out vec4 color;',
                     'void main(void) {',
-                    '  vec4 c = texelFetch(Texture0, vVertex, 0 );',
+                    '  //vec4 c = texelFetch(Texture0, vVertex, lod );',
+                    '  vec4 c = textureLod(Texture0, vVertex, lod );',
                     '  if ( c[3] == 0.0 ) discard; //c = vec4(0.0,0.0,0.0,0.2);',
                     '  color = c;',
                     '}',
@@ -496,8 +511,15 @@
             geom.setVertexAttribArray( 'Vertex', new osg.BufferArray( 'ARRAY_BUFFER', buffer, 3, true ) );
             geom.getOrCreateStateSet().setAttributeAndModes( program );
             geom.getOrCreateStateSet().setTextureAttributeAndModes( 0, this._voxelTexture );
-
+            var uniform = osg.Uniform.createFloat1( 0, 'lod' );
+            geom.getOrCreateStateSet().addUniform( uniform );
             var node = new osg.MatrixTransform();
+            node.addUpdateCallback( {
+                update: function () {
+                    if ( window.lodDebug !== undefined )
+                        uniform.setInt( window.lodDebug );
+                }
+            } );
             osg.mat4.fromTranslation( node.getMatrix(), [ 10, 0, 0 ] );
             node.addChild( geom );
             return node;
