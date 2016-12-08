@@ -425,6 +425,7 @@ GLTFLoader.prototype = {
     createTextureAndSetAttrib: function ( glTFTextureId, osgStateSet, location, uniform ) {
 
         var defer = Promise.defer();
+        if ( !glTFTextureId ) return defer.resolve();
 
         var texture = new Texture();
 
@@ -445,6 +446,9 @@ GLTFLoader.prototype = {
 
             texture.setImage( data, GLTFLoader.TEXTURE_FORMAT[ glTFTexture.format ] );
             texture.setFlipY( glTFTexture.flipY );
+            var extras = glTFTexture.extras;
+            if ( extras )
+                osgStateSet.addUniform( Uniform.createInt1( extras.yUp ? 0 : 1, 'uFlipNormalY' ) );
 
             osgStateSet.setTextureAttributeAndModes( location, texture );
 
@@ -1071,9 +1075,9 @@ GLTFLoader.prototype = {
         var self = this;
 
         this.init();
-        this._preloaded = options.preloaded;
         this._files = files;
 
+        this._preloaded = options ? options.preloaded : null;
         if ( this._preloaded )
             this.preloadFiles( files );
 
