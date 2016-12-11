@@ -415,9 +415,9 @@ GLTFLoader.prototype = {
         var scale = vec3.create();
         mat4.getScale( scale, node.getMatrix() );
 
-        animationCallback.getStackedTransforms().push( new StackedTranslate( 'translation', translation ) );
-        animationCallback.getStackedTransforms().push( new StackedQuaternion( 'rotation', rotationQuat ) );
-        animationCallback.getStackedTransforms().push( new StackedScale( 'scale', scale ) );
+        animationCallback.getStackedTransforms().push( new StackedTranslate( callbackName + '_translation', translation ) );
+        animationCallback.getStackedTransforms().push( new StackedQuaternion( callbackName + '_rotation', rotationQuat ) );
+        animationCallback.getStackedTransforms().push( new StackedScale( callbackName + '_scale', scale ) );
 
         node.addUpdateCallback( animationCallback );
     },
