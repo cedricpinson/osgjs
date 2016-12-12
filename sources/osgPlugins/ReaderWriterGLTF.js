@@ -44,6 +44,7 @@ var GLTFLoader = function () {
     this._visitedNodes = null;
     this._animatedNodes = null;
     this._skeletons = null;
+    this._bindShapeMatrices = null;
     this._bones = null;
     this._skeletonToInfluenceMap = null;
 
@@ -114,6 +115,7 @@ GLTFLoader.prototype = {
         this._visitedNodes = {};
         this._animatedNodes = {};
         this._skeletons = {};
+        this._bindShapeMatrices = {};
         this._bones = {};
         this._skeletonToInfluenceMap = {};
         this._stateSetMap = {};
@@ -735,7 +737,7 @@ GLTFLoader.prototype = {
                 if ( rootBoneId && !this._skeletons[ rootBoneId ] ) {
 
                     this._skeletons[ rootJointId ] = new Skeleton();
-
+                    this._bindShapeMatrices[ rootJointId ] = skin.bindShapeMatrix;
                     // Adds missing bone to the boneMap
                     bonesToSkin[ rootBoneId ] = skin;
                 }
@@ -939,13 +941,26 @@ GLTFLoader.prototype = {
 
                 rigOrGeom.setSourceGeometry( geom );
                 rigOrGeom.mergeChildrenData();
-
+                this.applyBindShapeMatrix( rigOrGeom, skeletonJointId );
                 rigOrGeom.computeBoundingBox = geom.computeBoundingBox;
             }
 
             return rigOrGeom;
 
-        } );
+        }.bind( this ) );
+    },
+
+    applyBindShapeMatrix: function ( rigGeom, skeletonJointId ) {
+        var bindShape = this._bindShapeMatrices[ skeletonJointId ];
+        var elts = rigGeom.getVertexAttributeList()[ 'Vertex' ].getElements();
+        var v = vec3.create();
+        for ( var i = 0; i < elts.length; i += 3 ) {
+            v.set( [ elts[ i ], elts[ i + 1 ], elts[ i + 2 ] ] );
+            vec3.transformMat4( v, v, bindShape );
+            elts[ i ] = v[ 0 ];
+            elts[ i + 1 ] = v[ 1 ];
+            elts[ i + 2 ] = v[ 2 ];
+        }
     },
 
     loadGLTFPrimitives: function ( meshId, resultMeshNode, skeletonJointId ) {
