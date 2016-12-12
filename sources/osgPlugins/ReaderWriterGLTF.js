@@ -415,9 +415,9 @@ GLTFLoader.prototype = {
         var scale = vec3.create();
         mat4.getScale( scale, node.getMatrix() );
 
-        animationCallback.getStackedTransforms().push( new StackedTranslate( callbackName + '_translation', translation ) );
-        animationCallback.getStackedTransforms().push( new StackedQuaternion( callbackName + '_rotation', rotationQuat ) );
-        animationCallback.getStackedTransforms().push( new StackedScale( callbackName + '_scale', scale ) );
+        animationCallback.getStackedTransforms().push( new StackedTranslate( 'translation', translation ) );
+        animationCallback.getStackedTransforms().push( new StackedQuaternion( 'rotation', rotationQuat ) );
+        animationCallback.getStackedTransforms().push( new StackedScale( 'scale', scale ) );
 
         node.addUpdateCallback( animationCallback );
     },
@@ -490,15 +490,16 @@ GLTFLoader.prototype = {
         return mat;
     },
 
-    preprocessChannel: function ( glTFChannel, glTFAnim, glTFAnimParams ) {
+    preprocessChannel: function ( glTFChannel, glTFAnim, glTFParams ) {
 
         var json = this._loadedFiles.glTF;
         var promisesArray = [];
 
         var glTFSampler = glTFAnim.samplers[ glTFChannel.sampler ];
 
-        var timeAccessor = json.accessors[ glTFAnimParams[ glTFSampler.input ] ];
-        var valueAccessor = json.accessors[ glTFAnimParams[ glTFSampler.output ] ];
+        // parameters are no longer used in GlTF 1.1 specification, see https://github.com/lexaknyazev/glTF/tree/master-test/specification/1.1#animations
+        var timeAccessor = json.accessors[ ( glTFParams ? glTFParams[ glTFSampler.input ] : glTFSampler.input ) ];
+        var valueAccessor = json.accessors[ ( glTFParams ? glTFParams[ glTFSampler.output ] : glTFSampler.output ) ];
 
         var timePromise = this.loadAccessorBuffer( timeAccessor, null );
         var valuePromise = this.loadAccessorBuffer( valueAccessor, null );
@@ -516,11 +517,11 @@ GLTFLoader.prototype = {
 
             if ( GLTFLoader.TYPE_TABLE[ valueAccessor.type ] === 4 ) {
 
-                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFChannel.target.path, null );
 
             } else if ( GLTFLoader.TYPE_TABLE[ valueAccessor.type ] === 3 ) {
 
-                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFChannel.target.path, null );
 
             }
 
@@ -559,15 +560,15 @@ GLTFLoader.prototype = {
         for ( var i = 0; i < animationsObjectKeys.length; ++i ) {
 
             var glTFAnim = json.animations[ animationsObjectKeys[ i ] ];
-            var glTFAnimParams = glTFAnim.parameters;
 
             var channelsPromiseArray = [];
             // Creates each OSGJS channel
             for ( var j = 0; j < glTFAnim.channels.length; ++j ) {
 
                 var glTFChannel = glTFAnim.channels[ j ];
+                var glTFParam = glTFAnim.parameters;
 
-                var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim, glTFAnimParams );
+                var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim, glTFParam );
                 channelsPromiseArray.push( osgChannel );
             }
 
@@ -1068,6 +1069,37 @@ GLTFLoader.prototype = {
         this._visitedNodes[ nodeId ] = true;
 
         return Promise.all( promises );
+    },
+
+    //
+    postProcessSkeletons: function () {
+        if ( Object.keys( this._skeletons ).length <= 1 )
+            return;
+
+        // if several skeletons, merge them
+        var skeletonKeys = Object.keys( this._skeletons );
+        var mainSkeleton = this._skeletons[ skeletonKeys[ 0 ] ];
+
+        // Works when skeletons are distinct
+        for ( var i = 1; i < skeletonKeys.length; ++i ) {
+            console.log( 'Merging ' + skeletonKeys[ i ] + ' in ' + skeletonKeys[ 0 ] );
+            var numChildren = this._skeletons[ skeletonKeys[ i ] ].getChildren().length;
+            for ( var j = 0; j < numChildren; ++j ) {
+                mainSkeleton.addChild( this._skeletons[ skeletonKeys[ i ] ].getChildren()[ j ] );
+            }
+            this._skeletons[ skeletonKeys[ i ] ].removeChildren();
+        }
+
+        //update invBinds
+        var invmat = mat4.create();
+        var invMainSkeletonWorldMatrix = mainSkeleton.getWorldMatrices()[ 0 ];
+        console.log( invMainSkeletonWorldMatrix );
+
+        var boneKeys = Object.keys( this._bones );
+        for ( i = 0; i < boneKeys.length; ++i ) {
+            var newInvBind = mat4.multiply( mat4.create(), invMainSkeletonWorldMatrix, this._bones[ boneKeys[ i ] ].getInvBindMatrixInSkeletonSpace() );
+            this._bones[ boneKeys[ i ] ].setInvBindMatrixInSkeletonSpace( newInvBind );
+        }
     },
 
     readNodeURL: function ( files, options ) {
