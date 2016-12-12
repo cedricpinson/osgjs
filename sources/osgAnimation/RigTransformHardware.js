@@ -92,7 +92,6 @@ RigTransformHardware.prototype = {
 
             for ( var i = 0, l = bones.length; i < l; i++ ) {
                 var bone = bones[ i ];
-
                 var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
                 var boneMatrix = bone.getMatrixInSkeletonSpace();
 
