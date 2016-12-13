@@ -303,14 +303,17 @@ var CompilerVertex = {
 
         var inputTangent = this.getOrCreateAttribute( 'vec4', 'Tangent' );
         var hasMorphTangent = this._morphAttribute && this._morphAttribute.hasTarget( 'Tangent' );
-        // Approximate tangent morphing depending of the normal morphing (disabled as we are not sure it's worth it for now)
-        var hasMorph = hasMorphTangent /*|| this._morphAttribute && this._morphAttribute.hasTarget( 'Normal' )*/ ;
 
-        if ( !hasMorph ) return inputTangent;
+        if ( !hasMorphTangent ) return inputTangent;
 
-        if ( hasMorphTangent ) return this.morphTransformVec3( inputTangent, this.createVariable( 'vec3', 'morphTangent' ) );
+        return this.morphTransformVec3( inputTangent, this.createVariable( 'vec3', 'morphTangent' ) );
 
-        return this.morphTangentApproximation( inputTangent, this.createVariable( 'vec3', 'morphTangent' ) );
+        // if ( !hasMorphTangent && !this._morphAttribute && !this._morphAttribute.hasTarget( 'Normal' ) ) return inputTangent;
+
+        // if ( hasMorphTangent ) return this.morphTransformVec3( inputTangent, this.createVariable( 'vec3', 'morphTangent' ) );
+
+        // // Approximate tangent morphing depending of the normal morphing (disabled as we are not sure it's worth it for now)
+        // return this.morphTangentApproximation( inputTangent, this.createVariable( 'vec3', 'morphTangent' ) );
     },
 
     getOrCreateSkinVertex: function () {

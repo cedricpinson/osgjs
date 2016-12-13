@@ -640,6 +640,20 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
 
     },
 
+    resetAllStackedTransforms: function () {
+        var anims = this._animationsUpdateCallbackArray;
+        for ( var i = 0, nbAnims = anims.length; i < nbAnims; i++ ) {
+            var stacked = anims[ i ].getStackedTransforms();
+            for ( var j = 0, nbStacked = stacked.length; j < nbStacked; j++ ) {
+                stacked[ j ].resetToDefaultValue();
+            }
+
+            // computeChannels is not mandatory here as the following frame will call
+            // this function anyway
+            anims[ i ].computeChannels();
+        }
+    },
+
     setAnimationLerpEndStart: function ( anim, lerpDuration ) {
         var channels = anim.channels;
         if ( anim.originalDuration === undefined )
