@@ -237,6 +237,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         this.setKernelSizePCF( shadowSettings.kernelSizePCF );
         this.setBias( shadowSettings.bias );
+        this.setNormalBias( shadowSettings.normalBias );
 
     },
 
@@ -254,6 +255,14 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
     getCastsShadowBoundsTraversalMask: function () {
         return this._castsShadowBoundsTraversalMask;
+    },
+
+    getNormalBias: function () {
+        return this._shadowReceiveAttribute.getNormalBias();
+    },
+
+    setNormalBias: function ( value ) {
+        this._shadowReceiveAttribute.setNormalBias( value );
     },
 
 
@@ -443,6 +452,11 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
                 }
             }
         }
+    },
+
+    updateShadowTechnic: function ( /*nv*/) {
+        Notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
+        this.updateShadowTechnique();
     },
 
     setTextureFiltering: function () {
