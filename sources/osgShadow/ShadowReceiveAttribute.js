@@ -3,6 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 var Map = require( 'osg/Map' );
+var Notify = require( 'osg/notify' );
 
 
 /**
@@ -20,9 +21,14 @@ var ShadowReceiveAttribute = function ( lightNum, disable ) {
     // hash change var
     this._algoType = 'NONE';
 
+
     // shadow depth bias as projected in shadow camera space texture
     // and viewer camera space projection introduce its bias
     this._bias = 0.001;
+
+    // shadow normal bias from normal exploding offset technique
+    this._normalBias = undefined;
+
     // algo dependant
     // Exponential shadow maps use exponential
     // to allows fuzzy depth
@@ -96,6 +102,14 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         return this._bias;
     },
 
+    setNormalBias: function ( bias ) {
+        this._normalBias = bias;
+    },
+
+    getNormalBias: function () {
+        return this._normalBias;
+    },
+
     setExponent0: function ( exp ) {
         this._exponent0 = exp;
     },
@@ -159,6 +173,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         // Variance Shadow mapping use One more epsilon
         var uniforms = {
             bias: Uniform.createFloat( this.getUniformName( 'bias' ) ),
+            normalBias: Uniform.createFloat( this.getUniformName( 'normalBias' ) ),
             exponent0: Uniform.createFloat( this.getUniformName( 'exponent0' ) ),
             exponent1: Uniform.createFloat( this.getUniformName( 'exponent1' ) ),
             epsilonVSM: Uniform.createFloat( this.getUniformName( 'epsilonVSM' ) )
@@ -284,6 +299,10 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
             defines.push( '#define _ATLAS_SHADOW' );
         }
 
+        if ( this.getNormalBias() ) {
+            defines.push( '#define _NORMAL_OFFSET' );
+        }
+
         return defines;
     },
 
@@ -293,6 +312,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
         var uniformMap = this.getOrCreateUniforms();
 
+        uniformMap.normalBias.setFloat( this._normalBias );
         uniformMap.bias.setFloat( this._bias );
         uniformMap.exponent0.setFloat( this._exponent0 );
         uniformMap.exponent1.setFloat( this._exponent1 );
@@ -304,6 +324,12 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
     // StateAttribute from the shader compilation
     isEnabled: function () {
         return this._enable;
+    },
+
+    // Deprecated methods, should be removed in the future
+    isEnable: function () {
+        Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
+        return this.isEnabled();
     },
 
     getHash: function () {

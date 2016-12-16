@@ -49,8 +49,7 @@ PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
         'lighted',
         'lightEyePos',
-        'lightEyeDir',
-        'lightNDL'
+        'lightEyeDir'
 
     ],
 
@@ -77,7 +76,6 @@ PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
                 this._inputs.lightEyePos,
                 this._inputs.lightEyeDir,
-                this._inputs.lightNDL,
                 this._inputs.lighted
             ] );
     }
@@ -118,8 +116,7 @@ SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
         'lighted',
         'lightEyePos',
-        'lightEyeDir',
-        'lightNDL'
+        'lightEyeDir'
 
     ],
 
@@ -150,7 +147,6 @@ SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
                 this._inputs.lightEyePos,
                 this._inputs.lightEyeDir,
-                this._inputs.lightNDL,
                 this._inputs.lighted
             ] );
     }
@@ -183,8 +179,7 @@ SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
         'lightmatrix',
 
         'lighted',
-        'lightEyeDir',
-        'lightNDL'
+        'lightEyeDir'
 
     ],
 
@@ -209,7 +204,6 @@ SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
                 this._inputs.lightmatrix,
 
                 this._inputs.lightEyeDir,
-                this._inputs.lightNDL,
                 this._inputs.lighted
             ] );
     }
@@ -238,8 +232,7 @@ HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
         'lightmatrix',
 
         'lighted',
-        'lightEyeDir',
-        'lightNDL'
+        'lightEyeDir'
     ],
 
     computeShader: function () {
@@ -261,7 +254,6 @@ HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
                 this._inputs.lightmatrix,
 
                 this._inputs.lightEyeDir,
-                this._inputs.lightNDL,
                 this._inputs.lighted
             ] );
     }

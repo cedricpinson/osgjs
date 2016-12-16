@@ -58,7 +58,8 @@ var ShadowSettings = function ( options ) {
 
     // depth offset (shadow acne / peter panning)
     this.bias = 0.005;
-
+    // normal exploding offset (shadow acne / peter panning)
+    this.normalBias = undefined;
 
     // Impact on shadow aliasing by better coverage
     // algo for shadow
