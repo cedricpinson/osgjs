@@ -10,6 +10,7 @@ var ShadowReceive = function () {
 
 ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
     type: 'ShadowReceiveNode',
+
     validInputs: [ 'lighted',
         'shadowTexture',
         //'shadowTextureMapSize',
@@ -17,9 +18,8 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
         'shadowTextureProjectionMatrix',
         'shadowTextureViewMatrix',
         'shadowTextureDepthRange',
-        'lightNDL',
         'vertexWorld',
-        'shadowbias', /* 'shadowexponent0', 'shadowexponent1', 'shadowepsilonVSM' */
+        'shadowbias',
     ],
     validOutputs: [ 'float' ],
 
@@ -49,18 +49,23 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
             inp.shadowTexture
         ];
 
-        if ( this._shadow.getAtlas() )
+        if ( this._shadow.getAtlas() ) {
             inputs.push( inp.shadowTextureMapSize );
+        }
 
         inputs = inputs.concat( [
             inp.shadowTextureRenderSize,
             inp.shadowTextureProjectionMatrix,
             inp.shadowTextureViewMatrix,
             inp.shadowTextureDepthRange,
-            inp.lightNDL,
+            inp.normalWorld,
             inp.vertexWorld,
             inp.shadowbias
         ] );
+
+        if ( this._shadow.getNormalBias() ) {
+            inputs.push( inp.shadownormalBias );
+        }
 
         return ShaderUtils.callFunction( 'computeShadow', this._outputs.float, inputs );
     }

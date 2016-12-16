@@ -62,8 +62,7 @@ vec3 computeSpotLightShading(
 
     out vec3 eyeLightPos,
     out vec3 eyeLightDir,
-    out float NdotL,
-    out bool lighted){
+    out bool lighted) {
     lighted = false;
     eyeLightPos = vec3(lightMatrix * lightSpotPosition);
     eyeLightDir = eyeLightPos - vViewVertex.xyz;
@@ -90,7 +89,7 @@ vec3 computeSpotLightShading(
 
             if (spot > 0.0) {
                 // compute NdL
-                NdotL = dot(eyeLightDir, normal);
+                float NdotL = dot(eyeLightDir, normal);
                 if (NdotL > 0.0) {
                     lighted = true;
                     vec3 diffuseContrib;
@@ -125,7 +124,6 @@ vec3 computePointLightShading(
 
     out vec3 eyeLightPos,
     out vec3 eyeLightDir,
-    out float NdotL,
     out bool lighted) {
 
     eyeLightPos =  vec3(lightMatrix * lightPosition);
@@ -138,7 +136,7 @@ vec3 computePointLightShading(
         // compute direction
         eyeLightDir = dist > 0.0 ? eyeLightDir / dist :  vec3( 0.0, 1.0, 0.0 );
         // compute NdL
-        NdotL = dot(eyeLightDir, normal);
+        float NdotL = dot(eyeLightDir, normal);
         if (NdotL > 0.0) {
             lighted = true;
             vec3 diffuseContrib;
@@ -170,13 +168,12 @@ vec3 computeSunLightShading(
     const in mat4 lightMatrix,
 
     out vec3 eyeLightDir,
-    out float NdotL,
     out bool lighted) {
 
     lighted = false;
     eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
     // compute NdL   // compute NdL
-    NdotL = dot(eyeLightDir, normal);
+    float NdotL = dot(eyeLightDir, normal);
     if (NdotL > 0.0) {
         lighted = true;
         vec3 diffuseContrib;
@@ -205,12 +202,12 @@ vec3 computeHemiLightShading(
     const in mat4 lightMatrix,
 
     out vec3 eyeLightDir,
-    out float NdotL,
     out bool lighted) {
+
     lighted = false;
 
     eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
-    NdotL = dot(eyeLightDir, normal);
+    float NdotL = dot(eyeLightDir, normal);
     float weight = 0.5 * NdotL + 0.5;
     vec3 diffuseContrib = materialDiffuse * mix(lightGround, lightDiffuse, weight);
 

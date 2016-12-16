@@ -45,6 +45,10 @@ var ShadowSettings = function ( options ) {
     // depth offset (shadow acne / peter panning)
     this.bias = 0.005;
 
+    // normal exploding offset (shadow acne / peter panning)
+    this.normalBias = undefined;
+
+
     // defaut shader generator name for shadow casting
     this.shadowCastShaderGeneratorName = 'ShadowCast';
 

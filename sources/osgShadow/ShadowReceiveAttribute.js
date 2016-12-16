@@ -3,6 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 var Map = require( 'osg/Map' );
+var Notify = require( 'osg/notify' );
 
 
 /**
@@ -19,9 +20,13 @@ var ShadowReceiveAttribute = function ( lightNum, disable ) {
     // see shadowSettings.js header for shadow algo param explanations
     // hash change var
 
+
     // shadow depth bias as projected in shadow camera space texture
     // and viewer camera space projection introduce its bias
     this._bias = 0.001;
+
+    // shadow normal bias from normal exploding offset technique
+    this._normalBias = undefined;
     // shader compilation different upon texture precision
     this._precision = 'UNSIGNED_BYTE';
     // kernel size & type for pcf
@@ -72,6 +77,14 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         return this._bias;
     },
 
+    setNormalBias: function ( bias ) {
+        this._normalBias = bias;
+    },
+
+    getNormalBias: function () {
+        return this._normalBias;
+    },
+
     getKernelSizePCF: function () {
         return this._kernelSizePCF;
     },
@@ -102,6 +115,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
         var uniforms = {
             bias: Uniform.createFloat( this.getUniformName( 'bias' ) ),
+            normalBias: Uniform.createFloat( this.getUniformName( 'normalBias' ) )
         };
 
         obj.uniforms[ typeMember ] = new Map( uniforms );
@@ -150,6 +164,10 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
             defines.push( '#define _ATLAS_SHADOW' );
         }
 
+        if ( this.getNormalBias() ) {
+            defines.push( '#define _NORMAL_OFFSET' );
+        }
+
         return defines;
     },
 
@@ -159,6 +177,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
         var uniformMap = this.getOrCreateUniforms();
 
+        uniformMap.normalBias.setFloat( this._normalBias );
         uniformMap.bias.setFloat( this._bias );
 
     },
@@ -167,6 +186,12 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
     // StateAttribute from the shader compilation
     isEnabled: function () {
         return this._enable;
+    },
+
+    // Deprecated methods, should be removed in the future
+    isEnable: function () {
+        Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
+        return this.isEnabled();
     },
 
     getHash: function () {
