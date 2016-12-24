@@ -254,8 +254,6 @@
 
             promise.then( function ( root ) {
 
-                $( '#loading' ).hide();
-
                 if ( !root )
                     return;
 
@@ -277,52 +275,98 @@
 
         },
 
+        readZipContentGLTF: function ( zip ) {
+
+            var promisesArray = [];
+
+            Object.keys( zip.files ).forEach( function ( filename ) {
+
+                var ext = filename.split( '.' ).pop();
+                var type = null;
+
+                if ( ext === 'gltf' )
+                    type = 'string';
+                else if ( ext === 'bin' )
+                    type = 'arraybuffer';
+                else if ( ext === 'png' || ext === 'jpg' || ext === 'jpeg' )
+                    type = 'base64';
+
+                if ( !type ) return;
+
+                var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
+
+                    var data = fileData;
+                    var name = filename.split( '/' ).pop();
+
+                    if ( type === 'base64' ) {
+
+                        data = new window.Image();
+                        data.src = 'data:image/' + ext + ';base64,' + fileData;
+
+                    }
+
+                    return {
+                        name: name,
+                        data: data
+                    };
+
+                } );
+
+                promisesArray.push( p );
+
+            } );
+
+            return P.all( promisesArray ).then( function ( dataList ) {
+
+                var loadedFiles = {};
+                var gltfFileName;
+                for ( var i = 0; i < dataList.length; ++i ) {
+
+                    var name = dataList[ i ].name;
+                    var data = dataList[ i ].data;
+
+                    if ( name.indexOf( '.gltf' ) !== -1 )
+                        gltfFileName = dataList[ i ].name;
+
+                    loadedFiles[ dataList[ i ].name ] = data;
+
+                }
+
+                return this.loadGLTFModel( loadedFiles, gltfFileName, true );
+
+            }.bind( this ) );
+
+        },
+
         loadZipFile: function ( file ) {
 
             return JSZip.loadAsync( file ).then( function ( zip ) {
 
-                var promisesArray = [];
-
+                var gltfFormat = undefined;
+                var environmentFormat = undefined;
                 Object.keys( zip.files ).forEach( function ( filename ) {
-
                     var ext = filename.split( '.' ).pop();
-                    var type = null;
-
-                    if ( ext === 'gltf' )
-                        type = 'string';
-                    else if ( ext === 'bin' )
-                        type = 'arraybuffer';
-                    else if ( ext === 'png' || ext === 'jpg' || ext === 'jpeg' )
-                        type = 'base64';
-
-                    if ( !type ) return;
-
-                    var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
-
-                        var data = fileData;
-                        var name = filename.split( '/' ).pop();
-
-                        if ( type === 'base64' ) {
-
-                            data = new window.Image();
-                            data.src = 'data:image/' + ext + ';base64,' + fileData;
-
-                        }
-
-                        return {
-                            name: name,
-                            data: data
-                        };
-
-                    } );
-
-                    promisesArray.push( p );
-
+                    if ( ext === 'gltf' ) gltfFormat = true;
+                    if ( filename === 'config.json' ) environmentFormat = true;
                 } );
 
-                return P.all( promisesArray );
+                if ( gltfFormat ) {
 
-            } );
+                    return this.readZipContentGLTF( zip );
+
+                } else if ( environmentFormat ) {
+
+                    var env = new Environment();
+                    return env.readZipContent( zip ).then( function () {
+                        this._currentEnvironment = env;
+                        this.updateEnvironment();
+                    }.bind( this ) );
+
+                }
+
+                return false;
+
+            }.bind( this ) );
 
         },
 
@@ -335,28 +379,9 @@
 
             if ( files.length === 1 && files[ 0 ].name.indexOf( '.zip' ) !== -1 ) {
 
-                var loadedFiles = {};
-
-                var p = self.loadZipFile( files[ 0 ] );
-                p.then( function ( dataList ) {
-
-                    for ( var i = 0; i < dataList.length; ++i ) {
-
-                        var name = dataList[ i ].name;
-                        var data = dataList[ i ].data;
-
-                        if ( name.indexOf( '.gltf' ) !== -1 )
-                            gltfFileName = dataList[ i ].name;
-
-                        loadedFiles[ dataList[ i ].name ] = data;
-
-                    }
-
-                    self.loadGLTFModel( loadedFiles, gltfFileName, true );
-
+                return this.loadZipFile( files[ 0 ] ).then( function () {
+                    $( '#loading' ).hide();
                 } );
-
-                return;
 
             }
 
@@ -371,9 +396,9 @@
 
             }
 
-            self.loadGLTFModel( files, gltfFileName, false );
-
-            return;
+            return self.loadGLTFModel( files, gltfFileName, false ).then( function () {
+                $( '#loading' ).hide();
+            } );
         },
 
         loadFiles: function () {
@@ -1438,14 +1463,5 @@
         }, true );
 
     }, true );
-
-    // window.testEnv = function () {
-    //     var env = new Environment();
-    //     env.loadPackage( 'http://me/dev/osgjs/examples/pbr/textures/parking.zip' ).then( function () {
-    //         window.example._currentEnvironment = env;
-    //         window.example.updateEnvironment();
-    //     } );
-
-    // };
 
 } )();

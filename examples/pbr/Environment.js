@@ -28,16 +28,8 @@
         loadPackage: function ( urlOfFile ) {
 
             var loadZip = function ( file ) {
-                return this.loadZipFile( file ).then( function ( fileArray ) {
-
-                    fileArray.forEach( function ( entry ) {
-                        this._files[ entry.name ] = entry.data;
-                    }.bind( this ) );
-
-                    // STOP HERE, problem config.json is not in the file list
-                    // ???
-                    return this.init( null, this._files[ 'config.json' ] );
-
+                return JSZip.loadAsync( file ).then( function ( zip ) {
+                    return this.readZipContent( zip );
                 }.bind( this ) );
             }.bind( this );
 
@@ -53,45 +45,47 @@
             return loadZip( file );
         },
 
-        loadZipFile: function ( file ) {
+        readZipContent: function ( zip ) {
 
-            return JSZip.loadAsync( file ).then( function ( zip ) {
+            var promisesArray = [];
 
-                var promisesArray = [];
+            Object.keys( zip.files ).forEach( function ( filename ) {
 
-                Object.keys( zip.files ).forEach( function ( filename ) {
+                var ext = filename.split( '.' ).pop();
+                var type = null;
 
-                    var ext = filename.split( '.' ).pop();
-                    var type = null;
+                if ( ext === 'json' ) type = 'string';
+                if ( ext === 'bin' || ext === 'gz' ) type = 'arraybuffer';
+                if ( !type ) return;
 
-                    if ( ext === 'json' ) type = 'string';
-                    if ( ext === 'bin' || ext === 'gz' ) type = 'arraybuffer';
-                    if ( !type ) return;
+                var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
 
-                    var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
+                    var data = fileData;
+                    var name = filename.split( '/' ).pop();
 
-                        var data = fileData;
-                        var name = filename.split( '/' ).pop();
+                    if ( name.split( '.' ).pop() === 'json' ) data = JSON.parse( data );
 
-                        if ( name.split( '.' ).pop() === 'json' ) data = JSON.parse( data );
-
-                        return {
-                            name: name,
-                            data: data
-                        };
-
-                    } );
-
-                    promisesArray.push( p );
+                    return {
+                        name: name,
+                        data: data
+                    };
 
                 } );
 
-                return P.all( promisesArray );
+                promisesArray.push( p );
 
             } );
 
-        },
+            return P.all( promisesArray ).then( function ( fileArray ) {
 
+                fileArray.forEach( function ( entry ) {
+                    this._files[ entry.name ] = entry.data;
+                }.bind( this ) );
+
+                return this.init( null, this._files[ 'config.json' ] );
+
+            }.bind( this ) );
+        },
 
         getImage: function ( type, encoding, format ) {
 
