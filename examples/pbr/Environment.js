@@ -29,11 +29,12 @@
 
             var loadZip = function ( file ) {
                 return JSZip.loadAsync( file ).then( function ( zip ) {
-                    return this.readZipContent( zip );
+                    return this.readZipContent( zip, urlOfFile );
                 }.bind( this ) );
             }.bind( this );
 
             var file = urlOfFile;
+
             if ( typeof urlOfFile === 'string' ) {
                 return osgDB.requestFile( urlOfFile, {
                     responseType: 'blob'
@@ -45,9 +46,12 @@
             return loadZip( file );
         },
 
-        readZipContent: function ( zip ) {
+        readZipContent: function ( zip, url ) {
 
             var promisesArray = [];
+
+            var envName = url.split( '/' ).pop().split( '.zip' )[ 0 ];
+            this.name = envName;
 
             Object.keys( zip.files ).forEach( function ( filename ) {
 
@@ -107,24 +111,27 @@
             return results;
         },
 
+        getFormatList: function () {
+            return Object.keys( this._panoramaUE4 );
+        },
+
         init: function ( url, config ) {
-            var formatList = window.formatList;
+            var formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
 
             this._config = config;
 
             var ready = this._promises;
-            var mipmapTexture;
 
-            //var spherical = environment + 'spherical';
-            if ( formatList.FLOAT ) {
-                ( function () {
-                    mipmapTexture = this.getImage( 'mipmap', 'float', 'cubemap' );
-                    var file = mipmapTexture.file;
-                    var urlOrData = this._files[ file ] || ( url + file );
-                    var size = mipmapTexture.width;
-                    this._cubemapPackedFloat = new EnvironmentCubeMap( urlOrData, size, config );
-                }.bind( this ) )();
-            }
+            // var mipmapTexture;
+            // if ( formatList.FLOAT ) {
+            //     ( function () {
+            //         mipmapTexture = this.getImage( 'mipmap', 'float', 'cubemap' );
+            //         var file = mipmapTexture.file;
+            //         var urlOrData = this._files[ file ] || ( url + file );
+            //         var size = mipmapTexture.width;
+            //         this._cubemapPackedFloat = new EnvironmentCubeMap( urlOrData, size, config );
+            //     }.bind( this ) )();
+            // }
 
             // read all panorama format U4
             formatList.forEach( function ( key ) {
