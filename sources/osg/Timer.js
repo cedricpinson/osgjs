@@ -13,6 +13,7 @@ var now = ( function () {
     }
 
     var fn = w.performance.now || w.performance.mozNow || w.performance.msNow || w.performance.oNow || w.performance.webkitNow ||
+
         function () {
             return Date.now();
         };
