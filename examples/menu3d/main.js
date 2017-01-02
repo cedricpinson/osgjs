@@ -1,13 +1,13 @@
 ( function () {
     'use strict';
 
-    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgGA = OSG.osgGA;
     var osgDB = OSG.osgDB;
     var osgUtil = OSG.osgUtil;
     var Hammer = window.Hammer;
+    var Object = window.Object;
     var $ = window.$;
     var ExampleOSGJS = window.ExampleOSGJS;
 
@@ -98,18 +98,18 @@
             hc.on( 'tap', this.pick.bind( this ) );
         },
 
-        touch: function ( e ) {
+        touch: function () {
             // assume the first touch in the 1/4 of the top canvas is a google cardboard touch
             console.log( 'cardboard touch' );
             this._manipulator.getForwardInterpolator().setTarget( 1 );
         },
 
-        unTouch: function ( e ) {
+        unTouch: function () {
             console.log( 'cardboard unTouch' );
             this._manipulator.getForwardInterpolator().setTarget( 0 );
         },
 
-        createCamera: function ( texture ) {
+        createCamera: function () {
             var size = 1.0;
             var defaultCursorSize = 0.1;
             var camera = new osg.Camera();
@@ -183,53 +183,6 @@
                 this._items[ i ].getOrCreateStateSet().setAttributeAndModes( this._materialBlur );
             }
         },
-
-        // debug scene to show camera in world space
-        createCameraGrid: function () {
-            var node = new osg.Node();
-            node.addChild( osg.createGridGeometry( -10, -10, 0, 20, 0, 0, 0, 20, 0, 10, 10 ) );
-            node.addChild( osg.createAxisGeometry( 2 ) );
-
-            var mt = new osg.MatrixTransform();
-            var camera = osg.createAxisGeometry( 2 );
-            mt.addChild( camera );
-            var tg = new osg.MatrixTransform();
-            tg.addChild( osg.createTexturedSphere( 0.5 ) );
-
-            var sphere = new osg.MatrixTransform();
-            sphere.addChild( osg.createTexturedBox() );
-            osg.mat4.fromTranslation( sphere.getMatrix(), [ 0, 5, 5 ] );
-
-            node.addChild( tg );
-            node.addChild( mt );
-            node.addChild( sphere );
-
-            var fps = new FPS();
-            fps.setCamera( new osg.Camera() );
-            fps.setNode( sphere );
-            fps.init();
-            fps.setTarget( [ 0, 0, 0 ] );
-
-            mt.addUpdateCallback( {
-                update: function () {
-
-                    fps.update();
-
-                    var target = [];
-                    fps.getTarget( target );
-                    window.camTarget = target;
-                    window.camPos = fps.getEyePosition( [] );
-                    osg.mat4.fromTranslation( tg.getMatrix(), [ target[ 0 ], target[ 1 ], target[ 2 ] ] );
-                    osg.mat4.invert( node.getMatrix(), fps.getInverseMatrix() );
-
-
-                    return true;
-                }
-            } );
-
-            return node;
-        },
-
 
         // Transform canvas coordinate into webgl coordinate
         canvasCoordToGL: function ( canvasX, canvasY, out ) {
@@ -346,7 +299,6 @@
                 }
             }
             scene.addChild( this.createCamera() );
-            // scene.addChild( this.createCameraGrid() );
 
             var manipulator = new osgGA.FirstPersonManipulator();
             this._manipulator = manipulator;

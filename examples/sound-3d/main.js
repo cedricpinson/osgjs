@@ -38,7 +38,7 @@
 
         initializeSoundCloud: function () {
             SC.initialize( {
-                client_id: SoundCloudID
+                'client_id': SoundCloudID
             } );
         },
 
@@ -63,14 +63,14 @@
 
                     var errors = '';
                     for ( var i = 0; i < soundCloudResult.errors.length; i++ ) {
-                        errors += soundCloudResult.errors[ i ].error_message + '\n';
+                        errors += soundCloudResult.errors[ i ][ 'error_message' ] + '\n';
                     }
 
                     defer.reject( errors );
 
                 } else {
 
-                    var soundCloudURL = soundCloudResult.stream_url + '?client_id=' + SoundCloudID;
+                    var soundCloudURL = soundCloudResult[ 'stream_url' ] + '?client_id=' + SoundCloudID;
                     osg.log( 'stream ' + soundCloudURL + ' ready' );
 
                     var soundUpdateCallback = self._soundManager.create3DSound( audio, soundCloudURL );

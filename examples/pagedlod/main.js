@@ -12,10 +12,11 @@
     var maxExtent = [ 1000000.0, 1000000.0 ];
 
     var Example = function () {
-        var maxx, minx, miny, maxy;
-        var viewer;
-        var params = undefined;
-        var gui = undefined;
+        this.maxx = undefined;
+        this.minx = undefined;
+        this.miny = undefined;
+        this.maxy = undefined;
+        this.gui = undefined;
 
         this._config = {
             lodScale: 0.01,

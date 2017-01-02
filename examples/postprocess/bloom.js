@@ -19,6 +19,8 @@
 
         var currentSceneTexture = osg.Texture.createFromURL( 'Budapest.jpg' );
         var cachedScenes = [];
+        var brightFilter;
+        var additiveFilter;
 
         var setSceneTexture = function ( sceneFile ) {
 
@@ -37,7 +39,7 @@
         bloomTexture.setMinFilter( 'LINEAR' );
         bloomTexture.setMagFilter( 'LINEAR' );
 
-        var brightFilter = new osgUtil.Composer.Filter.Custom(
+        brightFilter = new osgUtil.Composer.Filter.Custom(
             [
                 '#ifdef GL_ES',
                 'precision highp float;',
@@ -76,11 +78,11 @@
                 '}',
             ].join( '\n' ), {
                 'Texture0': currentSceneTexture,
-                'threshold': threshold,
+                'threshold': threshold
             }
         );
 
-        var additiveFilter = new osgUtil.Composer.Filter.Custom(
+        additiveFilter = new osgUtil.Composer.Filter.Custom(
             [
                 '#ifdef GL_ES',
                 'precision highp float;',
@@ -100,7 +102,7 @@
             ].join( '\n' ), {
                 'Texture0': currentSceneTexture,
                 'Texture1': bloomTexture,
-                'factor': factor,
+                'factor': factor
             }
         );
 

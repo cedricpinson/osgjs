@@ -16,6 +16,7 @@ var jshintrc = JSON.parse( fs.readFileSync( './.jshintrc' ).toString() );
 // They always have to finish with a '/'.
 //
 var SOURCE_PATH = 'sources/';
+var EXAMPLE_PATH = 'examples/';
 var BUILD_PATH = 'builds/';
 var TEST_PATH = 'tests/';
 var DIST_PATH = path.join( BUILD_PATH, 'dist/' );
@@ -44,6 +45,10 @@ var find = function ( cwd, pattern ) {
 
 // get source file once and for all, caching results.
 var srcFiles = find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+    return pathname;
+} );
+
+var exampleFiles = find( EXAMPLE_PATH, '**/*.js' ).map( function ( pathname ) {
     return pathname;
 } );
 
@@ -193,6 +198,21 @@ var gruntTasks = {};
         } )
     };
 
+    gruntTasks.jshint.examples = {
+        options: {
+            globals: {
+                define: true,
+                require: true
+            }
+        },
+        src: exampleFiles.filter( function ( pathName ) {
+            return pathName.indexOf( 'vendors' ) === -1;
+
+        } ).map( function ( pathname ) {
+            return path.join( EXAMPLE_PATH, pathname );
+        } )
+    };
+
     gruntTasks.jshint.tests = {
         options: {
             globals: {
@@ -230,7 +250,6 @@ var gruntTasks = {};
         },
         target: srcFiles.filter( function ( pathName ) {
             return pathName.indexOf( 'vendors' ) === -1 &&
-                pathName.indexOf( 'Hammer.js' ) === -1 &&
                 pathName.indexOf( 'webgl-debug.js' ) === -1 &&
                 pathName.indexOf( 'webgl-utils.js' ) === -1;
         } ).map( function ( pathname ) {
@@ -487,7 +506,7 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-webpack' );
 
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources', 'jshint:tests' ] );
+    grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources', 'jshint:examples', 'jshint:tests' ] );
     grunt.registerTask( 'lint', [ 'eslint' ] );
     grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 

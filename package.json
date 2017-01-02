@@ -27,7 +27,7 @@
     "grunt-webpack": "^1.0.8",
     "grunt-shell": "*",
     "grunt-git": "*",
-    "grunt-eslint": "^17.1.0",
+    "grunt-eslint": "*",
     "grunt-copy-to": "0.0.12",
     "grunt-contrib-uglify": "*",
     "grunt-contrib-jshint": "*",
@@ -36,8 +36,8 @@
     "grunt": "> 1.0.0",
     "glob": "*",
     "extend": "*",
-    "eslint-plugin-private-variables": "^0.1.2",
-    "eslint": "^1.3.1"
+    "eslint-plugin-private-variables": "*",
+    "eslint": "*"
   },
   "contributors": [
     "Paul Cheyrou-Lagrèze <tuan.kuranes@gmail.com>",

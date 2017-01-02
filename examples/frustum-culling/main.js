@@ -7,7 +7,7 @@
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
     var viewer;
-
+    var Object = window.Object;
     var culled = 0;
     var config;
 

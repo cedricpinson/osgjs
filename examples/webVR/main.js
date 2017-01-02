@@ -8,6 +8,7 @@
     var osgGA = OSG.osgGA;
     var ExampleOSGJS = window.ExampleOSGJS;
     var $ = window.$;
+    var Object = window.Object;
 
     var Example = function () {
 

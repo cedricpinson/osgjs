@@ -7,6 +7,7 @@
     var osgViewer = OSG.osgViewer;
     var osgDB = OSG.osgDB;
     var osgShader = OSG.osgShader;
+    var Object = window.Object;
 
     var $ = window.$;
 

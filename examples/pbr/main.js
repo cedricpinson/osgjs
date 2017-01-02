@@ -10,6 +10,7 @@
     var osgShader = OSG.osgShader;
     var $ = window.$;
     var JSZip = window.JSZip;
+    var Object = window.Object;
 
     var Environment = window.Environment;
 
@@ -400,8 +401,8 @@
 
             return JSZip.loadAsync( fileOrBlob ).then( function ( zip ) {
 
-                var gltfFormat = undefined;
-                var environmentFormat = undefined;
+                var gltfFormat;
+                var environmentFormat;
                 Object.keys( zip.files ).forEach( function ( path ) {
                     var filename = path.split( '/' ).pop();
                     var ext = filename.split( '.' ).pop();

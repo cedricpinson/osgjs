@@ -4,7 +4,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
-
+    var Object = window.Object;
 
     var JSZip = window.JSZip;
 
