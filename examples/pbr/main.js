@@ -12,7 +12,6 @@
     var JSZip = window.JSZip;
 
     var Environment = window.Environment;
-    var ModelLoader = window.ModelLoader;
 
     var PredefinedMaterials = {
         Silver: [ 0.971519, 0.959915, 0.915324 ],
@@ -149,14 +148,19 @@
     window.GLTF_PBR_METAL_MODE = 'PBR_metal_roughness';
     window.GLTF_PBR_SPEC_MODE = 'PBR_specular_glossiness';
 
-    window.formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
-
-    var modelsPBR = [ 'cerberus', 'c3po', 'devastator' ];
-
     var modelList = [ 'sphere', 'model' ];
-    if ( window.useExternalModels ) {
-        modelList = modelList.concat( modelsPBR );
+
+    var defaultEnvironment = 'textures/parking.zip';
+    var envURL = defaultEnvironment;
+    if ( optionsURL.env ) {
+        if ( optionsURL.env.indexOf( 'http' ) !== -1 )
+            envURL = optionsURL.env;
+        else
+            envURL = 'textures/' + optionsURL.env;
     }
+    var environment = envURL;
+    var environmentList = [];
+    var environmentMap = {};
 
 
     var Example = function () {
@@ -164,9 +168,6 @@
         this._gui = new window.dat.GUI();
 
         this._shaderPath = 'shaders/';
-
-        if ( optionsURL.colorEncoding )
-            window.formatList = [ optionsURL.colorEncoding ];
 
         this._config = {
             envRotation: Math.PI,
@@ -183,15 +184,11 @@
             roughness: 0.5,
             material: 'Gold',
 
-            format: window.formatList[ 0 ],
+            format: '',
             model: modelList[ 0 ],
+            environment: '',
             mobile: isMobileDevice()
         };
-
-        if ( window.useExternalModels )
-            $( '#model-list' )[ 0 ].innerHTML = 'Cerberus by Andrew Maximov / Devastator by Pasha GubaInsania / C3PO by Christian Hecht / <a href=\'https://github.com/lighttransport/lighttransportequation-orb\'>lighttransportequation orb</a> by Syoyo Fujita';
-        else
-            $( '#model-list' )[ 0 ].innerHTML = '<a href=\'https://github.com/lighttransport/lighttransportequation-orb\'>lighttransportequation orb</a> by Syoyo Fujita';
 
         this.updateAlbedo();
 
@@ -203,16 +200,13 @@
 
         this._modelsLoaded = {};
 
-        this._modelsPBR = [];
-        this._modelPBRConfig = [];
-
         this._environmentTransformUniform = osg.Uniform.createMatrix4( osg.mat4.create(), 'uEnvironmentTransform' );
 
         this._cubemapUE4 = {};
 
         this._shaders = [];
 
-        this._currentEnvironment = new Environment();
+        this._currentEnvironment = undefined;
 
         // node that will contains models
         this._proxyRealModel = new osg.Node();
@@ -254,10 +248,7 @@
 
             promise.then( function ( root ) {
 
-                $( '#loading' ).hide();
-
-                if ( !root )
-                    return;
+                if ( !root ) return;
 
                 //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
 
@@ -270,59 +261,170 @@
                 modelList.push( gltfFileName );
 
                 var controllers = self._gui.__controllers;
-                controllers[ controllers.length - 1 ].remove();
-                self._gui.add( self._config, 'model', modelList ).onChange( self.updateModel.bind( self ) );
+                var controller = controllers.filter( function ( cont ) {
+                    return cont.property === 'model';
+                } )[ 0 ];
+                controller = controller.options( modelList );
+                controller.onChange( self.updateModel.bind( self ) );
 
             } );
 
         },
 
-        loadZipFile: function ( file ) {
+        createEnvironment: function ( urlOrZip, zipFileName ) {
 
-            return JSZip.loadAsync( file ).then( function ( zip ) {
+            var env = new Environment();
 
-                var promisesArray = [];
+            var registerEnvironment = function ( envReady ) {
 
-                Object.keys( zip.files ).forEach( function ( filename ) {
+                var name = envReady.name;
+                environmentMap[ name ] = envReady;
+                environmentList.push( name );
 
-                    var ext = filename.split( '.' ).pop();
-                    var type = null;
+                var controllers = this._gui.__controllers;
+                var controller = controllers.filter( function ( cont ) {
+                    return cont.property === 'environment';
+                } )[ 0 ];
 
-                    if ( ext === 'gltf' )
-                        type = 'string';
-                    else if ( ext === 'bin' )
-                        type = 'arraybuffer';
-                    else if ( ext === 'png' || ext === 'jpg' || ext === 'jpeg' )
-                        type = 'base64';
+                this._config.environment = name;
+                controller = controller.options( environmentList );
+                controller.onChange( this.setEnvironment.bind( this ) );
 
-                    if ( !type ) return;
+            }.bind( this );
 
-                    var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
+            if ( typeof urlOrZip === 'string' ) {
+                var url = urlOrZip;
+                return env.loadPackage( url ).then( function () {
+                    registerEnvironment( env );
+                    return env;
+                } );
+            }
 
-                        var data = fileData;
-                        var name = filename.split( '/' ).pop();
+            var zip = urlOrZip;
+            return env.readZipContent( zip, zipFileName ).then( function () {
+                registerEnvironment( env );
+                return env;
+            } );
 
-                        if ( type === 'base64' ) {
 
-                            data = new window.Image();
-                            data.src = 'data:image/' + ext + ';base64,' + fileData;
+        },
 
-                        }
+        updateConfigFromEnvironment: function ( formatList ) {
 
-                        return {
-                            name: name,
-                            data: data
-                        };
 
-                    } );
+            if ( formatList.indexOf( this._config.format ) === -1 ) this._config.format = formatList[ 0 ];
 
-                    promisesArray.push( p );
+            var controllers = this._gui.__controllers;
+            var controller = controllers.filter( function ( cont ) {
+                return cont.property === 'format';
+            } )[ 0 ];
+            controller = controller.options( formatList );
+            controller.onChange( this.updateEnvironment.bind( this ) );
+
+        },
+
+        setEnvironment: function ( name ) {
+
+            if ( environmentMap[ name ] ) {
+                this._currentEnvironment = environmentMap[ name ];
+                this.updateConfigFromEnvironment( this._currentEnvironment.getFormatList() );
+                this.updateEnvironment();
+            }
+
+        },
+
+        readZipContentGLTF: function ( zip ) {
+
+            var promisesArray = [];
+
+            Object.keys( zip.files ).forEach( function ( filename ) {
+
+                var ext = filename.split( '.' ).pop();
+                var type = null;
+
+                if ( ext === 'gltf' )
+                    type = 'string';
+                else if ( ext === 'bin' )
+                    type = 'arraybuffer';
+                else if ( ext === 'png' || ext === 'jpg' || ext === 'jpeg' )
+                    type = 'base64';
+
+                if ( !type ) return;
+
+                var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
+
+                    var data = fileData;
+                    var name = filename.split( '/' ).pop();
+
+                    if ( type === 'base64' ) {
+
+                        data = new window.Image();
+                        data.src = 'data:image/' + ext + ';base64,' + fileData;
+
+                    }
+
+                    return {
+                        name: name,
+                        data: data
+                    };
 
                 } );
 
-                return P.all( promisesArray );
+                promisesArray.push( p );
 
             } );
+
+            return P.all( promisesArray ).then( function ( dataList ) {
+
+                var loadedFiles = {};
+                var gltfFileName;
+                for ( var i = 0; i < dataList.length; ++i ) {
+
+                    var name = dataList[ i ].name;
+                    var data = dataList[ i ].data;
+
+                    if ( name.indexOf( '.gltf' ) !== -1 )
+                        gltfFileName = dataList[ i ].name;
+
+                    loadedFiles[ dataList[ i ].name ] = data;
+
+                }
+
+                return this.loadGLTFModel( loadedFiles, gltfFileName, true );
+
+            }.bind( this ) );
+
+        },
+
+        loadZipFile: function ( fileOrBlob, zipFileName ) {
+
+            return JSZip.loadAsync( fileOrBlob ).then( function ( zip ) {
+
+                var gltfFormat = undefined;
+                var environmentFormat = undefined;
+                Object.keys( zip.files ).forEach( function ( path ) {
+                    var filename = path.split( '/' ).pop();
+                    var ext = filename.split( '.' ).pop();
+                    if ( ext === 'gltf' ) gltfFormat = true;
+                    if ( filename === 'config.json' ) environmentFormat = true;
+                } );
+
+                if ( gltfFormat ) {
+
+                    return this.readZipContentGLTF( zip );
+
+                } else if ( environmentFormat ) {
+
+                    var name = zipFileName;
+                    return this.createEnvironment( zip, name ).then( function ( env ) {
+                        return this.setEnvironment( env.name );
+                    }.bind( this ) );
+
+                }
+
+                return false;
+
+            }.bind( this ) );
 
         },
 
@@ -335,28 +437,9 @@
 
             if ( files.length === 1 && files[ 0 ].name.indexOf( '.zip' ) !== -1 ) {
 
-                var loadedFiles = {};
-
-                var p = self.loadZipFile( files[ 0 ] );
-                p.then( function ( dataList ) {
-
-                    for ( var i = 0; i < dataList.length; ++i ) {
-
-                        var name = dataList[ i ].name;
-                        var data = dataList[ i ].data;
-
-                        if ( name.indexOf( '.gltf' ) !== -1 )
-                            gltfFileName = dataList[ i ].name;
-
-                        loadedFiles[ dataList[ i ].name ] = data;
-
-                    }
-
-                    self.loadGLTFModel( loadedFiles, gltfFileName, true );
-
+                return this.loadZipFile( files[ 0 ], files[ 0 ].name ).then( function () {
+                    $( '#loading' ).hide();
                 } );
-
-                return;
 
             }
 
@@ -371,9 +454,24 @@
 
             }
 
-            self.loadGLTFModel( files, gltfFileName, false );
+            return self.loadGLTFModel( files, gltfFileName, false ).then( function () {
+                $( '#loading' ).hide();
+            } );
+        },
 
-            return;
+
+        handleDroppedURL: function ( url ) {
+
+            $( '#loading' ).show();
+
+            return osgDB.requestFile( url, {
+                responseType: 'blob'
+            } ).then( function ( blob ) {
+                return this.loadZipFile( blob, url ).then( function () {
+                    $( '#loading' ).hide();
+                } );
+            }.bind( this ) );
+
         },
 
         loadFiles: function () {
@@ -731,8 +829,6 @@
             } else {
 
                 var model = null;
-                var index = modelsPBR.indexOf( this._config.model );
-
                 if ( this._config.model.indexOf( '.gltf' ) !== -1 ) {
 
                     model = this._modelsLoaded[ this._config.model ];
@@ -761,19 +857,6 @@
                         this.updateShaderPBR();
 
                     }
-
-                } else if ( index !== -1 ) {
-
-                    var modelPBR = this._modelsPBR[ index ];
-                    if ( modelPBR ) {
-
-                        model = modelPBR.getNode();
-
-                        if ( !this._modelPBRConfig[ index ] ) {
-                            this._modelPBRConfig[ index ] = this.registerModel( modelPBR );
-                        }
-                    }
-
                 }
 
                 if ( model ) {
@@ -963,13 +1046,9 @@
 
         createSampleScene: function () {
 
-            var group = new osg.Node();
-            this._mainSceneNode = group;
-            // add environment geometry
-            var environmentGeometry = this.createEnvironmentNode();
-            group.addChild( environmentGeometry );
+            var group = this._mainSceneNode;
 
-            this._environmentStateSet = environmentGeometry.getOrCreateStateSet();
+            group.addChild( this._environmentGeometry );
 
             group.addChild( this.createSampleModels() );
 
@@ -1092,6 +1171,11 @@
 
         createScene: function () {
 
+            this._environmentGeometry = this.createEnvironmentNode();
+            this._environmentStateSet = this._environmentGeometry.getOrCreateStateSet();
+
+            this._mainSceneNode = new osg.Node();
+
             var root = new osg.Node();
             //root.addChild( osg.createAxisGeometry( 50 ) );
 
@@ -1161,6 +1245,65 @@
 
         },
 
+
+        createGUI: function () {
+            var gui = this._gui;
+
+            var controller;
+
+            controller = gui.add( this._config, 'envRotation', -Math.PI, Math.PI ).step( 0.1 );
+            controller.onChange( this.updateEnvironmentRotation.bind( this ) );
+
+            controller = gui.add( this._config, 'brightness', 0.0, 25.0 ).step( 0.01 );
+            controller.onChange( this.updateEnvironmentBrightness.bind( this ) );
+
+            controller = gui.add( this._config, 'normalAA' );
+            controller.onChange( this.updateNormalAA.bind( this ) );
+
+            controller = gui.add( this._config, 'flipY' );
+            controller.onChange( this.updateFlipY.bind( this ) );
+
+            controller = gui.add( this._config, 'specularPeak' );
+            controller.onChange( this.updateSpecularPeak.bind( this ) );
+
+            controller = gui.add( this._config, 'occlusionHorizon' );
+            controller.onChange( this.updateOcclusionHorizon.bind( this ) );
+
+            controller = gui.add( this._config, 'cameraPreset', Object.keys( CameraPresets ) );
+            controller.onChange( this.updateCameraPreset.bind( this ) );
+
+            controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
+            controller.onChange( function ( value ) {
+                this._lod.get()[ 0 ] = value;
+                this._lod.dirty();
+            }.bind( this ) );
+
+            controller = gui.add( this._config, 'format', [] );
+
+            controller = gui.add( this._config, 'environmentType', [ 'cubemapSeamless', 'panorama' ] );
+            controller.onChange( this.updateEnvironment.bind( this ) );
+
+            controller = gui.add( this._config, 'material', Object.keys( PredefinedMaterials ) );
+            controller.onChange( this.updateRowModelsSpecularMetal.bind( this ) );
+
+            controller = gui.add( this._config, 'roughness', 0, 1.0 );
+            controller.onChange( this.updateRowModelsMetalic.bind( this ) );
+
+            controller = gui.addColor( this._config, 'albedo' );
+            controller.onChange( this.updateAlbedo.bind( this ) );
+
+            controller = gui.add( {
+                loadModel: function () {}
+            }, 'loadModel' );
+            controller.onChange( this.loadFiles.bind( this ) );
+
+            controller = gui.add( this._config, 'model', modelList );
+            controller.onChange( this.updateModel.bind( this ) );
+
+            controller = gui.add( this._config, 'environment', environmentList );
+            controller.onChange( this.updateEnvironment.bind( this ) );
+        },
+
         run: function ( canvas ) {
 
             //osgGA.Manipulator.DEFAULT_SETTINGS = osgGA.Manipulator.DEFAULT_SETTINGS | osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
@@ -1168,6 +1311,7 @@
                 preserveDrawingBuffer: true,
                 premultipliedAlpha: false
             } );
+
             viewer.init();
 
             var gl = viewer.getState().getGraphicContext();
@@ -1178,62 +1322,19 @@
             var hasTextureLod = gl.getExtension( 'EXT_shader_texture_lod' );
             console.log( hasTextureLod );
 
+            this.createGUI();
+
             var ready = [];
 
-            var environment;
-            // environment = 'textures/city_night_reference_2048/';
-            environment = 'textures/' + ( optionsURL.env ? optionsURL.env : 'sample_parking' ) + '/';
+            var promise = this.createEnvironment( environment );
+            ready.push( this.readShaders() );
+            ready.push( promise );
+            ready.push( this.createModelMaterialSample() );
 
-
-            //var environment = 'textures/bus_garage5/';
-            //var environment = 'textures/walk_of_fame/';
-            //var environment = 'textures/airport/';
-            //var environment = 'textures/tmp/';
-
-            //var model = new ModelLoader( 'models/cerberus/' );
-
-            var modelPromises = [];
-            if ( window.useExternalModels ) {
-                modelsPBR.forEach( function ( modelString, index ) {
-
-                    var model = new ModelLoader( 'models/' + modelString + '/' );
-                    var promise = model.load();
-                    modelPromises.push( promise );
-                    promise.then( function () {
-                        this._modelsPBR[ index ] = model;
-                    }.bind( this ) );
-
-                }.bind( this ) );
-            }
-
-            var promise = this.readEnvConfig( environment + 'config.json' );
-            promise.then( function ( config ) {
-
-                // adjust format requested from environment config and fallback on LUV
-                var formatListEnvironment = {};
-                config.textures.forEach( function ( texture ) {
-                    formatListEnvironment[ texture.encoding ] = true;
-                } );
-                formatListEnvironment = Object.keys( formatListEnvironment );
-                if ( formatListEnvironment.indexOf( this._config.format.toLowerCase() ) === -1 ) {
-                    this._config.format = 'LUV';
-                }
-
-                this._currentEnvironment.init( environment, config );
-
-                ready.push( this.readShaders() );
-                ready.push( this._currentEnvironment.getPromise() );
-                ready.push( this.createModelMaterialSample() );
-                ready.push( P.all( modelPromises ) );
-
-                return P.all( ready );
-
-            }.bind( this ) ).then( function () {
+            P.all( ready ).then( function () {
 
                 var root = this.createScene();
                 viewer.setSceneData( root );
-
-                // this.addModel( model );
 
                 viewer.setupManipulator();
                 viewer.getManipulator()._boundStrategy = OSG.osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
@@ -1244,73 +1345,15 @@
 
                 osg.mat4.perspective( viewer.getCamera().getProjectionMatrix(), Math.PI / 180 * 30, canvas.width / canvas.height, 0.1, 1000 );
 
-
-                //var gui = new window.dat.GUI();
-                var gui = this._gui;
-
-                var controller;
-
-                controller = gui.add( this._config, 'envRotation', -Math.PI, Math.PI ).step( 0.1 );
-                controller.onChange( this.updateEnvironmentRotation.bind( this ) );
-
-                controller = gui.add( this._config, 'brightness', 0.0, 25.0 ).step( 0.01 );
-                controller.onChange( this.updateEnvironmentBrightness.bind( this ) );
-
-                controller = gui.add( this._config, 'normalAA' );
-                controller.onChange( this.updateNormalAA.bind( this ) );
-
-                controller = gui.add( this._config, 'flipY' );
-                controller.onChange( this.updateFlipY.bind( this ) );
-
-                controller = gui.add( this._config, 'specularPeak' );
-                controller.onChange( this.updateSpecularPeak.bind( this ) );
-
-                controller = gui.add( this._config, 'occlusionHorizon' );
-                controller.onChange( this.updateOcclusionHorizon.bind( this ) );
-
-                controller = gui.add( this._config, 'cameraPreset', Object.keys( CameraPresets ) );
-                controller.onChange( this.updateCameraPreset.bind( this ) );
-
-                controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
-                controller.onChange( function ( value ) {
-                    this._lod.get()[ 0 ] = value;
-                    this._lod.dirty();
-                }.bind( this ) );
-
-                controller = gui.add( this._config, 'format', window.formatList );
-                controller.onChange( this.updateEnvironment.bind( this ) );
-
-                controller = gui.add( this._config, 'environmentType', [ 'cubemapSeamless', 'panorama' ] );
-                controller.onChange( this.updateEnvironment.bind( this ) );
-
-                controller = gui.add( this._config, 'material', Object.keys( PredefinedMaterials ) );
-                controller.onChange( this.updateRowModelsSpecularMetal.bind( this ) );
-
-                controller = gui.add( this._config, 'roughness', 0, 1.0 );
-                controller.onChange( this.updateRowModelsMetalic.bind( this ) );
-
-                controller = gui.addColor( this._config, 'albedo' );
-                controller.onChange( this.updateAlbedo.bind( this ) );
-
-                controller = gui.add( {
-                    loadModel: function () {}
-                }, 'loadModel' );
-                controller.onChange( this.loadFiles.bind( this ) );
-
-                controller = gui.add( this._config, 'model', modelList );
-                controller.onChange( this.updateModel.bind( this ) );
-
                 if ( !hasTextureLod )
                     this._config.environmentType = 'panorama';
 
-                if ( !hasFloatLinear )
-                    this._config.format = 'LUV';
-
                 this.updateModel();
+                this.setEnvironment( environmentList[ 0 ] );
 
                 // Iterate over all controllers
-                for ( var i in gui.__controllers ) {
-                    gui.__controllers[ i ].updateDisplay();
+                for ( var i in this._gui.__controllers ) {
+                    this._gui.__controllers[ i ].updateDisplay();
                 }
 
             }.bind( this ) );
@@ -1342,6 +1385,7 @@
         },
 
         updateEnvironment: function () {
+            if ( !this._currentEnvironment ) return;
 
             if ( this._config.environmentType === 'cubemapSeamless' ) {
                 this.setCubemapSeamless();
@@ -1400,8 +1444,15 @@
         evt.preventDefault();
 
         var files = evt.dataTransfer.files;
-
-        this.handleDroppedFiles( files );
+        if ( files.length )
+            this.handleDroppedFiles( files );
+        else {
+            var url = evt.dataTransfer.getData( 'text' );
+            if ( url.indexOf( '.zip' ) !== -1 || url.indexOf( '.gltf' ) !== -1 )
+                this.handleDroppedURL( url );
+            else
+                osg.warn( 'url ' + url + ' not supported, drag n drop only valid zip files' );
+        }
 
     };
 
@@ -1438,14 +1489,5 @@
         }, true );
 
     }, true );
-
-    // window.testEnv = function () {
-    //     var env = new Environment();
-    //     env.loadPackage( 'http://me/dev/osgjs/examples/pbr/textures/parking.zip' ).then( function () {
-    //         window.example._currentEnvironment = env;
-    //         window.example.updateEnvironment();
-    //     } );
-
-    // };
 
 } )();

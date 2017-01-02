@@ -28,20 +28,13 @@
         loadPackage: function ( urlOfFile ) {
 
             var loadZip = function ( file ) {
-                return this.loadZipFile( file ).then( function ( fileArray ) {
-
-                    fileArray.forEach( function ( entry ) {
-                        this._files[ entry.name ] = entry.data;
-                    }.bind( this ) );
-
-                    // STOP HERE, problem config.json is not in the file list
-                    // ???
-                    return this.init( null, this._files[ 'config.json' ] );
-
+                return JSZip.loadAsync( file ).then( function ( zip ) {
+                    return this.readZipContent( zip, urlOfFile );
                 }.bind( this ) );
             }.bind( this );
 
             var file = urlOfFile;
+
             if ( typeof urlOfFile === 'string' ) {
                 return osgDB.requestFile( urlOfFile, {
                     responseType: 'blob'
@@ -53,45 +46,50 @@
             return loadZip( file );
         },
 
-        loadZipFile: function ( file ) {
+        readZipContent: function ( zip, url ) {
 
-            return JSZip.loadAsync( file ).then( function ( zip ) {
+            var promisesArray = [];
 
-                var promisesArray = [];
+            var envName = url.split( '/' ).pop().split( '.zip' )[ 0 ];
+            this.name = envName;
 
-                Object.keys( zip.files ).forEach( function ( filename ) {
+            Object.keys( zip.files ).forEach( function ( filename ) {
 
-                    var ext = filename.split( '.' ).pop();
-                    var type = null;
+                var ext = filename.split( '.' ).pop();
+                var type = null;
 
-                    if ( ext === 'json' ) type = 'string';
-                    if ( ext === 'bin' || ext === 'gz' ) type = 'arraybuffer';
-                    if ( !type ) return;
+                if ( ext === 'json' ) type = 'string';
+                if ( ext === 'bin' || ext === 'gz' ) type = 'arraybuffer';
+                if ( !type ) return;
 
-                    var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
+                var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
 
-                        var data = fileData;
-                        var name = filename.split( '/' ).pop();
+                    var data = fileData;
+                    var name = filename.split( '/' ).pop();
 
-                        if ( name.split( '.' ).pop() === 'json' ) data = JSON.parse( data );
+                    if ( name.split( '.' ).pop() === 'json' ) data = JSON.parse( data );
 
-                        return {
-                            name: name,
-                            data: data
-                        };
-
-                    } );
-
-                    promisesArray.push( p );
+                    return {
+                        name: name,
+                        data: data
+                    };
 
                 } );
 
-                return P.all( promisesArray );
+                promisesArray.push( p );
 
             } );
 
-        },
+            return P.all( promisesArray ).then( function ( fileArray ) {
 
+                fileArray.forEach( function ( entry ) {
+                    this._files[ entry.name ] = entry.data;
+                }.bind( this ) );
+
+                return this.init( null, this._files[ 'config.json' ] );
+
+            }.bind( this ) );
+        },
 
         getImage: function ( type, encoding, format ) {
 
@@ -113,24 +111,27 @@
             return results;
         },
 
+        getFormatList: function () {
+            return Object.keys( this._panoramaUE4 );
+        },
+
         init: function ( url, config ) {
-            var formatList = window.formatList;
+            var formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
 
             this._config = config;
 
             var ready = this._promises;
-            var mipmapTexture;
 
-            //var spherical = environment + 'spherical';
-            if ( formatList.FLOAT ) {
-                ( function () {
-                    mipmapTexture = this.getImage( 'mipmap', 'float', 'cubemap' );
-                    var file = mipmapTexture.file;
-                    var urlOrData = this._files[ file ] || ( url + file );
-                    var size = mipmapTexture.width;
-                    this._cubemapPackedFloat = new EnvironmentCubeMap( urlOrData, size, config );
-                }.bind( this ) )();
-            }
+            // var mipmapTexture;
+            // if ( formatList.FLOAT ) {
+            //     ( function () {
+            //         mipmapTexture = this.getImage( 'mipmap', 'float', 'cubemap' );
+            //         var file = mipmapTexture.file;
+            //         var urlOrData = this._files[ file ] || ( url + file );
+            //         var size = mipmapTexture.width;
+            //         this._cubemapPackedFloat = new EnvironmentCubeMap( urlOrData, size, config );
+            //     }.bind( this ) )();
+            // }
 
             // read all panorama format U4
             formatList.forEach( function ( key ) {
