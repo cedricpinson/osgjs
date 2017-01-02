@@ -3,15 +3,15 @@
 
 #pragma include "shadowLinearSoft.glsl"
 
-float getShadowPCF(const in sampler2D depths, const in vec4 size, const in vec2 uv, const in float compare, const in vec2 biasPCF)
+float getShadowPCF(const in sampler2D depths, const in vec4 size, const in vec2 uv, const in float compare, const in vec2 biasPCF, const in vec4 clampDimension)
 {
 
      float res = 0.0;
 
 #if defined(_ROTATE_OFFSET)
-     res += texture2DShadowLerp(depths, size,   uv + size.zw*(noise2D(uv*gl_FragCoord.xy)*2.0 - 1.0) + biasPCF, compare);
+     res += texture2DShadowLerp(depths, size,   uv + size.zw*(noise2D(uv*gl_FragCoord.xy)*2.0 - 1.0) + biasPCF, compare, clampDimension);
 #else
-     res += texture2DShadowLerp(depths, size,   uv + biasPCF, compare);
+     res += texture2DShadowLerp(depths, size,   uv + biasPCF, compare, clampDimension);
 #endif
 
 
@@ -24,7 +24,7 @@ float getShadowPCF(const in sampler2D depths, const in vec4 size, const in vec2 
     float dx1 = size.z;
     float dy1 = size.w;
 
-#define TSF(o1,o2) texture2DShadowLerp(depths, size, uv + vec2(o1, o2) + biasPCF,  compare)
+#define TSF(o1,o2) texture2DShadowLerp(depths, size, uv + vec2(o1, o2) + biasPCF,  compare, clampDimension)
 
     res += TSF(dx0, dx0);
     res += TSF(dx0, .0);

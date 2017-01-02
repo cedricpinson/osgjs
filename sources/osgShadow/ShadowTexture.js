@@ -16,10 +16,14 @@ var vec4 = require( 'osg/glMatrix' ).vec4;
  * @inherits StateAttribute
  */
 var ShadowTexture = function () {
+
     Texture.call( this );
+
     this._uniforms = {};
     this._mapSize = vec4.create();
-    this._lightUnit = -1; // default for a valid cloneType
+    this._renderSize = vec4.create();
+    this._lightNumber = -1; // default for a valid cloneType
+
 };
 
 ShadowTexture.uniforms = {};
@@ -29,21 +33,23 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
     cloneType: function () {
         return new ShadowTexture();
     },
-
-    setLightUnit: function ( lun ) {
-        this._lightUnit = lun;
+    hasLightNumber: function ( lightNum ) {
+        return this._lightNumber === lightNum;
     },
-    getLightUnit: function () {
-        return this._lightUnit;
+    setLightNumber: function ( lun ) {
+        this._lightNumber = lun;
+    },
+    getLightNumber: function () {
+        return this._lightNumber;
     },
 
     getUniformName: function ( name ) {
-        var prefix = 'Shadow_' + this.getType() + this._lightUnit.toString();
+        var prefix = 'Shadow_' + this.getType() + this._lightNumber.toString();
         return 'u' + prefix + '_' + name;
     },
 
     getVaryingName: function ( name ) {
-        var prefix = this.getType() + this._lightUnit.toString();
+        var prefix = this.getType() + this._lightNumber.toString();
         return 'v' + prefix + '_' + name;
     },
 
@@ -52,7 +58,7 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         var obj = ShadowTexture;
 
         Notify.assert( unit !== undefined );
-        Notify.assert( this._lightUnit !== -1 );
+        Notify.assert( this._lightNumber !== -1 );
 
         if ( obj.uniforms[ unit ] !== undefined ) return obj.uniforms[ unit ];
 
@@ -60,7 +66,8 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
             ViewMatrix: Uniform.createMat4( this.getUniformName( 'viewMatrix' ) ),
             ProjectionMatrix: Uniform.createMat4( this.getUniformName( 'projectionMatrix' ) ),
             DepthRange: Uniform.createFloat4( this.getUniformName( 'depthRange' ) ),
-            MapSize: Uniform.createFloat4( this.getUniformName( 'mapSize' ) )
+            MapSize: Uniform.createFloat4( this.getUniformName( 'mapSize' ) ),
+            RenderSize: Uniform.createFloat4( this.getUniformName( 'renderSize' ) )
         };
 
         // Dual Uniform of texture, needs:
@@ -95,27 +102,33 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         this._mapSize[ 1 ] = h;
         this._mapSize[ 2 ] = 1.0 / w;
         this._mapSize[ 3 ] = 1.0 / h;
+
+        this._renderSize[ 0 ] = w;
+        this._renderSize[ 1 ] = h;
+        this._renderSize[ 2 ] = 1.0 / w;
+        this._renderSize[ 3 ] = 1.0 / h;
     },
 
-    apply: function ( state, texUnit ) {
+    apply: function ( state, texNumber ) {
 
         // Texture stuff: call parent class method
-        Texture.prototype.apply.call( this, state, texUnit );
+        Texture.prototype.apply.call( this, state, texNumber );
 
-        if ( this._lightUnit === -1 )
+        if ( this._lightNumber === -1 )
             return;
 
         // update Uniforms
-        var uniformMap = this.getOrCreateUniforms( texUnit );
+        var uniformMap = this.getOrCreateUniforms( texNumber );
         uniformMap.ViewMatrix.setMatrix4( this._viewMatrix );
         uniformMap.ProjectionMatrix.setMatrix4( this._projectionMatrix );
         uniformMap.DepthRange.setFloat4( this._depthRange );
         uniformMap.MapSize.setFloat4( this._mapSize );
+        uniformMap.RenderSize.setFloat4( this._renderSize );
 
     },
 
     getHash: function () {
-        return this.getTypeMember() + '_' + this._lightUnit + '_' + this._type;
+        return this.getTypeMember() + '_' + this._lightNumber + '_' + this._type;
     }
 
 } ), 'osgShadow', 'ShadowTexture' );

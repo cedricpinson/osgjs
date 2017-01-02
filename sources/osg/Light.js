@@ -37,7 +37,7 @@ var Light = function ( lightNum, disable ) {
     // the array contains constant, linear, quadratic factor
     this._attenuation = vec4.fromValues( 1.0, 0.0, 0.0, 0.0 );
 
-    this._lightUnit = lightNumber;
+    this._lightNumber = lightNumber;
 
     this._invMatrix = mat4.create();
 
@@ -56,15 +56,15 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     attributeType: 'Light',
 
     cloneType: function () {
-        return new Light( this._lightUnit, true );
+        return new Light( this._lightNumber, true );
     },
 
     getTypeMember: function () {
-        return this.attributeType + this._lightUnit;
+        return this.attributeType + this._lightNumber;
     },
 
     getUniformName: function ( name ) {
-        var prefix = this.getType() + this._lightUnit.toString();
+        var prefix = this.getType() + this._lightNumber.toString();
         return 'u' + prefix + '_' + name;
     },
 
@@ -262,11 +262,11 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     },
 
     setLightNumber: function ( unit ) {
-        this._lightUnit = unit;
+        this._lightNumber = unit;
     },
 
     getLightNumber: function () {
-        return this._lightUnit;
+        return this._lightNumber;
     },
 
     // internal helper

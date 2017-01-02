@@ -311,16 +311,19 @@ var CompilerFragment = {
         // TODO: multi shadow textures for 1 light
         var lightNum = light.getLightNumber();
         for ( k = 0; k < this._shadows.length; k++ ) {
+
             shadow = this._shadows[ k ];
             if ( shadow.getLightNumber() !== lightNum ) continue;
 
             lightIndex = k;
             for ( var p = 0; p < this._shadowsTextures.length; p++ ) {
+
                 shadowTexture = this._shadowsTextures[ p ];
-                if ( shadowTexture && shadowTexture.getLightUnit() === lightNum ) {
+                if ( shadowTexture && shadowTexture.hasLightNumber( lightNum ) ) {
                     shadowTextures[ p ] = shadowTexture;
                     hasShadows = true;
                 }
+
             }
         }
 
@@ -333,7 +336,7 @@ var CompilerFragment = {
         // and mult with lighted output
         var shadowedOutput = this.createVariable( 'float' );
 
-        // shadow Attribute uniforms
+        // shadow Attribute uniforms        
         var shadowUniforms = this.getOrCreateStateAttributeUniforms( this._shadows[ lightIndex ], 'shadow' );
         var shadowInputs = MACROUTILS.objectMix( inputs, shadowUniforms );
 
@@ -342,7 +345,8 @@ var CompilerFragment = {
         for ( k = 0; k < shadowTextures.length; k++ ) {
             shadowTexture = shadowTextures[ k ];
             if ( shadowTexture ) {
-                shadowInputs = this.createShadowTextureInputVarying( shadowTexture, shadowInputs, vertexWorld, k );
+
+                shadowInputs = this.createShadowTextureInputVarying( shadowTexture, shadowInputs, vertexWorld, k, lightNum );
             }
 
         }
@@ -366,8 +370,9 @@ var CompilerFragment = {
 
     },
 
-    createShadowTextureInputVarying: function ( shadowTexture, inputs, vertexWorld, tUnit ) {
+    createShadowTextureInputVarying: function ( shadowTexture, inputs, vertexWorld, tUnit, lightNum ) {
         var shadowTexSamplerName = 'Texture' + tUnit;
+
 
         // we declare first this uniform so that the Int one 
         var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
@@ -377,7 +382,43 @@ var CompilerFragment = {
         var backupInt = uniforms[ shadowTexSamplerName ];
         // remove the uniform texture unit uniform
         delete uniforms[ shadowTexSamplerName ];
-        var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', tUnit );
+
+
+        // get subset of shadow texture uniform corresponding to light
+        var keys = window.Object.keys( uniforms );
+        var object = {};
+
+        var prefixUniform = 'shadowTexture';
+
+        for ( var i = 0; i < keys.length; i++ ) {
+
+            var key = keys[ i ];
+            var lightIndexed = key.split( '_' );
+
+            var k;
+
+            if ( lightIndexed.length === 2 ) {
+
+                if ( Number( lightIndexed[ 1 ] ) === lightNum ) {
+
+                    k = prefixUniform + lightIndexed[ 0 ];
+                    object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+                }
+
+            } else {
+
+                k = prefixUniform + keys[ i ];
+                object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+
+            }
+
+
+        }
+
+        var shadowTextureUniforms = object;
+
+
+        // tUnit, lightNum
         uniforms[ shadowTexSamplerName ] = backupInt;
 
         var inputsShadow = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
