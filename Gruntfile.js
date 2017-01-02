@@ -201,7 +201,9 @@ var gruntTasks = {};
             }
         },
         src: testsFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1 && pathName.indexOf( 'glMatrix' ) === -1;
+            return pathName.indexOf( 'vendors' ) === -1 &&
+                pathName.indexOf( 'glMatrix' ) === -1 &&
+                pathName.indexOf( 'mocha.js' ) === -1;
         } ).map( function ( pathname ) {
             return path.join( SOURCE_PATH, pathname );
         } )
@@ -242,7 +244,7 @@ var gruntTasks = {};
 
 ( function () {
 
-    var jsFiles = [ 'sources/**/*.js', 'examples/**/*.js', 'tutorials/**/*.js', 'tests/**/*.js', '!examples/vendors/*.js', '!tests/vendors/**/*.js' ];
+    var jsFiles = [ 'sources/**/*.js', 'examples/**/*.js', 'tutorials/**/*.js', 'tests/**/*.js', '!examples/vendors/*.js', '!tests/vendors/**/*.js', '!tests/mocha.js' ];
 
     gruntTasks.jsbeautifier = {
         default: {
