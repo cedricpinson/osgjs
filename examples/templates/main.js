@@ -1,20 +1,10 @@
 ( function () {
     'use strict';
 
-    // globals
-    var P = window.P;
-    var $ = window.$;
-
     // various osg shortcuts
     var OSG = window.OSG;
     var osg = OSG.osg;
-    var osgViewer = OSG.osgViewer;
-    var osgShader = OSG.osgShader;
-    var osgUtil = OSG.osgUtil;
-    var osgDB = OSG.osgDB;
-    var osgGA = OSG.osgGA;
-
-
+    var ExampleOSGJS = window.ExampleOSGJS;
 
     // inherits for the ExampleOSGJS prototype
     var Example = function () {

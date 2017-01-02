@@ -3,6 +3,7 @@
  * v2.0.0 - 2014-12-22
  * (c) Sindre Sorhus; MIT License
  */
+var Object = window.Object;
 
 ( function () {
     'use strict';

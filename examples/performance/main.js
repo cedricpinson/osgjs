@@ -1,19 +1,8 @@
 ( function () {
     'use strict';
 
-    var OSG = window.OSG;
-    var osg = OSG.osg;
-    var osgViewer = OSG.osgViewer;
-
-    // globals
-    var P = window.P;
-    var $ = window.$;
-
-    var OSG = window.OSG;
-    var osg = OSG.osg;
-    var osgViewer = OSG.osgViewer;
-    var osgShader = OSG.osgShader;
-    var osgUtil = OSG.osgUtil;
+    var ExampleOSGJS = window.ExampleOSGJS;
+    var osg = window.OSG.osg;
 
     // we create a Callback
     var FPSUpdateCallback = function ( config ) {
@@ -224,7 +213,7 @@
 
             this._gui.add( this._config, 'texture' );
             this._gui.add( this._config, 'textureSize', [ '64', '128', '256', '512', '1024', '2048', '4096' ] );
-            this._gui.add( this._config, 'numTextures', 0, 60 ).step( 1 );;
+            this._gui.add( this._config, 'numTextures', 0, 60 ).step( 1 );
 
             //button
             this._gui.add( this._config, 'update' );

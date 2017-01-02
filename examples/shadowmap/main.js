@@ -7,7 +7,7 @@
     var osgViewer = OSG.osgViewer;
     var osgUtil = OSG.osgUtil;
     var osgShadow = OSG.osgShadow;
-
+    var Object = window.Object;
 
     //////////////////////
     /// The sample itself is in this object.
@@ -1074,7 +1074,6 @@
                 cubeNode.getOrCreateStateSet().setTextureAttributeAndModes( 0, cubeTex );
 
             } );
-
 
             var groundNode = new osg.Node();
             groundNode.setName( 'groundNode' );

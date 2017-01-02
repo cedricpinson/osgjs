@@ -6,6 +6,7 @@
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
     var osgDB = OSG.osgDB;
+    var Object = window.Object;
 
     /*
         This filter is used to 'correctly' render HDR images
@@ -27,6 +28,7 @@
         };
 
         var cachedScenes = [];
+        var lumTexture;
 
         var currentSceneTexture = osg.Texture.createHDRFromURL( '../hdr/textures/Alexs_Apartment/Alexs_Apt_2k.hdr' );
         currentSceneTexture.addApplyTexImage2DCallback( function () {
@@ -34,7 +36,7 @@
             lumTexture.dirtyMipmap();
         } );
 
-        var lumTexture = new osg.Texture();
+        lumTexture = new osg.Texture();
         lumTexture.setTextureSize( 1024, 1024 );
         lumTexture.setMinFilter( osg.Texture.LINEAR_MIPMAP_LINEAR );
 

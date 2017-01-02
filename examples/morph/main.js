@@ -8,6 +8,7 @@
     var osgDB = OSG.osgDB;
     var osgAnimation = OSG.osgAnimation;
     var ExampleOSGJS = window.ExampleOSGJS;
+    var Object = window.Object;
 
     var FindAnimationManagerVisitor = function () {
         osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );

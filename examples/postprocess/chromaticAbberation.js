@@ -25,7 +25,7 @@
                 '#endif',
 
                 'varying vec2 vTexCoord0;',
-                'uniform sampler2D input_texture;',
+                'uniform sampler2D inputTexture;',
                 'uniform float factor;',
 
                 'void main() {',
@@ -54,7 +54,7 @@
 
                 '}'
             ].join( '\n' ), {
-                input_texture: inputTexture,
+                inputTexture: inputTexture,
                 factor: factor
             } );
 

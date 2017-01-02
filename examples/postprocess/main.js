@@ -4,6 +4,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
+    var Object = window.Object;
 
     function commonScene( rttSize ) {
 
@@ -145,8 +146,10 @@
             effects[ postScenes[ i ].name ] = postScenes[ i ];
 
         var globalGui = {
-            'filter': postScenes[ 0 ].name,
+            'filter': postScenes[ 0 ].name
         };
+
+        var setComposer;
 
         function addSceneController() {
             gui.add( globalGui, 'filter', Object.keys( effects ) ).onChange( function ( value ) {
@@ -161,7 +164,7 @@
         var cachedComposers = [];
         cachedComposers[ postScenes[ 0 ].name ] = currentComposer;
 
-        function setComposer( effectName ) {
+        setComposer = function setComposer( effectName ) {
 
             // Put the composer in cache at first utilisation
             if ( cachedComposers[ effectName ] === undefined ) {
@@ -184,7 +187,7 @@
             else
                 root.removeChild( commonNode );
 
-        }
+        };
 
         scene.addChild( quad );
         scene.addChild( currentComposer );

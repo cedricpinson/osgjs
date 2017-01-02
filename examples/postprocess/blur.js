@@ -20,8 +20,9 @@
             osgDB.readImageURL( 'Beaumaris.jpg' ),
             osgDB.readImageURL( 'Seattle.jpg' )
         ];
-
+        var getSceneTexture;
         var imagesLoaded = false;
+
         P.all( images ).then( function ( images ) {
             getSceneTexture( 'Budapest.jpg', images[ 0 ] );
             getSceneTexture( 'Beaumaris.jpg', images[ 1 ] );
@@ -29,7 +30,7 @@
             imagesLoaded = true;
         } );
 
-        var getSceneTexture = function ( sceneFile, image ) {
+        getSceneTexture = function ( sceneFile, image ) {
             if ( cachedScenes[ sceneFile ] === undefined ) {
                 if ( image )
                     cachedScenes[ sceneFile ] = osg.Texture.createFromImage( image );

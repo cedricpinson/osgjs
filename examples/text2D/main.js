@@ -8,6 +8,7 @@
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
     var osgText = OSG.osgText;
+    var Object = window.Object;
 
     var Example = function () {
         this.gui = undefined;
@@ -26,8 +27,8 @@
             this.gui = new window.dat.GUI( {
                 autoPlace: false
             } );
-            var self = this;
-            this._text = 'say what?'
+
+            this._text = 'say what?';
 
             this.params = {
                 text: this._text,
@@ -56,7 +57,8 @@
                 OBJECT_COORDS: osgText.Text.OBJECT_COORDS,
                 SCREEN_COORDS: osgText.Text.SCREEN_COORDS,
                 SCREEN_SIZE_CAPPED: osgText.Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT
-            }
+            };
+
             var fonts = [ 'monospace', 'Andale Mono', 'Arial', 'Comic Sans MS', 'Courier New', ' Lucida Console', 'Impact, fantasy' ];
             var that = this;
 
