@@ -7,8 +7,10 @@ var clamp = function ( x, min, max ) {
 };
 
 var smoothStep = function ( edge0, edge1, x ) {
-    var t = clamp( ( x - edge0 ) / ( edge1 - edge0 ), 0.0, 1.0 );
-    return t * t * ( 3.0 - 2.0 * t );
+    if ( x <= edge0 ) return 0.0;
+    if ( x >= edge1 ) return 1.0;
+    var y = ( x - edge0 ) / ( edge1 - edge0 );
+    return y * y * ( 3.0 - 2.0 * y );
 };
 
 // native isNaN is slow (e.g: https://jsperf.com/isnan-performance/2)
