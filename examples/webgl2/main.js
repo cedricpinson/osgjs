@@ -525,20 +525,7 @@
             return node;
         },
 
-        createScene: function () {
-
-            var UpdateCallback = function () {
-                this.update = function ( node, nv ) {
-                    var fn = nv.getFrameStamp().getFrameNumber();
-                    if ( fn === this._frameNumber ) return false;
-
-                    this._frameNumber = fn;
-                    osg.mat4.fromRotation( node.getMatrix(), 0.005 * this._frameNumber, [ 0, 1, 0 ] );
-                    return false;
-                };
-            };
-
-            // the root node
+        createHelperScene: function() {
             var scene = new osg.Node();
             scene.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 0 ) );
 
@@ -551,10 +538,27 @@
             mt.addChild( grid );
             mt.addChild( osg.createAxisGeometry() );
             scene.addChild( mt );
+            return scene;
+        },
 
+        createContentScene: function() {
+            var UpdateCallback = function () {
+                this.update = function ( node, nv ) {
+                    var fn = nv.getFrameStamp().getFrameNumber();
+                    if ( fn === this._frameNumber ) return false;
+
+                    this._frameNumber = fn;
+                    osg.mat4.fromRotation( node.getMatrix(), 0.005 * this._frameNumber, [ 0, 1, 0 ] );
+                    return false;
+                };
+            };
+
+            // the root node
+
+            var size = 2;
             var geom, material, color;
             var sceneCube = new osg.MatrixTransform();
-            geom = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
+            geom = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
             color = [ 0.0, 0.0, 1.0, 1.0 ];
             material = new osg.Material();
             material.setDiffuse( color );
@@ -562,7 +566,7 @@
             geom.getOrCreateStateSet().addUniform( osg.Uniform.createFloat4( color, 'uColor' ) );
             sceneCube.addChild( geom );
 
-            geom = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
+            geom = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
             color = [ 0.0, 1.0, 0.0, 1.0 ];
             material = new osg.Material();
             material.setDiffuse( color );
@@ -576,24 +580,31 @@
             mm.addChild( mtg );
             sceneCube.addChild( mm );
 
-            geom = osg.createTexturedBoxGeometry( 4, 4, 4, 1, 1, 1 );
+            geom = osg.createTexturedBoxGeometry( 4, 4, 4, size, size, size );
             color = [ 1.0, 0.0, 0.0, 1.0 ];
             material = new osg.Material();
             material.setDiffuse( color );
             geom.getOrCreateStateSet().setAttributeAndModes( material );
             geom.getOrCreateStateSet().addUniform( osg.Uniform.createFloat4( color, 'uColor' ) );
             sceneCube.addChild( geom );
+            return sceneCube;
+        },
 
-            var rtt = this.createRTT( sceneCube );
-            scene.addChild( sceneCube );
+        createScene: function () {
 
-            this.getRootNode().addChild( rtt );
-            this.getRootNode().addChild( scene );
+            var baseScene = this.createHelperScene();
+            var content = this.createContentScene();
+            baseScene.addChild( content );
+
+            var voxelisationRTT = this.createRTT( content );
+
+            this.getRootNode().addChild( voxelisationRTT );
+            this.getRootNode().addChild( baseScene );
 
             this.getRootNode().addChild( this.createDebugTexture3D() );
 
             //this.getRootNode().addChild( this.createDebugTexture3DQuad() );
-            this._viewer.getManipulator().setNode( scene );
+            this._viewer.getManipulator().setNode( baseScene );
             this._viewer.getManipulator().computeHomePosition();
 
         }
