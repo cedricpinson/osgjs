@@ -1,6 +1,7 @@
 'use strict';
-var Notify = require( 'osg/notify' );
 
+var Notify = require( 'osg/notify' );
+var osgMath = require( 'osg/math' );
 
 var OrbitManipulatorHammerController = function ( manipulator ) {
     this._manipulator = manipulator;
@@ -19,6 +20,9 @@ OrbitManipulatorHammerController.prototype = {
         this._lastScale = 0;
         this._nbPointerLast = 0; // to check if we the number of pointers has changed
         this._delay = 0.15;
+
+        this._transformStarted = false;
+        this._dragStarted = false;
     },
     setEventProxy: function ( proxy ) {
         if ( proxy === undefined || ( proxy !== undefined && proxy === this._eventProxy ) ) {
@@ -52,9 +56,9 @@ OrbitManipulatorHammerController.prototype = {
             if ( !manipulator || self._transformStarted || event.pointerType === 'mouse' ) {
                 return;
             }
-            var gesture = event;
+
             self._dragStarted = true;
-            self._nbPointerLast = computeTouches( gesture );
+            self._nbPointerLast = computeTouches( event );
 
             if ( self._nbPointerLast === 2 ) {
                 manipulator.getPanInterpolator().reset();
@@ -63,7 +67,7 @@ OrbitManipulatorHammerController.prototype = {
                 manipulator.getRotateInterpolator().reset();
                 manipulator.getRotateInterpolator().set( event.center.x * self._rotateFactorX, event.center.y * self._rotateFactorY );
             }
-            Notify.debug( 'drag start, ' + dragCB( gesture ) );
+            Notify.debug( 'drag start, ' + dragCB( event ) );
         };
 
         this._cbPanMove = function ( event ) {
@@ -71,8 +75,8 @@ OrbitManipulatorHammerController.prototype = {
             if ( !manipulator || !self._dragStarted || event.pointerType === 'mouse' ) {
                 return;
             }
-            var gesture = event;
-            var nbPointers = computeTouches( gesture );
+
+            var nbPointers = computeTouches( event );
             // prevent sudden big changes in the event.center variables
             if ( self._nbPointerLast !== nbPointers ) {
                 if ( nbPointers === 2 ) manipulator.getPanInterpolator().reset();
@@ -82,11 +86,11 @@ OrbitManipulatorHammerController.prototype = {
 
             if ( nbPointers === 2 ) {
                 manipulator.getPanInterpolator().setTarget( event.center.x * self._panFactorX, event.center.y * self._panFactorY );
-                Notify.debug( 'pan, ' + dragCB( gesture ) );
+                Notify.debug( 'pan, ' + dragCB( event ) );
             } else {
                 manipulator.getRotateInterpolator().setDelay( self._delay );
                 manipulator.getRotateInterpolator().setTarget( event.center.x * self._rotateFactorX, event.center.y * self._rotateFactorY );
-                Notify.debug( 'rotate, ' + dragCB( gesture ) );
+                Notify.debug( 'rotate, ' + dragCB( event ) );
             }
         };
 
@@ -96,8 +100,7 @@ OrbitManipulatorHammerController.prototype = {
                 return;
             }
             self._dragStarted = false;
-            var gesture = event;
-            Notify.debug( 'drag end, ' + dragCB( gesture ) );
+            Notify.debug( 'drag end, ' + dragCB( event ) );
         };
 
         this._cbPinchStart = function ( event ) {
@@ -106,13 +109,12 @@ OrbitManipulatorHammerController.prototype = {
                 return;
             }
             self._transformStarted = true;
-            var gesture = event;
 
-            self._lastScale = gesture.scale;
+            self._lastScale = event.scale;
             manipulator.getZoomInterpolator().reset();
             manipulator.getZoomInterpolator().set( self._lastScale );
             event.preventDefault();
-            Notify.debug( 'zoom start, ' + dragCB( gesture ) );
+            Notify.debug( 'zoom start, ' + dragCB( event ) );
         };
 
         this._cbPinchEnd = function ( event ) {
@@ -123,19 +125,25 @@ OrbitManipulatorHammerController.prototype = {
             Notify.debug( 'zoom end, ' + dragCB( event ) );
         };
 
+
         this._cbPinchInOut = function ( event ) {
             var manipulator = self._manipulator;
             if ( !manipulator || !self._transformStarted || event.pointerType === 'mouse' ) {
                 return;
             }
-            var gesture = event;
-            // make the dezoom faster
-            var zoomFactor = gesture.scale > self._lastScale ? self._zoomFactor : self._zoomFactor * 4.0;
-            var scale = ( gesture.scale - self._lastScale ) * zoomFactor;
-            self._lastScale = gesture.scale;
+
+            // make the dezoom faster (because the manipulator dezoom/dezoom distance speed is adaptive)
+            var zoomFactor = event.scale > self._lastScale ? self._zoomFactor : self._zoomFactor * 3.0;
+            // also detect pan (velocity) to reduce zoom force
+            var minDezoom = 0.0;
+            var maxDezoom = 0.5;
+            zoomFactor *= osgMath.smoothStep( minDezoom, maxDezoom, -Math.abs( event.velocity ) + ( minDezoom + maxDezoom ) );
+
+            var scale = ( event.scale - self._lastScale ) * zoomFactor;
+            self._lastScale = event.scale;
 
             manipulator.getZoomInterpolator().setTarget( manipulator.getZoomInterpolator().getTarget()[ 0 ] - scale );
-            Notify.debug( 'zoom, ' + dragCB( gesture ) );
+            Notify.debug( 'zoom, ' + dragCB( event ) );
         };
 
         hammer.on( 'panstart ', this._cbPanStart );
