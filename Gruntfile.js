@@ -299,7 +299,7 @@ var gruntTasks = {};
     gruntTasks.mocha = {
         test: {
             options: {
-                urls: [ 'http://127.0.0.1:9001/tests/index.html' ],
+                urls: [ 'http://localhost:9001/tests/index.html' ],
                 mocha: {
                     ui: 'qunit'
                 },
@@ -310,7 +310,7 @@ var gruntTasks = {};
         },
         bench: {
             options: {
-                urls: [ 'http://127.0.0.1:9001/benchmarks/index.html' ],
+                urls: [ 'http://localhost:9001/benchmarks/index.html' ],
                 mocha: {
                     ui: 'qunit'
                 },
@@ -369,14 +369,14 @@ var gruntTasks = {};
         server: {
             options: {
                 port: 9001,
-                hostname: '127.0.0.1'
+                hostname: 'localhost'
             }
         },
         dist: {
             options: {
                 port: 9000,
                 directory: currentDirectory,
-                hostname: '0.0.0.0',
+                hostname: 'localhost',
                 open: true,
                 middleware: function ( connect, options, middlewares ) {
 
