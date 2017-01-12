@@ -310,10 +310,17 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             var pitch = Math.atan( -this._rotation[ 6 ] / this._rotation[ 5 ] ) + dy / 10.0;
             pitch = Math.min( Math.max( pitch, this._limitPitchDown ), this._limitPitchUp );
 
-            var yaw = Math.atan2( this._rotation[ 4 ], this._rotation[ 0 ] ) + dx / 10.0;
-            if ( yaw > Math.PI ) yaw = yaw % Math.PI - Math.PI;
-            else if ( yaw < -Math.PI ) yaw = yaw % Math.PI + Math.PI;
-            yaw = Math.min( Math.max( yaw, this._limitYawLeft ), this._limitYawRight );
+            var deltaYaw = dx / 10.0;
+            var previousYaw = Math.atan2( this._rotation[ 4 ], this._rotation[ 0 ] );
+            var yaw = previousYaw + deltaYaw;
+
+            if ( this._limitYawRight !== Math.PI || this._limitYawLeft !== -Math.PI ) {
+                if ( deltaYaw > 0.0 && previousYaw <= this._limitYawRight && yaw > this._limitYawRight ) {
+                    yaw = this._limitYawRight;
+                } else if ( deltaYaw < 0.0 && previousYaw >= this._limitYawLeft && yaw < this._limitYawLeft ) {
+                    yaw = this._limitYawLeft;
+                }
+            }
 
             mat4.fromRotation( this._rotation, -pitch, right );
             mat4.rotate( this._rotation, this._rotation, -yaw, this._upz );
