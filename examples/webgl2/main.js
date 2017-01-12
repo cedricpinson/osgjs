@@ -114,6 +114,7 @@
 
                 var maxSize = sceneSize[ maxAxis ];
                 var sceneVoxelSize = maxSize / voxelSize;
+                self._sceneVoxelSize = sceneVoxelSize;
 
                 var node = new osg.Node();
                 node.setStateSet( stateSet );
@@ -590,16 +591,174 @@
             return sceneCube;
         },
 
+
+        createMainShader: function() {
+
+            var getShader = function () {
+                var vertexshader = [
+                    '#version 300 es',
+
+                    'layout(location = 0) in vec3 Vertex;',
+                    'layout(location = 1) in vec3 Normal;',
+
+                    'uniform mat4 uModelMatrix;',
+                    'uniform mat4 uModelViewMatrix;',
+                    'uniform mat4 uProjectionMatrix;',
+                    '',
+                    'out vec3 vVertexWorld;',
+                    'out vec3 vNormalWorld;',
+                    '',
+                    'void main(void) {',
+                    '  vec4 v = vec4(Vertex,1.0);',
+                    '  vVertexWorld = vec3(uModelMatrix * v);',
+                    '  vNormalWorld = vec3(uModelMatrix * vec4(Normal,0.0));',
+                    '  gl_Position = (uProjectionMatrix * uModelViewMatrix) * v;',
+                    '}'
+                ].join( '\n' );
+
+                var fragmentshader = [
+                    '#version 300 es',
+
+                    'precision highp float;',
+                    'precision highp int;',
+                    'precision highp sampler3D;',
+
+                    'in vec3 vVertexWorld;',
+                    'in vec3 vNormalWorld;',
+
+                    'uniform sampler3D Texture0;',
+
+                    'float VoxelWorldSize = float(' + this._sceneVoxelSize +');',
+                    'float VoxelGridWorldSize = float(' + (this._sceneVoxelSize * this._voxelSize) +');',
+                    'int VoxelDimensions = ' + this._voxelSize  +';',
+
+                    'const float MAX_DIST = 100.0;',
+                    'const float ALPHA_THRESH = 0.95;',
+
+                    'out vec4 color;',
+
+                    'vec3 normalWorld;',
+                    'mat3 tangentToWorld;',
+                    '// 6 60 degree cone',
+                    'const int NUM_CONES = 6;',
+                    'vec3 coneDirections[6] = vec3[]',
+                    '(                            vec3(0, 1, 0),',
+                    '                            vec3(0, 0.5, 0.866025),',
+                    '                            vec3(0.823639, 0.5, 0.267617),',
+                    '                            vec3(0.509037, 0.5, -0.700629),',
+                    '                            vec3(-0.509037, 0.5, -0.700629),',
+                    '                            vec3(-0.823639, 0.5, 0.267617)',
+                    '                            );',
+                    'float coneWeights[6] = float[](0.25, 0.15, 0.15, 0.15, 0.15, 0.15);',
+
+                    'vec4 sampleVoxels(vec3 worldPosition, float lod) {',
+                    '    vec3 offset = vec3(1.0 / float(VoxelDimensions), 1.0 / float(VoxelDimensions), 0); // Why??',
+                    '    vec3 voxelTextureUV = worldPosition / (VoxelGridWorldSize * 0.5);',
+                    '    voxelTextureUV = voxelTextureUV * 0.5 + 0.5 + offset;',
+                    '    return textureLod(Texture0, voxelTextureUV, lod);',
+                    '}',
+
+
+                    '// Third argument to say how long between steps?',
+                    'vec4 coneTrace(vec3 direction, float tanHalfAngle, out float occlusion) {',
+                    '    ',
+                    '    // lod level 0 mipmap is full size, level 1 is half that size and so on',
+                    '    float lod = 0.0;',
+                    '    vec3 color = vec3(0);',
+                    '    float alpha = 0.0;',
+                    '    occlusion = 0.0;',
+                    '',
+                    '    float voxelWorldSize = VoxelWorldSize;',
+                    '    float dist = voxelWorldSize; // Start one voxel away to avoid self occlusion',
+                    '    vec3 startPos = vVertexWorld + normalWorld * voxelWorldSize; // Plus move away slightly in the normal direction to avoid',
+                    '                                                                    // self occlusion in flat surfaces',
+                    '',
+                    '    while(dist < MAX_DIST && alpha < ALPHA_THRESH) {',
+                    '        // smallest sample diameter possible is the voxel size',
+                    '        float diameter = max(voxelWorldSize, 2.0 * tanHalfAngle * dist);',
+                    '        float lodLevel = log2(diameter / voxelWorldSize);',
+                    '        vec4 voxelColor = sampleVoxels(startPos + dist * direction, lodLevel);',
+                    '',
+                    '        // front-to-back compositing',
+                    '        float a = (1.0 - alpha);',
+                    '        color += a * voxelColor.rgb;',
+                    '        alpha += a * voxelColor.a;',
+                    '        //occlusion += a * voxelColor.a;',
+                    '        occlusion += (a * voxelColor.a) / (1.0 + 0.03 * diameter);',
+                    '        dist += diameter * 0.5; // smoother',
+                    '        //dist += diameter; // faster but misses more voxels',
+                    '    }',
+                    '',
+                    '    return vec4(color, alpha);',
+                    '}',
+                    '',
+
+                    'vec4 indirectLight(out float occlusion_out) {',
+                    '    vec4 color = vec4(0);',
+                    '    occlusion_out = 0.0;',
+                    '',
+                    '    for(int i = 0; i < NUM_CONES; i++) {',
+                    '        float occlusion = 0.0;',
+                    '        // 60 degree cones -> tan(30) = 0.577',
+                    '        // 90 degree cones -> tan(45) = 1.0',
+                    '        color += coneWeights[i] * coneTrace(tangentToWorld * coneDirections[i], 0.577, occlusion);',
+                    '        occlusion_out += coneWeights[i] * occlusion;',
+                    '    }',
+                    '',
+                    '    occlusion_out = 1.0 - occlusion_out;',
+                    '',
+                    '    return color;',
+                    '}',
+
+                    'void main(void) {',
+                    '  ',
+                    '  normalWorld = normalize(vNormalWorld);',
+                    '  vec3 nn = abs(normalWorld);',
+                    '  vec3 upVector = abs(normalWorld.z) < 0.999 ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0);',
+                    '  vec3 tangentX = normalize( cross( upVector, normalWorld ) );',
+                    '  vec3 tangentY = cross( normalWorld, tangentX );',
+
+                    '  //tangentToWorld = mat3(vec3(1.0,0.0,0.0), vec3(0.0,1.0,0.0), vec3(0.0,0.0,1.0) );',
+                    '  tangentToWorld = mat3(tangentX, normalWorld, tangentY );',
+                    '  float occlusion;',
+                    '  vec4 c = indirectLight(occlusion);',
+                    '  c = vec4( vec3(1.0-occlusion), 1.0 );',
+                    '  color = c;',
+                    '',
+                    '}',
+                    ''
+                ].join( '\n' );
+
+                var program = new osg.Program(
+                    new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+                    new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+
+                return program;
+            }.bind(this);
+
+            var stateSet = new osg.StateSet();
+            stateSet.setAttributeAndModes( getShader() );
+            stateSet.setTextureAttributeAndModes( 0, this._voxelTexture );
+
+            return stateSet;
+        },
+
         createScene: function () {
+
 
             var baseScene = this.createHelperScene();
             var content = this.createContentScene();
-            baseScene.addChild( content );
+            var nodeShader = new osg.Node();
+
+            nodeShader.addChild( content );
+            baseScene.addChild( nodeShader );
 
             var voxelisationRTT = this.createRTT( content );
 
             this.getRootNode().addChild( voxelisationRTT );
             this.getRootNode().addChild( baseScene );
+
+            nodeShader.setStateSet( this.createMainShader() );
 
             this.getRootNode().addChild( this.createDebugTexture3D() );
 
