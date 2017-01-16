@@ -1,4 +1,5 @@
 'use strict';
+
 var AutoTransform = require( 'osg/AutoTransform' );
 var BillboardAttribute = require( 'osg/BillboardAttribute' );
 var BlendColor = require( 'osg/BlendColor' );
@@ -44,6 +45,7 @@ var Notify = require( 'osg/notify' );
 var Object = require( 'osg/Object' );
 var PagedLOD = require( 'osg/PagedLOD' );
 var Polytope = require( 'osg/Polytope' );
+var PointSizeAttribute = require( 'osg/PointSizeAttribute' );
 var Plane = require( 'osg/Plane' );
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
 var PrimitiveSet = require( 'osg/primitiveSet' );
@@ -128,6 +130,7 @@ MACROUTILS.objectMix( osg, Notify );
 osg.Object = Object;
 osg.PagedLOD = PagedLOD;
 osg.Plane = Plane;
+osg.PointSizeAttribute = PointSizeAttribute;
 osg.Polytope = Polytope;
 osg.PrimitiveSet = PrimitiveSet;
 osg.PrimitiveFunctor = PrimitiveFunctor;

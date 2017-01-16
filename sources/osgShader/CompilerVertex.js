@@ -23,15 +23,30 @@ var CompilerVertex = {
 
     declareVertexMain: function () {
 
-        var glPointSize = this.getNode( 'glPointSize' );
-        this.getNode( 'SetFromNode' ).inputs( this.getOrCreateConstantOne( 'float' ) ).outputs( glPointSize );
-
         // Because of a weird bug on iOS, glPosition should be computed in the vertex shader before some varyings
-        var roots = [ glPointSize, this.declareVertexPosition() ];
+        var roots = [ this.declarePointSize(), this.declareVertexPosition() ];
 
         this.declareVertexVaryings( roots );
 
         return roots;
+    },
+
+    declarePointSize: function () {
+        var glPointSize = this.getNode( 'glPointSize' );
+
+        if ( !this._pointSizeAttribute || !this._pointSizeAttribute.isEnabled() ) {
+            this.getNode( 'SetFromNode' ).inputs( this.getOrCreateConstantOne( 'float' ) ).outputs( glPointSize );
+            return glPointSize;
+        }
+
+        this.getNode( 'InlineCode' ).code( '%pointSize = min(64.0, max(1.0, -%size / %position.z));' ).inputs( {
+            position: this.getOrCreateViewVertex(),
+            size: this.getOrCreateUniform( 'float', 'uPointSize' )
+        } ).outputs( {
+            pointSize: glPointSize
+        } );
+
+        return glPointSize;
     },
 
     declareVertexVaryings: function ( roots ) {
