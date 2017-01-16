@@ -8,7 +8,7 @@ var ShaderGeneratorShadowCast = function () {
     this.setShaderCompiler( ShadowCompiler );
     // only one attribute makes change to the compilation
     // ignore all others
-    this._acceptAttributeTypes = new window.Set( [ 'ShadowCast', 'Skinning', 'Morph' ] );
+    this._acceptAttributeTypes = new window.Set( [ 'ShadowCast', 'Skinning', 'Morph', 'PointSize' ] );
 
 };
 
