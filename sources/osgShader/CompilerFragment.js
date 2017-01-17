@@ -24,6 +24,19 @@ var CompilerFragment = {
         return shader;
     },
 
+    applyPointSizeCircle: function ( color ) {
+        if ( !this._pointSizeAttribute || !this._pointSizeAttribute.isEnabled() || !this._pointSizeAttribute.isCircleShape() )
+            return color;
+
+        this.getNode( 'InlineCode' ).code( 'if (length(2.0 * gl_PointCoord - 1.0) > %radius) discard;' ).inputs( {
+            radius: this.getOrCreateConstantOne( 'float' )
+        } ).outputs( {
+            output: color
+        } );
+
+        return color;
+    },
+
     cleanAfterFragment: function () {
         // reset for next
         this._variables = {};

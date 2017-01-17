@@ -91,6 +91,8 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
                 this._skinningAttribute = attributes[ i ];
             } else if ( type === 'MorphAttribute' ) {
                 this._morphAttribute = attributes[ i ];
+            } else if ( type === 'PointSizeAttribute' ) {
+                this._pointSizeAttribute = attributes[ i ];
             }
         }
     },

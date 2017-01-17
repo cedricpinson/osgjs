@@ -1286,7 +1286,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var i, l, name, uniform;
         var activeUniformKeys = activeUniformMap.getKeys();
 
-        this.nbApplyUniform += activeUniformKeys.length;
         for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
 
             name = activeUniformKeys[ i ];
