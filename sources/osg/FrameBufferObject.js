@@ -249,14 +249,9 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
         var gl = this._gl;
         var status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
-        if ( status !== 0x8CD5 ) {
+        if ( status !== gl.FRAMEBUFFER_COMPLETE ) {
             this._reportFrameBufferError( status );
         }
-        if ( gl.checkFramebufferStatus( gl.FRAMEBUFFER ) !== gl.FRAMEBUFFER_COMPLETE ) {
-            Notify.error( 'Cant use framebuffer.' );
-            // See http://www.khronos.org/opengles/sdk/docs/man/xhtml/glCheckFramebufferStatus.xml
-        }
-
     },
 
     _checkAllowedSize: function ( w, h ) {
@@ -293,8 +288,8 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                 // Check extDrawBuffers extension
                 var extDrawBuffers = this._extDrawBuffers;
                 if ( extDrawBuffers === undefined ) { // will be null if not supported
-                    extDrawBuffers = gl.getExtension( 'WEBGL_draw_buffers' );
-                    //this._extDrawBuffers = extDrawBuffers;
+                    extDrawBuffers = WebglCaps.instance( gl ).getWebGLExtension( 'WEBGL_draw_buffers' );
+                    this._extDrawBuffers = extDrawBuffers;
                 }
                 var bufs = extDrawBuffers ? [] : undefined;
                 var hasRenderBuffer = false;

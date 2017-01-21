@@ -3,16 +3,13 @@
 
     // globals
     var P = window.P;
-    var $ = window.$;
-
     // various osg shortcuts
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
-    var osgShader = OSG.osgShader;
-    var osgUtil = OSG.osgUtil;
     var osgDB = OSG.osgDB;
-    var osgGA = OSG.osgGA;
+    var ExampleOSGJS = window.ExampleOSGJS;
+
 
     var NUM_TEXTURES = 4;
 
@@ -111,7 +108,7 @@
             return quad;
         },
 
-        createRTTScene: function ( width, height ) {
+        createRTTScene: function () {
             var defer = P.defer();
             var that = this;
             osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( node ) {
@@ -136,12 +133,12 @@
                 '#endif',
                 'attribute vec3 Vertex;',
                 'attribute vec2 TexCoord0;',
-                'varying vec2 FragTexCoord0;',
-                'uniform mat4 ModelViewMatrix;',
-                'uniform mat4 ProjectionMatrix;',
+                'varying vec2 vTexCoord0;',
+                'uniform mat4 uModelViewMatrix;',
+                'uniform mat4 uProjectionMatrix;',
                 'void main(void) {',
-                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-                '  FragTexCoord0 = TexCoord0;',
+                '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                '  vTexCoord0 = TexCoord0;',
                 '}',
                 ''
             ].join( '\n' );
@@ -175,12 +172,12 @@
                 '#endif',
                 'attribute vec3 Vertex;',
                 'attribute vec2 TexCoord0;',
-                'varying vec2 FragTexCoord0;',
-                'uniform mat4 ModelViewMatrix;',
-                'uniform mat4 ProjectionMatrix;',
+                'varying vec2 vTexCoord0;',
+                'uniform mat4 uModelViewMatrix;',
+                'uniform mat4 uProjectionMatrix;',
                 'void main(void) {',
-                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-                '  FragTexCoord0 = TexCoord0;',
+                '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                '  vTexCoord0 = TexCoord0;',
                 '}',
                 ''
             ].join( '\n' );
@@ -190,7 +187,7 @@
                 'precision highp float;',
                 '#endif',
                 '#extension GL_EXT_draw_buffers : require',
-                'varying vec2 FragTexCoord0;',
+                'varying vec2 vTexCoord0;',
                 'uniform sampler2D Texture0;',
                 'uniform sampler2D Texture1;',
                 'uniform sampler2D Texture2;',
@@ -198,8 +195,8 @@
                 'uniform sampler2D DepthTexture;',
                 'void main (void)',
                 '{',
-                '  vec3 color = texture2D( Texture0, FragTexCoord0.xy).xyz;',
-                '  gl_FragData[0] = vec4( color * texture2D( DepthTexture, FragTexCoord0.xy).xyz, 1.0 );',
+                '  vec3 color = texture2D( Texture0, vTexCoord0.xy).xyz;',
+                '  gl_FragData[0] = vec4( color * texture2D( DepthTexture, vTexCoord0.xy).xyz, 1.0 );',
                 '}',
                 ''
             ].join( '\n' );
