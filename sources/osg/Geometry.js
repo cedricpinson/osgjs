@@ -31,7 +31,6 @@ var Geometry = function () {
 
     // null means the kdTree builder will skip the kdTree creation
     this._shape = undefined;
-
 };
 
 Geometry.enableVAO = true;
@@ -145,7 +144,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             vertexAttributeSetup.push( 'attr = this._attributes[\'' + validAttributeKeyList[ i ] + '\'];' );
             vertexAttributeSetup.push( 'if ( attr.BufferArrayProxy ) attr = attr.getBufferArray();' );
             vertexAttributeSetup.push( 'if ( !attr.isValid() ) return;' );
-            vertexAttributeSetup.push( 'state.setVertexAttribArray(' + validAttributeIndexList[ i ] + ', attr, attr.getNormalize() );' );
+            vertexAttributeSetup.push( 'state.setVertexAttribArray(' + validAttributeIndexList[ i ] + ', attr, attr.getNormalize(), attr.getAttributeDivisor() );' );
 
         }
 
@@ -340,6 +339,10 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
     },
 
     computeBoundingBox: function ( boundingBox ) {
+
+        if ( this._computeBoundingBoxCallback !== undefined ) {
+            return this._computeBoundingBoxCallback( boundingBox );
+        }
 
         boundingBox.init();
 

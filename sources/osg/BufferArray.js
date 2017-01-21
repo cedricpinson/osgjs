@@ -4,7 +4,6 @@ var Object = require( 'osg/Object' );
 var GLObject = require( 'osg/GLObject' );
 var Timer = require( 'osg/Timer' );
 
-
 var getAttributeType = function ( array ) {
     var type;
 
@@ -38,6 +37,8 @@ var BufferArray = function ( target, elements, itemSize, preserveArrayType ) {
     // initialized by setElements
     this._type = undefined;
     this._normalize = false;
+
+    this._divisor = undefined;
 
     if ( elements !== undefined ) {
         var typedArray = elements;
@@ -140,6 +141,16 @@ BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
             gl.bindBuffer( target, this._buffer );
         }
     },
+
+
+    getAttributeDivisor: function () {
+        return this._divisor;
+    },
+
+    setAttributeDivisor: function ( divisor ) {
+        this._divisor = divisor;
+    },
+
     getItemSize: function () {
         return this._itemSize;
     },
