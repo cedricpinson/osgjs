@@ -108,6 +108,7 @@
 
                 var sceneSize = osg.vec3.sub( osg.vec3.create(), sceneBoundingBox.getMax(), sceneBoundingBox.getMin() );
                 var sceneCenter = sceneBoundingBox.center( osg.vec3.create() );
+                self._sceneVoxelCenter = sceneCenter;
 
                 var maxAxis = sceneSize[ 0 ] > sceneSize[ 1 ] ? 0 : 1;
                 maxAxis = sceneSize[ maxAxis ] < sceneSize[ 2 ] ? 2 : maxAxis;
@@ -631,6 +632,7 @@
                     'float VoxelWorldSize = float(' + this._sceneVoxelSize +');',
                     'float VoxelGridWorldSize = float(' + (this._sceneVoxelSize * this._voxelSize) +');',
                     'int VoxelDimensions = ' + this._voxelSize  +';',
+                    'vec3 VoxelWorldCenter = vec3(' + this._sceneVoxelCenter[0] + ',' + this._sceneVoxelCenter[1] + ',' + this._sceneVoxelCenter[2] + ' );',
 
                     'const float MAX_DIST = 100.0;',
                     'const float ALPHA_THRESH = 0.95;',
@@ -669,10 +671,13 @@
                     '    occlusion = 0.0;',
                     '',
                     '    float voxelWorldSize = VoxelWorldSize;',
+                    '    vec3 voxelPosition = vVertexWorld - VoxelWorldCenter;',
                     '    float dist = voxelWorldSize; // Start one voxel away to avoid self occlusion',
-                    '    vec3 startPos = vVertexWorld + normalWorld * voxelWorldSize; // Plus move away slightly in the normal direction to avoid',
+                    '    vec3 startPos = voxelPosition + normalWorld * voxelWorldSize; // Plus move away slightly in the normal direction to avoid',
                     '                                                                    // self occlusion in flat surfaces',
                     '',
+                    '    vec4 c = sampleVoxels(voxelPosition, 0.0);',
+                    '    return vec4( c.rgb, 1.0 );',
                     '    while(dist < MAX_DIST && alpha < ALPHA_THRESH) {',
                     '        // smallest sample diameter possible is the voxel size',
                     '        float diameter = max(voxelWorldSize, 2.0 * tanHalfAngle * dist);',
@@ -697,7 +702,8 @@
                     '    vec4 color = vec4(0);',
                     '    occlusion_out = 0.0;',
                     '',
-                    '    for(int i = 0; i < NUM_CONES; i++) {',
+                    '    for(int i = 0; i < 1; i++) {',
+                    '    //for(int i = 0; i < NUM_CONES; i++) {',
                     '        float occlusion = 0.0;',
                     '        // 60 degree cones -> tan(30) = 0.577',
                     '        // 90 degree cones -> tan(45) = 1.0',
@@ -722,7 +728,7 @@
                     '  tangentToWorld = mat3(tangentX, normalWorld, tangentY );',
                     '  float occlusion;',
                     '  vec4 c = indirectLight(occlusion);',
-                    '  c = vec4( vec3(1.0-occlusion), 1.0 );',
+                    '  //c = vec4( vec3(1.0-occlusion), 1.0 );',
                     '  color = c;',
                     '',
                     '}',
@@ -758,6 +764,7 @@
             this.getRootNode().addChild( voxelisationRTT );
             this.getRootNode().addChild( baseScene );
 
+            // comment to see the rendering without voxel
             nodeShader.setStateSet( this.createMainShader() );
 
             this.getRootNode().addChild( this.createDebugTexture3D() );
@@ -765,6 +772,11 @@
             //this.getRootNode().addChild( this.createDebugTexture3DQuad() );
             this._viewer.getManipulator().setNode( baseScene );
             this._viewer.getManipulator().computeHomePosition();
+
+            // var osgUtil = OSG.osgUtil;
+            // var displayGraph = osgUtil.DisplayGraph.instance();
+            // displayGraph.setDisplayGraphRenderer( true );
+            // displayGraph.createGraph( this.getRootNode() );
 
         }
 
