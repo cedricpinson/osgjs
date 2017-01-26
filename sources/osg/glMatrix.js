@@ -43,10 +43,14 @@ vec3.init = function ( out ) {
     return vec3.set( out, 0.0, 0.0, 0.0 );
 };
 
-vec3.transformMat4R = function ( out, v, m ) {
-    out[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
-    out[ 1 ] = m[ 4 ] * v[ 0 ] + m[ 5 ] * v[ 1 ] + m[ 6 ] * v[ 2 ];
-    out[ 2 ] = m[ 8 ] * v[ 0 ] + m[ 9 ] * v[ 1 ] + m[ 10 ] * v[ 2 ];
+vec3.transformMat4Rotate = function ( out, v, m ) {
+    var x = v[ 0 ],
+        y = v[ 1 ],
+        z = v[ 2 ];
+    out[ 0 ] = m[ 0 ] * x + m[ 1 ] * y + m[ 2 ] * z;
+    out[ 1 ] = m[ 4 ] * x + m[ 5 ] * y + m[ 6 ] * z;
+    out[ 2 ] = m[ 8 ] * x + m[ 9 ] * y + m[ 10 ] * z;
+    return out;
 };
 
 vec3.valid = function ( a ) {
@@ -324,16 +328,15 @@ mat4.getLookAt = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.fromValues( 0.0, 1.0, 0.0 );
     var v3 = vec3.fromValues( 0.0, 0.0, -1.0 );
-    var distVec = vec3.create();
     return function ( eye, center, up, matrix, distance ) {
 
         var d = distance !== undefined ? distance : 1.0;
         mat4.invert( inv, matrix );
-        vec3.transformMat4( eye, v1, inv );
-        vec3.transformMat4R( up, v2, matrix );
-        vec3.transformMat4R( center, v3, matrix );
+        mat4.getTranslation( eye, inv );
+        vec3.transformMat4Rotate( up, v2, matrix );
+        vec3.transformMat4Rotate( center, v3, matrix );
         vec3.normalize( center, center );
-        vec3.add( center, vec3.scale( distVec, center, d ), eye );
+        vec3.add( center, vec3.scale( v1, center, d ), eye );
     };
 } )();
 
