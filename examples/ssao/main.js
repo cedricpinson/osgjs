@@ -24,14 +24,12 @@
     // the current displayed scene in the Example
     var loadFiles = function ( example, files, sceneName ) {
 
-        var promise = OSG.osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' )
-            .readNodeURL( files );
-
+        var promise = OSG.osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' ).readNodeURL( files );
         promise.then( function ( scene ) {
 
             if ( !scene ) {
 
-                example._config.scene = 'box';
+                example._config.scene = 'default';
                 example.updateScene();
 
                 return;
@@ -58,17 +56,17 @@
 
         this._config = {
             scale: 1.0,
-            radius: 0.3,
-            bias: 0.01,
-            intensity: 0.8,
+            radius: 1.00,
+            bias: 0.08,
+            intensity: 1.8,
             crispness: 0.8,
-            scene: 'box'
+            scene: 'default'
         };
 
         // The two following attributes are use for sliders
         // normalization according to the scene bounding sphere
         this._baseSlidersBounds = {
-            radius: [ 0.005, 0.25 ],
+            radius: [ 0.005, 0.3 ],
             bias: [ 0.01, 0.08 ],
             intensity: [ 0.01, 1.8 ],
         };
@@ -110,21 +108,45 @@
 
         createScene: function () {
 
-            // Creates basic scene containing
-            // a plane and a cube
             var group = new osg.MatrixTransform();
             group.setName( 'group' );
 
-            var ground = osg.createTexturedBoxGeometry( 0.0, 0.0, 0.0, 4.0, 4.0, 0.0 );
-            ground.setName( 'groundBox' );
+            for ( var i = 0; i < 100; ++i ) {
 
-            var box = osg.createTexturedBoxGeometry( 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 );
-            box.setName( 'Box' );
+                var sphere = osg.createTexturedSphereGeometry( Math.random() * 2.0 + 1.0, 32, 32 );
+                var dir = osg.vec3.create();
+                dir[ 0 ] = Math.random() * 2.0 - 1.0;
+                dir[ 1 ] = Math.random() * 2.0 - 1.0;
+                dir[ 2 ] = Math.random() * 2.0 - 1.0;
+                osg.vec3.normalize( dir, dir );
 
-            group.addChild( ground );
-            group.addChild( box );
+                var scale = Math.random() * -15.0 + 15.0;
+                dir[ 0 ] *= scale;
+                dir[ 1 ] *= scale;
+                dir[ 2 ] *= scale;
 
-            this._modelsMap.box = group;
+                var mt = new osg.MatrixTransform();
+
+                osg.mat4.translate( mt.getMatrix(), mt.getMatrix(), dir );
+
+                mt.addChild( sphere );
+                group.addChild( mt );
+            }
+
+            group.addUpdateCallback( {
+
+                update: function ( node ) {
+
+                    var mt = node.getMatrix();
+                    osg.mat4.rotate( mt, mt, 0.001, [ 1.0, 0, 0 ] );
+
+                }
+
+
+            } );
+
+            this._modelsMap.default = group;
+
         },
 
         getRstatsOptions: function () {
@@ -426,12 +448,13 @@
 
             // (intensity / radius^6) is dependent from the radius
             this.updateIntensity();
+            this.updateBias();
         },
 
         updateBias: function () {
 
             var uniform = this._aoUniforms.uBias;
-            var value = this._config.bias;
+            var value = this._config.bias * this._config.radius;
 
             this.updateFloatData( uniform, value );
 
@@ -486,6 +509,14 @@
                 this._config.radius = radiusCont.__max * 0.9;
                 this._config.bias = biasCont.__max * 0.35;
                 this._config.intensity = intensityCont.__max * 0.65;
+
+                if ( this._config.scene === 'default' ) {
+
+                    this._config.radius = 1.8;
+                    this._config.intensity = 1.0;
+                    this._config.bias = 0.08;
+
+                }
 
             }
 
@@ -588,7 +619,7 @@
             this.readShaders().then( function () {
 
                 // Loads the glTF Sponza scene by default if exists
-                loadFiles( self, '../media/models/sponza.gltf', 'sponza' );
+                // loadFiles( self, '../media/models/sponza.gltf', 'sponza' );
 
                 var cam = self.createDepthCameraRTT();
                 self.bindProjectionUpdateCallback( cam );
@@ -603,6 +634,12 @@
 
                 self._viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
                 self._viewer.setSceneData( root );
+
+                self.updateScene();
+
+                var scene = self._modelsMap[ self._config.scene ];
+                scene.dirtyBound();
+                self._viewer.getManipulator().computeHomePosition( OSG.Manipulator.COMPUTE_HOME_USING_SPHERE );
 
             } );
 
@@ -629,7 +666,6 @@
 
             var sceneId = this._config.scene;
             var node = this._modelsMap[ sceneId ];
-
 
             this._rttCamera.removeChildren();
             this._rttCamera.addChild( node );

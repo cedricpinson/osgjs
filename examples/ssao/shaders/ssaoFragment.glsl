@@ -203,12 +203,12 @@ float fallOffMethod0(float vv, float vn, vec3 normal) {
 
         float invRadius2 = 1.0 / uRadius2;
         float f = max(1.0 - vv * invRadius2, 0.0);
-        return f * max((vn - uBias) * inversesqrt(EPSILON + vv), 0.0);
+        return f * max((vn - uBias) * inversesqrt(vv), 0.0);
 
     #   else
 
         float f = max(uRadius2 - vv, 0.0);
-        return f * f * f * max((vn - uBias) / (EPSILON + vv), 0.0);
+        return f * f * f * max((vn - uBias) / (vv), 0.0);
 
     #   endif
 }

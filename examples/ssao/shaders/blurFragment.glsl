@@ -127,9 +127,9 @@ void main() {
     // Temporary code setting the background
     // controller after the last composer pass
     if(uAxis.x == 0) {
-       gl_FragColor = vec4(gl_FragColor.rrr, 1.0);
-       if(tmp.gba == vec3(0.0))
-	       gl_FragColor = vec4(0.2, 0.2, 0.2, 1.0);
+		gl_FragColor = vec4(0.7411 * gl_FragColor.r, 0.7411 * gl_FragColor.r, 0.7411 * gl_FragColor.r, 1.0);
+		if(tmp.gba == vec3(0.0))
+			gl_FragColor = vec4(0.2, 0.2, 0.2, 1.0);
     }
     // END DEBUG
 }
