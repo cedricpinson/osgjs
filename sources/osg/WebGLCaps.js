@@ -336,12 +336,13 @@ WebGLCaps.prototype = {
         // try to compile a small shader to test the spec is respected
     },
 
-    getAndApplyExtension: function ( gl, name ) {
+    applyExtension: function ( gl, name ) {
+        // Borrowed from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
         var ext = gl.getExtension( name );
         var suffix = name.split( '_' )[ 0 ];
-        var prefix = '_';
+        var prefix = '_' + suffix;
         var suffixRE = new RegExp( suffix + '$' );
-        var prefixRE = new RegExp( '^' + prefix );
+        var prefixRE = new RegExp( prefix );
         for ( var key in ext ) {
             var val = ext[ key ];
             if ( typeof ( val ) === 'function' ) {
@@ -351,7 +352,8 @@ WebGLCaps.prototype = {
                     gl[ unsuffixedKey ] = ext[ key ].bind( ext );
             } else {
                 var unprefixedKey = key.replace( prefixRE, '' );
-                gl[ unprefixedKey ] = ext[ key ];
+                if ( gl[ unprefixedKey ] === undefined )
+                    gl[ unprefixedKey ] = ext[ key ];
             }
         }
     },
@@ -383,7 +385,8 @@ WebGLCaps.prototype = {
             }
 
             ext[ sup ] = gl.getExtension( sup );
-            this.getAndApplyExtension( gl, sup );
+            if ( this._isGL2 )
+                this.applyExtension( gl, sup );
         }
 
         var anisoExt = this.getWebGLExtension( 'EXT_texture_filter_anisotropic' );

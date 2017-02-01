@@ -37,8 +37,12 @@
 
         },
         run: function ( canvas1, canvas2 ) {
-            this._viewer1 = new osgViewer.Viewer( canvas1 );
-            this._viewer2 = new osgViewer.Viewer( canvas2 );
+            this._viewer1 = new osgViewer.Viewer( canvas1, {
+                'webgl2': true
+            } );
+            this._viewer2 = new osgViewer.Viewer( canvas2, {
+                'webgl2': false
+            } );
             this._viewer1.init();
             this._viewer2.init();
             var scene1 = this.createScene1();
