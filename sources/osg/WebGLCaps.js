@@ -159,7 +159,6 @@ WebGLCaps.prototype = {
             this._checkRTT[ Texture.FLOAT + ',' + Texture.LINEAR ] = true;
             this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.LINEAR ] = true;
 
-            return;
             var nativeExtension = [
                 'OES_element_index_uint',
                 'EXT_sRGB',
@@ -336,6 +335,27 @@ WebGLCaps.prototype = {
         // TODO ?
         // try to compile a small shader to test the spec is respected
     },
+
+    getAndApplyExtension: function ( gl, name ) {
+        var ext = gl.getExtension( name );
+        var suffix = name.split( '_' )[ 0 ];
+        var prefix = '_';
+        var suffixRE = new RegExp( suffix + '$' );
+        var prefixRE = new RegExp( '^' + prefix );
+        for ( var key in ext ) {
+            var val = ext[ key ];
+            if ( typeof ( val ) === 'function' ) {
+                // remove suffix (eg: bindVertexArrayOES -> bindVertexArray)
+                var unsuffixedKey = key.replace( suffixRE, '' );
+                if ( key.substring )
+                    gl[ unsuffixedKey ] = ext[ key ].bind( ext );
+            } else {
+                var unprefixedKey = key.replace( prefixRE, '' );
+                gl[ unprefixedKey ] = ext[ key ];
+            }
+        }
+    },
+
     getWebGLExtension: function ( str ) {
         return this._webGLExtensions[ str ];
     },
@@ -363,6 +383,7 @@ WebGLCaps.prototype = {
             }
 
             ext[ sup ] = gl.getExtension( sup );
+            this.getAndApplyExtension( gl, sup );
         }
 
         var anisoExt = this.getWebGLExtension( 'EXT_texture_filter_anisotropic' );

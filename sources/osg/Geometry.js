@@ -129,6 +129,8 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             var prgID = keys[ i ];
             if ( this._vao[ prgID ] ) {
                 var vao = this._vao[ prgID ];
+                // FIXME: We need here a strategy to delete VAO's
+                // passing the graphic context or other
                 this._extVAO.deleteVertexArrayOES( vao );
                 this._vao[ prgID ] = undefined;
             }
@@ -310,7 +312,10 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
                 var vertexAttributeSetup = this._generateVertexSetup( validAttributeKeyList, validAttributeList, optimizeIndexBufferVAO );
 
                 state.clearVertexAttribCache();
-                var vao = this._extVAO.createVertexArrayOES();
+                var gl = state.getGraphicContext();
+                var vao = gl.createVertexArray();
+                //var vao = this._extVAO.createVertexArrayOES();
+
                 state.setVertexArrayObject( vao );
                 this._vao[ prgID ] = vao;
 

@@ -256,7 +256,7 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
             return false;
         }
 
-        gl.framebufferTextureLayer( gl.FRAMEBUFFER, attachment, texture.getTextureObject().id(), level || 0 , layer || 0 );
+        gl.framebufferTextureLayer( gl.FRAMEBUFFER, attachment, texture.getTextureObject().id(), level || 0, layer || 0 );
 
         /* develblock:start */
         // only visible with webgl-insector enabled

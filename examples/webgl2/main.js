@@ -3,7 +3,7 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
-    var osgDB = OSG.osgDB;
+    //var osgDB = OSG.osgDB;
     var ExampleOSGJS = window.ExampleOSGJS;
 
     var Example = function () {
@@ -127,7 +127,7 @@
                     // needs handle the scene bbox and adjust near/far to clip
                     var near = sliceIndex * sceneVoxelSize - 1e-4;
                     var far = ( sliceIndex + maxDrawBuffer ) * sceneVoxelSize;
-                    var projection = osg.mat4.ortho( osg.mat4.create(), -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, near, far );
+                    var projection = osg.mat4.ortho( osg.mat4.create(), -maxSize / 2, maxSize / 2, -maxSize / 2, maxSize / 2, near, far );
                     var camera = new osg.Camera();
                     camera.setComputeNearFar( false ); //_clampProjectionMatrix = false;
                     camera.setViewport( viewport );
@@ -146,7 +146,7 @@
 
 
                 var nbPasses = voxelSize / maxDrawBuffer;
-                var i,l;
+                var i, l;
                 var nodeComputing = [ new osg.Node(), new osg.Node(), new osg.Node() ];
                 for ( var a = 0; a < 3; a++ ) {
                     // if ( a !== 2 ) continue;
@@ -225,7 +225,7 @@
                     camera2d.setViewport( viewport );
 
                     var projection = osg.mat4.create();
-                    osg.mat4.ortho( projection, -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, -10, 10 );
+                    osg.mat4.ortho( projection, -maxSize / 2, maxSize / 2, -maxSize / 2, maxSize / 2, -10, 10 );
                     camera2d.setProjectionMatrix( projection );
                     camera2d.setViewMatrix( viewMatrix[ 2 ] );
 
@@ -290,11 +290,11 @@
                     vertexArray[ idx + 17 ] = z;
                 }
 
-                var center = osg.vec3.fromValues( voxelSize/2, voxelSize/2, -voxelSize/2 );
-                var view = osg.vec3.fromValues( voxelSize/2, voxelSize/2, 0.0 );
+                var center = osg.vec3.fromValues( voxelSize / 2, voxelSize / 2, -voxelSize / 2 );
+                var view = osg.vec3.fromValues( voxelSize / 2, voxelSize / 2, 0.0 );
                 var up = osg.vec3.fromValues( 1, 0, 0 );
                 var matrixView = osg.mat4.create();
-                osg.mat4.lookAt( matrixView , view, center, up );
+                osg.mat4.lookAt( matrixView, view, center, up );
 
                 var maxSize = voxelSize;
 
@@ -303,7 +303,7 @@
                     // needs handle the scene bbox and adjust near/far to clip
                     var near = sliceIndex - 1e-4;
                     var far = ( sliceIndex + maxDrawBuffer );
-                    var projection = osg.mat4.ortho( osg.mat4.create(), -maxSize/2, maxSize/2, -maxSize/2, maxSize/2, near, far );
+                    var projection = osg.mat4.ortho( osg.mat4.create(), -maxSize / 2, maxSize / 2, -maxSize / 2, maxSize / 2, near, far );
                     var camera = new osg.Camera();
                     camera.setComputeNearFar( false );
                     camera.setViewport( viewport );
@@ -428,7 +428,7 @@
                 }
 
                 // a dirty mip map at in the last pass
-                cameraSlice.setFinalDrawCallback( function ( state ) {
+                cameraSlice.setFinalDrawCallback( function ( /*state*/) {
                     finalTexture3D.dirtyMipmap();
                     //state.applyTextureAttribute( 1, finalTexture3D );
                 } );
@@ -438,7 +438,7 @@
             };
 
             createEachAxisTexture3D( root );
-            this._voxelTexture = finalTexture3D;//texture3D[ 2 ];
+            this._voxelTexture = finalTexture3D; //texture3D[ 2 ];
 
             mergeFinalTexture3D( root );
 
@@ -527,7 +527,7 @@
             return node;
         },
 
-        createHelperScene: function() {
+        createHelperScene: function () {
             var scene = new osg.Node();
             scene.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 0 ) );
 
@@ -543,7 +543,7 @@
             return scene;
         },
 
-        createContentScene: function() {
+        createContentScene: function () {
             var UpdateCallback = function () {
                 this.update = function ( node, nv ) {
                     var fn = nv.getFrameStamp().getFrameNumber();
@@ -593,7 +593,7 @@
         },
 
 
-        createMainShader: function() {
+        createMainShader: function () {
 
             var getShader = function () {
                 var vertexshader = [
@@ -629,10 +629,10 @@
 
                     'uniform sampler3D Texture0;',
 
-                    'float VoxelWorldSize = float(' + this._sceneVoxelSize +');',
-                    'float VoxelGridWorldSize = float(' + (this._sceneVoxelSize * this._voxelSize) +');',
-                    'int VoxelDimensions = ' + this._voxelSize  +';',
-                    'vec3 VoxelWorldCenter = vec3(' + this._sceneVoxelCenter[0] + ',' + this._sceneVoxelCenter[1] + ',' + this._sceneVoxelCenter[2] + ' );',
+                    'float VoxelWorldSize = float(' + this._sceneVoxelSize + ');',
+                    'float VoxelGridWorldSize = float(' + ( this._sceneVoxelSize * this._voxelSize ) + ');',
+                    'int VoxelDimensions = ' + this._voxelSize + ';',
+                    'vec3 VoxelWorldCenter = vec3(' + this._sceneVoxelCenter[ 0 ] + ',' + this._sceneVoxelCenter[ 1 ] + ',' + this._sceneVoxelCenter[ 2 ] + ' );',
 
                     'const float MAX_DIST = 100.0;',
                     'const float ALPHA_THRESH = 0.95;',
@@ -740,7 +740,7 @@
                     new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
                 return program;
-            }.bind(this);
+            }.bind( this );
 
             var stateSet = new osg.StateSet();
             stateSet.setAttributeAndModes( getShader() );
