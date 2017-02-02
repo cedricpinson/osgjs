@@ -2,7 +2,6 @@
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
-var Notify = require( 'osg/notify' );
 
 var TriangleIntersection = function ( normal, i1, i2, i3 ) {
     this.normal = normal;
@@ -13,11 +12,7 @@ var TriangleIntersection = function ( normal, i1, i2, i3 ) {
 };
 
 var TriangleSphereIntersector = function () {
-    TriangleIntersector.apply( this, arguments );
-
-    if ( arguments && arguments.length ) {
-        Notify.warn( 'using ctor as initialiser is deprecated, use set(center, radius)' );
-    }
+    TriangleIntersector.apply( this );
 };
 
 TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleIntersector.prototype, {

@@ -1,6 +1,5 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var Notify = require( 'osg/notify' );
 var Object = require( 'osg/Object' );
 var GLObject = require( 'osg/GLObject' );
 var Timer = require( 'osg/Timer' );
@@ -170,10 +169,5 @@ BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
     }
 
 } );
-
-BufferArray.create = function ( type, elements, itemSize ) {
-    Notify.log( 'BufferArray.create is deprecated, use new BufferArray with same arguments instead' );
-    return new BufferArray( type, elements, itemSize );
-};
 
 module.exports = BufferArray;

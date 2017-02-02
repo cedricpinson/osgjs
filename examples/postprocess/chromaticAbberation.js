@@ -4,6 +4,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
+    var osgDB = OSG.osgDB;
 
     /*
         This effect simulate the visual effect produced by camera lens.
@@ -13,8 +14,10 @@
     */
     window.getPostSceneChromaticAberration = function () {
 
-        var inputTexture = osg.Texture.createFromURL( 'Chess20.png' );
-
+        var inputTexture = new osg.Texture();
+        osgDB.readImageURL( 'Chess20.png' ).then( function ( image ) {
+            inputTexture.setImage( image );
+        } );
         var factor = osg.Uniform.createFloat1( 0.01, 'factor' );
 
         // TODO: Add a (radial?) blur because sharp red and blue aberrations are not realistic

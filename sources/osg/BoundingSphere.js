@@ -1,6 +1,5 @@
 'use strict';
 var BoundingBox = require( 'osg/BoundingBox' );
-var Notify = require( 'osg/notify' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
 
@@ -60,11 +59,6 @@ BoundingSphere.prototype = {
         };
     } )(),
 
-    expandByBox: function ( bb ) {
-        Notify.log( 'BoundingSphere.expandByBox is deprecated, use instead BoundingSphere.expandByBoundingBox' );
-        return this.expandByBoundingBox( bb );
-    },
-
     expandByvec3: ( function () {
         var dv = vec3.create();
         return function ( v ) {
@@ -100,11 +94,6 @@ BoundingSphere.prototype = {
                 this._radius = sh._radius;
             }
         }
-    },
-
-    expandBy: function ( bs ) {
-        Notify.log( 'BoundingSphere.expandBy is deprecated, use instead BoundingSphere.expandByBoundingSphere' );
-        this.expandByBoundingSphere( bs );
     },
 
     expandByBoundingSphere: function ( sh ) {

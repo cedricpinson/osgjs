@@ -1,6 +1,5 @@
 'use strict';
 var Map = require( 'osg/Map' );
-var Notify = require( 'osg/notify' );
 var Object = require( 'osg/Object' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var MACROUTILS = require( 'osg/Utils' );
@@ -112,11 +111,6 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._setTextureAttribute( unit, this.getAttributePair( attribute, mode ) );
     },
 
-    setTextureAttributeAndMode: function ( unit, attribute, mode ) {
-        Notify.log( 'StateSet.setTextureAttributeAndMode is deprecated, insteady use setTextureAttributeAndModes' );
-        this.setTextureAttributeAndModes( unit, attribute, mode );
-    },
-
     getNumTextureAttributeLists: function () {
         return this.textureAttributeMapList.length;
     },
@@ -151,11 +145,6 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     setAttributeAndModes: function ( attribute, originalMode ) {
         var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
         this._setAttribute( this.getAttributePair( attribute, mode ) );
-    },
-
-    setAttributeAndMode: function ( attribute, mode ) {
-        Notify.log( 'StateSet.setAttributeAndMode is deprecated, insteady use setAttributeAndModes' );
-        this.setAttributeAndModes( attribute, mode );
     },
 
     setAttribute: function ( attribute, originalMode ) {

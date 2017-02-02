@@ -1,7 +1,6 @@
 'use strict';
 var Node = require( 'osg/Node' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
-var Notify = require( 'osg/notify' );
 var Depth = require( 'osg/Depth' );
 var BlendFunc = require( 'osg/BlendFunc' );
 var CullFace = require( 'osg/CullFace' );
@@ -676,10 +675,6 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             var cam = this._viewer.getCamera();
 
             var screenPoint = out;
-            if ( !out ) {
-                Notify.warn( 'deprecated, use out argument for result ' );
-                screenPoint = vec3.create();
-            }
 
             if ( cam.getViewport() ) {
                 cam.getViewport().computeWindowMatrix( mat );

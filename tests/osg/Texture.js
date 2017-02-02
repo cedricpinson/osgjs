@@ -4,14 +4,19 @@ var mockup = require( 'tests/mockup/mockup' );
 var Texture = require( 'osg/Texture' );
 var State = require( 'osg/State' );
 var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
-
+var Input = require( 'osgDB/Input' );
 
 module.exports = function () {
 
     test( 'Texture', function ( done ) {
         this.timeout( 20000 );
 
-        var textureFromURL = Texture.createFromURL( '"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="' );
+        var input = new Input();
+        var textureFromURL = new Texture();
+        input.readImageURL( '"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="' ).
+        then( function ( image ) {
+            textureFromURL.setImage( image );
+        } );
         assert.isOk( textureFromURL !== undefined, 'Check textureFromURL' );
 
         var ready;

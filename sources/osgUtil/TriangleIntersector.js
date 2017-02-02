@@ -3,7 +3,6 @@
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
-var Notify = require( 'osg/notify' );
 var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
 
 var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
@@ -19,10 +18,6 @@ var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
 };
 
 var TriangleIntersector = function () {
-
-    if ( arguments && arguments.length ) {
-        Notify.warn( 'using ctor as initialiser is deprecated, use set(start, end)' );
-    }
 
     this._intersections = [];
     this._nodePath = [];

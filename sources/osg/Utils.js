@@ -14,10 +14,6 @@ Utils.init = function () {
     osgPool.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraphClass ).grow( 50 );
 };
 
-Utils.isArray = function ( obj ) {
-    Notify.log( 'isArray is deprecated, use instead Array.isArray' );
-    return Array.isArray( obj );
-};
 
 Utils.extend = function () {
     // Save a reference to some core methods
@@ -118,10 +114,6 @@ Utils.objectInherit = function ( base /*, extras*/ ) {
         Utils.objectMix( obj, arguments[ i ], false );
     }
     return obj;
-};
-
-Utils.objectInehrit = function () {
-    console.warn( 'please use objectInherit instead of objectInehrit' );
 };
 
 Utils.objectMix = function ( obj, properties, test ) {
