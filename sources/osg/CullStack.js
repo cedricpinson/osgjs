@@ -9,7 +9,6 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var Plane = require( 'osg/Plane' );
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var Transform = require( 'osg/Transform' );
-var Notify = require( 'osg/notify' );
 var TransformEnums = require( 'osg/transformEnums' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
@@ -76,11 +75,6 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
     getCurrentModelViewMatrix: function () {
         return this._modelViewMatrixStack[ this._modelViewMatrixStack.length - 1 ];
-    },
-
-    getCurrentModelviewMatrix: function () {
-        Notify.warn( 'deprecated switch to getCurrentModelViewMatrix' );
-        return this.getCurrentModelViewMatrix();
     },
 
     getCameraInverseMatrix: function () {

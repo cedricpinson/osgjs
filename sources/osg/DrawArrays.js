@@ -1,5 +1,4 @@
 'use strict';
-var Notify = require( 'osg/notify' );
 var PrimitiveSet = require( 'osg/primitiveSet' );
 
 
@@ -49,11 +48,6 @@ DrawArrays.prototype = {
         return this.first + i;
     }
 
-};
-DrawArrays.create = function ( mode, first, count ) {
-    Notify.log( 'DrawArrays.create is deprecated, use new DrawArrays with same arguments' );
-    var d = new DrawArrays( mode, first, count );
-    return d;
 };
 
 module.exports = DrawArrays;

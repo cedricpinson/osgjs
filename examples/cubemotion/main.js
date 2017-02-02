@@ -3,6 +3,7 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgDB = OSG.osgDB;
     var osgAnimation = OSG.osgAnimation;
     var osgViewer = OSG.osgViewer;
 
@@ -164,7 +165,6 @@
 
         var root = new osg.Node();
 
-        var texture = osg.Texture.createFromURL( 'image.png' );
         var target = new osg.MatrixTransform();
         var targetModel = osg.createTexturedBoxGeometry( 0,
             0,
@@ -179,6 +179,11 @@
 
         var targetPos = [ 0, 0, 0 ];
         var centerPos = [ 20, 8, 30 ];
+
+        var texture = new osg.Texture();
+        osgDB.readImageURL( 'image.png' ).then( function ( image ) {
+            texture.setImage( image );
+        } );
 
         var group = createEffect( texture, targetPos, centerPos );
 

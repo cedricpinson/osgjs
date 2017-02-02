@@ -499,11 +499,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         }
     },
 
-    updateShadowTechnic: function ( /*nv*/) {
-        Notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
-        this.updateShadowTechnique();
-    },
-
     setTextureFiltering: function () {
 
         var textureType, texFilterMin, texFilterMag;

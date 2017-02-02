@@ -1,8 +1,6 @@
 'use strict';
 var BoundingSphere = require( 'osg/BoundingSphere' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var Notify = require( 'osg/notify' );
-
 
 // Base class for Camera / User manipulator
 var Manipulator = function ( boundStrategy ) {
@@ -34,17 +32,14 @@ Manipulator.prototype = {
     getComputeBoundNodeMaskOverride: function () {
         return this._computeBoundNodeMaskOverride;
     },
+
+    // overrideStrat should be a bounding volume calculation strategy
     getHomeBound: function ( overrideStrat ) {
         var node = this._node;
         if ( !node )
             return;
 
         var type = overrideStrat !== undefined ? overrideStrat : this._boundStrategy;
-
-        if ( type === true || type === false ) {
-            Notify.warn( 'Manipulator.getHomeBound with boolean is deprecated, pass a type instead' );
-            type = type ? Manipulator.COMPUTE_HOME_USING_BBOX : Manipulator.COMPUTE_HOME_USING_SPHERE;
-        }
 
         if ( type & Manipulator.COMPUTE_HOME_USING_BBOX ) {
             var bs = new BoundingSphere();

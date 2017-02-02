@@ -4,6 +4,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
+    var osgDB = OSG.osgDB;
 
     /*
         This filter simulate a property of lenses which tends to make
@@ -17,7 +18,10 @@
         if ( bloomTextureFactor === undefined )
             bloomTextureFactor = 8;
 
-        var currentSceneTexture = osg.Texture.createFromURL( 'Budapest.jpg' );
+        var currentSceneTexture = new osg.Texture();
+        osgDB.readImageURL( 'Budapest.jpg' ).then( function ( image ) {
+            currentSceneTexture.setImage( image );
+        } );
         var cachedScenes = [];
         var brightFilter;
         var additiveFilter;
@@ -25,8 +29,12 @@
         var setSceneTexture = function ( sceneFile ) {
 
             // On met en cache lors du premier chargement
-            if ( cachedScenes[ sceneFile ] === undefined )
-                cachedScenes[ sceneFile ] = osg.Texture.createFromURL( sceneFile );
+            if ( cachedScenes[ sceneFile ] === undefined ) {
+                cachedScenes[ sceneFile ] = new osg.Texture();
+                osgDB.readImageURL( sceneFile ).then( function ( image ) {
+                    cachedScenes[ sceneFile ].setImage( image );
+                } );
+            }
 
             currentSceneTexture = cachedScenes[ sceneFile ];
             additiveFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );

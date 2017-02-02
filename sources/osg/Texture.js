@@ -5,7 +5,6 @@ var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 var Image = require( 'osg/Image' );
 var GLObject = require( 'osg/GLObject' );
-var ReaderParser = require( 'osgDB/readerParser' );
 var CustomMap = require( 'osg/Map' );
 var TextureManager = require( 'osg/TextureManager' );
 var WebglCaps = require( 'osg/WebGLCaps' );
@@ -445,11 +444,6 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         }
     },
 
-    setType: function ( value ) {
-        Notify.log( 'Texture.setType is deprecated, use instead Texture.setInternalFormatType' );
-        this.setInternalFormatType( value );
-    },
-
     setInternalFormatType: function ( value ) {
 
         if ( typeof value === 'string' ) {
@@ -742,20 +736,5 @@ Texture.createFromImage = function ( image, format ) {
 Texture.createFromCanvas = function ( canvas, format ) {
     return Texture.createFromImage( canvas, format );
 };
-
-Texture.create = function ( url ) {
-    Notify.log( 'Texture.create is deprecated, use Texture.createFromURL instead' );
-    return Texture.createFromURL( url );
-};
-
-Texture.createFromURL = function ( imageSource, format ) {
-    Notify.log( 'Texture.createFromURL is deprecated, use instead osgDB.readImageURL' );
-    var texture = new Texture();
-    ReaderParser.readImage( imageSource ).then( function ( img ) {
-        texture.setImage( img, format );
-    } );
-    return texture;
-};
-
 
 module.exports = Texture;

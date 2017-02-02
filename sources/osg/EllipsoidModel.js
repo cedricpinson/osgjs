@@ -1,5 +1,4 @@
 'use strict';
-var Notify = require( 'osg/notify' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
@@ -29,10 +28,6 @@ EllipsoidModel.prototype = {
         return this._radiusPolar;
     },
     convertLatLongHeightToXYZ: function ( latitude, longitude, height, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )' );
-            result = vec3.create();
-        }
         var sinLatitude = Math.sin( latitude );
         var cosLatitude = Math.cos( latitude );
         var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sinLatitude * sinLatitude );
@@ -45,10 +40,6 @@ EllipsoidModel.prototype = {
         return result;
     },
     convertXYZToLatLongHeight: function ( X, Y, Z, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'deprecated, use this signature convertXYZToLatLongHeight( X,  Y,  Z , result)' );
-            result = vec3.create();
-        }
         // http://www.colorado.edu/geography/gcraft/notes/datum/gif/xyzllh.gif
         var p = Math.sqrt( X * X + Y * Y );
         var theta = Math.atan2( Z * this._radiusEquator, ( p * this._radiusPolar ) );
@@ -95,10 +86,6 @@ EllipsoidModel.prototype = {
         this._eccentricitySquared = 2.0 * flattening - flattening * flattening;
     },
     computeLocalToWorldTransformFromLatLongHeight: function ( latitude, longitude, height, result ) {
-        if ( result === undefined ) {
-            Notify.warn( 'deprecated, use this signature computeLocalToWorldTransformFromLatLongHeight(latitude, longitude, height, result)' );
-            result = mat4.create();
-        }
         var pos = this.convertLatLongHeightToXYZ( latitude, longitude, height, result );
         mat4.fromTranslation( result, pos );
         this.computeCoordinateFrame( latitude, longitude, result );

@@ -29,7 +29,11 @@
 
             var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
             request.then( function ( model ) {
-                model.getOrCreateStateSet().setTextureAttributeAndModes( 0, osg.Texture.createFromURL( '../media/textures/seamless/grunge1.jpg' ) );
+                var texture = new osg.Texture();
+                osgDB.readImageURL( '../media/textures/seamless/grunge1.jpg' ).then( function ( image ) {
+                    texture.setImage( image );
+                } );
+                model.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
                 node.addChild( model );
                 this._viewer2.getManipulator().computeHomePosition();
             }.bind( this ) );

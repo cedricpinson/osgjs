@@ -6,8 +6,6 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var Map = require( 'osg/Map' );
-var Notify = require( 'osg/notify' );
-
 
 // use the same kind of opengl lights
 // see http://www.glprogramming.com/red/chapter05.html
@@ -106,17 +104,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setEnabled: function ( bool ) {
         this._enable = bool;
-    },
-
-    // Deprecated methods, should be removed in the future
-    isEnable: function () {
-        Notify.log( 'Light.isEnable() is deprecated, use isEnabled instead' );
-        return this.isEnabled();
-    },
-
-    setEnable: function ( bool ) {
-        Notify.log( 'Light.setEnable() is deprecated, use setEnabled instead' );
-        this.setEnabled( bool );
     },
 
     // colors

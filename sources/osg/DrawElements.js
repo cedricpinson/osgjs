@@ -1,5 +1,4 @@
 'use strict';
-var Notify = require( 'osg/notify' );
 var PrimitiveSet = require( 'osg/primitiveSet' );
 
 
@@ -76,11 +75,6 @@ DrawElements.prototype = {
     }
 
 
-};
-
-DrawElements.create = function ( mode, indices ) {
-    Notify.log( 'DrawElements.create is deprecated, use new DrawElements with same arguments' );
-    return new DrawElements( mode, indices );
 };
 
 module.exports = DrawElements;

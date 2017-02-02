@@ -4,7 +4,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
-
+    var osgDB = OSG.osgDB;
     /*
         This filter makes the image look more sharp and defined.
         It is useful on blurred images to regain details
@@ -22,8 +22,10 @@
             return [ -0.5 * x, -x, -0.5 * x, -x, x * 6, -x, -0.5 * x, -x, -0.5 * x ];
         }
 
-        var inputTexture = osg.Texture.createFromURL( 'Medusa.png' );
-
+        var inputTexture = new osg.Texture();
+        osgDB.readImageURL( 'Medusa.png' ).then( function ( image ) {
+            inputTexture.setImage( image );
+        } );
         var kernel = osg.Uniform.createMatrix3( laplace( 1 ), 'kernel' );
         var useDiagonal = false;
         var factor = 0;

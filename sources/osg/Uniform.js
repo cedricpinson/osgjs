@@ -1,6 +1,4 @@
 'use strict';
-var Notify = require( 'osg/notify' );
-
 
 /**
  * Uniform manage variable used in glsl shader.
@@ -30,26 +28,8 @@ Uniform.prototype = {
         return this._name;
     },
 
-    dirty: function () {
-        Notify.log( 'deprecated dont use Uniform.dirty anymore' );
-    },
-
     getType: function () {
         return this._type;
-    },
-
-    get: function () {
-        Notify.log( 'deprecated use getInternalArray instead' );
-        return this._data;
-    },
-
-    set: function ( array ) {
-        Notify.log( 'deprecated use setFloat/setInt instead' );
-        var value = array;
-        if ( !Array.isArray( value ) && value.byteLength === undefined )
-            this._data[ 0 ] = value;
-        else
-            this._data = array;
     },
 
     apply: function UniformApply( gl, location ) {
