@@ -1,19 +1,12 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
-var Notify = require( 'osg/notify' );
 
 var KdTreeRayIntersector = function () {
-
-    if ( arguments && arguments.length ) {
-        Notify.warn( 'using ctor as initialiser is deprecated, use init(intersections, start, end, nodePath) and/or     setKdtree: function ( vertices, nodes, triangles )' );
-    }
-
     this._intersector = new TriangleIntersector();
     this._dInvX = vec3.create();
     this._dInvY = vec3.create();
     this._dInvZ = vec3.create();
-
 };
 
 KdTreeRayIntersector.prototype = {

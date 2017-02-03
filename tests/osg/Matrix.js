@@ -1,7 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var Matrix = require( 'osg/Matrix' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
@@ -42,34 +41,6 @@ module.exports = function () {
 
         var m2 = mat4.lookAt( mat4.create(), vec3.fromValues( 0.0, 0.0, -10 ), vec3.create(), vec3.fromValues( 0.0, 1.0, 0.0 ) );
         assert.equalVector( m2, mat4.fromValues( -1, 0.0, -0, 0.0, 0.0, 1.0, -0, 0.0, 0.0, -0, -1, 0.0, 0.0, 0.0, -10, 1.0 ) );
-    } );
-
-    test( 'Matrix.computeFustrumCornersVectors', function () {
-        var m = mat4.create();
-        var ratio = 16.0 / 9.0;
-        mat4.perspective( m, Math.PI / 180 * 45, ratio, 1.0, 100.0 );
-
-
-        var ymax = 1.0 * Math.tan( 45 * Math.PI / 360.0 );
-        var ymin = -ymax;
-        var xmin = ymin * ratio;
-        var xmax = ymax * ratio;
-
-        var corners = [];
-        corners.push( vec3.fromValues( xmin, ymax, 1.0 ) );
-        corners.push( vec3.fromValues( xmin, ymin, 1.0 ) );
-        corners.push( vec3.fromValues( xmax, ymin, 1.0 ) );
-        corners.push( vec3.fromValues( xmax, ymax, 1.0 ) );
-
-        var vectors = [];
-        Matrix.computeFrustumCornersVectors( m, vectors );
-        // Notify.log( corners );
-        // Notify.log( vectors );
-        assert.equalVector( vectors[ 0 ], corners[ 0 ] );
-        assert.equalVector( vectors[ 1 ], corners[ 1 ] );
-        assert.equalVector( vectors[ 2 ], corners[ 2 ] );
-        assert.equalVector( vectors[ 3 ], corners[ 3 ] );
-        assert.isOk( true, 'check computeFustrumVectors' );
     } );
 
     test( 'Matrix.getLookAt', function () {

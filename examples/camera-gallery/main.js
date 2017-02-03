@@ -91,7 +91,7 @@
             var group = new osg.Node();
 
             var size = 50;
-            var ground = osg.createTexturedBox( 0, 0, 0, size, size, size );
+            var ground = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
 
             group.addChild( ground );
             group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );

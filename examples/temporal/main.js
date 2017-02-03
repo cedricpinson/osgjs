@@ -8,6 +8,7 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
     var osgShader = OSG.osgShader;
     var osgUtil = OSG.osgUtil;
@@ -61,7 +62,14 @@
             osg.mat4.setTranslation( m, [ 0.0, 0.0, 0.0 ] );
             group.addChild( groundPlace );
 
-            ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, osg.Texture.createFromURL( this._mediaPath + 'textures/seamless/bricks1.jpg' ) );
+
+            var texture = new osg.Texture();
+
+            osgDB.readImageURL( this._mediaPath + 'textures/seamless/bricks1.jpg' ).then( function ( image ) {
+                texture.setImage( image );
+            } );
+
+            ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
 
 
             var gridDefinition = 15;

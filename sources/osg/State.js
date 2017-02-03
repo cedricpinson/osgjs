@@ -726,11 +726,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         }
     },
 
-    setGlobalDefaultValue: function ( attribute ) {
-        Notify.log( 'setGlobalDefaultValue is deprecated, use instead setGlobalDefaultAttribute' );
-        this.setGlobalDefaultAttribute( attribute );
-    },
-
     setGlobalDefaultAttribute: function ( attribute ) {
         var typeMember = attribute.getTypeMember();
         var attributeMap = this.attributeMap;

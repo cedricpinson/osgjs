@@ -1,5 +1,4 @@
 'use strict';
-var Notify = require( 'osg/notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
@@ -52,11 +51,6 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
         max[ 0 ] = Math.max( max[ 0 ], x + radius );
         max[ 1 ] = Math.max( max[ 1 ], y + radius );
         max[ 2 ] = Math.max( max[ 2 ], z + radius );
-    },
-
-    expandBySphere: function ( bs ) {
-        Notify.log( 'BoundingBox.expandBySphere is deprecated, use instead BoundBox.expandByBoundingSphere' );
-        return this.expandByBoundingSphere( bs );
     },
 
     expandByvec3: function ( v ) {
