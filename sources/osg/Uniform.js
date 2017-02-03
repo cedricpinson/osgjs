@@ -54,23 +54,13 @@ Uniform.prototype = {
 
     apply: function UniformApply( gl, location ) {
 
-        if ( !this._cache || this._cacheDirty === true ) {
+        if ( !this._cache )
             this._cache = gl[ this._glCall ];
-            this._dirtyCache = false;
-        }
+
         if ( this._isMatrix )
             this._cache.call( gl, location, this._transpose, this._data );
         else
             this._cache.call( gl, location, this._data );
-    },
-
-    setGLCall: function ( glSignature ) {
-        this._glCall = glSignature;
-        this.dirtyCache();
-    },
-
-    dirtyCache: function () {
-        this._cacheDirty = true;
     },
 
     // no type checking, so array should be valid
@@ -166,7 +156,7 @@ var createUniformX = function ( dataOrName, uniformName, defaultConstructor, glS
         }
     }
 
-    uniform.setGLCall( glSignature );
+    uniform._glCall = glSignature;
     uniform._type = type;
     uniform._isMatrix = !!isMatrix;
     return uniform;

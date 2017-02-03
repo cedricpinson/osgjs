@@ -385,7 +385,7 @@ WebGLCaps.prototype = {
             }
 
             ext[ sup ] = gl.getExtension( sup );
-            if ( this._isGL2 )
+            if ( !this._isGL2 )
                 this.applyExtension( gl, sup );
         }
 
