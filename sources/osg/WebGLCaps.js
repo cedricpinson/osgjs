@@ -150,14 +150,6 @@ WebGLCaps.prototype = {
 
         if ( this._isGL2 ) {
 
-
-            // osgjs code is webgl1, so we fake webgl2 capabilities
-            // and calls for retrocompatibility with webgl1
-            this._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
-            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.NEAREST ] = true;
-            this._checkRTT[ Texture.FLOAT + ',' + Texture.LINEAR ] = true;
-            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.LINEAR ] = true;
-
             var nativeExtension = [
                 'OES_element_index_uint',
                 'EXT_sRGB',
@@ -168,6 +160,8 @@ WebGLCaps.prototype = {
                 'OES_standard_derivatives',
                 'OES_texture_float',
                 'OES_texture_half_float',
+                'OES_texture_half_float_linear',
+                'OES_texture_float_linear',
                 'OES_vertex_array_object',
                 'WEBGL_draw_buffers',
                 'OES_fbo_render_mipmap',
@@ -222,6 +216,10 @@ WebGLCaps.prototype = {
     checkSupportRTT: function ( gl, typeFloat, typeTexture ) {
 
         var key = typeFloat + ',' + typeTexture;
+
+        if ( this._isGL2 ) {
+            return !!this._webglExtensions[ 'EXT_color_buffer_float' ];
+        }
 
         // check once only
         if ( this._checkRTT[ key ] !== undefined )
