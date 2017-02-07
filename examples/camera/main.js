@@ -3,6 +3,7 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
 
     function createScene() {
@@ -23,7 +24,11 @@
         var textureQuad = osg.createTexturedQuadGeometry( 0, 0, 0,
             rttSize[ 0 ], 0, 0,
             0, rttSize[ 1 ], 0 );
-        textureQuad.getOrCreateStateSet().setTextureAttributeAndModes( 0, osg.Texture.createFromURL( 'textures/sol_trauma_periph.png' ) );
+        osgDB.readImageURL( 'textures/sol_trauma_periph.png' ).then( function ( image ) {
+            var texture = new osg.Texture();
+            texture.setImage( image );
+            textureQuad.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
+        } );
         rttCamera.addChild( textureQuad );
 
         // we attach the target texture to our camera

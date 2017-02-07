@@ -5,7 +5,6 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var BoundingSphere = require( 'osg/BoundingSphere' );
 var StateSet = require( 'osg/StateSet' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var Notify = require( 'osg/notify' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
@@ -186,7 +185,6 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
       @param Oject callback
    */
     setUpdateCallback: function ( cb ) {
-        Notify.warn( 'deprecated use instead addUpdateCallback/removeUpdateCallback' );
         if ( cb === this._updateCallbacks[ 0 ] || !cb ) return;
 
         var hasExistingCallback = Boolean( this._updateCallbacks.length );

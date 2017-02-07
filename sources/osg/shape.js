@@ -1,5 +1,4 @@
 'use strict';
-var Notify = require( 'osg/notify' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
@@ -433,24 +432,6 @@ var createTexturedQuadGeometry = function ( cornerx, cornery, cornerz,
     return g;
 };
 
-var createTexturedBox = function ( centerx, centery, centerz,
-    sizex, sizey, sizez ) {
-    Notify.log( 'createTexturedBox is deprecated use instead createTexturedBoxGeometry' );
-    return createTexturedBoxGeometry( centerx, centery, centerz,
-        sizex, sizey, sizez );
-};
-
-var createTexturedQuad = function ( cornerx, cornery, cornerz,
-    wx, wy, wz,
-    hx, hy, hz,
-    l, b, r, t ) {
-    Notify.log( 'createTexturedQuad is deprecated use instead createTexturedQuadGeometry' );
-    return createTexturedQuadGeometry( cornerx, cornery, cornerz,
-        wx, wy, wz,
-        hx, hy, hz,
-        l, b, r, t );
-};
-
 var createAxisGeometry = function ( size ) {
     if ( size === undefined ) {
         size = 5.0;
@@ -787,9 +768,7 @@ module.exports = {
     createTexturedBoxGeometry: createTexturedBoxGeometry,
     createTexturedQuadGeometry: createTexturedQuadGeometry,
     createTexturedSphereGeometry: createTexturedSphere,
-    createTexturedBox: createTexturedBox,
     createTexturedFullScreenFakeQuadGeometry: createTexturedFullScreenFakeQuadGeometry,
-    createTexturedQuad: createTexturedQuad,
     createAxisGeometry: createAxisGeometry,
     createTexturedSphere: createTexturedSphere,
     createGridGeometry: createGridGeometry,

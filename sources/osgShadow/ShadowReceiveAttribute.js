@@ -3,7 +3,6 @@ var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 var Map = require( 'osg/Map' );
-var Notify = require( 'osg/notify' );
 
 
 /**
@@ -305,12 +304,6 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
     // StateAttribute from the shader compilation
     isEnabled: function () {
         return this._enable;
-    },
-
-    // Deprecated methods, should be removed in the future
-    isEnable: function () {
-        Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
-        return this.isEnabled();
     },
 
     getHash: function () {

@@ -188,9 +188,4 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
     }
 } );
 
-Shader.create = function ( type, text ) {
-    Notify.log( 'Shader.create is deprecated, use new Shader with the same arguments instead' );
-    return new Shader( type, text );
-};
-
 module.exports = Shader;

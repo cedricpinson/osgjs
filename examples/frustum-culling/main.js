@@ -5,6 +5,7 @@
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
+    var osgDB = OSG.osgDB;
     var $ = window.$;
     var viewer;
     var Object = window.Object;
@@ -230,7 +231,11 @@
                 ground.setName( 'groundWithThousandsParent' );
                 ground.setCullingActive( true );
 
-                var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
+                var groundTex = new osg.Texture();
+                osgDB.readImageURL( '../media/textures/seamless/bricks1.jpg' ).then( function ( image ) {
+                    groundTex.setImage( image );
+                } );
+
                 groundTex.setWrapT( 'MIRRORED_REPEAT' );
                 groundTex.setWrapS( 'MIRRORED_REPEAT' );
                 ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, groundTex );

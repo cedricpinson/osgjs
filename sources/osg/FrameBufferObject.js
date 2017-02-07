@@ -20,7 +20,7 @@ var FrameBufferObject = function () {
     this._rbo = undefined;
     this._attachments = [];
     this._dirty = true;
-
+    this._extDrawBuffers = undefined;
 };
 
 FrameBufferObject.COLOR_ATTACHMENT0 = 0x8CE0;
@@ -256,7 +256,7 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
             return false;
         }
 
-        gl.framebufferTextureLayer( gl.FRAMEBUFFER, attachment, texture.getTextureObject().id(), level || 0 , layer || 0 );
+        gl.framebufferTextureLayer( gl.FRAMEBUFFER, attachment, texture.getTextureObject().id(), level || 0, layer || 0 );
 
         /* develblock:start */
         // only visible with webgl-insector enabled
@@ -315,6 +315,14 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                 this.bindFrameBufferObject();
 
                 var hasRenderBuffer = false;
+                // Check extDrawBuffers extension
+
+                if ( this._extDrawBuffers === undefined ) { // will be null if not supported
+                    this._extDrawBuffers = WebglCaps.instance( gl ).getWebGLExtension( 'WEBGL_draw_buffers' );
+                }
+
+                var extDrawBuffers = this._extDrawBuffers;
+
                 var buffers = [];
                 for ( var i = 0, l = attachments.length; i < l; ++i ) {
 
@@ -352,9 +360,10 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                             this.releaseGLObjects();
                             return;
                         }
-
-                        buffers.push( attachment.attachment );
-
+                        // Make sure that it is a color texture
+                        if ( extDrawBuffers !== undefined && attachment.attachment >= gl.COLOR_ATTACHMENT0 && attachment.attachment <= gl.COLOR_ATTACHMENT15 ) {
+                            buffers.push( attachment.attachment );
+                        }
                     }
 
                 }

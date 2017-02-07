@@ -1,7 +1,7 @@
 'use strict';
 
 var Notify = require( 'osg/notify' );
-
+var WebGLCaps = require( 'osg/WebGLCaps' );
 /*
 use EXT_disjoint_timer_queryto time webgl calls GPU side average over multiple frames
 
@@ -19,14 +19,15 @@ var TimerGPU = function ( gl ) {
 
     if ( gl ) {
 
-        var ext = gl.getExtension( 'EXT_disjoint_timer_query' );
+        var extText = ( WebGLCaps.instance( gl ).isWebGL2() === true ) ? 'EXT_disjoint_timer_query_webgl2' : 'EXT_disjoint_timer_query';
+        var ext = WebGLCaps.instance( gl ).getWebGLExtension( extText );
         if ( !ext ) return this;
-
+        this._glTimer = this.initExtension( gl, ext );
         // https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/extensions/ext-disjoint-timer-query.html#L102
         // run the page if strange results
         // to validate you gpu/browser has correct gpu queries support
-        this._hasTimeElapsed = ext.getQueryEXT( ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
-        this._hasTimeStamp = ext.getQueryEXT( ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
+        this._hasTimeElapsed = this._glTimer.getQueryEXT( ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
+        this._hasTimeStamp = this._glTimer.getQueryEXT( ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
 
         if ( !this._hasTimeElapsed && !this._hasTimeStamp ) {
             return this;
@@ -36,9 +37,7 @@ var TimerGPU = function ( gl ) {
         // which means each start must be followed by a end
         // BEFORE any other start (of other queryID)
         if ( !this._hasTimeStamp ) Notify.debug( 'Warning: do not use interleaved GPU query' );
-
         this._gl = gl;
-        this._glTimer = ext;
         this._enabled = true;
 
     }
@@ -91,6 +90,27 @@ TimerGPU.prototype = {
         this._glQueries.length = 0;
         this._queriesByID = {};
     },
+
+    initExtension: function ( gl, ext ) {
+        // We need to wrap the gl calls if gl is a webGL2 context
+        if ( WebGLCaps.instance( gl ).isWebGL2() ) {
+            gl.getQueryEXT = gl.getQuery;
+            gl.deleteQueryEXT = gl.deleteQuery;
+            gl.createQueryEXT = gl.createQuery;
+            gl.beginQueryEXT = gl.beginQuery;
+            gl.endQueryEXT = gl.endQuery;
+            gl.getQueryObjectEXT = gl.getQueryParameter;
+            gl.QUERY_RESULT_AVAILABLE_EXT = gl.QUERY_RESULT_AVAILABLE;
+            gl.QUERY_RESULT_EXT = gl.QUERY_RESULT;
+            gl.GPU_DISJOINT_EXT = ext.GPU_DISJOINT_EXT;
+            gl.TIME_ELAPSED_EXT = ext.TIME_ELAPSED_EXT;
+            gl.TIMESTAMP_EXT = ext.TIMESTAMP_EXT;
+            return gl;
+        } else {
+            return ext;
+        }
+    },
+
 
     supportTimeStamp: function () {
         return this._hasTimeStamp;

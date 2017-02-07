@@ -119,7 +119,8 @@ WebGLCaps.prototype = {
 
         // store context in case of multiple context
         this._gl = gl;
-
+        // We need to check if this is a webGL2 context to get the extensions work.
+        this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
         // Takes care of circular dependencies on Texture
         // Texture should be resolved at this point
         // Texture = require( 'osg/Texture' );
@@ -147,19 +148,8 @@ WebGLCaps.prototype = {
 
         this.initContextDependant( gl );
 
-        this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
-
         if ( this._isGL2 ) {
 
-
-            // osgjs code is webgl1, so we fake webgl2 capabilities
-            // and calls for retrocompatibility with webgl1
-            this._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
-            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.NEAREST ] = true;
-            this._checkRTT[ Texture.FLOAT + ',' + Texture.LINEAR ] = true;
-            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.LINEAR ] = true;
-
-            return;
             var nativeExtension = [
                 'OES_element_index_uint',
                 'EXT_sRGB',
@@ -170,6 +160,8 @@ WebGLCaps.prototype = {
                 'OES_standard_derivatives',
                 'OES_texture_float',
                 'OES_texture_half_float',
+                'OES_texture_half_float_linear',
+                'OES_texture_float_linear',
                 'OES_vertex_array_object',
                 'WEBGL_draw_buffers',
                 'OES_fbo_render_mipmap',
@@ -224,6 +216,10 @@ WebGLCaps.prototype = {
     checkSupportRTT: function ( gl, typeFloat, typeTexture ) {
 
         var key = typeFloat + ',' + typeTexture;
+
+        if ( this._isGL2 ) {
+            return !!this._webglExtensions[ 'EXT_color_buffer_float' ];
+        }
 
         // check once only
         if ( this._checkRTT[ key ] !== undefined )
@@ -336,6 +332,29 @@ WebGLCaps.prototype = {
         // TODO ?
         // try to compile a small shader to test the spec is respected
     },
+
+    applyExtension: function ( gl, name ) {
+        // Borrowed from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
+        var ext = gl.getExtension( name );
+        var suffix = name.split( '_' )[ 0 ];
+        var prefix = '_' + suffix;
+        var suffixRE = new RegExp( suffix + '$' );
+        var prefixRE = new RegExp( prefix );
+        for ( var key in ext ) {
+            var val = ext[ key ];
+            if ( typeof ( val ) === 'function' ) {
+                // remove suffix (eg: bindVertexArrayOES -> bindVertexArray)
+                var unsuffixedKey = key.replace( suffixRE, '' );
+                if ( key.substring )
+                    gl[ unsuffixedKey ] = ext[ key ].bind( ext );
+            } else {
+                var unprefixedKey = key.replace( prefixRE, '' );
+                if ( gl[ unprefixedKey ] === undefined )
+                    gl[ unprefixedKey ] = ext[ key ];
+            }
+        }
+    },
+
     getWebGLExtension: function ( str ) {
         return this._webGLExtensions[ str ];
     },
@@ -363,6 +382,8 @@ WebGLCaps.prototype = {
             }
 
             ext[ sup ] = gl.getExtension( sup );
+            if ( !this._isGL2 )
+                this.applyExtension( gl, sup );
         }
 
         var anisoExt = this.getWebGLExtension( 'EXT_texture_filter_anisotropic' );

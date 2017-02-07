@@ -1,7 +1,7 @@
 ### Status
 
 [![Join the chat at https://gitter.im/cedricpinson/osgjs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cedricpinson/osgjs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/cedricpinson/osgjs.png)](https://travis-ci.org/cedricpinson/osgjs)
+[![Build Status](https://travis-ci.org/cedricpinson/osgjs.svg?branch=master)](https://travis-ci.org/cedricpinson/osgjs)
 [![Coverity Status](https://scan.coverity.com/projects/9275/badge.svg)](https://scan.coverity.com/projects/cedricpinson-osgjs)
 OSG.JS WebGL framework
 ----------------------------
@@ -32,17 +32,17 @@ First, clone a copy of the main git repo by running:
 
 Install required node dependencies:
 
-    npm install # before you may need to execute npm install -g grunt-cli ( using sudo if you are running linux )
+    # if you dont have grunt-cli installed, use sudo on linux
+    # npm install -g grunt-cli
+    npm install
 
 Compile:
 
     grunt build
-    Alternatively you can use webpack -d
 
 Compile whenever watched files change:
 
-    grunt watch
-    Alternatively use webpack -w  // faster than grunt watch because it uses webpack's incremental builds
+    webpack -w
 
 The built version of osgjs will be put in the `build/` subdirectory.
 
@@ -53,7 +53,7 @@ Simply type in the command-line:
 
     grunt serve
 
-It should open a browser pointing to the root source directory, then navigate to examples or tutorials folder.
+You can now test some real examples http://localhost:9000/examples http://localhost:9000/tutorial
 
 Executing unitary tests
 -----------------------

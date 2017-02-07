@@ -17,7 +17,8 @@ var DefaultsAcceptAttributeTypes = [
     'Texture',
     'Light',
     'Material',
-    'Billboard'
+    'Billboard',
+    'PointSize'
 ];
 
 var ShaderGenerator = function () {

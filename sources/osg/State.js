@@ -726,11 +726,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         }
     },
 
-    setGlobalDefaultValue: function ( attribute ) {
-        Notify.log( 'setGlobalDefaultValue is deprecated, use instead setGlobalDefaultAttribute' );
-        this.setGlobalDefaultAttribute( attribute );
-    },
-
     setGlobalDefaultAttribute: function ( attribute ) {
         var typeMember = attribute.getTypeMember();
         var attributeMap = this.attributeMap;
@@ -914,7 +909,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         if ( this._currentVAO !== vao ) {
 
-            this._extVAO.bindVertexArrayOES( vao );
+            var gl = this._graphicContext;
+            gl.bindVertexArray( vao );
             this._currentVAO = vao;
 
             // disable cache to force a re enable of array
@@ -1288,7 +1284,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var i, l, name, uniform;
         var activeUniformKeys = activeUniformMap.getKeys();
 
-        this.nbApplyUniform += activeUniformKeys.length;
         for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
 
             name = activeUniformKeys[ i ];

@@ -74,7 +74,7 @@ var Geometry = function () {
     this._extVAO = undefined;
     this._vao = {};
     this._cacheVertexAttributeBufferList = {};
-
+    this._gc = undefined;
     // null means the kdTree builder will skip the kdTree creation
     this._shape = undefined;
 
@@ -129,7 +129,9 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             var prgID = keys[ i ];
             if ( this._vao[ prgID ] ) {
                 var vao = this._vao[ prgID ];
-                this._extVAO.deleteVertexArrayOES( vao );
+                // FIXME: We need here a strategy to delete VAO's
+                // passing the graphic context or other
+                this._gc.deleteVertexArray( vao );
                 this._vao[ prgID ] = undefined;
             }
         }
@@ -310,7 +312,9 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
                 var vertexAttributeSetup = this._generateVertexSetup( validAttributeKeyList, validAttributeList, optimizeIndexBufferVAO );
 
                 state.clearVertexAttribCache();
-                var vao = this._extVAO.createVertexArrayOES();
+                var gl = state.getGraphicContext();
+                var vao = gl.createVertexArray();
+
                 state.setVertexArrayObject( vao );
                 this._vao[ prgID ] = vao;
 
@@ -380,6 +384,8 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
                 var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
                 this._extVAO = extVAO;
+                // Just save a reference. As long as we have extVAO we'll need to destroy VAOs later. 
+                this._gc = state.getGraphicContext();
             }
 
             cachedDraw = this.generateDrawCommand( state, program, prgID );

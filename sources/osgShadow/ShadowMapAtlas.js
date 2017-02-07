@@ -333,7 +333,7 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     addLight: function ( light ) {
 
         if ( !light || this._lights.indexOf( light ) !== -1 ) {
-            notify.warn( 'no light or light arelady added' );
+            notify.warn( 'no light or light already added' );
             return -1;
         }
 
@@ -412,11 +412,6 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
             this._shadowMaps[ i ].updateShadowTechnique( nv, this._viewportDimension[ i ] );
         }
 
-    },
-
-    updateShadowTechnic: function ( /*nv*/) {
-        notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
-        this.updateShadowTechnique();
     },
 
     setTextureFiltering: function () {
