@@ -1,7 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
-var Notify = require( 'osg/notify' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 var DrawElements = require( 'osg/DrawElements' );
 var BufferArrayProxy = require( 'osg/BufferArrayProxy' );
@@ -15,53 +14,10 @@ var Geometry = function () {
 
     Node.call( this );
 
-    // Use proxy to detect change in vertex attributes
-    // you should use setVertexAttribute but if you dont
-    if ( window.Proxy ) {
-
-        var self = this;
-
-        this._attributes = {};
-        this._primitives = [];
-        this.attributes = new Proxy( this._attributes, {
-            set: function ( obj, prop, value ) {
-                var old = obj[ prop ];
-                if ( old !== value ) {
-                    obj[ prop ] = value;
-                    self.dirty();
-                }
-                return true;
-            }
-        } );
-
-        var push = function () {
-            this.push.apply( this, arguments );
-            self.dirty();
-
-        }.bind( this._primitives );
-
-        var pop = function () {
-            this.pop();
-            self.dirty();
-
-        }.bind( this._primitives );
-
-        this.primitives = new Proxy( this._primitives, {
-            get: function ( obj, key ) {
-                if ( key === 'push' ) return push;
-                if ( key === 'pop' ) return pop;
-                return obj[ key ];
-            }
-        } );
-
-    } else {
-
-        this.attributes = {};
-        this.primitives = [];
-        this._primitives = this.primitives;
-        this._attributes = this.attributes;
-
-    }
+    this.attributes = {};
+    this.primitives = [];
+    this._primitives = this.primitives;
+    this._attributes = this.attributes;
 
     // function is generated for each Shader Program ID
     // which generates a a special "draw"
@@ -79,17 +35,6 @@ var Geometry = function () {
     this._shape = undefined;
 
 };
-
-/**
- * enableVAO flag
- * We rely on Proxy to detect changes in vertextes attributes list or in primitives
- * list. If you dont have Proxy and you still want to use the VAO code path, replace
- * OSG.osg.Geometry.enableVAO = true at the begining of your application, but be sure to
- * not change vertexes attributes without calling dirty after.
- */
-Geometry.enableVAO = Boolean( window.Proxy );
-if ( Geometry.enableVAO ) Notify.info( 'enable VAO' );
-
 
 /** @lends Geometry.prototype */
 Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
@@ -377,7 +322,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             // no cache for this combination of vertex attributes
             // compute new Draw Call
 
-            if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
+            if ( this._extVAO === undefined ) { // will be null if not supported
                 var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
                 this._extVAO = extVAO;
             }
