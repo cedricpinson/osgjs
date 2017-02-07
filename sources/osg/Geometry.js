@@ -14,10 +14,8 @@ var Geometry = function () {
 
     Node.call( this );
 
-    this.attributes = {};
-    this.primitives = [];
-    this._primitives = this.primitives;
-    this._attributes = this.attributes;
+    this._attributes = {};
+    this._primitives = [];
 
     // function is generated for each Shader Program ID
     // which generates a a special "draw"
@@ -104,7 +102,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
     },
 
     getVertexAttributeList: function () {
-        return this.attributes;
+        return this._attributes;
     },
 
     /**
@@ -113,7 +111,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
      * you must call dirty() on the Geometry
      */
     getPrimitiveSetList: function () {
-        return this.primitives;
+        return this._primitives;
     },
 
     /**
