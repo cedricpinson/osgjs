@@ -119,7 +119,8 @@ WebGLCaps.prototype = {
 
         // store context in case of multiple context
         this._gl = gl;
-
+        // We need to check if this is a webGL2 context to get the extensions work.
+        this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
         // Takes care of circular dependencies on Texture
         // Texture should be resolved at this point
         // Texture = require( 'osg/Texture' );
@@ -146,8 +147,6 @@ WebGLCaps.prototype = {
         this.initBugDB();
 
         this.initContextDependant( gl );
-
-        this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
 
         if ( this._isGL2 ) {
 
