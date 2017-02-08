@@ -18,7 +18,7 @@ window.addEventListener( 'load', function () {
     group.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ -5, 10, -5 ] ) );
     var size = 5;
     // that node will be the geometry
-    var ground = osg.createTexturedBox( 0, 0, 0, size, size, size );
+    var ground = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
     //We add geomtry as child of the transform
     // and now it's transformed magically
     group.addChild( ground );

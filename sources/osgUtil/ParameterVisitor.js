@@ -61,8 +61,7 @@ ArraySlider.prototype = {
             var cuniform = uniform;
             var id = cbnameIndex;
             var func = function ( value ) {
-                cuniform.get()[ cindex ] = value;
-                cuniform.dirty();
+                cuniform.getInternalArray()[ cindex ] = value;
                 Notify.debug( cname + ' value ' + value );
                 document.getElementById( cbnameIndex ).innerHTML = Number( value ).toFixed( 4 );
                 self.setValue( id, value );

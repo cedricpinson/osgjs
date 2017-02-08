@@ -30,7 +30,7 @@ function createScene() {
     material.setAmbient( [ 1.0, 1.0, 0.2, 0.0 ] );
     material.setSpecular( [ 1.0, 1.0, 0.0, 0.0 ] );
     material.setEmission( [ 0.0, 0.0, 0.0, 0.5 ] );
-    cube.getOrCreateStateSet().setAttributeAndMode( material );
+    cube.getOrCreateStateSet().setAttributeAndModes( material );
 
     // attache updatecallback function to cube
     var cb = new SimpleUpdateCallback( material );
