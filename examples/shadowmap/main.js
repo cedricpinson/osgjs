@@ -25,6 +25,7 @@
             lightNum: 3,
             lightType: 'Spot',
             bias: 0.005,
+            normalBias: 0.075,
             model: 'material-test',
             shadowProjection: 'fov',
             fov: 50,
@@ -334,6 +335,9 @@
             controller = gui.add( this._config, 'bias', 0.0001, 0.05 );
             controller.onChange( this.updateShadow.bind( this ) );
 
+            controller = gui.add( this._config, 'normalBias', 0.001, 1.0 );
+            controller.onChange( this.updateShadow.bind( this ) );
+
             controller = gui.add( this._config, 'fov' ).min( 0.0 ).max( 180.0 );
             controller.onChange( this.updateShadow.bind( this ) );
 
@@ -633,6 +637,7 @@
                 var shadowSettings = this._shadowSettings[ l ];
 
                 shadowSettings.bias = this._config.bias;
+                shadowSettings.normalBias = this._config.normalBias;
                 shadowSettings.kernelSizePCF = this._config.kernelSizePCF;
             }
 
