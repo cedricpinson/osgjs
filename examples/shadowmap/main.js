@@ -24,6 +24,7 @@
             lightNum: 3,
             lightType: 'Spot',
             bias: 0.005,
+            normalBias: 0.075,
             epsilonVSM: 0.0008,
             superSample: 0,
             blur: false,
@@ -394,6 +395,9 @@
             controller = gui.add( this._config, 'bias', 0.0001, 0.05 );
             controller.onChange( this.updateShadow.bind( this ) );
 
+            controller = gui.add( this._config, 'normalBias', 0.001, 1.0 );
+            controller.onChange( this.updateShadow.bind( this ) );
+
             controller = gui.add( this._config, 'fov' ).min( 0.0 ).max( 180.0 );
             controller.onChange( this.updateShadow.bind( this ) );
 
@@ -751,6 +755,7 @@
                 var shadowSettings = this._shadowSettings[ l ];
 
                 shadowSettings.bias = this._config.bias;
+                shadowSettings.normalBias = this._config.normalBias;
                 shadowSettings.exponent = this._config.exponent;
                 shadowSettings.exponent1 = this._config.exponent1;
                 shadowSettings.epsilonVSM = this._config.epsilonVSM;
