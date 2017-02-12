@@ -49,6 +49,14 @@ PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Lo
         this._range[ childNo ][ 1 ] = max;
     },
 
+    getRange: function ( childNo ) {
+        return this._range[ childNo ];
+    },
+
+    getNumRanges: function () {
+        return this._range.length;
+    },
+
     setExpiryTime: function ( expiryTime ) {
         this._expiryTime = expiryTime;
     },

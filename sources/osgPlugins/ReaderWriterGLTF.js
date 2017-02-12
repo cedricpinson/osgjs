@@ -48,7 +48,7 @@ var ReaderWriterGLTF = function () {
     this._skeletonToInfluenceMap = undefined;
     this._inputImgReader = undefined;
     this._localPath = '';
-
+    this._glbModel = undefined;
     this.init();
 };
 
@@ -87,6 +87,7 @@ ReaderWriterGLTF.ALBEDO_TEXTURE_UNIT = 2;
 ReaderWriterGLTF.DIFFUSE_TEXTURE_UNIT = 2;
 ReaderWriterGLTF.SPECULAR_GLOSSINESS_TEXTURE_UNIT = 3;
 ReaderWriterGLTF.METALLIC_ROUGHNESS_TEXTURE_UNIT = 3;
+
 ReaderWriterGLTF.SPECULAR_TEXTURE_UNIT = 4;
 ReaderWriterGLTF.NORMAL_TEXTURE_UNIT = 5;
 ReaderWriterGLTF.AO_TEXTURE_UNIT = 6;
@@ -113,14 +114,18 @@ ReaderWriterGLTF.prototype = {
         this._stateSetMap = {};
         this._filesMap = new window.Map();
         this._inputReader = new Input();
-
     },
 
-
+    setGLBModel: function ( glbModel ) {
+        this._glbModel = glbModel;
+    },
 
     loadFile: P.method( function ( uri ) {
         if ( this._filesMap.has( uri ) )
             return this._filesMap.get( uri );
+
+        if ( uri === 'data:,' && this._glbModel !== undefined )
+            return this._glbModel.binary;
 
         var ext = uri.substr( uri.lastIndexOf( '.' ) + 1 );
         var fileType = FileHelper.getTypeForExtension( ext );
@@ -159,13 +164,22 @@ ReaderWriterGLTF.prototype = {
         var bufferView = json.bufferViews[ accessor.bufferView ];
         var buffer = json.buffers[ bufferView.buffer ];
         var filePromise = this.loadFile( buffer.uri );
+        // =======
+
+        //         var urlOrFile = this.findFileFromURI( this._files, buffer.uri );
+        //         // It comes from a glb file, we already have the data;
+        //         if ( urlOrFile === 'data:,' ) {
+        //             return this.assignBuffers( this._glbModel.binary, accessor, type, bufferView );
+        //         }
+
+        //         var filePromise = this.loadFile( urlOrFile, buffer.uri );
+
+        // >>>>>>> Initial support for 3D Tiles: TileSetWitDiscreteLOD
         var self = this;
         return filePromise.then( function ( data ) {
             return self.assignBuffers( data, accessor, type, bufferView );
         } );
     },
-
-
 
     assignBuffers: P.method( function ( data, accessor, type, bufferView ) {
         if ( !data )
@@ -506,6 +520,7 @@ ReaderWriterGLTF.prototype = {
         var osgStateSet = geometryNode.getOrCreateStateSet();
 
         var promises = [];
+
         var model = '';
         if ( pbrMetallicRoughness ) {
             if ( pbrMetallicRoughness.baseColorTexture )
@@ -528,7 +543,6 @@ ReaderWriterGLTF.prototype = {
         if ( glTFmaterial.occlusionTexture )
             promises.push( this.createTextureAndSetAttrib( glTFmaterial.occlusionTexture, osgStateSet, ReaderWriterGLTF.AO_TEXTURE_UNIT, ReaderWriterGLTF.AO_UNIFORM ) );
 
-        // TODO:Need to check for specular glossiness extension
         geometryNode.setUserData( {
             pbrWorklow: model
         } );
@@ -860,9 +874,7 @@ ReaderWriterGLTF.prototype = {
                 root.addUpdateCallback( self._basicAnimationManager );
 
             return P.all( promises ).then( function () {
-
                 return root;
-
             } );
 
         } );
