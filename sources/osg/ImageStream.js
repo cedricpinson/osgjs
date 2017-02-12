@@ -54,7 +54,9 @@ ImageStream.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
         if ( !this._canPlayDefered ) {
             this._canPlayDefered = P.defer();
-            this._imageObject.addEventListener( 'canplaythrough', this._canPlayDefered.resolve.bind( this._canPlayDefered, this ), true );
+            // resolve directly if the event is already fired
+            if ( this._imageObject.readyState > 3 ) this._canPlayDefered.resolve( this );
+            else this._imageObject.addEventListener( 'canplaythrough', this._canPlayDefered.resolve.bind( this._canPlayDefered, this ), true );
         }
 
         return this._canPlayDefered.promise;
