@@ -10,7 +10,7 @@
         var self = this;
 
         this._config = {
-            url: 'http://d8d913s460fub.cloudfront.net/videoserver/cat-test-video-320x240.mp4',
+            url: 'https://krpano.com/videoserver/cat-test-video-320x240.mp4',
             'PLAY': function () {
                 if ( self._currentImageStream ) self._currentImageStream.play();
             },
@@ -76,6 +76,25 @@
             videoElement.loop = true;
             videoElement.crossOrigin = 'anonymous';
             videoElement.src = this._config.url;
+
+            videoElement.onerror = function () {
+                var err = 'unknown error';
+                switch ( videoElement.error.code ) {
+                case 1:
+                    err = 'video loading aborted';
+                    break;
+                case 2:
+                    err = 'network loading error';
+                    break;
+                case 3:
+                    err = 'video decoding failed / corrupted data or unsupported codec';
+                    break;
+                case 4:
+                    err = 'video not supported';
+                    break;
+                }
+                osg.error( 'Error: ' + err + ' (errorcode=' + videoElement.error.code + ')' );
+            };
 
             window.image = image;
             this._currentImageStream = image;
