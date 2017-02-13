@@ -156,6 +156,8 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
 
     applyNode: function ( node ) {
         if ( !this.enter( node ) ) return;
+        // As this part of the code is potentially executed a lot of times we don't use instanceof
+        // https://jsperf.com/instanceof-performance/25
         if ( node.getPrimitiveSetList ) {
             this._intersector.intersect( this, node );
             // If it is a leaf (it has primitives) we can safely return
