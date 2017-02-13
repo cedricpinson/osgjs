@@ -53,12 +53,12 @@ window.addEventListener( 'load', function () {
                 var lightPos = l._position;
 
                 var lightTarget = [ x, y, 1, 1 ];
-                var lightDir = osg.Vec3.sub( osg.Vec3.create(), lightPos, lightTarget );
-                osg.Vec3.normalize( lightDir, lightDir );
+                var lightDir = osg.vec3.sub( osg.vec3.create(), lightPos, lightTarget );
+                osg.vec3.normalize( lightDir, lightDir );
 
                 var up = [ 0, 0, -1 ]; //   camera up
                 // Check it's not coincident with lightdir
-                if ( Math.abs( osg.Vec3.dot( up, lightDir ) ) >= 1.0 ) {
+                if ( Math.abs( osg.vec3.dot( up, lightDir ) ) >= 1.0 ) {
                     // another camera up
                     this.up = [ 0, 1, 0 ];
                 }

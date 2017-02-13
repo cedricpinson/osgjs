@@ -16,8 +16,8 @@ function getShader() {
         'uniform mat4 uModelViewMatrix;',
         'uniform mat4 uProjectionMatrix;',
         'uniform mat4 uModelViewNormalMatrix;',
-        'uniform vec4 lightPos;',
-        'uniform vec4 eyePos;',
+        'uniform vec3 lightPos;',
+        'uniform vec3 eyePos;',
         'varying vec4 position;',
         'varying vec3 l;',
         'varying vec3 v;',
@@ -30,9 +30,9 @@ function getShader() {
 
         'void main(void) {',
         '  vec3 p = vec3(uModelViewMatrix * vec4(Vertex,1.0));',
-        '  l = normalize (vec3(lightPos) - p);',
+        '  l = normalize ( lightPos - p);',
 
-        '  v = normalize (vec3(eyePos) - p);',
+        '  v = normalize ( eyePos - p);',
 
         '  n = normalize( vec3(uModelViewNormalMatrix * vec4(Normal, 1.0)));',
         '//Vertex.x = Vertex.x + rand(1.0); Vertex.y = Vertex.y + rand(1.0);',
@@ -86,8 +86,8 @@ function getShaderVariant2() {
         'uniform mat4 uModelViewMatrix;',
         'uniform mat4 uProjectionMatrix;',
         'uniform mat4 uModelViewNormalMatrix;',
-        'uniform vec4 lightPos;',
-        'uniform vec4 eyePos;',
+        'uniform vec3 lightPos;',
+        'uniform vec3 eyePos;',
         'varying vec4 position;',
         'varying vec3 l;',
         'varying vec3 h;',
@@ -95,9 +95,9 @@ function getShaderVariant2() {
         'varying vec3 n;',
         'void main(void) {',
         '  vec3 p = vec3(uModelViewMatrix * vec4(Vertex,1.0));',
-        '  l = normalize (vec3(lightPos) - p);',
+        '  l = normalize ( lightPos - p);',
 
-        '  v = normalize (vec3(eyePos) - p);',
+        '  v = normalize ( eyePos - p);',
         '  h = normalize (l+ v);',
 
         '  n = normalize( vec3(uModelViewNormalMatrix * vec4(Normal, 1.0)));',
