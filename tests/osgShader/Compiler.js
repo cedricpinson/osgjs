@@ -27,7 +27,7 @@ module.exports = function () {
             var root = compiler.createFragmentShaderGraph();
 
             var extensions = compiler.evaluateAndGatherField( root, 'getExtensions' );
-            assert.isOk( extensions.length === 0, 'Compiler Evaluate And Gather Field: defines rightly so' );
+            assert.isOk( extensions.length === 1, 'Compiler Evaluate And Gather Field: defines rightly so' );
             var defines = compiler.evaluateAndGatherField( root, 'getDefines' );
             assert.isOk( defines.length === 1, 'Compiler Evaluate And Gather Field: defines rightly so' );
 
