@@ -48,9 +48,6 @@ if(!earlyOut) {
       
 }
 
-
-#if defined( _PCF )
-
 // pcf pbias to add on offset
 vec2 shadowBiasPCF = vec2(0.);
 
@@ -60,9 +57,6 @@ shadowBiasPCF.x = clamp(dFdx(shadowReceiverZ)* shadowTextureSize.z, -1.0, 1.0 );
 shadowBiasPCF.y = clamp(dFdy(shadowReceiverZ)* shadowTextureSize.w, -1.0, 1.0 );
 
 #endif
-
-#endif
-
 
 vec4 clampDimension;
 
@@ -113,47 +107,7 @@ shadowReceiverZ -= shadowBias;
 
 // Now computes Shadow
 
-#ifdef _NONE
-
-float shadowDepth = getSingleFloatFromTex(tex, shadowUV.xy);
-// shadowReceiverZ : receiver depth in light view
-// shadowDepth : caster depth in light view
-// receiver is shadowed if its depth is superior to the caster
-shadow = ( shadowReceiverZ > shadowDepth ) ? 0.0 : 1.0;
-
-#elif defined( _PCF )
-
 shadow = getShadowPCF(tex, shadowTextureSize, shadowUV, shadowReceiverZ, shadowBiasPCF, clampDimension);
-
-#elif defined( _ESM )
-
-shadow = fetchESM(tex, shadowTextureSize, shadowUV, shadowReceiverZ, exponent0, exponent1);
-
-#elif  defined( _VSM )
-
-vec2 moments = getDoubleFloatFromTex(tex, shadowUV.xy);
-shadow = chebyshevUpperBound(moments, shadowReceiverZ, epsilonVSM);
-
-#elif  defined( _EVSM )
-
-vec4 occluder = getQuadFloatFromTex(tex, shadowUV.xy);
-vec2 exponents = vec2(exponent0, exponent1);
-vec2 warpedDepth = warpDepth(shadowReceiverZ, exponents);
-
-float derivationEVSM = epsilonVSM;
-// Derivative of warping at depth
-vec2 depthScale = derivationEVSM * exponents * warpedDepth;
-vec2 minVariance = depthScale * depthScale;
-
-float epsilonEVSM = -epsilonVSM;
-
-// Compute the upper bounds of the visibility function both for x and y
-float posContrib = chebyshevUpperBound(occluder.xz, -warpedDepth.x, minVariance.x);
-float negContrib = chebyshevUpperBound(occluder.yw, warpedDepth.y, minVariance.y);
-
-shadow = min(posContrib, negContrib);
-
-#endif
 
 
 return shadow;

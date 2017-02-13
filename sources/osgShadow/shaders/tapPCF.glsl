@@ -1,19 +1,11 @@
 
-#pragma include "noise.glsl" "_ROTATE_OFFSET"
-
 #pragma include "shadowLinearSoft.glsl"
 
 float getShadowPCF(const in sampler2D depths, const in vec4 size, const in vec2 uv, const in float compare, const in vec2 biasPCF, const in vec4 clampDimension)
 {
 
      float res = 0.0;
-
-#if defined(_ROTATE_OFFSET)
-     res += texture2DShadowLerp(depths, size,   uv + size.zw*(noise2D(uv*gl_FragCoord.xy)*2.0 - 1.0) + biasPCF, compare, clampDimension);
-#else
      res += texture2DShadowLerp(depths, size,   uv + biasPCF, compare, clampDimension);
-#endif
-
 
 #if defined(_PCFx1)
 

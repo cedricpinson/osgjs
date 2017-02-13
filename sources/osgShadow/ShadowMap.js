@@ -235,15 +235,8 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this.setTextureSize( shadowSettings.textureSize );
         this.setTexturePrecision( shadowSettings.textureType );
 
-        this.setFakePCF( shadowSettings.fakePCF );
-        this.setRotateOffset( shadowSettings.rotateOffset );
         this.setKernelSizePCF( shadowSettings.kernelSizePCF );
-        this.setAlgorithm( shadowSettings.algorithm );
         this.setBias( shadowSettings.bias );
-        this.setExponent0( shadowSettings.exponent );
-        this.setExponent1( shadowSettings.exponent1 );
-        this.setEpsilonVSM( shadowSettings.epsilonVSM );
-
 
     },
 
@@ -273,59 +266,12 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._casterStateSet.getUniformList()[ 'bias' ].getUniform().setFloat( value );
     },
 
-    getExponent0: function () {
-        return this._shadowReceiveAttribute.getExponent0();
-    },
-
-    setExponent0: function ( value ) {
-        this._shadowReceiveAttribute.setExponent0( value );
-        this._casterStateSet.getUniformList()[ 'exponent0' ].getUniform().setFloat( value );
-    },
-
-    getExponent1: function () {
-        return this._shadowReceiveAttribute.getExponent1();
-    },
-
-    setExponent1: function ( value ) {
-        this._shadowReceiveAttribute.setExponent1( value );
-        this._casterStateSet.getUniformList()[ 'exponent1' ].getUniform().setFloat( value );
-    },
-
-    getEpsilonVSM: function () {
-        return this._shadowReceiveAttribute.getEpsilonVSM();
-    },
-
-    setEpsilonVSM: function ( value ) {
-        this._shadowReceiveAttribute.setEpsilonVSM( value );
-    },
-
     getKernelSizePCF: function () {
         return this._shadowReceiveAttribute.getKernelSizePCF();
     },
 
     setKernelSizePCF: function ( value ) {
         this._shadowReceiveAttribute.setKernelSizePCF( value );
-    },
-
-    getFakePCF: function () {
-        return this._shadowReceiveAttribute.getFakePCF();
-    },
-
-    setFakePCF: function ( value ) {
-        if ( this._shadowReceiveAttribute.getFakePCF() !== value ) {
-            this._shadowReceiveAttribute.setFakePCF( value );
-            this.setTextureFiltering();
-        }
-    },
-
-    getRotateOffset: function () {
-        return this._shadowReceiveAttribute.getRotateOffset();
-    },
-
-    setRotateOffset: function ( value ) {
-        if ( this._shadowReceiveAttribute.getRotateOffset() !== value ) {
-            this._shadowReceiveAttribute.setRotateOffset( value );
-        }
     },
 
     setShadowedScene: function ( shadowedScene ) {
@@ -501,71 +447,26 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
     setTextureFiltering: function () {
 
-        var textureType, texFilterMin, texFilterMag;
+        var textureType;
         var texType = this.getTexturePrecision();
-        if ( this._texture ) {
-            // see shadowSettings.js header
-            switch ( this.getAlgorithm() ) {
-            case 'ESM':
-            case 'VSM':
-            case 'EVSM':
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-
-            default:
-            case 'PCF':
-            case 'NONE':
-                if ( this.getFakePCF() ) {
-                    texFilterMin = Texture.LINEAR;
-                    texFilterMag = Texture.LINEAR;
-
-                    // // TODO try anisotropy with better biaspcf
-                    // texFilterMin = Texture.LINEAR_MIPMAP_LINEAR;
-                    // texFilterMag = Texture.LINEAR_MIPMAP_LINEAR;
-                    // this._texture.setMaxAnisotropy( 16 );
-
-
-                } else {
-                    texFilterMin = Texture.NEAREST;
-                    texFilterMag = Texture.NEAREST;
-                }
-                break;
-            }
-
-            switch ( texType ) {
-            case 'HALF_FLOAT':
-                textureType = Texture.HALF_FLOAT;
-                texFilterMin = Texture.NEAREST;
-                texFilterMag = Texture.NEAREST;
-                break;
-            case 'HALF_FLOAT_LINEAR':
-                textureType = Texture.HALF_FLOAT;
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-            case 'FLOAT':
-                textureType = Texture.FLOAT;
-                texFilterMin = Texture.NEAREST;
-                texFilterMag = Texture.NEAREST;
-                break;
-            case 'FLOAT_LINEAR':
-                textureType = Texture.FLOAT;
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-            default:
-            case 'UNSIGNED_BYTE':
-                textureType = Texture.UNSIGNED_BYTE;
-                break;
-            }
+        switch ( texType ) {
+        case 'HALF_FLOAT':
+            textureType = Texture.HALF_FLOAT;
+            break;
+        case 'FLOAT':
+            textureType = Texture.FLOAT;
+            break;
+        default:
+        case 'UNSIGNED_BYTE':
+            textureType = Texture.UNSIGNED_BYTE;
+            break;
         }
 
         this._texture.setInternalFormatType( textureType );
-        this._texture.setMinFilter( texFilterMin );
-        this._texture.setMagFilter( texFilterMag );
-        this._textureMagFilter = texFilterMag;
-        this._textureMinFilter = texFilterMin;
+        this._texture.setMinFilter( Texture.NEAREST );
+        this._texture.setMagFilter( Texture.NEAREST );
+        this._textureMagFilter = Texture.NEAREST;
+        this._textureMinFilter = Texture.NEAREST;
 
     },
 
@@ -617,17 +518,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._textureSize = mapSize;
 
         this.dirty();
-    },
-
-    setAlgorithm: function ( algo ) {
-
-        if ( algo === this.getAlgorithm() ) return;
-        this._shadowReceiveAttribute.setAlgorithm( algo );
-        this.dirty();
-    },
-
-    getAlgorithm: function () {
-        return this._shadowReceiveAttribute.getAlgorithm();
     },
 
     getCasterStateSet: function () {

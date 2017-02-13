@@ -2,8 +2,6 @@
 
 #pragma include "colorEncode.glsl"
 
-// see shadowSettings.js header for shadow algo param explanations
-
 // end Float codec
 float getSingleFloatFromTex(const in sampler2D depths, const in vec2 uv){
 #ifndef _FLOATTEX
@@ -26,11 +24,4 @@ vec4 getQuadFloatFromTex(const in sampler2D depths, const in vec2 uv){
 }
 // end Float codec
 
-
-#pragma include "vsm.glsl" "_VSM"
-
-#pragma include "evsm.glsl" "_EVSM"
-
-#pragma include "esm.glsl" "_ESM"
-
-#pragma include "pcf.glsl" "_NONE" "_PCF"
+#pragma include "pcf.glsl" 

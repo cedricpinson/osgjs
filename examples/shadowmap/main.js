@@ -24,19 +24,10 @@
             lightNum: 3,
             lightType: 'Spot',
             bias: 0.005,
-            epsilonVSM: 0.0008,
-            superSample: 0,
-            blur: false,
-            blurKernelSize: 4.0,
-            blurTextureSize: 256,
             model: 'material-test',
             shadowProjection: 'fov',
             fov: 50,
             kernelSizePCF: '1Tap(4texFetch)',
-            fakePCF: false,
-            rotateOffset: false,
-            exponent: 80.0,
-            exponent1: 0.33,
             atlas: false,
             lightMovement: 'Rotate',
             lightSpeed: 0.5,
@@ -142,7 +133,6 @@
         this._previousFrustumTest = this._config.frustumTest;
         this._previousKernelSizePCF = this._config.kernelSizePCF;
         this._previousDisable = this._config.disableShadows;
-        this._fakePCF = this._config.fakePCF;
         this._debugOtherTechniques = false;
         this._debugFrustum = false;
         this._debugPrefilter = false;
@@ -315,26 +305,11 @@
             var textureTypes = [ 'UNSIGNED_BYTE' ];
             if ( this._hasAnyFloatTextureSupport ) {
                 if ( this._halfFloatTextureSupport ) textureTypes.push( 'HALF_FLOAT' );
-                if ( this._halfFloatLinearTextureSupport ) textureTypes.push( 'HALF_FLOAT_LINEAR' );
-                if ( this._floatLinearTextureSupport ) textureTypes.push( 'FLOAT_LINEAR' );
                 if ( this._floatTextureSupport ) textureTypes.push( 'FLOAT' );
             }
 
 
             var controller;
-
-            var algoShadow = {
-                'Shadow Map': 'NONE',
-                'Shadow Map Percentage Close Filtering (PCF)': 'PCF'
-            };
-            if ( this._debugOtherTechniques ) {
-                algoShadow[ 'Variance Shadow Map (VSM)' ] = 'VSM';
-                algoShadow[ 'Exponential Variance Shadow Map (EVSM)' ] = 'EVSM';
-                algoShadow[ 'Exponential Shadow Map (ESM)' ] = 'ESM';
-            }
-
-            controller = gui.add( this._config, 'shadow', algoShadow );
-            controller.onChange( this.updateShadow.bind( this ) );
 
             controller = gui.add( this._config, 'textureType', textureTypes );
             controller.onChange( this.updateShadow.bind( this ) );
@@ -398,48 +373,9 @@
             controller.onChange( this.updateShadow.bind( this ) );
 
 
-            var pcfFolder = gui.addFolder( 'PCF' );
-            controller = pcfFolder.add( this._config, 'kernelSizePCF', osgShadow.ShadowSettings.kernelSizeList );
+            controller = gui.add( this._config, 'kernelSizePCF', osgShadow.ShadowSettings.kernelSizeList );
             controller.onChange( this.updateShadow.bind( this ) );
 
-            controller = pcfFolder.add( this._config, 'fakePCF' );
-            controller.onChange( this.updateShadow.bind( this ) );
-
-            controller = pcfFolder.add( this._config, 'rotateOffset' );
-            controller.onChange( this.updateShadow.bind( this ) );
-
-
-            if ( this._debugOtherTechniques ) {
-
-                var folderVSM = gui.addFolder( 'Variance (VSM, EVSM)' );
-
-                controller = folderVSM.add( this._config, 'epsilonVSM' ).min( 0.0001 ).max( 0.01 );
-                controller.onChange( this.updateShadow.bind( this ) );
-
-
-                if ( this._debugPrefilter ) {
-                    controller = folderVSM.add( this._config, 'superSample' ).step( 1 ).min( 0.0 ).max( 8 );
-                    controller.onChange( this.updateShadow.bind( this ) );
-
-                    controller = folderVSM.add( this._config, 'blur' );
-                    controller.onChange( this.updateShadow.bind( this ) );
-
-                    controller = folderVSM.add( this._config, 'blurKernelSize' ).min( 3.0 ).max( 128.0 );
-                    controller.onChange( this.updateShadow.bind( this ) );
-
-                    controller = folderVSM.add( this._config, 'blurTextureSize', [ 32, 64, 128, 256, 512, 1024, 2048, 4096, 8144 ] );
-                    controller.onChange( this.updateShadow.bind( this ) );
-                }
-
-                var ExpFolder = gui.addFolder( 'Exponent (ESM, EVSM)' );
-
-                controller = ExpFolder.add( this._config, 'exponent' ).min( 0.0 ).max( 300.0 );
-                controller.onChange( this.updateShadow.bind( this ) );
-
-                controller = ExpFolder.add( this._config, 'exponent1' ).min( 0.0 ).max( 200.0 );
-                controller.onChange( this.updateShadow.bind( this ) );
-
-            }
             this._gui = gui;
 
         },
@@ -705,62 +641,6 @@
             }
 
         },
-        updateShadowTechniqueMode: function () {
-
-            var l, numLights = ~~this._config.lightNum;
-
-            if ( this._previousTech !== this._config.shadow ) {
-                // technique change.
-
-
-                this._groundNode.setNodeMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowTraversalMask ) );
-
-                switch ( this._config.shadow ) {
-                case 'ESM':
-
-                    this._config.exponent = 0.66;
-                    this._config.exponent1 = 20.0;
-
-                    //this._groundNode.setNodeMask( this._castsShadowTraversalMask );
-                    break;
-                case 'EVSM':
-                    this._config.exponent = 146;
-                    this._config.exponent1 = 1.0;
-                    this._config.bias = 0.05;
-                    this._config.textureType = 'FLOAT';
-                    //this._groundNode.setNodeMask( this._castsShadowTraversalMask );
-                    break;
-                case 'VSM':
-                    this._config.epsilonVSM = 0.0001;
-                    //this._groundNode.setNodeMask( this._castsShadowTraversalMask );
-                    break;
-                default:
-                    break;
-
-                }
-                l = numLights;
-                while ( l-- ) {
-                    this._shadowSettings[ l ].setAlgorithm( this._config.shadow );
-                }
-
-                this._previousTech = this._config.shadow;
-            }
-
-            l = numLights;
-            while ( l-- ) {
-                var shadowSettings = this._shadowSettings[ l ];
-
-                shadowSettings.bias = this._config.bias;
-                shadowSettings.exponent = this._config.exponent;
-                shadowSettings.exponent1 = this._config.exponent1;
-                shadowSettings.epsilonVSM = this._config.epsilonVSM;
-                shadowSettings.kernelSizePCF = this._config.kernelSizePCF;
-                shadowSettings.fakePCF = this._config.fakePCF;
-                shadowSettings.rotateOffset = this._config.rotateOffset;
-            }
-
-
-        },
         updateDebugRTT: function () {
             // show the shadowmap as ui quad on left bottom screen
             if ( this._updateRTT || ( this._previousRTT === true && this._config.debugRTT === false ) ) {
@@ -820,7 +700,6 @@
 
             this.updateLightType();
             this.updateFov();
-            this.updateShadowTechniqueMode();
 
             this.updateShadowFormat();
             this.updateShadowMapSize();
@@ -1140,7 +1019,6 @@
                 shadowSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
                 shadowSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
 
-                shadowSettings.setAlgorithm( this._config.shadow );
             }
 
             // at three light you might burn...
@@ -1390,11 +1268,9 @@
 
             this._glContext = viewer.getGraphicContext();
 
-            this._floatLinearTextureSupport = osg.WebGLCaps.instance().hasLinearFloatRTT();
             this._floatTextureSupport = osg.WebGLCaps.instance().hasFloatRTT();
-            this._halfFloatLinearTextureSupport = osg.WebGLCaps.instance().hasHalfFloatRTT();
-            this._halfFloatTextureSupport = osg.WebGLCaps.instance().hasLinearHalfFloatRTT();
-            this._hasAnyFloatTextureSupport = this._floatLinearTextureSupport || this._floatTextureSupport || this._halfFloatLinearTextureSupport || this._halfFloatTextureSupport;
+            this._halfFloatTextureSupport = osg.WebGLCaps.instance().hasHalfFloatRTT();
+            this._hasAnyFloatTextureSupport = this._floatTextureSupport || this._halfFloatTextureSupport;
 
             var scene = this.createScene();
 
