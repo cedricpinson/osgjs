@@ -1,7 +1,5 @@
 
-#pragma include "bandPCF.glsl" "_BAND_PCF"
-#pragma include "poissonPCF.glsl" "_POISSON_PCF"
-#pragma include "tapPCF.glsl" "_TAP_PCF"
+#pragma include "tapPCF.glsl"
 
 #ifdef _ATLAS_SHADOW
 
@@ -32,7 +30,7 @@ float computeShadow(const in bool lighted,
 #endif
 {
                         
-    #pragma include "shadowsReceiveMain.glsl" "_PCF" "_NONE"
+    #pragma include "shadowsReceiveMain.glsl"
 
 }
 

@@ -62,18 +62,6 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
             inp.shadowbias
         ] );
 
-        var algo = this._shadow.getAlgorithm();
-        if ( algo === 'ESM' ) {
-            inputs.push( this._inputs.shadowexponent0 );
-            inputs.push( this._inputs.shadowexponent1 );
-        } else if ( algo === 'EVSM' ) {
-            inputs.push( this._inputs.shadowepsilonVSM );
-            inputs.push( this._inputs.shadowexponent0 );
-            inputs.push( this._inputs.shadowexponent1 );
-        } else if ( algo === 'VSM' ) {
-            inputs.push( this._inputs.shadowepsilonVSM );
-        }
-
         return ShaderUtils.callFunction( 'computeShadow', this._outputs.float, inputs );
     }
 
@@ -85,31 +73,29 @@ var ShadowCast = function () {
 };
 
 ShadowCast.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
     type: 'ShadowCast',
-    validInputs: [ 'exponent0', 'exponent1', 'shadowDepthRange', 'fragEye' ],
+    validInputs: [ 'shadowDepthRange', 'fragEye' ],
     validOutputs: [ 'color' ],
 
     globalFunctionDeclaration: function () {
         return '#pragma include "shadowsCastFrag.glsl"';
     },
+
     setShadowCastAttribute: function ( shadowAttr ) {
         this._shadowCast = shadowAttr;
         return this;
     },
+
     // must return an array of defines
     // because it will be passed to the ShaderGenerator
     getDefines: function () {
         return this._shadowCast.getDefines();
     },
+
     computeShader: function () {
         var inp = this._inputs;
-
-        var algo = this._shadowCast.getAlgorithm();
-        if ( algo === 'NONE' || algo === 'PCF' ) {
-            return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange ] );
-        }
-
-        return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange, inp.exponent0, inp.exponent1 ] );
+        return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange ] );
     }
 
 } );

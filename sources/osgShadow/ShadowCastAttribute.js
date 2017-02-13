@@ -25,12 +25,8 @@ ShadowCastAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.object
         if ( !this._shadowReceiveAttribute ) return undefined; // test here because of cloneType
         return this._shadowReceiveAttribute.getDefines();
     },
-    getAlgorithm: function () {
-        if ( !this._shadowReceiveAttribute ) return undefined; // test here because of cloneType
-        return this._shadowReceiveAttribute.getAlgorithm();
-    },
     getHash: function () {
-        return 'ShadowCast' + this._enable + this._shadowReceiveAttribute.getAlgorithm() + this._shadowReceiveAttribute.getPrecision();
+        return 'ShadowCast' + this._enable + this._shadowReceiveAttribute.getPrecision();
     },
     // need a isEnabled to let the ShaderGenerator to filter
     // StateAttribute from the shader compilation
