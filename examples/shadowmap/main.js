@@ -5,14 +5,15 @@
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
-    var osgUtil = OSG.osgUtil;
     var osgShadow = OSG.osgShadow;
-    var Object = window.Object;
+    var ExampleOSGJS = window.ExampleOSGJS;
 
     //////////////////////
     /// The sample itself is in this object.
     ///
     var Example = function () {
+
+        ExampleOSGJS.call( this );
 
         // sample default parameters
         // at start most can be changed by the UI
@@ -46,7 +47,6 @@
             quadraticAttenuation: 0.0,
             exampleObj: this,
             shadowStatic: false,
-            disableShadows: false,
             basicScene: false,
 
             logCamLight: function () {
@@ -132,41 +132,8 @@
         this._previousRTT = this._config.debugRTT;
         this._previousFrustumTest = this._config.frustumTest;
         this._previousKernelSizePCF = this._config.kernelSizePCF;
-        this._previousDisable = this._config.disableShadows;
-        this._debugOtherTechniques = false;
         this._debugFrustum = false;
         this._debugPrefilter = false;
-
-        // default & change debug
-        var queryDict = {};
-
-        window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
-            queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
-        } );
-        if ( queryDict.debug ) {
-
-            this._debugOtherTechniques = true;
-            this._debugFrustum = true;
-            this._debugPrefilter = true;
-
-        }
-
-        var keys = Object.keys( queryDict );
-
-        for ( var i = 0; i < keys.length; i++ ) {
-
-            var property = keys[ i ];
-            if ( queryDict[ property ] && queryDict[ property ].length !== 0 ) {
-                var n = JSON.parse( queryDict[ property ] );
-
-                if ( !isNaN( parseFloat( n ) ) && isFinite( n ) ) {
-                    n = parseFloat( n );
-                }
-
-                this._config[ property ] = n;
-            }
-
-        }
     };
 
 
@@ -293,7 +260,7 @@
         }
     };
 
-    Example.prototype = {
+    Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
         /*
          *   UI user choices
@@ -347,8 +314,6 @@
 
             controller = gui.add( this._config, 'shadowStatic' );
             controller.onChange( this.updateShadow.bind( this ) );
-
-            controller = gui.add( this._config, 'disableShadows' );
 
             controller = gui.add( this._config, 'debugBounds' );
             controller.onChange( this.updateShadow.bind( this ) );
@@ -492,7 +457,7 @@
         },
 
         updateLightsEnable: function () {
-            var l, numLights = ~~this._config.lightNum;
+            var l, numLights = this._config.lightNum;
 
             while ( this._maxVaryings < ( numLights + 4 ) ) {
                 numLights--;
@@ -641,55 +606,12 @@
             }
 
         },
-        updateDebugRTT: function () {
-            // show the shadowmap as ui quad on left bottom screen
-            if ( this._updateRTT || ( this._previousRTT === true && this._config.debugRTT === false ) ) {
-                this._RTTdebugNode.removeChildren();
-            }
-            if ( this._updateRTT || ( this._previousRTT === false && this._config.debugRTT ) ) {
-
-                var l, numLights = ~~this._config.lightNum;
-
-                // make sure we have latest one
-                this._RTT = [];
-                var shadowMap;
-                l = numLights;
-                if ( this._config.atlas ) {
-
-                    shadowMap = this._shadowTechnique[ 0 ];
-                    this._RTT.push( shadowMap.getTexture() );
-
-                } else {
-                    while ( l-- ) {
-                        shadowMap = this._shadowTechnique[ l ];
-                        this._RTT.push( shadowMap.getTexture() );
-                    }
-                }
-                this.showFrameBuffers( {
-                    screenW: this._canvas.width,
-                    screenH: this._canvas.height
-                } );
-            }
-            this._previousRTT = this._config.debugRTT;
-            this._updateRTT = false;
-        },
 
         /*
          * try to minimize update cost and code size
          * with a single callback for all ui user changes
          */
         updateShadow: function () {
-
-            if ( this._config.disableShadows !== this._previousDisable ) {
-                if ( this._config.disableShadows ) {
-                    this._rootNode.removeChild( this._lightAndShadowScene );
-                    this._rootNode.addChild( this._shadowScene );
-                } else {
-                    this._rootNode.removeChild( this._shadowScene );
-                    this._rootNode.addChild( this._lightAndShadowScene );
-                }
-                this._previousDisable = this._config.disableShadows;
-            }
 
             this.updateShadowStatic();
 
@@ -704,13 +626,46 @@
             this.updateShadowFormat();
             this.updateShadowMapSize();
 
-            this.updateDebugRTT();
+            var l, numLights;
+            numLights = this._config.lightNum;
+            l = numLights;
+            while ( l-- ) {
+                var shadowSettings = this._shadowSettings[ l ];
 
-            var l = this._lights.length;
+                shadowSettings.bias = this._config.bias;
+                shadowSettings.kernelSizePCF = this._config.kernelSizePCF;
+            }
+
+            var shadowMap;
+            if ( this._updateRTT || ( this._previousRTT === false && this._config.debugRTT ) ) {
+
+                this._RTT = [];
+
+                l = numLights;
+                if ( this._config.atlas ) {
+
+                    shadowMap = this._shadowTechnique[ 0 ];
+                    this._RTT.push( shadowMap.getTexture() );
+
+                } else {
+                    while ( l-- ) {
+                        shadowMap = this._shadowTechnique[ l ];
+                        this._RTT.push( shadowMap.getTexture() );
+                    }
+                }
+
+                this.createDebugTextureList( this._RTT, {
+                    w: 110,
+                    h: 110
+                } );
+                this.showDebugTextureList();
+            }
+
+            l = this._lights.length;
 
             if ( !this._config.atlas ) {
                 while ( l-- ) {
-                    var shadowMap = this._shadowTechnique[ l ];
+                    shadowMap = this._shadowTechnique[ l ];
                     shadowMap.setShadowSettings( this._shadowSettings[ l ] );
                     shadowMap.setDebug( this._config.debugBounds );
                 }
@@ -729,102 +684,6 @@
 
         },
 
-        // show the shadowmap as ui quad on left bottom screen
-        // in fact show all texture inside this._RTT
-        showFrameBuffers: function ( optionalArgs ) {
-
-            if ( !this._RTTdebugNode ) this._RTTdebugNode = new osg.Node();
-            if ( !this._composerDebugNode ) this._composerDebugNode = new osg.Node();
-            this._composerDebugNode._name = 'debugComposerNode';
-            this._composerDebugNode.setCullingActive( false );
-            if ( !this._composerDebugCamera ) this._composerDebugCamera = new osg.Camera();
-            this._RTTdebugNode.addChild( this._composerDebugCamera );
-
-            var optionsDebug = {
-                x: 0,
-                y: 100,
-                w: 100,
-                h: 80,
-                horizontal: true,
-                screenW: 1024,
-                screenH: 768,
-                fullscreen: false
-            };
-            if ( optionalArgs )
-                osg.extend( optionsDebug, optionalArgs );
-
-
-            var matrixDest = this._composerDebugCamera.getProjectionMatrix();
-            osg.mat4.ortho( matrixDest, 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5 );
-            this._composerDebugCamera.setProjectionMatrix( matrixDest ); //not really needed until we do matrix caches
-
-            matrixDest = this._composerDebugCamera.getViewMatrix();
-            osg.mat4.fromTranslation( matrixDest, [ 0, 0, 0 ] );
-            this._composerDebugCamera.setViewMatrix( matrixDest );
-            this._composerDebugCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
-            this._composerDebugCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
-            this._composerDebugCamera.addChild( this._composerDebugNode );
-
-            var texture;
-            var xOffset = optionsDebug.x;
-            var yOffset = optionsDebug.y;
-            this._composerDebugNode.removeChildren();
-
-            var stateset;
-
-            if ( !this._programRTT ) {
-
-
-                var vertexShader = [
-                    '',
-                    'attribute vec3 Vertex;',
-                    'attribute vec2 TexCoord0;',
-                    'varying vec2 vTexCoord0;',
-                    'uniform mat4 uModelViewMatrix;',
-                    'uniform mat4 uProjectionMatrix;',
-                    'void main(void) {',
-                    '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex,1.0));',
-                    '  vTexCoord0 = TexCoord0;',
-                    '}',
-                    ''
-                ].join( '\n' );
-
-                var fgt = [
-                    osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0, vTexCoord0);', '}', ''
-                ].join( '\n' );
-                var program = new osg.Program(
-                    new osg.Shader( 'VERTEX_SHADER', vertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
-
-                this._programRTT = program;
-            }
-
-            stateset = this._composerDebugNode.getOrCreateStateSet();
-            if ( !optionsDebug.fullscreen )
-                stateset.setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
-            stateset.setAttributeAndModes( this._programRTT );
-
-
-            for ( var i = 0, l = this._RTT.length; i < l; i++ ) {
-                texture = this._RTT[ i ];
-                if ( texture ) {
-                    var quad = osg.createTexturedQuadGeometry( xOffset, yOffset, 0, optionsDebug.w, 0, 0, 0, optionsDebug.h, 0 );
-
-                    stateset = quad.getOrCreateStateSet();
-
-                    quad.setName( 'debugCompoQuadGeom' );
-
-                    stateset.setTextureAttributeAndModes( 0, texture );
-                    stateset.setAttributeAndModes( this._programRTT );
-                    // stateset.setAttributeAndModes(new osg.Depth('DISABLE'));
-
-                    this._composerDebugNode.addChild( quad );
-
-                    if ( optionsDebug.horizontal ) xOffset += optionsDebug.w + 2;
-                    else yOffset += optionsDebug.h + 2;
-                }
-            }
-            return this._composerDebugCamera;
-        },
         // Scene to be shadowed,  and to cast  shadow from
         // Multiple parents...
         createSceneCasterReceiver: function () {
@@ -1006,12 +865,10 @@
                 15 + 35 * num
             ];
 
-
             var shadowSettings;
             if ( !this._config.atlas ) {
 
                 shadowSettings = new osgShadow.ShadowSettings( this._config );
-
 
                 var mapres = parseInt( this._config.textureSize, 10 );
                 shadowSettings.setTextureSize( mapres );
@@ -1119,6 +976,14 @@
          * main sample scene shadow code using OSG interface
          */
         createScene: function () {
+
+            this._viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
+            this._viewer.getCamera().setComputeNearFar( true );
+            this._glContext = this._viewer.getGraphicContext();
+            this._floatTextureSupport = osg.WebGLCaps.instance().hasFloatRTT();
+            this._halfFloatTextureSupport = osg.WebGLCaps.instance().hasHalfFloatRTT();
+            this._hasAnyFloatTextureSupport = this._floatTextureSupport || this._halfFloatTextureSupport;
+
             var group = new osg.Node();
 
             this._castsShadowDrawTraversalMask = 0x2;
@@ -1154,7 +1019,7 @@
             // need camera position in world too
             this._config.camera = this._viewer.getCamera();
 
-            var numLights = ~~this._config.lightNum;
+            var numLights = this._config.lightNum;
             var lightScale = 1.0 / numLights - 1e-4;
 
             var k;
@@ -1190,24 +1055,23 @@
                 }
             }
 
-
-            this._RTTdebugNode = new osg.Node();
-            this._RTTdebugNode._name = 'debugFBNode';
-            group.addChild( this._RTTdebugNode );
-
             // doesn't show anything as shadow text and scene
             // isn't init until first frame
-            if ( this._config.debugRTT ) {
-                this.showFrameBuffers( {
-                    screenW: this._canvas.width,
-                    screenH: this._canvas.height
-                } );
-            }
+            if ( this._config.debugRTT ) this.showDebugTextureList();
 
             // one config to rule them all
             //this._config = shadowedScene.getShadowSettings()._config;
             this._rootNode = group;
-            return group;
+            this._root.addChild( group );
+
+
+            var timerGPU = osg.TimerGPU.instance();
+            if ( timerGPU.isEnabled() ) {
+                var cam = this._viewer.getCamera();
+                cam.setInitialDrawCallback( timerGPU.start.bind( timerGPU, 'gltotalframe' ) );
+                cam.setFinalDrawCallback( timerGPU.end.bind( timerGPU, 'gltotalframe' ) );
+            }
+
         },
 
         getOptionsStats: function () {
@@ -1243,7 +1107,7 @@
         /*
          * standard run scene, but for float tex support and shader loading
          */
-        run: function ( canvas ) {
+        run: function () {
 
             var caps = osg.WebGLCaps.instance();
             this._maxVaryings = caps.getWebGLParameter( 'MAX_VARYING_VECTORS' );
@@ -1253,60 +1117,31 @@
             // usual shader is already 4 vertexColor, vViewNormal, vViewVertex, vTexcoord. each shadow is 1 more vec4 per shadow
             this._maxLights = Math.min( this._maxTextureUnit - 1, this._maxVaryings - 5 );
 
-            var opt = {
-                rstats: this.getOptionsStats()
-            };
+            ExampleOSGJS.prototype.run.call( this );
 
-            var viewer = new osgViewer.Viewer( canvas, opt );
-            this._canvas = canvas;
-            this._viewer = viewer;
+            if ( this._config.debug ) {
 
-            viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
-            viewer.init();
+                this._debugFrustum = true;
+                this._debugPrefilter = true;
 
-            viewer.getCamera().setComputeNearFar( true );
-
-            this._glContext = viewer.getGraphicContext();
-
-            this._floatTextureSupport = osg.WebGLCaps.instance().hasFloatRTT();
-            this._halfFloatTextureSupport = osg.WebGLCaps.instance().hasHalfFloatRTT();
-            this._hasAnyFloatTextureSupport = this._floatTextureSupport || this._halfFloatTextureSupport;
-
-            var scene = this.createScene();
-
-            viewer.setSceneData( scene );
-            viewer.setupManipulator();
-            viewer.getManipulator().computeHomePosition();
-            viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
-
-            viewer.run();
-
-            var wantToSeeAShadowSceneGraph = false;
-            if ( wantToSeeAShadowSceneGraph ) {
-                var graphDebug = new osgUtil.DisplayGraph();
-                graphDebug.createGraph( scene );
             }
 
-
-            var timerGPU = osg.TimerGPU.instance();
-            if ( timerGPU.isEnabled() ) {
-                var cam = this._viewer.getCamera();
-                cam.setInitialDrawCallback( timerGPU.start.bind( timerGPU, 'gltotalframe' ) );
-                cam.setFinalDrawCallback( timerGPU.end.bind( timerGPU, 'gltotalframe' ) );
-            }
-
-            this.initDatGUI();
             this.updateShadow();
         }
-    };
+    } );
+
     // execute loaded code when ready
     window.addEventListener( 'load', function () {
 
         osg.log( osg.WebGLCaps.instance().getWebGLParameters() );
 
         var example = new Example();
-        var canvas = document.getElementById( 'View' );
-        example.run( canvas );
+
+        var opt = {
+            rstats: example.getOptionsStats()
+        };
+        example.run( opt );
+
     }, true );
 
 } )();
