@@ -7,7 +7,6 @@ var osg = window.osg;
 var osgViewer = window.osgViewer;
 var osgUtil = window.osgUtil;
 
-
 function getShader() {
     var vertexshader = [
         '',
@@ -44,11 +43,6 @@ function getShader() {
     var program = new osg.Program(
         new osg.Shader( 'VERTEX_SHADER', vertexshader ),
         new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
-
-    program.trackAttributes = {};
-    program.trackAttributes.attributeKeys = [];
-    program.trackAttributes.attributeKeys.push( 'Material' );
-
     return program;
 }
 
@@ -81,9 +75,14 @@ function createScene() {
     target.getOrCreateStateSet().addUniform( density );
 
     //automatic UI shader binding
-    var parameterVisitor = new osgUtil.ParameterVisitor();
-    parameterVisitor.setTargetHTML( document.getElementById( 'Parameters' ) );
-    target.accept( parameterVisitor );
+    var gui = new window.dat.GUI();
+    // config to let dat.gui change the scale
+    var densityController = gui.add( {
+        density: 0.5
+    }, 'density', 0.0, 0.81 );
+    densityController.onChange( function ( value ) {
+        density.setFloat( value );
+    } );
 
     root.addChild( target );
     root.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
