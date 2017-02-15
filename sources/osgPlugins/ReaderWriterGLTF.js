@@ -164,17 +164,6 @@ ReaderWriterGLTF.prototype = {
         var bufferView = json.bufferViews[ accessor.bufferView ];
         var buffer = json.buffers[ bufferView.buffer ];
         var filePromise = this.loadFile( buffer.uri );
-        // =======
-
-        //         var urlOrFile = this.findFileFromURI( this._files, buffer.uri );
-        //         // It comes from a glb file, we already have the data;
-        //         if ( urlOrFile === 'data:,' ) {
-        //             return this.assignBuffers( this._glbModel.binary, accessor, type, bufferView );
-        //         }
-
-        //         var filePromise = this.loadFile( urlOrFile, buffer.uri );
-
-        // >>>>>>> Initial support for 3D Tiles: TileSetWitDiscreteLOD
         var self = this;
         return filePromise.then( function ( data ) {
             return self.assignBuffers( data, accessor, type, bufferView );
