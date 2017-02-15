@@ -19,14 +19,14 @@
             'attribute vec3 Normal;',
             'uniform mat4 uModelViewMatrix;',
             'uniform mat4 uProjectionMatrix;',
-            'uniform mat4 uModelViewNormalMatrix;',
+            'uniform mat3 uModelViewNormalMatrix;',
 
             'varying vec3 vViewNormal;',
             'varying vec3 vViewVertex;',
 
             'void main(void) {',
             '  vViewVertex = vec3(uModelViewMatrix * vec4(Vertex,1.0));',
-            '  vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 0.0));',
+            '  vViewNormal = uModelViewNormalMatrix * Normal;',
             '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
         ].join( '\n' );
@@ -81,14 +81,12 @@
             'attribute vec2 TexCoord0;',
             'uniform mat4 uModelViewMatrix;',
             'uniform mat4 uProjectionMatrix;',
-            'uniform mat4 uModelViewNormalMatrix;',
 
             'varying vec3 vViewNormal;',
             'varying vec3 vLocalVertex;',
 
             'void main(void) {',
             '  vLocalVertex = Vertex;',
-            '  vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 1.0));',
             '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
         ].join( '\n' );
@@ -99,7 +97,6 @@
             'precision highp float;',
             '#endif',
             'uniform samplerCube Texture0;',
-            'varying vec3 vViewNormal;',
             'varying vec3 vLocalVertex;',
 
             'void main(void) {',

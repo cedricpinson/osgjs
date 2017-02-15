@@ -1,6 +1,7 @@
 'use strict';
 var Map = require( 'osg/Map' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
+var mat3 = require( 'osg/glMatrix' ).mat3;
 var Notify = require( 'osg/notify' );
 var Object = require( 'osg/Object' );
 var Program = require( 'osg/Program' );
@@ -66,11 +67,12 @@ var State = function ( shaderGeneratorProxy ) {
 
     this.attributeMap = new Map();
 
+    this.projectionMatrix = Uniform.createMatrix4( mat4.create(), 'uProjectionMatrix' );
     this.modelMatrix = Uniform.createMatrix4( mat4.create(), 'uModelMatrix' );
     this.viewMatrix = Uniform.createMatrix4( mat4.create(), 'uViewMatrix' );
     this.modelViewMatrix = Uniform.createMatrix4( mat4.create(), 'uModelViewMatrix' );
-    this.projectionMatrix = Uniform.createMatrix4( mat4.create(), 'uProjectionMatrix' );
-    this.modelViewNormalMatrix = Uniform.createMatrix4( mat4.create(), 'uModelViewNormalMatrix' );
+    this.modelNormalMatrix = Uniform.createMatrix3( mat3.create(), 'uModelNormalMatrix' );
+    this.modelViewNormalMatrix = Uniform.createMatrix3( mat3.create(), 'uModelViewNormalMatrix' );
 
     // track uniform for color array enabled
     var arrayColorEnable = new Stack();
@@ -247,9 +249,9 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     applyModelViewMatrix: ( function () {
 
-        var normal = mat4.create();
+        var normal = mat3.create();
 
-        return function StateApplyModelViewMatrix( matrix ) {
+        return function StateApplyModelViewMatrix( matrix, matrixModel ) {
 
             if ( this._modelViewMatrix === matrix ) return false;
 
@@ -285,111 +287,16 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 mu = this.modelViewNormalMatrix;
                 mul = uniformCache.uModelViewNormalMatrix;
                 if ( mul ) {
-
-                    normal[ 0 ] = matrix[ 0 ];
-                    normal[ 1 ] = matrix[ 1 ];
-                    normal[ 2 ] = matrix[ 2 ];
-                    normal[ 4 ] = matrix[ 4 ];
-                    normal[ 5 ] = matrix[ 5 ];
-                    normal[ 6 ] = matrix[ 6 ];
-                    normal[ 8 ] = matrix[ 8 ];
-                    normal[ 9 ] = matrix[ 9 ];
-                    normal[ 10 ] = matrix[ 10 ];
-
-                    mat4.invert( normal, normal );
-                    mat4.transpose( normal, normal );
-
-                    mu.setMatrix4( normal );
+                    mat3.normalFromMat4( normal, matrix );
+                    mu.setMatrix3( normal );
                     mu.apply( gc, mul );
                 }
-            }
 
-            this._modelViewMatrix = matrix;
-            return true;
-        };
-    } )(),
-
-
-    applyModelViewMatrixEperiment: ( function () {
-
-        var normal = mat4.create();
-
-        var checkMatrix = function ( m0, m1 ) {
-            if ( m0[ 0 ] !== m1[ 0 ] ) return true;
-            if ( m0[ 1 ] !== m1[ 1 ] ) return true;
-            if ( m0[ 2 ] !== m1[ 2 ] ) return true;
-            if ( m0[ 4 ] !== m1[ 4 ] ) return true;
-            if ( m0[ 5 ] !== m1[ 5 ] ) return true;
-            if ( m0[ 6 ] !== m1[ 6 ] ) return true;
-            if ( m0[ 8 ] !== m1[ 8 ] ) return true;
-            if ( m0[ 9 ] !== m1[ 9 ] ) return true;
-            if ( m0[ 10 ] !== m1[ 10 ] ) return true;
-            return false;
-        };
-
-        var epsilon = 1e-6;
-        var scaleEpsilonMax = 1.0 + epsilon;
-        var scaleEpsilonMin = 1.0 - epsilon;
-
-        return function StateApplyModelViewMatrix( matrix ) {
-            if ( this._modelViewMatrix === matrix ) return false;
-
-            var program = this.getLastProgramApplied();
-
-            var mu = this.modelViewMatrix;
-            var mul = program.getUniformsCache().uModelViewMatrix;
-            if ( mul ) {
-
-                mu.setMatrix4( matrix );
-                mu.apply( this.getGraphicContext(), mul );
-            }
-
-            var sendNormal = true;
-            if ( this._modelViewMatrix ) {
-                sendNormal = checkMatrix( matrix, this._modelViewMatrix );
-                // check if we need to push normal
-                // test rotation component, if not diff
-                // we dont need to send normal
-                // for ( var i = 0; i < 11; i++ ) {
-                //     if ( matrix[ i ] !== this._modelViewMatrix[ i ] ) {
-                //         sendNormal = true;
-                //         break;
-                //     }
-                // }
-            }
-
-            if ( sendNormal ) {
-                mu = this.modelViewNormalMatrix;
-                mul = program.getUniformsCache().uModelViewNormalMatrix;
+                mul = uniformCache.uModelNormalMatrix;
                 if ( mul ) {
-
-                    // mat4.copy( normal , matrix );
-                    normal[ 0 ] = matrix[ 0 ];
-                    normal[ 1 ] = matrix[ 1 ];
-                    normal[ 2 ] = matrix[ 2 ];
-                    normal[ 4 ] = matrix[ 4 ];
-                    normal[ 5 ] = matrix[ 5 ];
-                    normal[ 6 ] = matrix[ 6 ];
-                    normal[ 8 ] = matrix[ 8 ];
-                    normal[ 9 ] = matrix[ 9 ];
-                    normal[ 10 ] = matrix[ 10 ];
-
-                    // check for scaling
-                    var xlen = normal[ 0 ] * normal[ 0 ] + normal[ 4 ] * normal[ 4 ] + normal[ 8 ] * normal[ 8 ];
-                    var ylen = normal[ 1 ] * normal[ 1 ] + normal[ 5 ] * normal[ 5 ] + normal[ 9 ] * normal[ 9 ];
-                    var zlen = normal[ 2 ] * normal[ 2 ] + normal[ 6 ] * normal[ 6 ] + normal[ 10 ] * normal[ 10 ];
-
-                    // http://www.gamedev.net/topic/637192-detect-non-uniform-scaling-in-matrix/
-                    if ( xlen > scaleEpsilonMax || xlen < scaleEpsilonMin ||
-                        ylen > scaleEpsilonMax || ylen < scaleEpsilonMin ||
-                        zlen > scaleEpsilonMax || zlen < scaleEpsilonMin ) {
-
-                        mat4.invert( normal, normal );
-                        mat4.transpose( normal, normal );
-                    }
-
-                    mu.setMatrix4( normal );
-                    mu.apply( this.getGraphicContext(), mul );
+                    mat3.normalFromMat4( normal, matrixModel );
+                    mu.setMatrix3( normal );
+                    mu.apply( gc, mul );
                 }
             }
 
@@ -1148,6 +1055,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                     name !== this.viewMatrix.getName() &&
                     name !== this.projectionMatrix.getName() &&
                     name !== this.modelViewNormalMatrix.getName() &&
+                    name !== this.modelNormalMatrix.getName() &&
                     name !== 'uArrayColorEnabled' ) {
                     foreignUniforms.push( name );
                 }

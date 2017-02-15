@@ -120,25 +120,40 @@ MatrixMultDirection.prototype = MACROUTILS.objectInherit( Add.prototype, {
 
         var inputType = this._inputs.vec.getType();
         var outputType = this._outputs.vec.getType();
+        var matrixType = this._inputs.matrix.getType();
 
-        var strOut = vecOut + ' = ';
+        var strOut = vecOut;
 
-        if ( outputType !== 'vec4' )
-            strOut += outputType + '(';
+        if ( matrixType === 'mat4' ) {
+            strOut += ' = ';
 
-        var strCasted = vecIn;
-        if ( this._forceComplement || inputType !== 'vec4' )
-            strCasted = 'vec4(' + vecIn + '.xyz, ' + this.complement + ')';
+            if ( outputType !== 'vec4' )
+                strOut += outputType + '(';
 
-        strOut += this._inverseOp ? strCasted + this.operator + matrix : matrix + this.operator + strCasted;
+            var strCasted = vecIn;
+            if ( this._forceComplement || inputType !== 'vec4' )
+                strCasted = 'vec4(' + vecIn + '.xyz, ' + this.complement + ')';
 
-        if ( outputType !== 'vec4' )
-            strOut += ')';
+            strOut += this._inverseOp ? strCasted + this.operator + matrix : matrix + this.operator + strCasted;
 
-        strOut += ';';
+            if ( outputType !== 'vec4' )
+                strOut += ')';
 
-        if ( !this._overwriteW && inputType === 'vec4' )
-            strOut += '\n' + vecOut + '.a = ' + vecIn + '.a;';
+            strOut += ';';
+
+            if ( !this._overwriteW && inputType === 'vec4' )
+                strOut += '\n' + vecOut + '.a = ' + vecIn + '.a;';
+
+        } else {
+            if ( outputType === 'vec4' ) strOut += '.xyz';
+            strOut += ' = ';
+
+            var strvec3 = vecIn + '.xyz';
+            strOut += ( this._inverseOp ? strvec3 + this.operator + matrix : matrix + this.operator + strvec3 ) + ';';
+
+            if ( !this._overwriteW && outputType === 'vec4' && inputType === 'vec4' )
+                strOut += '\n' + vecOut + '.a = ' + vecIn + '.a;';
+        }
 
         return strOut;
     }

@@ -19,7 +19,7 @@
             'uniform vec3 uCenterPicking;',
             'uniform mat4 uModelViewMatrix;',
             'uniform mat4 uProjectionMatrix;',
-            'uniform mat4 uModelViewNormalMatrix;',
+            'uniform mat3 uModelViewNormalMatrix;',
 
             'varying vec3 vViewVertex;',
             'varying vec3 vNormal;',
@@ -27,7 +27,7 @@
 
             'void main( void ) {',
             '  vInter = vec3( uModelViewMatrix * vec4( uCenterPicking, 1.0 ) );',
-            '  vNormal = normalize(vec3( uModelViewNormalMatrix * vec4( Normal, 1.0 )) );',
+            '  vNormal = normalize( uModelViewNormalMatrix * Normal );',
             '  vViewVertex = vec3( uModelViewMatrix * vec4( Vertex, 1.0 ) );',
             '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4( Vertex, 1.0 ));',
             '}'
