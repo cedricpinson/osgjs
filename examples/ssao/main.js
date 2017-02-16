@@ -6,6 +6,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
+    var osgGA = OSG.osgGA;
     var osgShader = OSG.osgShader;
     var osgUtil = OSG.osgUtil;
     var Texture = osg.Texture;
