@@ -352,7 +352,7 @@ functorDrawArrays[ PrimitiveSet.TRIANGLE_FAN ] = ( function () {
 PrimitiveFunctor.prototype = {
     apply: function () {
         var geom = this._geom;
-        var primitives = geom.primitives;
+        var primitives = geom.getPrimitiveSetList();
         if ( !primitives )
             return;
 

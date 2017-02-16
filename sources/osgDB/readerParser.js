@@ -181,8 +181,8 @@ ReaderParser.parseSceneGraphDeprecated = function ( node ) {
 
     var newnode;
     var children = node.children;
-    var primitives = node.primitives || node.Primitives || undefined;
-    var attributes = node.attributes || node.Attributes || undefined;
+    var primitives = node._primitives || node.primitives || node.Primitives || undefined;
+    var attributes = node._attributes || node.attributes || node.Attributes || undefined;
     if ( primitives || attributes ) {
 
         var geom = new Geometry();

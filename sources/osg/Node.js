@@ -162,41 +162,6 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         return this._numChildrenRequiringUpdateTraversal;
     },
 
-    /**
-     <p>
-      Set update node callback, called during update traversal.
-      The Object must have the following method
-      update(node, nodeVisitor) {}
-      note, callback is responsible for scenegraph traversal so
-      they must call traverse(node,nv) to ensure that the
-      scene graph subtree (and associated callbacks) are traversed.
-      </p>
-      <p>
-      Here a dummy UpdateCallback example
-      </p>
-      @example
-      var DummyUpdateCallback = function() {};
-      DummyUpdateCallback.prototype = {
-          update: function(node, nodeVisitor) {
-              return true;
-          }
-      };
-
-      @param Oject callback
-   */
-    setUpdateCallback: function ( cb ) {
-        if ( cb === this._updateCallbacks[ 0 ] || !cb ) return;
-
-        var hasExistingCallback = Boolean( this._updateCallbacks.length );
-        if ( !this._updateCallbacks.length )
-            this.addUpdateCallback( cb );
-        else
-            this._updateCallbacks[ 0 ] = cb;
-
-        if ( !hasExistingCallback )
-            this._updateNumChildrenRequeringUpdateTraversal( 1 );
-    },
-
     /** Get update node callback, called during update traversal.
       @type Oject
    */

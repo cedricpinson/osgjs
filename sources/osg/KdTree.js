@@ -111,7 +111,7 @@ BuildKdTree.prototype = {
         var kdTree = this._kdTree;
 
         var totalLenArray = 0;
-        var geomPrimitives = geom.primitives;
+        var geomPrimitives = geom.getPrimitiveSetList();
         var nbPrimitives = geomPrimitives.length;
         var i = 0;
         for ( i = 0; i < nbPrimitives; i++ ) {
