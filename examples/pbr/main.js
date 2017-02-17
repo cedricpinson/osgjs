@@ -115,26 +115,20 @@
     };
 
     PBRWorklowVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
-
         apply: function ( node ) {
             var data = node.getUserData();
-
             if ( data && data.pbrWorklow ) {
-
                 var stateSetWorkflow = {
                     stateSet: node.getOrCreateStateSet(),
                     workflow: data.pbrWorklow
                 };
                 this._workflow.push( stateSetWorkflow );
             }
-
             this.traverse( node );
         },
-
         getWorkflows: function () {
             return this._workflow;
         }
-
     } );
 
     var shaderProcessor = new osgShader.ShaderProcessor();
@@ -334,69 +328,6 @@
 
         },
 
-        readZipContentGLTF: function ( zip ) {
-
-            var promisesArray = [];
-
-            Object.keys( zip.files ).forEach( function ( filename ) {
-
-                var ext = filename.split( '.' ).pop();
-                var type = null;
-
-                if ( ext === 'gltf' )
-                    type = 'string';
-                else if ( ext === 'bin' )
-                    type = 'arraybuffer';
-                else if ( ext === 'png' || ext === 'jpg' || ext === 'jpeg' )
-                    type = 'base64';
-
-                if ( !type ) return;
-
-                var p = zip.files[ filename ].async( type ).then( function ( fileData ) {
-
-                    var data = fileData;
-                    var name = filename.split( '/' ).pop();
-
-                    if ( type === 'base64' ) {
-
-                        data = new window.Image();
-                        data.src = 'data:image/' + ext + ';base64,' + fileData;
-
-                    }
-
-                    return {
-                        name: name,
-                        data: data
-                    };
-
-                } );
-
-                promisesArray.push( p );
-
-            } );
-
-            return P.all( promisesArray ).then( function ( dataList ) {
-
-                var loadedFiles = {};
-                var gltfFileName;
-                for ( var i = 0; i < dataList.length; ++i ) {
-
-                    var name = dataList[ i ].name;
-                    var data = dataList[ i ].data;
-
-                    if ( name.indexOf( '.gltf' ) !== -1 )
-                        gltfFileName = dataList[ i ].name;
-
-                    loadedFiles[ dataList[ i ].name ] = data;
-
-                }
-
-                return this.loadGLTFModel( loadedFiles, gltfFileName, true );
-
-            }.bind( this ) );
-
-        },
-
         loadZipFile: function ( fileOrBlob, zipFileName ) {
 
             return JSZip.loadAsync( fileOrBlob ).then( function ( zip ) {
@@ -430,19 +361,33 @@
         },
 
         handleDroppedFiles: function ( files ) {
-
+            console.time( 'time' );
             var gltfFileName = null;
             var self = this;
 
             $( '#loading' ).show();
 
-            if ( files.length === 1 && files[ 0 ].name.indexOf( '.zip' ) !== -1 ) {
+            osgDB.FileHelper.readFileList( files ).then( function ( root ) {
+                $( '#loading' ).hide();
+                if ( !root ) return;
+                gltfFileName = root.getName();
+                //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
 
-                return this.loadZipFile( files[ 0 ], files[ 0 ].name ).then( function () {
-                    $( '#loading' ).hide();
-                } );
+                self._modelsLoaded[ gltfFileName ] = root;
 
-            }
+                self._config.model = gltfFileName;
+                self.updateModel();
+                console.timeEnd( 'time' );
+                // Updates the dropdown list
+                modelList.push( gltfFileName );
+
+                var controllers = self._gui.__controllers;
+                var controller = controllers.filter( function ( cont ) {
+                    return cont.property === 'model';
+                } )[ 0 ];
+                controller = controller.options( modelList );
+                controller.onChange( self.updateModel.bind( self ) );
+            } );
 
             for ( var i = 0; i < files.length; ++i ) {
 
@@ -454,10 +399,6 @@
                 }
 
             }
-
-            return self.loadGLTFModel( files, gltfFileName, false ).then( function () {
-                $( '#loading' ).hide();
-            } );
         },
 
 
@@ -830,7 +771,7 @@
             } else {
 
                 var model = null;
-                if ( this._config.model.indexOf( '.gltf' ) !== -1 ) {
+                if ( this._config.model.indexOf( '.gltf' ) !== -1 || this._config.model.indexOf( '.zip' ) !== -1 ) {
 
                     model = this._modelsLoaded[ this._config.model ];
 
@@ -856,7 +797,6 @@
 
                         this._shaders.push( config );
                         this.updateShaderPBR();
-
                     }
                 }
 
