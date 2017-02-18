@@ -140,6 +140,24 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     },
 
 
+    getNormalBias: function ( numShadow ) {
+
+        if ( numShadow !== undefined ) {
+            return this._shadowMaps[ numShadow ].getNormalBias();
+        } else if ( this._shadowMaps.length !== 0 ) {
+            return this._shadowMaps[ 0 ].getNormalBias();
+        }
+
+    },
+
+    setNormalBias: function ( value ) {
+
+        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
+            this._shadowMaps[ i ].setNormalBias( value );
+        }
+
+    },
+
     getBias: function ( numShadow ) {
 
         if ( numShadow !== undefined ) {

@@ -26,7 +26,7 @@ float fetchESM(const in sampler2D tex, const in vec4 shadowMapSize, const in vec
     // we're on an edge
     float depthScale = exponent1;
     float over_darkening_factor = exponent0;
-    float receiver = depthScale * ( shadowZ);
+    float receiver = depthScale * ( shadowZ );
     return 1.0 - clamp(over_darkening_factor*(occluder*exp(receiver)), 0.0, 1.0);
 }
 
@@ -37,7 +37,7 @@ float computeShadow(const in bool lighted,
                     const in mat4 shadowProjectionMatrix,
                     const in mat4 shadowViewMatrix,
                     const in vec4 depthRange,
-                    const in float N_Dot_L,
+                    const in vec3 normalWorld,
                     const in vec3 vertexWorld,
                     const in float bias,
                     const in float exponent0,
