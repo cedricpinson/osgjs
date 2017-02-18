@@ -2,7 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var Texture = require( 'osg/Texture' );
 
-var kernelSizeList = [ '1Band(1texFetch)', '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '1Tap(4texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)' ];
+var kernelSizeList = [ '1Tap(4texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)' ];
 
 /**
  *  ShadowSettings provides the parameters that the ShadowTechnique should use as a guide for setting up shadowing
@@ -39,47 +39,11 @@ var ShadowSettings = function ( options ) {
     // PCF algo and kernel size
     // Band kernelsize gives nxn texFetch
     // others a n*n*4 (emulating the HW shadowSampler)
-    // '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)'
-    this.kernelSizePCF = '4Band(4texFetch)';
-    // ensure that we don't linearly interpolate between shadowmap
-    // but do use the fake Texture2DShadow
-    // http://codeflow.org/entries/2013/feb/15/soft-shadow-mapping/#interpolated-shadowing
-    this._fakePCF = false;
-    //
-    this._rotateOffset = false;
-    // for prefilterable technique (ESM/VSM/EVSM)
-    this.superSample = 0;
-    this.blur = false;
-    this.blurKernelSize = 4.0;
-    this.blurTextureSize = 256;
-
-    // VSM bias
-    this.epsilonVSM = 0.0008;
+    // ['4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)']
+    this.kernelSizePCF = '4Tap(4texFetch)';
 
     // depth offset (shadow acne / peter panning)
     this.bias = 0.005;
-
-
-    // Impact on shadow aliasing by better coverage
-    // algo for shadow
-    //'Variance Shadow Map (VSM)': 'VSM',
-    //'Exponential Variance Shadow Map (EVSM)': 'EVSM',
-    //'Exponential Shadow Map (ESM)': 'ESM',
-    //'Shadow Map': 'NONE',
-    //'Shadow Map Percentage Close Filtering (PCF)': 'PCF'
-    // nice overview here
-    // http://developer.download.nvidia.com/presentations/2008/GDC/GDC08_SoftShadowMapping.pdf
-    // ALGO alllowing filtering
-    //
-    // ESM http://research.edm.uhasselt.be/tmertens/papers/gi_08_esm.pdf
-    // http://pixelstoomany.wordpress.com/2008/06/12/a-conceptually-simpler-way-to-derive-exponential-shadow-maps-sample-code/
-    // VSM: http://www.punkuser.net/vsm/
-    // http://lousodrome.net/blog/light/tag/evsm
-    this.algorithm = 'PCF';
-
-    // Exponential techniques variales
-    this.exponent = 40;
-    this.exponent1 = 10;
 
     // defaut shader generator name for shadow casting
     this.shadowCastShaderGeneratorName = 'ShadowCast';
@@ -130,12 +94,6 @@ ShadowSettings.prototype = {
     },
     getTextureFormat: function () {
         return this.textureFormat;
-    },
-    setAlgorithm: function ( alg ) {
-        this.algorithm = alg;
-    },
-    getAlgorithm: function () {
-        return this.algorithm;
     },
     setShadowCastShaderGeneratorName: function ( n ) {
         this.shadowCastShaderGeneratorName = n;
