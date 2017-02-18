@@ -11,11 +11,6 @@ float texture2DCompare(const in sampler2D depths, const in vec2 uv, const in flo
 // simulates linear fetch like texture2d shadow
 float texture2DShadowLerp(const in sampler2D depths, const in vec4 size, const in vec2 uv, const in float compare, const in vec4 clampDimension){
 
-#if defined(_FAKE_PCF)
-    // CHEAT: it's wrong, but 4x faster
-    // wronb because http://www.eng.utah.edu/~cs5610/handouts/reeves87.pdf p2
-    return texture2DCompare(depths, uv, compare, clampDimension);
-#else
     vec2 f = fract(uv*size.xy+0.5);
     vec2 centroidUV = floor(uv*size.xy+0.5)*size.zw;
 
@@ -27,6 +22,5 @@ float texture2DShadowLerp(const in sampler2D depths, const in vec4 size, const i
     float b = mix(rb, rt, f.y);
     float c = mix(a, b, f.x);
     return c;
-#endif
 
 }

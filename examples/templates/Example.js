@@ -4,6 +4,7 @@
     var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
     var osgDB = OSG.osgDB;
     var osgShader = OSG.osgShader;
@@ -51,14 +52,14 @@
 
     Example.prototype = {
 
-        run: function () {
+        run: function ( options ) {
 
             // get url parameter to override default _config values
             this.setConfigFromOptionsURL();
             //
             this._canvas = document.getElementById( 'View' );
 
-            this._viewer = new osgViewer.Viewer( this._canvas );
+            this._viewer = new osgViewer.Viewer( this._canvas, options );
             this._viewer.init();
             this._viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
             this._viewer.setupManipulator();
@@ -95,7 +96,17 @@
             var keys = Object.keys( queryDict );
             for ( var i = 0; i < keys.length; i++ ) {
                 var property = keys[ i ];
-                this._config[ property ] = queryDict[ property ];
+                try {
+
+                    var n = JSON.parse( queryDict[ property ] );
+                    if ( !isNaN( parseFloat( n ) ) && isFinite( n ) ) {
+                        n = parseFloat( n );
+                    }
+                    this._config[ property ] = n;
+
+                } catch ( e ) {
+                    console.log( 'cannot parse url option: ' + property );
+                }
             }
         },
 
@@ -206,6 +217,32 @@
             if ( optionalArgs )
                 osg.extend( optionsDebug, optionalArgs );
 
+            if ( !this._programRTT ) {
+
+
+                var vertexShader = [
+                    '',
+                    'attribute vec3 Vertex;',
+                    'attribute vec2 TexCoord0;',
+                    'varying vec2 vTexCoord0;',
+                    'uniform mat4 uModelViewMatrix;',
+                    'uniform mat4 uProjectionMatrix;',
+                    'void main(void) {',
+                    '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex,1.0));',
+                    '  vTexCoord0 = TexCoord0;',
+                    '}',
+                    ''
+                ].join( '\n' );
+
+                var fgt = [
+                    osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0, vTexCoord0);', '}', ''
+                ].join( '\n' );
+                var program = new osg.Program(
+                    new osg.Shader( 'VERTEX_SHADER', vertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
+
+                this._programRTT = program;
+            }
+
             var debugNodeRTT = this._debugNodeRTT;
             debugNodeRTT.setNodeMask( ~0x0 );
             debugNodeRTT.removeChildren();
@@ -248,7 +285,7 @@
                     quad.setName( 'debugComposerGeometry' + i );
 
                     stateSet.setTextureAttributeAndModes( 0, texture );
-
+                    stateSet.setAttributeAndModes( this._programRTT );
                     debugComposerNode.addChild( quad );
 
                     if ( optionsDebug.horizontal ) {
