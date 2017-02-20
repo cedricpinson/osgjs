@@ -88,7 +88,9 @@ clampDimension = vec4(0.0, 0.0, 1.0, 1.0);
 // and we don't access any mipmapped/texgrad texture
 // we can early out
 // see http://teknicool.tumblr.com/post/77263472964/glsl-dynamic-branching-and-texture-samplers
-if (earlyOut) return shadow;
+if (earlyOut){
+    // empty statement because of weird gpu intel bug
+} else {
 
 // depth bias: fighting shadow acne (depth imprecsion z-fighting)
 float shadowBias = 0.0;
@@ -154,7 +156,7 @@ float negContrib = chebyshevUpperBound(occluder.yw, warpedDepth.y, minVariance.y
 shadow = min(posContrib, negContrib);
 
 #endif
-
+}
 
 return shadow;
 
