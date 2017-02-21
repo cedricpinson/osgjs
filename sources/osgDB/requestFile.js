@@ -36,7 +36,7 @@ var requestFileFromReader = function ( file, options ) {
     var defer = Promise.defer();
     var reader = new window.FileReader();
     reader.onload = function ( data ) {
-        if ( options.responseType === 'base64' ) {
+        if ( options.responseType === 'blob' ) {
             var img = new window.Image();
             img.src = data.target.result;
             defer.resolve( img );
@@ -44,13 +44,17 @@ var requestFileFromReader = function ( file, options ) {
             defer.resolve( data.target.result );
         }
     };
-
-    if ( options.responseType === 'arraybuffer' || options.responseType === 'blob' )
-        reader.readAsArrayBuffer( file );
-    else if ( options.responseType === 'text' )
+    // handle responseType
+    if ( options && options.responseType ) {
+        if ( options.responseType === 'arraybuffer' )
+            reader.readAsArrayBuffer( file );
+        else if ( options.responseType === 'string' )
+            reader.readAsText( file );
+        else
+            reader.readAsDataURL( file );
+    } else {
         reader.readAsText( file );
-    else
-        reader.readAsDataURL( file );
+    }
     return defer.promise;
 };
 

@@ -233,38 +233,6 @@
 
     Example.prototype = {
 
-        loadGLTFModel: function ( files, gltfFileName, loaded ) {
-
-            var self = this;
-            var promise = osgDB.Registry.instance().getReaderWriterForExtension( 'gltf' )
-                .readNodeURL( files, {
-                    preloaded: loaded
-                } );
-
-            promise.then( function ( root ) {
-
-                if ( !root ) return;
-
-                //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
-
-                self._modelsLoaded[ gltfFileName ] = root;
-
-                self._config.model = gltfFileName;
-                self.updateModel();
-
-                // Updates the dropdown list
-                modelList.push( gltfFileName );
-
-                var controllers = self._gui.__controllers;
-                var controller = controllers.filter( function ( cont ) {
-                    return cont.property === 'model';
-                } )[ 0 ];
-                controller = controller.options( modelList );
-                controller.onChange( self.updateModel.bind( self ) );
-
-            } );
-
-        },
 
         createEnvironment: function ( urlOrZip, zipFileName ) {
 

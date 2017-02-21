@@ -1,8 +1,8 @@
 'use strict';
 
 var requestFile = require( 'osgDB/requestFile.js' );
-var Registry = require( 'osgDB/Registry' );
 var Input = require( 'osgDB/Input' );
+var Registry = require( 'osgDB/Registry' );
 var animation = require( 'osgAnimation/animation' );
 var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
 var Skeleton = require( 'osgAnimation/Skeleton' );
@@ -24,6 +24,7 @@ var primitiveSet = require( 'osg/primitiveSet' );
 var BufferArray = require( 'osg/BufferArray' );
 var UpdateBone = require( 'osgAnimation/UpdateBone' );
 var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
+var FileHelper = require( 'osgDB/FileHelper' );
 
 var Uniform = require( 'osg/Uniform' );
 var P = require( 'bluebird' );
@@ -34,23 +35,19 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var ReaderWriterGLTF = function () {
 
     // Contains all the needed glTF files (.gltf, .bin, etc...)
-    this._files = null;
-    this._loadedFiles = null;
-    this._localPath = null;
-    this._bufferViewCache = null;
+    this._filesMap = undefined;
+    this._loadedFiles = undefined;
+    this._bufferViewCache = undefined;
+    this._basicAnimationManager = undefined;
+    this._visitedNodes = undefined;
+    this._animatedNodes = undefined;
+    this._skeletons = undefined;
+    this._bones = undefined;
+    this._skeletonToInfluenceMap = undefined;
+    this._inputImgReader = undefined;
+    this._localPath = '';
 
-    this._basicAnimationManager = null;
-
-    this._visitedNodes = null;
-    this._animatedNodes = null;
-    this._skeletons = null;
-    this._bones = null;
-    this._skeletonToInfluenceMap = null;
-
-    this._cachepromise = null;
-    this._inputImgReader = null;
     this.init();
-    this._glbModel = undefined;
 };
 
 ReaderWriterGLTF.WEBGL_COMPONENT_TYPES = {
@@ -104,42 +101,46 @@ ReaderWriterGLTF.prototype = {
     init: function () {
 
         this._glTFJSON = undefined;
-        this._localPath = null;
-
         this._bufferViewCache = {};
-        this._basicAnimationManager = null;
-
+        this._basicAnimationManager = undefined;
+        this._localPath = '';
         this._visitedNodes = {};
         this._animatedNodes = {};
         this._skeletons = {};
         this._bones = {};
         this._skeletonToInfluenceMap = {};
         this._stateSetMap = {};
-
-        this._cachepromise = {};
-        this._inputImgReader = new Input();
+        this._filesMap = new window.Map();
+        this._inputReader = new Input();
 
     },
 
-    getFileType: function ( fileName ) {
-        var ext = fileName.split( '.' ).pop();
-        if ( ext === 'bin' )
-            return 'arraybuffer';
-        else if ( ext === 'gltf' )
-            return 'text';
-        return 'blob';
-    },
 
 
     loadFile: Promise.method( function ( uri ) {
-
         if ( this._filesMap.has( uri ) )
             return this._filesMap.get( uri );
-        var fileType = this.getFileType( uri );
 
-        var promiseFile = this.requestFileFromReader( uri, fileType );
-        this._cachepromise[ uri ] = promiseFile;
+        var ext = uri.substr( uri.lastIndexOf( '.' ) + 1 );
+        var fileType = FileHelper.getTypeForExtension( ext );
 
+        var promiseFile;
+        var url = this._localPath + uri;
+        if ( fileType === 'blob' ) {
+            promiseFile = this._inputReader.readImageURL( url, {
+                imageLoadingUsePromise: true
+            } );
+        } else if ( fileType === 'arraybuffer' ) {
+            promiseFile = this._inputReader.readBinaryArrayURL( url, {
+                fileType: fileType
+            } );
+        }
+
+        this._filesMap.set( uri, promiseFile );
+
+        promiseFile.then( function ( file ) {
+            return file;
+        } );
         return promiseFile;
     } ),
 
@@ -795,7 +796,7 @@ ReaderWriterGLTF.prototype = {
         var self = this;
 
         this.init();
-        if ( options.filesMap !== undefined && options.filesMap.size > 0 ) {
+        if ( options && options.filesMap !== undefined && options.filesMap.size > 0 ) {
             // it comes from the ZIP plugin or from drag'n drop
             // So we already have all the files.
             this._filesMap = options.filesMap;
@@ -803,9 +804,10 @@ ReaderWriterGLTF.prototype = {
             return this.readJSON( glTFFile, url );
         }
 
+        var index = url.lastIndexOf( '/' );
+        this._localPath = ( index === -1 ) ? '' : url.substr( 0, index + 1 );
         // Else it is a usual XHR request
         var filePromise = requestFile( url );
-
         filePromise.then( function ( glTFFile ) {
             defer.resolve( self.readJSON( glTFFile ) );
         } );

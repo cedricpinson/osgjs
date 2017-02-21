@@ -7,7 +7,7 @@ var osgWrappers = require( 'osgWrappers/serializers/osg' );
 var osgAnimationWrappers = require( 'osgWrappers/serializers/osgAnimation' );
 var osgTextWrappers = require( 'osgWrappers/serializers/osgText' );
 var Registry = require( 'osgDB/Registry' );
-var FileHelper = require( 'osgDB/fileHelper' );
+var FileHelper = require( 'osgDB/FileHelper' );
 
 var osgDB = {};
 osgDB.Input = Input;

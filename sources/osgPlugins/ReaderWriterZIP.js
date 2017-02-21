@@ -5,6 +5,7 @@ var requestFile = require( 'osgDB/requestFile.js' );
 var Notify = require( 'osg/notify' );
 var Registry = require( 'osgDB/Registry' );
 var ReaderParser = require( 'osgDB/readerParser' );
+var FileHelper = require( 'osgDB/FileHelper' );
 
 var ReaderWriterZIP = function () {
     this._options = undefined;
@@ -17,6 +18,10 @@ ReaderWriterZIP.prototype = {
 
     readNodeURL: function ( url, options ) {
         var defer = P.defer();
+        if ( JSZip === undefined ) {
+            Notify.error( 'You need to add JSZip as a dependency' );
+            return defer.reject();
+        }
         Notify.log( 'starting to read: ' + url );
         // Check if we already have the file
         var self = this;
@@ -25,11 +30,11 @@ ReaderWriterZIP.prototype = {
             if ( options.filesMap.has( url ) ) {
                 // Now url is a File
                 var file = options.filesMap.get( url );
-                this.readZipFile( file ).then( function () {
+                return this.readZipFile( file ).then( function () {
                     // At this point we have the main file name and a Map containing all the resources
-                    defer.resolve( ReaderParser.readNodeURL( self._fileName, {
+                    return ReaderParser.readNodeURL( self._fileName, {
                         filesMap: self._filesMap
-                    } ) );
+                    } );
                 } );
             }
         }
@@ -63,12 +68,14 @@ ReaderWriterZIP.prototype = {
                     // So this is the main file to read
                     self._fileName = fileName;
                 }
-                var type = self.getTypeForExtension( extension );
+                var type = FileHelper.getTypeForExtension( extension );
                 // We don't need to parse this file
                 if ( type === undefined ) return;
-                var p = zip.files[ fileName ].async( type ).then( function ( fileData ) {
+                if ( type === 'blob' ) type = 'base64'; // Images are base64 encoded in ZIP files
+                var p = zip.file( fileName ).async( type ).then( function ( fileData ) {
                     var data = fileData;
                     var name = fileName.split( '/' ).pop();
+                    // Is an image
                     if ( type === 'base64' ) {
                         data = new window.Image();
                         data.src = 'data:image/' + extension + ';base64,' + fileData;
@@ -84,28 +91,6 @@ ReaderWriterZIP.prototype = {
         } );
         return defer.promise;
 
-    },
-
-    getTypeForExtension: function ( ext ) {
-        var type;
-        switch ( ext ) {
-        case 'bin':
-        case 'b3dm':
-        case 'glb':
-            type = 'arraybuffer';
-            break;
-        case 'png':
-        case 'jpg':
-        case 'jpeg':
-        case 'gif':
-            type = 'base64';
-            break;
-        case 'gltf':
-        case 'osgjs':
-            type = 'string';
-            break;
-        }
-        return type;
     }
 
 };

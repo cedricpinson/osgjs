@@ -17,6 +17,12 @@
         },
 
         createScene: function () {
+            // Forr gltf download testing
+            // var self = this;
+            // osgDB.readNodeURL( 'microphone/Microphone.gltf' ).then( function ( node ) {
+            //     self.getRootNode().addChild( node );
+            //     self._viewer.getManipulator().computeHomePosition();
+            // } );
         },
 
         handleDroppedFiles: function ( files ) {
@@ -28,11 +34,8 @@
                 self.getRootNode().addChild( node );
                 self._viewer.getManipulator().computeHomePosition();
             } );
-            //           $( '#loading' ).hide();
         },
     } );
-
-
 
     var dragOverEvent = function ( evt ) {
         evt.stopPropagation();
@@ -48,15 +51,6 @@
         var files = evt.dataTransfer.files;
         if ( files.length )
             this.handleDroppedFiles( files );
-        // Microsoft explorer?
-        // else {
-        //    var url = evt.dataTransfer.getData( 'text' );
-        //    if ( url.indexOf( '.zip' ) !== -1 || url.indexOf( '.gltf' ) !== -1 )
-        //        this.handleDroppedURL( url );
-        //    else
-        //        osg.warn( 'url ' + url + ' not supported, drag n drop only valid zip files' );
-        // }
-
     };
     window.addEventListener( 'load', function () {
 
