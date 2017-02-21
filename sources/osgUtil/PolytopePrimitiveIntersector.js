@@ -2,6 +2,7 @@
 var osgMath = require( 'osg/math' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
+var Plane = require( 'osg/Plane' );
 
 
 var PolytopeIntersection = function ( index, candidates, candidatesMasks, referencePlane, nodePath ) {
@@ -14,14 +15,17 @@ var PolytopeIntersection = function ( index, candidates, candidatesMasks, refere
     this._center = vec3.create();
     for ( var i = 0, j = candidates.length; i < j; i++ ) {
         if ( candidatesMasks[ i ] === 0 ) continue;
+
         this._points[ this._numPoints++ ] = vec3.clone( candidates[ i ] );
         vec3.add( this._center, this._center, candidates[ i ] );
-        var distance = referencePlane[ 0 ] * candidates[ i ][ 0 ] + referencePlane[ 1 ] * candidates[ i ][ 1 ] + referencePlane[ 2 ] * candidates[ i ][ 2 ] + referencePlane[ 3 ];
+
+        var distance = Plane.distanceToPlane( referencePlane, candidates[ i ] );
         if ( distance > this._maxDistance ) this._maxDistance = distance;
         if ( this._numPoints === this._maxNumIntesections ) break;
     }
+
     vec3.scale( this._center, this._center, 1 / this._numPoints );
-    this._distance = referencePlane[ 0 ] * this._center[ 0 ] + referencePlane[ 1 ] * this._center[ 1 ] + referencePlane[ 2 ] * this._center[ 2 ] + referencePlane[ 3 ];
+    this._distance = Plane.distanceToPlane( referencePlane, this._center );
     this.nodePath = nodePath;
 };
 
@@ -381,11 +385,11 @@ PolytopePrimitiveIntersector.prototype = {
             if ( this._lines.length > 0 ) return this._lines; // Polytope lines already calculated
             var selectorMask = 0x1;
             for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 ) {
-                vec3.copy( normal1, this.getNormal( this._planes[ i ] ) );
+                vec3.copy( normal1, this._planes[ i ] );
                 vec3.scale( point1, normal1, -this._planes[ i ][ 3 ] ); // canonical point on plane[ i ]
                 var subSelectorMask = ( selectorMask << 1 );
                 for ( var jt = i + 1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 ) {
-                    vec3.copy( normal2, this.getNormal( this._planes[ jt ] ) );
+                    vec3.copy( normal2, this._planes[ jt ] );
                     if ( Math.abs( vec3.dot( normal1, normal2 ) ) > ( 1.0 - epsilon ) ) continue;
                     vec3.cross( lineDirection, normal1, normal2 );
                     vec3.cross( searchDirection, lineDirection, normal1 );
@@ -407,19 +411,9 @@ PolytopePrimitiveIntersector.prototype = {
     },
 
     distance: function ( plane, v ) {
-        var d = plane[ 0 ] * v[ 0 ] + plane[ 1 ] * v[ 1 ] + plane[ 2 ] * v[ 2 ] + plane[ 3 ];
-        return d;
-    },
+        return vec3.dot( plane, v ) + plane[ 3 ];
+    }
 
-    getNormal: ( function () {
-        var normal = vec3.create();
-        return function ( plane ) {
-            normal[ 0 ] = plane[ 0 ];
-            normal[ 1 ] = plane[ 1 ];
-            normal[ 2 ] = plane[ 2 ];
-            return normal;
-        };
-    } )()
 };
 
 module.exports = PolytopePrimitiveIntersector;

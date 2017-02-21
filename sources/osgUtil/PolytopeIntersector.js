@@ -2,6 +2,7 @@
 var PolytopePrimitiveIntersector = require( 'osgUtil/PolytopePrimitiveIntersector' );
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
+var Plane = require( 'osg/Plane' );
 
 /** Concrete class for implementing polytope intersections with the scene graph.
  * To be used in conjunction with IntersectionVisitor. */
@@ -43,13 +44,16 @@ var transformVec4PostMult = function ( out, p, m ) {
 PolytopeIntersector.prototype = {
 
     setPolytope: function ( polytope ) {
-        this._polytope = polytope;
-        this._referencePlane[ 0 ] = polytope[ polytope.length - 1 ][ 0 ];
-        this._referencePlane[ 1 ] = polytope[ polytope.length - 1 ][ 1 ];
-        this._referencePlane[ 2 ] = polytope[ polytope.length - 1 ][ 2 ];
-        this._referencePlane[ 3 ] = polytope[ polytope.length - 1 ][ 3 ];
-        // TODO initialize _iPolytope or _iReferencePlane in case there is no transform in the graph?
-        // same as setCurrentTransformation with matrix identity
+        var nbPlanes = polytope.length;
+        this._polytope.length = polytope.length = nbPlanes;
+        for ( var i = 0; i < nbPlanes; ++i ) {
+            var plane = polytope[ i ];
+            this._polytope[ i ] = vec4.copy( this._polytope[ i ] || Plane.create(), plane );
+            this._iPolytope[ i ] = vec4.copy( this._iPolytope[ i ] || Plane.create(), plane );
+        }
+
+        vec4.copy( this._referencePlane, polytope[ nbPlanes - 1 ] );
+        vec4.copy( this._iReferencePlane, this._referencePlane );
     },
 
     setPolytopeFromWindowCoordinates: function ( xMin, yMin, xMax, yMax ) {
@@ -80,7 +84,7 @@ PolytopeIntersector.prototype = {
 
     enter: function ( node ) {
         if ( this.reachedLimit() ) return false;
-        return ( this.intersects( node.getBound() ) );
+        return !node.isCullingActive() || this.intersects( node.getBound() );
     },
 
     reachedLimit: function () {
@@ -88,23 +92,18 @@ PolytopeIntersector.prototype = {
     },
 
     // Intersection Polytope/Sphere
-    intersects: ( function () {
-        var position = vec3.create();
-        return function ( bsphere ) {
-            if ( !bsphere.valid() ) return false;
-            var pos = bsphere.center();
-            var d;
-            vec3.copy( position, pos );
-            var radius = -bsphere.radius();
-            for ( var i = 0, j = this._iPolytope.length; i < j; i++ ) {
-                d = this._iPolytope[ i ][ 0 ] * position[ 0 ] + this._iPolytope[ i ][ 1 ] * position[ 1 ] + this._iPolytope[ i ][ 2 ] * position[ 2 ] + this._iPolytope[ i ][ 3 ];
-                if ( d <= radius ) {
-                    return false;
-                }
+    intersects: function ( bsphere ) {
+        if ( !bsphere.valid() ) return false;
+
+        var pos = bsphere.center();
+        var radius = -bsphere.radius();
+        for ( var i = 0, j = this._iPolytope.length; i < j; i++ ) {
+            if ( Plane.distanceToPlane( this._iPolytope, pos ) <= radius ) {
+                return false;
             }
-            return true;
-        };
-    } )(),
+        }
+        return true;
+    },
 
     // Intersection Polytope/Geometry
     intersect: function ( iv, node ) {
@@ -137,29 +136,19 @@ PolytopeIntersector.prototype = {
 
     setCurrentTransformation: function ( matrix ) {
         // Transform the polytope and the referencePlane to the current Model local coordinate frame
-        var inv;
-        var iplane = vec4.create();
         for ( var i = 0, j = this._polytope.length; i < j; i++ ) {
-            var plane = this._polytope[ i ];
+            var iplane = this._iPolytope[ i ] = this._iPolytope[ i ] || vec4.create();
             // PostMult
-            transformVec4PostMult( iplane, plane, matrix );
+            transformVec4PostMult( iplane, this._polytope[ i ], matrix );
             // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds.
-            inv = 1.0 / Math.sqrt( iplane[ 0 ] * iplane[ 0 ] + iplane[ 1 ] * iplane[ 1 ] + iplane[ 2 ] * iplane[ 2 ] );
-            iplane[ 0 ] *= inv;
-            iplane[ 1 ] *= inv;
-            iplane[ 2 ] *= inv;
-            iplane[ 3 ] *= inv;
-            this._iPolytope[ i ] = vec4.clone( iplane );
+            vec4.scale( iplane, iplane, 1.0 / vec3.len( iplane ) );
         }
+
         //Post Mult
         transformVec4PostMult( this._iReferencePlane, this._referencePlane, matrix );
 
         // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds.
-        inv = 1.0 / Math.sqrt( this._iReferencePlane[ 0 ] * this._iReferencePlane[ 0 ] + this._iReferencePlane[ 1 ] * this._iReferencePlane[ 1 ] + this._iReferencePlane[ 2 ] * this._iReferencePlane[ 2 ] );
-        this._iReferencePlane[ 0 ] *= inv;
-        this._iReferencePlane[ 1 ] *= inv;
-        this._iReferencePlane[ 2 ] *= inv;
-        this._iReferencePlane[ 3 ] *= inv;
+        vec4.scale( this._iReferencePlane, this._iReferencePlane, 1.0 / vec3.len( this._iReferencePlane ) );
     }
 };
 
