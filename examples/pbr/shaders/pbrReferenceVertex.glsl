@@ -6,7 +6,7 @@ attribute vec4 Tangent;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
-uniform mat4 uModelViewNormalMatrix;
+uniform mat3 uModelViewNormalMatrix;
 
 varying vec3 vViewVertex;
 varying vec3 vViewNormal;
@@ -16,8 +16,8 @@ varying vec2 vTexCoord0;
 void main(void) {
 
     vViewVertex = vec3(uModelViewMatrix * vec4(Vertex, 1.0));
-    vViewNormal = vec3(uModelViewNormalMatrix * vec4(Normal, 0.0));
-    vViewTangent = uModelViewNormalMatrix * Tangent;
+    vViewNormal = uModelViewNormalMatrix * Normal;
+    vViewTangent = vec4(uModelViewNormalMatrix * Tangent.xyz, Tangent.w);
     vTexCoord0 = TexCoord0;
 
     gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);

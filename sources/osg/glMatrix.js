@@ -11,6 +11,7 @@ var vec2 = glm.vec2;
 var vec3 = glm.vec3;
 var vec4 = glm.vec4;
 var mat4 = glm.mat4;
+var mat3 = glm.mat3;
 var quat = glm.quat;
 
 // osg vec3 additions
@@ -243,6 +244,20 @@ quat.nlerp = function ( out, a, b, t ) {
 //
 // slerp see glMatrix implementation
 
+
+// mat3 additions
+mat3.IDENTITY = mat3.create();
+mat3.create32 = function () {
+    var out = new Float32Array( 9 );
+    out[ 0 ] = out[ 4 ] = out[ 8 ] = 1.0;
+    return out;
+};
+
+mat3.create64 = function () {
+    var out = new Float64Array( 9 );
+    out[ 0 ] = out[ 4 ] = out[ 8 ] = 1.0;
+    return out;
+};
 
 // mat4 additions
 mat4.IDENTITY = mat4.create();

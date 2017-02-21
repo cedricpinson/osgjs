@@ -109,7 +109,7 @@ var CompilerVertex = {
         out = this.createVariable( 'vec3', 'modelNormal' );
 
         this.getNode( 'MatrixMultDirection' ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'uModelMatrix' ), // ModelNormalMatrix
+            matrix: this.getOrCreateUniform( 'mat3', 'uModelNormalMatrix' ),
             vec: this.getOrCreateLocalNormal()
         } ).outputs( {
             vec: out
@@ -126,7 +126,7 @@ var CompilerVertex = {
         out = this.createVariable( 'vec4', 'modelTangent' );
 
         this.getNode( 'MatrixMultDirection' ).setOverwriteW( false ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'uModelMatrix' ), // ModelNormalMatrix
+            matrix: this.getOrCreateUniform( 'mat3', 'uModelNormalMatrix' ),
             vec: this.getOrCreateLocalTangent()
         } ).outputs( {
             vec: out
@@ -158,7 +158,7 @@ var CompilerVertex = {
         out = this.createVariable( 'vec3', 'viewNormal' );
 
         this.getNode( 'MatrixMultDirection' ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'uModelViewNormalMatrix' ),
+            matrix: this.getOrCreateUniform( 'mat3', 'uModelViewNormalMatrix' ),
             vec: this.getOrCreateLocalNormal()
         } ).outputs( {
             vec: out
@@ -173,7 +173,7 @@ var CompilerVertex = {
         out = this.createVariable( 'vec4', 'viewTangent' );
 
         this.getNode( 'MatrixMultDirection' ).setOverwriteW( false ).inputs( {
-            matrix: this.getOrCreateUniform( 'mat4', 'uModelViewNormalMatrix' ),
+            matrix: this.getOrCreateUniform( 'mat3', 'uModelViewNormalMatrix' ),
             vec: this.getOrCreateLocalTangent()
         } ).outputs( {
             vec: out
