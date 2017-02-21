@@ -1,6 +1,6 @@
 var P = require( 'bluebird' );
 
-var requestFile = function ( url, options ) {
+var requestFileFromURL = function ( url, options ) {
 
     var defer = P.defer();
 
@@ -30,6 +30,40 @@ var requestFile = function ( url, options ) {
 
     req.send( null );
     return defer.promise;
+};
+
+var requestFileFromReader = function ( file, options ) {
+    var defer = Promise.defer();
+    var reader = new window.FileReader();
+    reader.onload = function ( data ) {
+        if ( options.responseType === 'blob' ) {
+            var img = new window.Image();
+            img.src = data.target.result;
+            defer.resolve( img );
+        } else {
+            defer.resolve( data.target.result );
+        }
+    };
+    // handle responseType
+    if ( options && options.responseType ) {
+        if ( options.responseType === 'arraybuffer' )
+            reader.readAsArrayBuffer( file );
+        else if ( options.responseType === 'string' )
+            reader.readAsText( file );
+        else
+            reader.readAsDataURL( file );
+    } else {
+        reader.readAsText( file );
+    }
+    return defer.promise;
+};
+
+var requestFile = function ( urlOrFile, options ) {
+    if ( typeof ( urlOrFile ) === 'string' ) {
+        return requestFileFromURL( urlOrFile, options );
+    } else {
+        return requestFileFromReader( urlOrFile, options );
+    }
 };
 
 module.exports = requestFile;
