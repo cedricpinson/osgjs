@@ -1,11 +1,11 @@
 'use strict';
 var P = require( 'bluebird' );
-var JSZip = require( 'jszip' );
 var requestFile = require( 'osgDB/requestFile.js' );
 var Notify = require( 'osg/notify' );
 var Registry = require( 'osgDB/Registry' );
 var ReaderParser = require( 'osgDB/readerParser' );
 var FileHelper = require( 'osgDB/FileHelper' );
+var JSZip = window.JSZip;
 
 var ReaderWriterZIP = function () {
     this._options = undefined;
