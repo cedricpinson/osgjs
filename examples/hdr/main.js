@@ -443,29 +443,37 @@
         };
         var urls = textures[ name ];
 
+        var textureHigh = new osg.Texture();
+        textureHigh.setTextureSize( 1, 1 );
+
+        var textureEnv = new osg.Texture();
+        textureEnv.setTextureSize( 1, 1 );
+
+        var backgroundStateSet = background.getOrCreateStateSet();
+        backgroundStateSet.setTextureAttributeAndModes( 0, textureHigh );
+        backgroundStateSet.addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
+
+        var groundStateSet = ground.getOrCreateStateSet();
+        groundStateSet.setTextureAttributeAndModes( 0, textureHigh );
+        groundStateSet.addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
+        groundStateSet.setTextureAttributeAndModes( 1, textureEnv );
+        groundStateSet.addUniform( osg.Uniform.createInt1( 1, 'Texture1' ) );
+
         P.all( [
             readImageURL( 'textures/' + name + '/' + urls[ 0 ] ),
             readImageURL( 'textures/' + name + '/' + urls[ 1 ] )
         ] ).then( function ( images ) {
-            var textureHigh = new osg.Texture();
             textureHigh.setImage( images[ 0 ] );
             if ( images[ 0 ].data ) {
                 textureHigh.setTextureSize( images[ 0 ].width, images[ 0 ].height );
                 textureHigh.setImage( images[ 0 ].data, osg.Texture.RGBA );
             }
-            background.getOrCreateStateSet().setTextureAttributeAndModes( 0, textureHigh );
-            background.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
 
-            var textureEnv = new osg.Texture();
             textureEnv.setImage( images[ 1 ] );
             if ( images[ 0 ].data ) {
                 textureEnv.setTextureSize( images[ 0 ].width, images[ 0 ].height );
                 textureEnv.setImage( images[ 0 ].data, osg.Texture.RGBA );
             }
-            ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, textureHigh );
-            ground.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
-            ground.getOrCreateStateSet().setTextureAttributeAndModes( 1, textureEnv );
-            ground.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 1, 'Texture1' ) );
         } );
     }
 

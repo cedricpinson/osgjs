@@ -195,8 +195,7 @@
             var iv = new osgUtil.IntersectionVisitor();
             iv.setIntersector( si );
             viewer.getSceneData().accept( iv );
-            var hitsSphere = si.getIntersections();
-            console.log( hitsSphere.length );
+            // console.log( si.getIntersections().length );
         }
     };
 

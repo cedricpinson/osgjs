@@ -639,7 +639,7 @@
 
                 var scene = self._modelsMap[ self._config.scene ];
                 scene.dirtyBound();
-                self._viewer.getManipulator().computeHomePosition( OSG.Manipulator.COMPUTE_HOME_USING_SPHERE );
+                self._viewer.getManipulator().computeHomePosition( OSG.osgGA.Manipulator.COMPUTE_HOME_USING_SPHERE );
 
             } );
 

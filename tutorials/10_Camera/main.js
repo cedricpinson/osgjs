@@ -193,7 +193,7 @@ window.addEventListener( 'load',
                     // [ m11, m12, m13, 0.0, m21, m22, m23, 0.0, m31, m32, m33, 0.0, 0.0, 0.0, 0.0,  1.0]
                     this._inv = [ m[ 0 ], m[ 1 ], m[ 2 ], 0.0, m[ 3 ], m[ 4 ], m[ 5 ], 0.0, m[ 6 ], m[ 7 ], m[ 8 ], 0.0, 0.0, 0.0, 0.0, 1.0 ];
 
-                    osg.Matrix.inverse( this._inv, this._inverseDeviceMatrix );
+                    osg.mat4.invert( this._inverseDeviceMatrix, this._inv );
 
                     osg.mat4.copy( viewer.getCamera().getViewMatrix(), this._inverseDeviceMatrix );
 

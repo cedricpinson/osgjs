@@ -185,12 +185,21 @@
 
         var size = 250;
         var background = getCubeMap( size, group );
-        background.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
-        background.getOrCreateStateSet().setAttributeAndModes( getShaderBackground() );
+
+        var texture = new osg.TextureCubeMap();
+        texture.setTextureSize( 1, 1 );
+
+        var backgroundStateSet = background.getOrCreateStateSet();
+        backgroundStateSet.setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
+        backgroundStateSet.setAttributeAndModes( getShaderBackground() );
+        backgroundStateSet.setTextureAttributeAndModes( 0, texture );
+        backgroundStateSet.addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
 
         var ground = getModel();
-
-        ground.getOrCreateStateSet().setAttributeAndModes( getShader() );
+        var groundStateSet = ground.getOrCreateStateSet();
+        groundStateSet.setAttributeAndModes( getShader() );
+        groundStateSet.setTextureAttributeAndModes( 0, texture );
+        groundStateSet.addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
 
         P.all( [
             osgDB.readImage( 'textures/posx.jpg' ),
@@ -203,8 +212,6 @@
             osgDB.readImage( 'textures/negz.jpg' )
         ] ).then( function ( images ) {
 
-            var texture = new osg.TextureCubeMap();
-
             texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_X', images[ 0 ] );
             texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_X', images[ 1 ] );
 
@@ -215,12 +222,6 @@
             texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Z', images[ 5 ] );
 
             texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
-
-            ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
-            ground.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
-
-            background.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
-            background.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
         } );
 
         group.addChild( ground );
