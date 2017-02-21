@@ -155,6 +155,7 @@ osg.vec2 = glm.vec2;
 osg.vec3 = glm.vec3;
 osg.vec4 = glm.vec4;
 osg.quat = glm.quat;
+osg.mat3 = glm.mat3;
 osg.mat4 = glm.mat4;
 
 osg.memoryPools = osgPool.memoryPools;
