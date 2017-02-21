@@ -332,7 +332,8 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                         }
                     }
                 }
-                if ( extDrawBuffers )
+
+                if ( extDrawBuffers && bufs.length > 0 )
                     extDrawBuffers.drawBuffersWEBGL( bufs );
 
                 this.checkStatus();
