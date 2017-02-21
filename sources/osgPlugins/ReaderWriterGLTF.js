@@ -1,7 +1,6 @@
 'use strict';
 
 var requestFile = require( 'osgDB/requestFile.js' );
-var Notify = require( 'osg/notify' );
 var Registry = require( 'osgDB/Registry' );
 var Input = require( 'osgDB/Input' );
 var animation = require( 'osgAnimation/animation' );
@@ -15,6 +14,7 @@ var RigGeometry = require( 'osgAnimation/RigGeometry' );
 var channel = require( 'osgAnimation/channel' );
 var createQuatChannel = channel.createQuatChannel;
 var createVec3Channel = channel.createVec3Channel;
+var MACROUTILS = require( 'osg/Utils' );
 
 var Geometry = require( 'osg/Geometry' );
 var Texture = require( 'osg/Texture' );
@@ -25,8 +25,11 @@ var primitiveSet = require( 'osg/primitiveSet' );
 var BufferArray = require( 'osg/BufferArray' );
 var UpdateBone = require( 'osgAnimation/UpdateBone' );
 var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
+var DisplayGraph = require( 'osgUtil/DisplayGraph' );
+var NodeVisitor = require( 'osg/NodeVisitor' );
 
 var Uniform = require( 'osg/Uniform' );
+var Notify = require( 'osg/notify' );
 
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
@@ -45,12 +48,18 @@ var GLTFLoader = function () {
     this._visitedNodes = null;
     this._animatedNodes = null;
     this._skeletons = null;
+    this._bindShapeMatrices = null;
+    this._rigGeoms = null;
     this._bones = null;
     this._skeletonToInfluenceMap = null;
 
     this._cachepromise = null;
     this._inputImgReader = null;
 
+    // For skeleton handling
+    this._rigToSkeleton = null;
+    this._rigToRigNode = null;
+    this._boneToSkeleton = null;
 };
 
 GLTFLoader.WEBGL_COMPONENT_TYPES = {
@@ -115,12 +124,17 @@ GLTFLoader.prototype = {
         this._visitedNodes = {};
         this._animatedNodes = {};
         this._skeletons = {};
+        this._bindShapeMatrices = {};
         this._bones = {};
         this._skeletonToInfluenceMap = {};
         this._stateSetMap = {};
 
         this._cachepromise = {};
         this._inputImgReader = new Input();
+
+        this._rigToSkeleton = {};
+        this._rigToRigNode = {};
+        this._boneToSkeleton = {};
 
     },
 
@@ -190,7 +204,7 @@ GLTFLoader.prototype = {
             var ext = urlOrFiles.split( '.' ).pop();
             if ( ext !== 'gltf' ) {
 
-                Notify.warn( 'The given URL does not point toward a valid glTF file' );
+                console.warn( 'The given URL does not point toward a valid glTF file' );
                 return Promise.resolve( null );
 
             }
@@ -204,7 +218,7 @@ GLTFLoader.prototype = {
 
             if ( !( urlOrFiles instanceof FileList ) && !this._preloaded ) {
 
-                Notify.warn( 'The provided argument is neither a FileList nor a valid URL' );
+                console.warn( 'The provided argument is neither a files array nor a valid URL' );
                 return Promise.resolve( null );
 
             }
@@ -226,7 +240,7 @@ GLTFLoader.prototype = {
 
         if ( !glTFFileOrUrl ) {
 
-            Notify.warn( 'You did not provided any glTF file' );
+            console.warn( 'You did not provided any glTF file' );
             return Promise.resolve( null );
 
         }
@@ -357,6 +371,7 @@ GLTFLoader.prototype = {
         var self = this;
 
         return filePromise.then( function ( data ) {
+            console.warn( '\'' + buffer.uri + '\' binary file not found' );
 
             if ( !data )
                 return Promise.resolve( null );
@@ -394,12 +409,14 @@ GLTFLoader.prototype = {
 
     },
 
-    registerUpdateCallback: function ( callbackName, node ) {
-
-        var json = this._loadedFiles.glTF;
+    registerUpdateCallback: function ( callbackName, node, glTFNode ) {
 
         var animationCallback = null;
-        if ( json.nodes[ callbackName ].jointName )
+
+        // Adding UpdateBone here even for non animated bones since
+        // boneMatrixInSkeletonSpace are updated by this callback
+        // Another solution would be to directly set this matrix
+        if ( node.className() === 'Bone' )
             animationCallback = new UpdateBone();
         else
             animationCallback = new UpdateMatrixTransform();
@@ -407,13 +424,18 @@ GLTFLoader.prototype = {
         animationCallback.setName( callbackName );
 
         var translation = vec3.create();
-        mat4.getTranslation( translation, node.getMatrix() );
+        if ( glTFNode.translation && glTFNode.translation.length > 0 )
+            translation.set( glTFNode.translation );
 
         var rotationQuat = quat.create();
-        mat4.getRotation( rotationQuat, node.getMatrix() );
+        if ( glTFNode.rotation && glTFNode.rotation.length > 0 )
+            rotationQuat.set( glTFNode.rotation );
 
         var scale = vec3.create();
-        mat4.getScale( scale, node.getMatrix() );
+        if ( glTFNode.scale && glTFNode.scale.length > 0 )
+            scale.set( glTFNode.scale );
+        else
+            scale.set( [ 1.0, 1.0, 1.0 ] );
 
         animationCallback.getStackedTransforms().push( new StackedTranslate( 'translation', translation ) );
         animationCallback.getStackedTransforms().push( new StackedQuaternion( 'rotation', rotationQuat ) );
@@ -490,15 +512,16 @@ GLTFLoader.prototype = {
         return mat;
     },
 
-    preprocessChannel: function ( glTFChannel, glTFAnim, glTFAnimParams ) {
+    preprocessChannel: function ( glTFChannel, glTFAnim, glTFParams ) {
 
         var json = this._loadedFiles.glTF;
         var promisesArray = [];
 
         var glTFSampler = glTFAnim.samplers[ glTFChannel.sampler ];
 
-        var timeAccessor = json.accessors[ glTFAnimParams[ glTFSampler.input ] ];
-        var valueAccessor = json.accessors[ glTFAnimParams[ glTFSampler.output ] ];
+        // parameters are no longer used in GlTF 1.1 specification, see https://github.com/lexaknyazev/glTF/tree/master-test/specification/1.1#animations
+        var timeAccessor = json.accessors[ ( glTFParams ? glTFParams[ glTFSampler.input ] : glTFSampler.input ) ];
+        var valueAccessor = json.accessors[ ( glTFParams ? glTFParams[ glTFSampler.output ] : glTFSampler.output ) ];
 
         var timePromise = this.loadAccessorBuffer( timeAccessor, null );
         var valuePromise = this.loadAccessorBuffer( valueAccessor, null );
@@ -516,11 +539,11 @@ GLTFLoader.prototype = {
 
             if ( GLTFLoader.TYPE_TABLE[ valueAccessor.type ] === 4 ) {
 
-                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFChannel.target.path, null );
 
             } else if ( GLTFLoader.TYPE_TABLE[ valueAccessor.type ] === 3 ) {
 
-                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFChannel.target.path, null );
 
             }
 
@@ -559,15 +582,15 @@ GLTFLoader.prototype = {
         for ( var i = 0; i < animationsObjectKeys.length; ++i ) {
 
             var glTFAnim = json.animations[ animationsObjectKeys[ i ] ];
-            var glTFAnimParams = glTFAnim.parameters;
 
             var channelsPromiseArray = [];
             // Creates each OSGJS channel
             for ( var j = 0; j < glTFAnim.channels.length; ++j ) {
 
                 var glTFChannel = glTFAnim.channels[ j ];
+                var glTFParam = glTFAnim.parameters;
 
-                var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim, glTFAnimParams );
+                var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim, glTFParam );
                 channelsPromiseArray.push( osgChannel );
             }
 
@@ -588,7 +611,6 @@ GLTFLoader.prototype = {
     },
 
     loadBone: function ( boneId, skin ) {
-
         var json = this._loadedFiles.glTF;
         var node = json.nodes[ boneId ];
 
@@ -617,20 +639,17 @@ GLTFLoader.prototype = {
 
     },
 
-    buildInfluenceMap: function ( rootBoneId, skin ) {
+    buildInfluenceMap: function ( skin, skinId ) {
 
-        if ( this._skeletonToInfluenceMap[ rootBoneId ] )
-            return;
-
-        this._skeletonToInfluenceMap[ rootBoneId ] = {};
+        if ( !this._skeletonToInfluenceMap[ skinId ] )
+            this._skeletonToInfluenceMap[ skinId ] = {};
 
         for ( var j = 0; j < skin.jointNames.length; j++ ) {
 
             var jointName = skin.jointNames[ j ];
-            this._skeletonToInfluenceMap[ rootBoneId ][ jointName ] = j;
+            this._skeletonToInfluenceMap[ skinId ][ jointName ] = j;
 
         }
-
     },
 
     mapBonesToSkin: function () {
@@ -677,7 +696,7 @@ GLTFLoader.prototype = {
             var boneId = nodesKeys[ i ];
             var boneNode = json.nodes[ boneId ];
 
-            if ( !boneNode.jointName )
+            if ( !boneNode.jointName || bonesToSkin[ boneId ] === undefined )
                 continue;
 
             var bonePromise = this.loadBone( boneId, bonesToSkin[ boneId ] );
@@ -711,35 +730,22 @@ GLTFLoader.prototype = {
 
             for ( var i = 0; i < node.skeletons.length; ++i ) {
 
-                var rootBoneId = null;
-                var rootJointId = node.skeletons[ i ];
-
-                for ( var k = 0; k < nodesKeys.length; ++k ) {
-
-                    var subnodeId = nodesKeys[ k ];
-                    var subnode = json.nodes[ subnodeId ];
-
-                    if ( !subnode.jointName )
-                        continue;
-
-                    if ( subnode.jointName === rootJointId ) {
-
-                        rootBoneId = subnodeId;
-                        break;
-
-                    }
-
-                }
+                var rootBoneId = node.skeletons[ i ];
 
                 if ( rootBoneId && !this._skeletons[ rootBoneId ] ) {
 
-                    this._skeletons[ rootJointId ] = new Skeleton();
+                    this._skeletons[ rootBoneId ] = new Skeleton();
+                    this._skeletons[ rootBoneId ].setName( rootBoneId );
+                    this._bindShapeMatrices[ rootBoneId ] = skin.bindShapeMatrix;
 
                     // Adds missing bone to the boneMap
                     bonesToSkin[ rootBoneId ] = skin;
+                    for ( var k = 0; k < skin.jointNames.length; ++k ) {
+                        this._boneToSkeleton[ skin.jointNames[ k ] ] = rootBoneId;
+                    }
                 }
 
-                this.buildInfluenceMap( rootJointId, skin );
+                this.buildInfluenceMap( skin, node.skin );
             }
         }
 
@@ -832,7 +838,7 @@ GLTFLoader.prototype = {
         return Promise.resolve();
     },
 
-    createGeometry: function ( primitive, skeletonJointId ) {
+    createGeometry: function ( primitive, skeletonJointId, skinId ) {
 
         var json = this._loadedFiles.glTF;
         var promisesArray = [];
@@ -850,10 +856,10 @@ GLTFLoader.prototype = {
 
         };
 
-        if ( skeletonJointId ) {
+        if ( skinId ) {
 
             rigOrGeom = new RigGeometry();
-            rigOrGeom._boneNameID = this._skeletonToInfluenceMap[ skeletonJointId ];
+            rigOrGeom._boneNameID = this._skeletonToInfluenceMap[ skinId ];
 
         }
 
@@ -938,16 +944,29 @@ GLTFLoader.prototype = {
 
                 rigOrGeom.setSourceGeometry( geom );
                 rigOrGeom.mergeChildrenData();
-
+                this.applyBindShapeMatrix( rigOrGeom, skeletonJointId );
                 rigOrGeom.computeBoundingBox = geom.computeBoundingBox;
             }
 
             return rigOrGeom;
 
-        } );
+        }.bind( this ) );
     },
 
-    loadGLTFPrimitives: function ( meshId, resultMeshNode, skeletonJointId ) {
+    applyBindShapeMatrix: function ( rigGeom, skeletonJointId ) {
+        var bindShape = this._bindShapeMatrices[ skeletonJointId ];
+        var elts = rigGeom.getVertexAttributeList()[ 'Vertex' ].getElements();
+        var v = vec3.create();
+        for ( var i = 0; i < elts.length; i += 3 ) {
+            v.set( [ elts[ i ], elts[ i + 1 ], elts[ i + 2 ] ] );
+            vec3.transformMat4( v, v, bindShape );
+            elts[ i ] = v[ 0 ];
+            elts[ i + 1 ] = v[ 1 ];
+            elts[ i + 2 ] = v[ 2 ];
+        }
+    },
+
+    loadGLTFPrimitives: function ( meshId, resultMeshNode, skeletonJointId, skinId ) {
 
         var json = this._loadedFiles.glTF;
         var mesh = json.meshes[ meshId ];
@@ -959,7 +978,7 @@ GLTFLoader.prototype = {
         for ( var i = 0; i < primitives.length; ++i ) {
 
             var primitive = primitives[ i ];
-            var promiseGeom = this.createGeometry( primitive, skeletonJointId );
+            var promiseGeom = this.createGeometry( primitive, skeletonJointId, skinId );
 
             promisesArray.push( promiseGeom );
 
@@ -971,7 +990,6 @@ GLTFLoader.prototype = {
                 resultMeshNode.addChild( geoms[ i ] );
 
             return geoms;
-
         } );
     },
 
@@ -989,21 +1007,22 @@ GLTFLoader.prototype = {
         var currentNode = null;
 
         if ( glTFNode.jointName ) {
-
             currentNode = this._bones[ nodeId ];
-
         } else {
-
             currentNode = new MatrixTransform();
-
         }
 
-        if ( glTFNode.jointName && this._skeletons[ glTFNode.jointName ] ) {
+        if ( this._skeletons[ nodeId ] ) {
 
-            var skeleton = this._skeletons[ glTFNode.jointName ];
-            skeleton.addChild( currentNode );
-            root.addChild( skeleton );
-
+            var skeleton = this._skeletons[ nodeId ];
+            if ( currentNode.className && currentNode.className() !== 'Bone' ) {
+                currentNode.addChild( skeleton );
+                root.addChild( currentNode );
+                currentNode = skeleton;
+            } else {
+                skeleton.addChild( currentNode );
+                root.addChild( skeleton );
+            }
         }
 
         currentNode.setName( nodeId );
@@ -1032,35 +1051,32 @@ GLTFLoader.prototype = {
                 var meshId = glTFNode.meshes[ i ];
                 if ( !glTFNode.skeletons ) {
 
-                    var geomPromise = this.loadGLTFPrimitives( meshId, currentNode, null );
+                    var geomPromise = this.loadGLTFPrimitives( meshId, currentNode, undefined, undefined );
                     promises.push( geomPromise );
                     continue;
 
                 }
 
+                var geomP = this.loadGLTFPrimitives( meshId, currentNode, glTFNode.skeletons[ 0 ], glTFNode.skin );
+                root.addChild( currentNode );
+                promises.push( geomP );
+
+                this._rigToSkeleton[ nodeId ] = [];
                 for ( var j = 0; j < glTFNode.skeletons.length; ++j ) {
 
                     var rootJointId = glTFNode.skeletons[ j ];
                     var skeletonNode = this._skeletons[ rootJointId ];
 
-                    var meshTransformNode = new MatrixTransform();
-                    mat4.copy( meshTransformNode.getMatrix(), currentNode.getMatrix() );
-
-                    var geomP = this.loadGLTFPrimitives( meshId, meshTransformNode, rootJointId );
-
-                    skeletonNode.addChild( meshTransformNode );
-
-                    promises.push( geomP );
+                    this._rigToSkeleton[ nodeId ].push( skeletonNode );
+                    this._rigToRigNode[ nodeId ] = currentNode;
                 }
-
             }
-
         }
 
         // Loads solid animations
         // by adding an update callback
-        if ( this._animatedNodes[ nodeId ] )
-            this.registerUpdateCallback( nodeId, currentNode );
+        if ( this._animatedNodes[ nodeId ] || currentNode.className() === 'Bone' )
+            this.registerUpdateCallback( nodeId, currentNode, glTFNode );
 
         if ( !this._skeletons[ nodeId ] )
             root.addChild( currentNode );
@@ -1068,6 +1084,288 @@ GLTFLoader.prototype = {
         this._visitedNodes[ nodeId ] = true;
 
         return Promise.all( promises );
+    },
+
+    moveParentChildren: function ( src, dst, replace = false ) {
+        var childs = [];
+        childs = childs.concat( src.getChildren() );
+        for ( var c = 0; c < childs.length; ++c ) {
+            dst.addChild( childs[ c ] );
+            src.removeChild( childs[ c ] );
+        }
+        if ( replace === true ) {
+            if ( src.getParents().length > 0 ) {
+                var parent = src.getParents()[ 0 ];
+                parent.removeChild( src );
+                parent.addChild( dst );
+            }
+        }
+    },
+
+    removeNodeFromGraph: function ( nodeToRemove ) {
+        var tempParent = nodeToRemove.getParents()[ 0 ];
+        var chs = [];
+        chs = chs.concat( nodeToRemove.getChildren() );
+        for ( var c = 0; c < chs.length; ++c ) {
+            nodeToRemove.removeChild( chs[ c ] );
+            tempParent.addChild( chs[ c ] );
+        }
+
+        tempParent.removeChild( nodeToRemove );
+        console.log( 'Skeleton ' + nodeToRemove.getName() + ' has been removed' );
+    },
+
+    createOrUpdateStackedTransformFromMatrix: function ( node ) {
+        var localTranslation = mat4.getTranslation( vec3.create(), node.getMatrix() );
+        var localRotation = mat4.getRotation( quat.create(), node.getMatrix() );
+        var localScale = mat4.getScale( vec3.create(), node.getMatrix() );
+
+        var stackedElements = node.getUpdateCallback().getStackedTransforms();
+        if ( stackedElements.length === 0 ) {
+            stackedElements.push( new StackedTranslate( 'translation', localTranslation ) );
+            stackedElements.push( new StackedQuaternion( 'rotation', localRotation ) );
+            stackedElements.push( new StackedScale( 'scale', localScale ) );
+        } else {
+            for ( var i = 0; i < stackedElements.length; ++i ) {
+                if ( stackedElements[ i ] instanceof StackedTranslate ) {
+                    stackedElements[ i ].setTranslate( localTranslation );
+                } else if ( stackedElements[ i ] instanceof StackedQuaternion ) {
+                    stackedElements[ i ].setQuaternion( localRotation );
+                } else if ( stackedElements[ i ] instanceof StackedScale ) {
+                    stackedElements[ i ].setScale( localScale );
+                }
+            }
+        }
+    },
+
+    postProcessSkeletons: function ( rootNode ) {
+
+        var FindCommonParentVisitor = function ( visitedNodes ) {
+            this.stopNode = undefined;
+            this.visitedNodes = visitedNodes;
+            NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
+        };
+        FindCommonParentVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+            reset: function () {
+                this.nodePath.length = 0;
+                this.stopNode = undefined;
+            },
+            apply: function ( node ) {
+                if ( node._parents.length === 0 || this.visitedNodes.indexOf( node ) !== -1 ) {
+                    this.stopNode = node;
+                    this.visitedNodes = this.visitedNodes.concat( this.nodePath.slice( 0 ) );
+                } else {
+                    this.traverse( node );
+                }
+            },
+            getVisitedNodes: function () {
+                return this.visitedNodes;
+            }
+        } );
+
+
+        var FindTopSkeletonVisitor = function () {
+            this.nodePaths = [];
+            this.topSkeleton = undefined;
+            NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
+        };
+        FindTopSkeletonVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+            reset: function () {
+                this.nodePath.length = 0;
+                this.nodePaths.length = 0;
+                this.topSkeleton = undefined;
+            },
+            apply: function ( node ) {
+                if ( node.className() === 'Skeleton' )
+                    this.topSkeleton = node;
+
+                if ( node.getParents().length !== 0 )
+                    this.traverse( node );
+            },
+            getTopSkeleton: function () {
+                return this.topSkeleton;
+            }
+        } );
+
+        var UpdateBoneHierarchy = function ( self, skeletonNode, skeletonWorldMatrix ) {
+            this.self = self;
+            this.nodePaths = [];
+            this.skeletonWorldMatrix = skeletonWorldMatrix;
+            this.skeletonNode = skeletonNode;
+            this.nodesToConvert = [];
+            NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
+        };
+
+        UpdateBoneHierarchy.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+            convertMTToBones: function () {
+                for ( var i = 0; i < this.nodesToConvert.length; ++i ) {
+                    var node = this.nodesToConvert[ i ];
+                    var newBone = new Bone();
+                    newBone.setName( node.getName() );
+                    mat4.copy( newBone.getMatrix(), node.getMatrix() );
+                    this.self.moveParentChildren( node, newBone, true );
+
+                    // Setting boneMatrixInSkeletonSpace is not enough when parent bones are animated
+                    // Set UpdateBone with node transform instead.
+                    var updateBone = new UpdateBone();
+                    updateBone.setName( node.getName() );
+                    newBone.addUpdateCallback( updateBone );
+                    this.self.createOrUpdateStackedTransformFromMatrix( newBone );
+                }
+            },
+            apply: function ( node ) {
+                if ( node.className() === 'Skeleton' )
+                    this.traverse( node );
+                else if ( node.className() !== 'Bone' ) {
+                    if ( node.className() !== 'Geometry' ) {
+                        this.nodesToConvert.push( node );
+                        this.traverse( node );
+                    }
+                } else {
+                    var newInvBind = mat4.multiply( mat4.create(), node.getInvBindMatrixInSkeletonSpace(), this.skeletonWorldMatrix );
+                    node.setInvBindMatrixInSkeletonSpace( newInvBind );
+                    this.traverse( node );
+                }
+
+            }
+        } );
+
+        var i = 0;
+        var j = 0;
+
+        var skeletonKeys = Object.keys( this._skeletons );
+        var rigKeys = Object.keys( this._rigToSkeleton );
+        var boneSkinKeys = Object.keys( this._boneToSkeleton );
+
+        // Maps original to definitive skeletons
+        var skeletonToFinalSkeleton = {};
+        for ( i = 0; i < skeletonKeys.length; ++i ) {
+            skeletonToFinalSkeleton[ skeletonKeys[ i ] ] = skeletonKeys[ i ];
+        }
+
+        if ( skeletonKeys.length > 1 ) {
+            // Look for rigGeoms being deformed by several skeletons.
+            var skeletonCandidates = [];
+            var newSkeletonCandidates = [];
+            var nodeList = [];
+            var skelToRemove = [];
+            for ( i = 0; i < rigKeys.length; ++i ) {
+
+                if ( this._rigToSkeleton[ rigKeys[ i ] ].length > 1 ) {
+
+                    console.log( 'RigGeometry ' + rigKeys[ i ] + ' is affected by several skeletons' );
+
+                    var counter = 0;
+                    var max = this._rigToSkeleton[ rigKeys[ i ] ].length;
+                    skeletonCandidates = skeletonCandidates.concat( this._rigToSkeleton[ rigKeys[ i ] ] );
+
+                    while ( skeletonCandidates.length > 1 && counter < max ) {
+
+                        for ( j = 0; j < skeletonCandidates.length; ++j ) {
+                            var collected = new FindCommonParentVisitor( nodeList );
+                            skeletonCandidates[ j ].accept( collected );
+                            nodeList = nodeList.concat( collected.getVisitedNodes() );
+                            if ( j !== 0 )
+                                newSkeletonCandidates.push( collected.stopNode );
+                        }
+
+                        skeletonCandidates = [];
+                        skeletonCandidates = skeletonCandidates.concat( newSkeletonCandidates );
+                        counter++;
+                    }
+
+                    // We should have with only one skeleton here now
+                    if ( skeletonCandidates.length > 1 ) {
+                        console.log( 'An issue occurred when merging skeletons for rigGeometry ' + rigKeys[ i ] + ' (' +
+                            skeletonCandidates.length + ' skeletons remaining after merge instead of 1' );
+                    }
+
+                    // Create a new skeleton under the top node previously found
+                    var newTopSkel = new Skeleton();
+                    var skelName = 'GLTF_created_' + rigKeys[ i ];
+                    newTopSkel.setName( skelName );
+
+                    this.moveParentChildren( skeletonCandidates[ 0 ], newTopSkel, false );
+                    skeletonCandidates[ 0 ].addChild( newTopSkel );
+
+                    this._skeletons[ skelName ] = newTopSkel;
+
+                    for ( j = 0; j < this._rigToSkeleton[ rigKeys[ i ] ].length; ++j ) {
+                        skeletonToFinalSkeleton[ this._rigToSkeleton[ rigKeys[ i ] ][ j ]._name ] = skelName;
+                        if ( skelToRemove.indexOf( this._rigToSkeleton[ rigKeys[ i ] ][ j ]._name ) === -1 )
+                            skelToRemove.push( this._rigToSkeleton[ rigKeys[ i ] ][ j ]._name );
+                    }
+                }
+            }
+
+            // Update skeleton keys list
+            skeletonKeys = Object.keys( this._skeletons );
+
+            // Detect nested skeletons
+            var topSkeletonVisitor = new FindTopSkeletonVisitor();
+            for ( i = 0; i < skeletonKeys.length; ++i ) {
+                var current = this._skeletons[ skeletonKeys[ i ] ].getParents()[ 0 ];
+                topSkeletonVisitor.reset();
+                current.accept( topSkeletonVisitor );
+
+                var parentSkeleton = topSkeletonVisitor.getTopSkeleton();
+                if ( parentSkeleton !== undefined ) {
+                    if ( skelToRemove.indexOf( skeletonKeys[ i ] ) === -1 )
+                        skelToRemove.push( skeletonKeys[ i ] );
+                    skeletonToFinalSkeleton[ skeletonKeys[ i ] ] = parentSkeleton.getName();
+                }
+            }
+
+            // Clean useless Skeletons
+            for ( i = 0; i < skelToRemove.length; ++i ) {
+                var tempSkel = this._skeletons[ skelToRemove[ i ] ];
+                this.removeNodeFromGraph( tempSkel );
+                delete this._skeletons[ skelToRemove[ i ] ];
+            }
+
+            // Make bones point to the right top skeleton for nested skeletons case
+            for ( i = 0; i < boneSkinKeys.length; ++i ) {
+                this._boneToSkeleton[ boneSkinKeys[ i ] ] = skeletonToFinalSkeleton[ this._boneToSkeleton[ boneSkinKeys[ i ] ] ];
+            }
+        }
+
+
+        // Compute worldMatrix for each skeleton
+        skeletonKeys = Object.keys( this._skeletons );
+        var skeletonWorlds = {};
+        for ( i = 0; i < skeletonKeys.length; ++i ) {
+            skeletonWorlds[ skeletonKeys[ i ] ] = this._skeletons[ skeletonKeys[ i ] ].getWorldMatrices( rootNode )[ 0 ];
+        }
+
+        // Set invBindMatrices and convert MatrixTransform that are inside a bone herarchy to bones
+        for ( i = 0; i < skeletonKeys.length; ++i ) {
+            var visitor = new UpdateBoneHierarchy( this, this._skeletons[ skeletonKeys[ i ] ], skeletonWorlds[ skeletonKeys[ i ] ] );
+            this._skeletons[ skeletonKeys[ i ] ].accept( visitor );
+            visitor.convertMTToBones();
+        }
+
+        // Move rigGeometries under their respective skeleton taking transforms into account
+        var rigSkelKeys = Object.keys( this._rigToSkeleton );
+        for ( i = 0; i < rigSkelKeys.length; ++i ) {
+            var skeleton = this._skeletons[ skeletonToFinalSkeleton[ this._rigToSkeleton[ rigSkelKeys[ i ] ][ 0 ].getName() ] ];
+            var node = this._rigToRigNode[ rigSkelKeys[ i ] ];
+            var skelWorld = skeleton.getWorldMatrices( rootNode )[ 0 ];
+            var nodeWorld = node.getParents()[ 0 ].getWorldMatrices( rootNode )[ 0 ];
+            console.log( 'About to move node ' + node.getName() + '  under its skeleton ' + skeleton.getName() );
+            var invSkelWorld = mat4.create();
+            mat4.invert( invSkelWorld, skelWorld );
+
+            // Handle the offset between original position in the graph and new position (under skeleton)
+            // by inserting a correction MatrixTransform
+            var correction = mat4.multiply( mat4.create(), invSkelWorld, nodeWorld );
+            var correctionNode = new MatrixTransform();
+            correctionNode.setName( 'Correction_rig_' + node.getName() );
+            correctionNode.setMatrix( correction );
+
+            node.getParents()[ 0 ].removeChild( node );
+            correctionNode.addChild( node );
+            skeleton.addChild( correctionNode );
+        }
     },
 
     readNodeURL: function ( files, options ) {
@@ -1087,14 +1385,12 @@ GLTFLoader.prototype = {
         // adding a PI / 2 rotation arround the X-axis
         var root = new MatrixTransform();
         root.setName( 'root' );
+        mat4.rotateX( root.getMatrix(), root.getMatrix(), Math.PI / 2 );
 
         return glTFFilePromise.then( function ( glTFFile ) {
 
             self._loadedFiles.glTF = JSON.parse( glTFFile );
             var json = self._loadedFiles.glTF;
-
-            if ( !json )
-                return Promise.resolve( null );
 
             var promisesArray = [];
 
@@ -1121,7 +1417,7 @@ GLTFLoader.prototype = {
 
                     for ( var j = 0; j < scene.nodes.length; ++j ) {
 
-                        var p = self.loadGLTFNode( scene.nodes[ j ], root );
+                        var p = self.loadGLTFNode( scene.nodes[ j ], root, false );
                         promises.push( p );
 
                     }
@@ -1133,9 +1429,13 @@ GLTFLoader.prototype = {
                     root.addUpdateCallback( self._basicAnimationManager );
 
                 return Promise.all( promises ).then( function () {
+                    // Postprocess skeletons
+                    self.postProcessSkeletons( root.getChildren()[ 0 ].getChildren()[ 0 ] );
+                    var displayGraph = DisplayGraph.instance();
+                    displayGraph.setDisplayGraphRenderer( false );
+                    displayGraph.createGraph( root );
 
                     return root;
-
                 } );
 
             } );
