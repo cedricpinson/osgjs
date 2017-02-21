@@ -52,14 +52,14 @@
 
     Example.prototype = {
 
-        run: function () {
+        run: function ( options ) {
 
             // get url parameter to override default _config values
             this.setConfigFromOptionsURL();
             //
             this._canvas = document.getElementById( 'View' );
 
-            this._viewer = new osgViewer.Viewer( this._canvas );
+            this._viewer = new osgViewer.Viewer( this._canvas, options );
             this._viewer.init();
             this._viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
             this._viewer.setupManipulator();
@@ -95,8 +95,23 @@
             } );
             var keys = Object.keys( queryDict );
             for ( var i = 0; i < keys.length; i++ ) {
+
                 var property = keys[ i ];
-                this._config[ property ] = queryDict[ property ];
+                var value = queryDict[ property ];
+                if ( !value || !value.length ) continue;
+
+                try {
+
+                    var n = JSON.parse( queryDict[ property ] );
+                    if ( !isNaN( parseFloat( n ) ) && isFinite( n ) ) {
+                        n = parseFloat( n );
+                    }
+                    this._config[ property ] = n;
+
+                } catch ( e ) {
+                    osg.log( 'cannot parse url option: ' + property );
+                }
+
             }
         },
 
@@ -252,12 +267,12 @@
                     var stateSet = quad.getOrCreateStateSet();
                     quad.setName( 'debugComposerGeometry' + i );
 
+
                     stateSet.setTextureAttributeAndModes( 0, texture );
                     if ( texture.getInternalFormat() !== osg.Texture.DEPTH_COMPONENT )
                         stateSet.setAttributeAndModes( this.getDebugProgram() );
                     else
                         stateSet.setAttributeAndModes( this.getDebugDepthProgram() );
-
 
                     debugComposerNode.addChild( quad );
 
@@ -276,19 +291,14 @@
                 var vertexShader = [
                     '',
                     '#version 100',
-
-                    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
-                    'precision highp float;',
-                    '#else',
-                    'precision mediump float;',
-                    '#endif',
+                    '#define SHADER_NAME DEBUG_RTT',
                     'attribute vec3 Vertex;',
                     'attribute vec2 TexCoord0;',
                     'varying vec2 vTexCoord0;',
                     'uniform mat4 uModelViewMatrix;',
                     'uniform mat4 uProjectionMatrix;',
                     'void main(void) {',
-                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                    '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex,1.0));',
                     '  vTexCoord0 = TexCoord0;',
                     //'  FragTexCoord1 = TexCoord1;',
                     '}',
@@ -297,9 +307,13 @@
 
                 var fragmentShader = [
                     '',
-                    '#ifdef GL_ES',
+
+                    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
                     'precision highp float;',
+                    '#else',
+                    'precision mediump float;',
                     '#endif',
+                    '#define SHADER_NAME DEBUG_RTT',
                     'varying vec2 vTexCoord0;',
                     'uniform sampler2D Texture0;',
                     '',
@@ -322,19 +336,14 @@
                 var vertexShader = [
                     '',
                     '#version 100',
-
-                    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
-                    'precision highp float;',
-                    '#else',
-                    'precision mediump float;',
-                    '#endif',
+                    '#define SHADER_NAME DEBUG_RTT',
                     'attribute vec3 Vertex;',
                     'attribute vec2 TexCoord0;',
                     'varying vec2 vTexCoord0;',
                     'uniform mat4 uModelViewMatrix;',
                     'uniform mat4 uProjectionMatrix;',
                     'void main(void) {',
-                    '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                    '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex,1.0));',
                     '  vTexCoord0 = TexCoord0;',
                     //'  FragTexCoord1 = TexCoord1;',
                     '}',
@@ -343,9 +352,13 @@
 
                 var fragmentShader = [
                     '',
-                    '#ifdef GL_ES',
+
+                    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
                     'precision highp float;',
+                    '#else',
+                    'precision mediump float;',
                     '#endif',
+                    '#define SHADER_NAME DEBUG_RTT',
                     'varying vec2 vTexCoord0;',
                     'uniform sampler2D Texture0;',
                     '',

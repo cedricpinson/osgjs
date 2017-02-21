@@ -1,7 +1,5 @@
 
-#pragma include "bandPCF.glsl" "_BAND_PCF"
-#pragma include "poissonPCF.glsl" "_POISSON_PCF"
-#pragma include "tapPCF.glsl" "_TAP_PCF"
+#pragma include "tapPCF.glsl"
 
 #ifdef _ATLAS_SHADOW
 
@@ -12,9 +10,13 @@ float computeShadow(const in bool lighted,
                     const in mat4 shadowProjectionMatrix,
                     const in mat4 shadowViewMatrix,
                     const in vec4 depthRange,
-                    const in float N_Dot_L,
-                    const in vec3 vertexWorld,
+                    const in vec3 normalWorld,
+                    const in vec3 vertexWorld,                    
                     const in float bias
+#ifdef _NORMAL_OFFSET
+                    ,const in float normalBias
+#endif //_NORMAL_OFFSET
+                    
     )
 #else
     
@@ -24,15 +26,19 @@ float computeShadow(const in bool lighted,
                     const in mat4 shadowProjectionMatrix,
                     const in mat4 shadowViewMatrix,
                     const in vec4 depthRange,
-                    const in float N_Dot_L,
+                    const in vec3 normalWorld,
                     const in vec3 vertexWorld,
                     const in float bias
-    )
+#ifdef _NORMAL_OFFSET
+                    ,const in float normalBias
+#endif //_NORMAL_OFFSET
+
+   )
     
 #endif
 {
                         
-    #pragma include "shadowsReceiveMain.glsl" "_PCF" "_NONE"
+    #pragma include "shadowsReceiveMain.glsl"
 
 }
 

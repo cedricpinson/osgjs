@@ -140,6 +140,24 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     },
 
 
+    getNormalBias: function ( numShadow ) {
+
+        if ( numShadow !== undefined ) {
+            return this._shadowMaps[ numShadow ].getNormalBias();
+        } else if ( this._shadowMaps.length !== 0 ) {
+            return this._shadowMaps[ 0 ].getNormalBias();
+        }
+
+    },
+
+    setNormalBias: function ( value ) {
+
+        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
+            this._shadowMaps[ i ].setNormalBias( value );
+        }
+
+    },
+
     getBias: function ( numShadow ) {
 
         if ( numShadow !== undefined ) {
@@ -158,58 +176,6 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
     },
 
-    getExponent0: function ( numShadow ) {
-
-        if ( numShadow !== undefined ) {
-            return this._shadowMaps[ numShadow ].getExponent0();
-        } else if ( this._shadowMaps.length !== 0 ) {
-            return this._shadowMaps[ 0 ].getExponent0();
-        }
-
-    },
-
-    setExponent0: function ( value ) {
-
-        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-            this._shadowMaps[ i ].setExponent0( value );
-        }
-
-    },
-
-    getExponent1: function ( numShadow ) {
-
-        if ( numShadow !== undefined ) {
-            return this._shadowMaps[ numShadow ].getExponent1();
-        } else if ( this._shadowMaps.length !== 1 ) {
-            return this._shadowMaps[ 0 ].getExponent1();
-        }
-
-    },
-
-    setExponent1: function ( value ) {
-
-        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-            this._shadowMaps[ i ].setExponent1( value );
-        }
-
-    },
-
-    getEpsilonVSM: function ( numShadow ) {
-
-        if ( numShadow !== undefined ) {
-            return this._shadowMaps[ numShadow ].getEpsilonVSM();
-        } else if ( this._shadowMaps.length !== 1 ) {
-            return this._shadowMaps[ 0 ].getEpsilonVSM();
-        }
-
-    },
-
-    setEpsilonVSM: function ( value ) {
-
-        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-            this._shadowMaps[ i ].setEpsilonVSM( value );
-        }
-    },
     getKernelSizePCF: function ( numShadow ) {
 
         if ( numShadow !== undefined ) {
@@ -224,38 +190,6 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
         for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
             this._shadowMaps[ i ].setKernelSizePCF( value );
-        }
-    },
-    getFakePCF: function ( numShadow ) {
-
-        if ( numShadow !== undefined ) {
-            return this._shadowMaps[ numShadow ].getFakePCF();
-        } else if ( this._shadowMaps.length !== 1 ) {
-            return this._shadowMaps[ 0 ].getFakePCF();
-        }
-
-    },
-
-    setFakePCF: function ( value ) {
-
-        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-            this._shadowMaps[ i ].setFakePCF( value );
-        }
-    },
-    getRotateOffset: function ( numShadow ) {
-
-        if ( numShadow !== undefined ) {
-            return this._shadowMaps[ numShadow ].getRotateOffset();
-        } else if ( this._shadowMaps.length !== 1 ) {
-            return this._shadowMaps[ 0 ].getRotateOffset();
-        }
-
-    },
-
-    setRotateOffset: function ( value ) {
-
-        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-            this._shadowMaps[ i ].setRotateOffset( value );
         }
     },
 
@@ -302,28 +236,6 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         this._numShadowHeight = this._textureSize / this._shadowMapSize;
 
         this.dirty();
-    },
-
-    setAlgorithm: function ( algo, lightNum ) {
-
-        if ( !lightNum ) {
-            for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-                this._shadowMaps[ i ].setAlgorithm( algo );
-            }
-        } else {
-            this._shadowMaps[ lightNum ].setAlgorithm( algo );
-        }
-
-    },
-
-    getAlgorithm: function ( numShadow ) {
-
-        if ( numShadow !== undefined ) {
-            return this._shadowMaps[ numShadow ].getAlgorithm();
-        } else if ( this._shadowMaps.length !== 1 ) {
-            return this._shadowMaps[ 0 ].getAlgorithm();
-        }
-
     },
 
     getShadowMap: function ( lightNum ) {
@@ -414,76 +326,6 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
     },
 
-    setTextureFiltering: function () {
-
-        var textureType, texFilterMin, texFilterMag;
-        var texType = this.getTexturePrecision();
-        if ( this._texture ) {
-            // see shadowSettings.js header
-            switch ( this.getAlgorithm() ) {
-            case 'ESM':
-            case 'VSM':
-            case 'EVSM':
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-
-            default:
-            case 'PCF':
-            case 'NONE':
-                if ( this.getFakePCF() ) {
-                    texFilterMin = Texture.LINEAR;
-                    texFilterMag = Texture.LINEAR;
-
-                    // // TODO try anisotropy with better biaspcf
-                    // texFilterMin = Texture.LINEAR_MIPMAP_LINEAR;
-                    // texFilterMag = Texture.LINEAR_MIPMAP_LINEAR;
-                    // this._texture.setMaxAnisotropy( 16 );
-
-
-                } else {
-                    texFilterMin = Texture.NEAREST;
-                    texFilterMag = Texture.NEAREST;
-                }
-                break;
-            }
-
-            switch ( texType ) {
-            case 'HALF_FLOAT':
-                textureType = Texture.HALF_FLOAT;
-                texFilterMin = Texture.NEAREST;
-                texFilterMag = Texture.NEAREST;
-                break;
-            case 'HALF_FLOAT_LINEAR':
-                textureType = Texture.HALF_FLOAT;
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-            case 'FLOAT':
-                textureType = Texture.FLOAT;
-                texFilterMin = Texture.NEAREST;
-                texFilterMag = Texture.NEAREST;
-                break;
-            case 'FLOAT_LINEAR':
-                textureType = Texture.FLOAT;
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-            default:
-            case 'UNSIGNED_BYTE':
-                textureType = Texture.UNSIGNED_BYTE;
-                break;
-            }
-        }
-
-        this._texture.setInternalFormatType( textureType );
-        this._texture.setMinFilter( texFilterMin );
-        this._texture.setMagFilter( texFilterMag );
-        this._textureMagFilter = texFilterMag;
-        this._textureMinFilter = texFilterMin;
-
-    },
-
     // internal texture allocation
     // handle any change like resize, filter param, etc.
     initTexture: function () {
@@ -505,7 +347,7 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         // luminance Float format ?
         textureFormat = Texture.RGBA;
 
-        this.setTextureFiltering();
+        ShadowMap.prototype.setTextureFiltering.call( this );
         this._texture.setInternalFormat( textureFormat );
 
         this._texture.setWrapS( Texture.CLAMP_TO_EDGE );
