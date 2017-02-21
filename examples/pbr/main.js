@@ -310,8 +310,14 @@
                 } );
 
                 if ( gltfFormat ) {
-
-                    return this.readZipContentGLTF( zip );
+                    var self = this;
+                    var filesMap = new window.Map();
+                    filesMap.set( zipFileName, fileOrBlob );
+                    osgDB.readNodeURL( zipFileName, {
+                        filesMap: filesMap
+                    } ).then( function ( node ) {
+                        return self.loadNode( node );
+                    } );
 
                 } else if ( environmentFormat ) {
 
@@ -329,51 +335,38 @@
         },
 
         handleDroppedFiles: function ( files ) {
-            console.time( 'time' );
-            var gltfFileName = null;
             var self = this;
-
             $( '#loading' ).show();
-
             osgDB.FileHelper.readFileList( files ).then( function ( root ) {
-                $( '#loading' ).hide();
-                if ( !root ) return;
-                gltfFileName = root.getName();
-                //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
-
-                self._modelsLoaded[ gltfFileName ] = root;
-
-                self._config.model = gltfFileName;
-                self.updateModel();
-                console.timeEnd( 'time' );
-                // Updates the dropdown list
-                modelList.push( gltfFileName );
-
-                var controllers = self._gui.__controllers;
-                var controller = controllers.filter( function ( cont ) {
-                    return cont.property === 'model';
-                } )[ 0 ];
-                controller = controller.options( modelList );
-                controller.onChange( self.updateModel.bind( self ) );
+                self.loadNode( root );
             } );
+        },
 
-            for ( var i = 0; i < files.length; ++i ) {
+        loadNode: function ( node ) {
+            $( '#loading' ).hide();
+            if ( !node ) return;
+            var gltfFileName = node.getName();
+            //osg.mat4.scale( root.getMatrix(), root.getMatrix(), [ 20, 20, 20 ] );
 
-                if ( files[ i ].name.indexOf( '.gltf' ) !== -1 ) {
+            this._modelsLoaded[ gltfFileName ] = node;
 
-                    gltfFileName = files[ i ].name;
-                    break;
+            this._config.model = gltfFileName;
+            this.updateModel();
+            console.timeEnd( 'time' );
+            // Updates the dropdown list
+            modelList.push( gltfFileName );
 
-                }
-
-            }
+            var controllers = this._gui.__controllers;
+            var controller = controllers.filter( function ( cont ) {
+                return cont.property === 'model';
+            } )[ 0 ];
+            controller = controller.options( modelList );
+            controller.onChange( this.updateModel.bind( this ) );
         },
 
 
         handleDroppedURL: function ( url ) {
-
             $( '#loading' ).show();
-
             return osgDB.requestFile( url, {
                 responseType: 'blob'
             } ).then( function ( blob ) {
