@@ -1,6 +1,7 @@
 'use strict';
 
-var requestFile = require( 'osgDB/requestFile.js' );
+var P = require( 'bluebird' );
+var requestFile = require( 'osgDB/requestFile' );
 var Input = require( 'osgDB/Input' );
 var Registry = require( 'osgDB/Registry' );
 var animation = require( 'osgAnimation/animation' );
@@ -117,7 +118,7 @@ ReaderWriterGLTF.prototype = {
 
 
 
-    loadFile: Promise.method( function ( uri ) {
+    loadFile: P.method( function ( uri ) {
         if ( this._filesMap.has( uri ) )
             return this._filesMap.get( uri );
 
@@ -166,7 +167,7 @@ ReaderWriterGLTF.prototype = {
 
 
 
-    assignBuffers: Promise.method( function ( data, accessor, type, bufferView ) {
+    assignBuffers: P.method( function ( data, accessor, type, bufferView ) {
         if ( !data )
             return null;
 
@@ -224,7 +225,7 @@ ReaderWriterGLTF.prototype = {
         node.addUpdateCallback( animationCallback );
     },
 
-    createTextureAndSetAttrib: Promise.method( function ( glTFTextureId, stateSet, location, uniform ) {
+    createTextureAndSetAttrib: P.method( function ( glTFTextureId, stateSet, location, uniform ) {
 
         if ( !glTFTextureId ) return;
         var json = this._glTFJSON;
@@ -293,7 +294,7 @@ ReaderWriterGLTF.prototype = {
 
         var self = this;
 
-        return Promise.all( promisesArray ).then( function ( timeAndValue ) {
+        return P.all( promisesArray ).then( function ( timeAndValue ) {
 
             var timeKeys = timeAndValue[ 0 ];
             var valueKeys = timeAndValue[ 1 ];
@@ -318,7 +319,7 @@ ReaderWriterGLTF.prototype = {
     },
 
     createAnimationFromChannels: function ( channelsPromiseArray, animName ) {
-        return Promise.all( channelsPromiseArray ).then( function ( channels ) {
+        return P.all( channelsPromiseArray ).then( function ( channels ) {
             return animation.createAnimation( channels, animName );
         } );
     },
@@ -328,7 +329,7 @@ ReaderWriterGLTF.prototype = {
      * them in a BasicAnimationManager instance
      * @return {BasicAnimationManager} the animation manager containing the animations
      */
-    preprocessAnimations: Promise.method( function () {
+    preprocessAnimations: P.method( function () {
 
         var json = this._glTFJSON;
 
@@ -358,7 +359,7 @@ ReaderWriterGLTF.prototype = {
         }
 
         var self = this;
-        return Promise.all( animPromiseArray ).then( function ( animations ) {
+        return P.all( animPromiseArray ).then( function ( animations ) {
 
             var animationManager = new BasicAnimationManager();
             animationManager.init( animations );
@@ -455,10 +456,10 @@ ReaderWriterGLTF.prototype = {
             var bonePromise = this.loadBone( boneId, bonesToSkin[ boneId ] );
             promises.push( bonePromise );
         }
-        return Promise.all( promises );
+        return P.all( promises );
     },
 
-    preprocessSkeletons: Promise.method( function () {
+    preprocessSkeletons: P.method( function () {
 
         var json = this._glTFJSON;
         if ( !json.skins )
@@ -501,7 +502,7 @@ ReaderWriterGLTF.prototype = {
         return this.preprocessBones( bonesToSkin );
     } ),
 
-    loadPBRMaterial: Promise.method( function ( materialId, glTFmaterial, geometryNode ) {
+    loadPBRMaterial: P.method( function ( materialId, glTFmaterial, geometryNode ) {
 
         var model = glTFmaterial.materialModel;
         var values = glTFmaterial.values;
@@ -536,10 +537,10 @@ ReaderWriterGLTF.prototype = {
         geometryNode.stateset = osgStateSet;
         this._stateSetMap[ materialId ] = osgStateSet;
 
-        return Promise.all( promises );
+        return P.all( promises );
     } ),
 
-    loadMaterial: Promise.method( function ( materialId, geometryNode ) {
+    loadMaterial: P.method( function ( materialId, geometryNode ) {
 
         var json = this._glTFJSON;
         var glTFmaterial = json.materials[ materialId ];
@@ -685,7 +686,7 @@ ReaderWriterGLTF.prototype = {
         if ( primitive.material )
             promisesArray.push( this.loadMaterial( primitive.material, geom ) );
 
-        return Promise.all( promisesArray ).then( function () {
+        return P.all( promisesArray ).then( function () {
 
             if ( skeletonJointId ) {
 
@@ -718,7 +719,7 @@ ReaderWriterGLTF.prototype = {
 
         }
 
-        return Promise.all( promisesArray ).then( function ( geoms ) {
+        return P.all( promisesArray ).then( function ( geoms ) {
 
             for ( var i = 0; i < geoms.length; ++i )
                 resultMeshNode.addChild( geoms[ i ] );
@@ -728,7 +729,7 @@ ReaderWriterGLTF.prototype = {
         } );
     },
 
-    loadGLTFNode: Promise.method( function ( nodeId, root ) {
+    loadGLTFNode: P.method( function ( nodeId, root ) {
 
         if ( this._visitedNodes[ nodeId ] )
             return;
@@ -788,7 +789,7 @@ ReaderWriterGLTF.prototype = {
             root.addChild( currentNode );
 
         this._visitedNodes[ nodeId ] = true;
-        return Promise.all( promises );
+        return P.all( promises );
     } ),
 
     readNodeURL: function ( url, options ) {
@@ -814,7 +815,7 @@ ReaderWriterGLTF.prototype = {
         return defer.promise;
     },
 
-    readJSON: Promise.method( function ( glTFFile, url ) {
+    readJSON: P.method( function ( glTFFile, url ) {
         // Creates the root node
         // adding a PI / 2 rotation arround the X-axis
         var root = new MatrixTransform();
@@ -833,7 +834,7 @@ ReaderWriterGLTF.prototype = {
 
         promisesArray.push( skeletonPromise, animPromise );
         var self = this;
-        return Promise.all( promisesArray ).then( function () {
+        return P.all( promisesArray ).then( function () {
 
             var promises = [];
             // Loops through each scene
@@ -856,7 +857,7 @@ ReaderWriterGLTF.prototype = {
             if ( self._basicAnimationManager )
                 root.addUpdateCallback( self._basicAnimationManager );
 
-            return Promise.all( promises ).then( function () {
+            return P.all( promises ).then( function () {
 
                 return root;
 
