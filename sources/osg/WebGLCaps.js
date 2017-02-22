@@ -190,7 +190,23 @@ WebGLCaps.prototype = {
     // inevitable bugs per platform (browser/OS/GPU)
     initBugDB: function () {
 
+        var p = this._webGLPlatforms;
+        var ext = this._webGLParameters;
+
+        // derivatives gives strange results on Shadow Shaders
+        if ( p.Apple ) {
+
+            if ( !ext.UNMASKED_VENDOR_WEBGL || ext.UNMASKED_VENDOR_WEBGL.indexOf( 'Intel' ) !== -1 ) {
+
+                // bug is on INTEL GPU on APPLE
+                // we disable the ext on Apple if we cannot get GPU info
+                this._bugsDB[ 'OES_standard_derivatives' ] = true;
+
+            }
+
+        }
     },
+
     initPlatformSupport: function () {
 
         var p = this._webGLPlatforms;
