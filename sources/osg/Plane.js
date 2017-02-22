@@ -63,7 +63,7 @@ var Plane = MACROUTILS.objectInherit( vec4, {
 
     /* using the plane equation, compute distance to plane of a point*/
     distanceToPlane: function ( plane, position ) {
-        return plane[ 0 ] * position[ 0 ] + plane[ 1 ] * position[ 1 ] + plane[ 2 ] * position[ 2 ] + plane[ 3 ];
+        return vec3.dot( plane, position ) + plane[ 3 ];
     },
 
 

@@ -52,12 +52,13 @@ Viewport.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
     computeWindowMatrix: ( function () {
         var translate = mat4.create();
         var scale = mat4.create();
-        var unitVec = vec3.fromValues( 1.0, 1.0, 1.0 );
+        var tmpVec = vec3.create();
+
         return function ( destination ) {
             // res = Matrix offset * Matrix scale * Matrix translate
-            mat4.fromTranslation( translate, unitVec );
+            mat4.fromTranslation( translate, vec3.ONE );
             mat4.fromScaling( scale, [ 0.5 * this._width, 0.5 * this._height, 0.5 ] );
-            var offset = mat4.fromTranslation( destination, vec3.fromValues( this._x, this._y, 0.0 ) );
+            var offset = mat4.fromTranslation( destination, vec3.set( tmpVec, this._x, this._y, 0.0 ) );
 
             return mat4.mul( offset, offset, mat4.mul( scale, scale, translate ) );
 
