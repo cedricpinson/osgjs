@@ -32,11 +32,10 @@ varying vec4 vViewTangent;
 mat3 environmentTransform;
 
 uniform sampler2D albedoMap;
-uniform sampler2D roughnessMap;
+uniform sampler2D metallicRoughnessMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D aoMap;
-uniform int uFlipNormalY;
 uniform int uNormalAA;
 uniform int uSpecularPeak;
 uniform int uOcclusionHorizon;
@@ -117,7 +116,6 @@ vec3 computeNormalFromTangentSpaceNormalMap(const in vec4 tangent, const in vec3
 
 vec3 textureNormal(const in vec3 rgb) {
     vec3 n = normalize((rgb-vec3(0.5)));
-    n[1] = (uFlipNormalY == 1) ? -n[1] : n[1];
     return n;
 }
 
@@ -157,9 +155,11 @@ void main(void) {
     }
 #endif
 
-    float roughness = texture2D( roughnessMap, uv ).r;
-#ifdef GLOSSINESS
+#ifdef SPECULAR_GLOSSINESS
+    float roughness = texture2D( metallicRoughnessMap, uv ).a;
     roughness = 1.0 - roughness;
+#else
+    float roughness = texture2D( metallicRoughnessMap, uv ).g;
 #endif
 
     roughness = max( minRoughness , roughness );
@@ -174,20 +174,21 @@ void main(void) {
 #ifdef AO
     ao = texture2D( aoMap, uv ).r;
 #endif
-
     vec3 specular;
-
 #ifdef SPECULAR
     specular = sRGBToLinear( texture2D( specularMap, vTexCoord0 ), DefaultGamma ).rgb;
-#else
-    float metallic = texture2D( specularMap, uv ).r;
-    vec3 albedoReduced = albedo * (1.0 - metallic);
-    specular = mix( dielectricColor, albedo, metallic);
-    albedo = albedoReduced;
+#else 
+    #ifdef SPECULAR_GLOSSINESS
+        specular = sRGBToLinear( texture2D( metallicRoughnessMap, vTexCoord0 ), DefaultGamma ).rgb;
+    #else
+        float metallic = texture2D( metallicRoughnessMap, uv ).r;
+        vec3 albedoReduced = albedo * (1.0 - metallic);
+        specular = mix( dielectricColor, albedo, metallic);
+        albedo = albedoReduced;
+    #endif
 #endif
-
     vec3 resultIBL = computeIBL_UE4( normal, -eye, albedo, roughness, specular );
-    vec4 result = vec4( resultIBL, 1.0);
+    vec4 result = vec4( resultIBL, albedoSource.a );
 
     gl_FragColor = linearTosRGB(result, DefaultGamma );
 }

@@ -135,12 +135,10 @@
 
     window.ALBEDO_TEXTURE_UNIT = 2;
     window.DIFFUSE_TEXTURE_UNIT = 2;
-    window.ROUGHNESS_TEXTURE_UNIT = 3;
-    window.METALNESS_TEXTURE_UNIT = 4;
-    window.NORMAL_TEXTURE_UNIT = 5;
+    window.METALLIC_ROUGHNESS_TEXTURE_UNIT = 3;
     window.SPECULAR_TEXTURE_UNIT = 4;
+    window.NORMAL_TEXTURE_UNIT = 5;
 
-    window.GLTF_PBR_METAL_MODE = 'PBR_metal_roughness';
     window.GLTF_PBR_SPEC_MODE = 'PBR_specular_glossiness';
 
     var modelList = [ 'sphere', 'model' ];
@@ -171,7 +169,6 @@
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
             normalAA: Boolean( optionsURL.normalAA === undefined ? true : optionsURL.normalAA ),
-            flipY: false,
             specularPeak: Boolean( optionsURL.specularPeak === undefined ? true : optionsURL.specularPeak ),
             occlusionHorizon: Boolean( optionsURL.occlusionHorizon === undefined ? true : optionsURL.occlusionHorizon ),
             cameraPreset: optionsURL.camera ? Object.keys( CameraPresets )[ optionsURL.camera ] : 'CameraCenter',
@@ -182,7 +179,9 @@
             format: '',
             model: modelList[ 0 ],
             environment: '',
-            mobile: isMobileDevice()
+            mobile: isMobileDevice(),
+            nb: 8,
+            offset: 160,
         };
 
         this.updateAlbedo();
@@ -213,13 +212,14 @@
         this._envBrightnessUniform = osg.Uniform.createFloat1( 1.0, 'uBrightness' );
 
         this._normalAA = osg.Uniform.createInt1( 0, 'uNormalAA' );
-        this._flipYUniform = osg.Uniform.createInt1( 0, 'uFlipNormalY' );
         this._specularPeak = osg.Uniform.createInt1( this._config.specularPeak ? 1 : 0, 'uSpecularPeak' );
 
         this._occlusionHorizon = osg.Uniform.createInt1( 0, 'uOcclusionHorizon' );
 
         // background stateSet
         this._backgroundStateSet = new osg.StateSet();
+        // Keep a reference to update it from the GUI
+        this._rowMetalic = undefined;
 
         window.printCurrentCamera = function () {
             var eye = osg.vec3.create();
@@ -395,25 +395,25 @@
             return false;
         },
 
-        setMaterial: function ( stateSet, albedo, roughness, specular ) {
+        setMaterial: function ( stateSet, albedo, metalRoughness, specular ) {
 
             stateSet.setTextureAttributeAndModes( window.ALBEDO_TEXTURE_UNIT, albedo );
-            stateSet.setTextureAttributeAndModes( window.ROUGHNESS_TEXTURE_UNIT, roughness );
-            stateSet.setTextureAttributeAndModes( window.METALNESS_TEXTURE_UNIT, specular );
-
+            stateSet.setTextureAttributeAndModes( window.METALLIC_ROUGHNESS_TEXTURE_UNIT, metalRoughness );
+            if ( specular )
+                stateSet.setTextureAttributeAndModes( window.SPECULAR_TEXTURE_UNIT, specular );
             if ( this._stateSetPBR )
                 this.updateShaderPBR();
         },
 
         getTexture0000: function () {
             if ( !this._texture0000 )
-                this._texture0000 = this.createTextureFromColor( [ 0, 0, 0, 1 ] );
+                this._texture0000 = this.createTextureFromColor( osg.vec4.fromValues( 0, 0, 0, 1 ) );
             return this._texture0000;
         },
 
         getTexture1111: function () {
             if ( !this._texture1111 )
-                this._texture1111 = this.createTextureFromColor( [ 1, 1, 1, 1 ] );
+                this._texture1111 = this.createTextureFromColor( osg.vec4.ONE );
             return this._texture1111;
         },
 
@@ -433,6 +433,40 @@
                 color.push( color[ 0 ] );
                 color.push( color[ 0 ] );
                 color.push( 1.0 );
+            }
+
+            color.forEach( function ( value, index ) {
+                if ( srgb )
+                    albedo[ index ] = Math.floor( 255 * linear2Srgb( value ) );
+                else
+                    albedo[ index ] = Math.floor( 255 * value );
+            } );
+
+            var texture = textureOutput;
+            if ( !texture )
+                texture = new osg.Texture();
+            texture.setTextureSize( 1, 1 );
+            texture.setImage( albedo );
+            return texture;
+        },
+
+        createMetalRoughnessTextureFromColors: function ( metalColor, roughnessColor, srgb, textureOutput ) {
+            var colorInput = metalColor;
+            var albedo = new osg.Uint8Array( 4 );
+
+            if ( typeof colorInput === 'number' ) {
+                colorInput = [ colorInput ];
+            }
+            var color = colorInput.slice( 0 );
+
+            if ( color.length === 3 )
+                color[ 1 ] = roughnessColor;
+
+            if ( color.length === 1 ) {
+                color.push( roughnessColor );
+                // 2nd and 3rd safely could be ignored
+                color.push( 0.0 );
+                color.push( 0.0 );
             }
 
             color.forEach( function ( value, index ) {
@@ -527,8 +561,8 @@
             if ( config && config.normalMap === true )
                 defines.push( '#define NORMAL' );
 
-            if ( config && config.glossinessMap === true )
-                defines.push( '#define GLOSSINESS' );
+            if ( config && config.specularGlossinessMap === true )
+                defines.push( '#define SPECULAR_GLOSSINESS' );
 
             if ( config && config.specularMap === true )
                 defines.push( '#define SPECULAR' );
@@ -579,13 +613,6 @@
         updateNormalAA: function () {
             var aa = this._config.normalAA ? 1 : 0;
             this._normalAA.setInt( aa );
-        },
-
-        updateFlipY: function () {
-
-            var flip = this._config.flipY ? 1 : 0;
-            this._flipYUniform.setInt( flip );
-
         },
 
         updateSpecularPeak: function () {
@@ -743,12 +770,18 @@
                     for ( var i = 0; i < workflows.length; ++i ) {
 
                         var specularWorkflow = ( workflows[ i ].workflow === window.GLTF_PBR_SPEC_MODE );
+                        // Check we have textures, else generate 1x1 texture
+                        if ( specularWorkflow && workflows[ i ].stateSet.getNumTextureAttributeLists() === 0 ) {
+                            var tex = this.getTexture0000();
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 2, tex );
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 3, tex );
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 5, tex );
+                        }
 
                         var shaderConfig = {
                             normalMap: true,
                             noTangeant: false,
-                            glossinessMap: specularWorkflow,
-                            specularMap: specularWorkflow
+                            specularGlossinessMap: specularWorkflow
                         };
 
                         var config = {
@@ -807,82 +840,83 @@
             return specularTexture;
         },
 
-        createRowModelsSpecularMetal: function ( nb, offset ) {
+        createRowModelsSpecularMetal: function () {
 
             var albedo = this.getTexture0000();
 
             var specularTexture = this.updateRowModelsSpecularMetal();
+            //var specularMat = PredefinedMaterials[ this._config.material ];
 
             var group = new osg.MatrixTransform();
 
-            for ( var j = 0; j < nb; j++ ) {
-                var roughness = j / ( nb - 1 );
+            for ( var j = 0; j < this._config.nb; j++ ) {
+                var roughness = j / ( this._config.nb - 1 );
 
                 var sample = this.getModelTestInstance();
-                var x = roughness * offset;
+                var x = roughness * this._config.offset;
                 osg.mat4.fromTranslation( sample.getMatrix(), [ x, 0, 0 ] );
 
-                var roughnessTexture = this.createTextureFromColor( roughness, false );
+                var metalRoughnessTexture = this.createMetalRoughnessTextureFromColors( 0, roughness, true );
 
-                this.setMaterial( sample.getOrCreateStateSet(), albedo, roughnessTexture, specularTexture );
+                this.setMaterial( sample.getOrCreateStateSet(), albedo, metalRoughnessTexture, specularTexture );
                 group.addChild( sample );
             }
             return group;
         },
 
         updateRowModelsMetalic: function () {
-            var roughnessTexture = this._roughnessMetalTexture = this.createTextureFromColor( this._config.roughness, false, this._roughnessMetalTexture );
-            return roughnessTexture;
+            this._rowMetalic.removeChildren();
+            this._rowMetalic.addChild( this.createRowModelsMetalic() );
         },
 
-        createRowModelsMetalic: function ( nb, offset ) {
+        createRowModelsMetalic: function () {
 
             var albedo = this._albedoTexture;
-            var roughnessTexture = this.updateRowModelsMetalic();
+            var roughness = this._config.roughness;
 
             var group = new osg.MatrixTransform();
 
-            for ( var j = 0; j < nb; j++ ) {
-                var metal = j / ( nb - 1 );
+            for ( var j = 0; j < this._config.nb; j++ ) {
+                var metal = j / ( this._config.nb - 1 );
 
                 var sample = this.getModelTestInstance();
-                var x = metal * offset;
+                var x = metal * this._config.offset;
                 osg.mat4.fromTranslation( sample.getMatrix(), [ x, 0, 0 ] );
 
-                var metalTexture = this.createTextureFromColor( metal, false );
+                var metallicRoughnessTexture = this.createMetalRoughnessTextureFromColors( metal, roughness, false );
 
-                this.setMaterial( sample.getOrCreateStateSet(), albedo, roughnessTexture, metalTexture );
+                this.setMaterial( sample.getOrCreateStateSet(), albedo, metallicRoughnessTexture );
                 group.addChild( sample );
             }
             return group;
         },
 
 
-        createRowModelsRoughness: function ( nb, offset ) {
+        createRowModelsRoughness: function () {
 
             var group = new osg.MatrixTransform();
             var albedo = this._albedoTexture;
             var metal, roughness;
-            var metalTexture, roughnessTexture;
+            var metalRoughnessTexture;
             var sample;
 
             for ( var i = 0; i < 2; i++ ) {
 
                 metal = i;
-                metalTexture = this.createTextureFromColor( metal, false );
+                //metalTexture = this.createTextureFromColor( metal, false );
 
-                for ( var j = 0; j < nb; j++ ) {
-                    roughness = j / ( nb - 1 );
+                for ( var j = 0; j < this._config.nb; j++ ) {
+                    roughness = j / ( this._config.nb - 1 );
 
                     sample = this.getModelTestInstance();
 
-                    var x = roughness * offset;
-                    var y = metal * offset * 0.2;
+                    var x = roughness * this._config.offset;
+                    var y = metal * this._config.offset * 0.2;
                     osg.mat4.fromTranslation( sample.getMatrix(), [ x, -y * 1.2, 0 ] );
 
-                    roughnessTexture = this.createTextureFromColor( roughness, false );
+                    metalRoughnessTexture = this.createMetalRoughnessTextureFromColors( metal, roughness, false );
 
-                    this.setMaterial( sample.getOrCreateStateSet(), albedo, roughnessTexture, metalTexture );
+                    this.setMaterial( sample.getOrCreateStateSet(), albedo, metalRoughnessTexture );
 
                     group.addChild( sample );
                 }
@@ -893,15 +927,12 @@
 
         createSampleModels: function () {
 
-            var nb = 8;
-            var offset = 8 * 20;
-
             var group = new osg.Node();
 
             var stateSet;
             var config;
 
-            var rowRoughness = this.createRowModelsRoughness( nb, offset );
+            var rowRoughness = this.createRowModelsRoughness();
             stateSet = rowRoughness.getOrCreateStateSet();
             config = {
                 stateSet: stateSet,
@@ -912,9 +943,10 @@
             this._shaders.push( config );
             group.addChild( rowRoughness );
             osg.mat4.fromTranslation( rowRoughness.getMatrix(), [ 0, 0, 0 ] );
-
-            var rowMetalic = this.createRowModelsMetalic( nb, offset );
-            stateSet = rowMetalic.getOrCreateStateSet();
+            // Keep a reference to update it from the GUI
+            this._rowMetalic = new osg.MatrixTransform();
+            this._rowMetalic.addChild( this.createRowModelsMetalic() );
+            stateSet = this._rowMetalic.getOrCreateStateSet();
             config = {
                 stateSet: stateSet,
                 config: {
@@ -922,10 +954,10 @@
                 }
             };
             this._shaders.push( config );
-            group.addChild( rowMetalic );
-            osg.mat4.fromTranslation( rowMetalic.getMatrix(), [ 0, 40, 0 ] );
+            group.addChild( this._rowMetalic );
+            osg.mat4.fromTranslation( this._rowMetalic.getMatrix(), [ 0, 40, 0 ] );
 
-            var rowSpecular = this.createRowModelsSpecularMetal( nb, offset );
+            var rowSpecular = this.createRowModelsSpecularMetal();
             stateSet = rowSpecular.getOrCreateStateSet();
             config = {
                 stateSet: stateSet,
@@ -989,7 +1021,6 @@
             stateSet.addUniform( this._environmentTransformUniform );
             stateSet.addUniform( this._envBrightnessUniform );
             stateSet.addUniform( this._normalAA );
-            stateSet.addUniform( this._flipYUniform );
             stateSet.addUniform( this._specularPeak );
             stateSet.addUniform( this._occlusionHorizon );
         },
@@ -1104,16 +1135,13 @@
                 group.addChild( this.createSampleScene() );
 
                 this.updateEnvironment();
-
-
                 //group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
-
                 // y up
                 osg.mat4.fromRotation( group.getMatrix(), -Math.PI / 2, [ -1, 0, 0 ] );
 
-                root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' ) );
+                root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.METALLIC_ROUGHNESS_TEXTURE_UNIT, 'metallicRoughnessMap' ) );
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.NORMAL_TEXTURE_UNIT, 'normalMap' ) );
-                root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.METALNESS_TEXTURE_UNIT, 'specularMap' ) );
+                root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.SPECULAR_TEXTURE_UNIT, 'specularMap' ) );
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
 
 
@@ -1162,9 +1190,6 @@
             controller = gui.add( this._config, 'normalAA' );
             controller.onChange( this.updateNormalAA.bind( this ) );
 
-            controller = gui.add( this._config, 'flipY' );
-            controller.onChange( this.updateFlipY.bind( this ) );
-
             controller = gui.add( this._config, 'specularPeak' );
             controller.onChange( this.updateSpecularPeak.bind( this ) );
 
@@ -1176,8 +1201,7 @@
 
             controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
             controller.onChange( function ( value ) {
-                this._lod.get()[ 0 ] = value;
-                this._lod.dirty();
+                this._lod.getInternalArray()[ 0 ] = value;
             }.bind( this ) );
 
             controller = gui.add( this._config, 'format', [] );
