@@ -246,25 +246,21 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             }
 
             if ( !compileClean ) {
+
                 // Any error, Any
                 // Pink must die.
-                if ( !Program.prototype._failSafeCache ) {
 
-                    var program = gl.createProgram();
-                    this._vertex.failSafe( gl );
-                    this._fragment.failSafe( gl );
+                var program = gl.createProgram();
+                this._vertex.failSafe( gl, this._vertex.getText() );
+                this._fragment.failSafe( gl, this._fragment.getText() );
 
-                    gl.attachShader( program, this._vertex.shader );
-                    gl.attachShader( program, this._fragment.shader );
-                    gl.linkProgram( program );
-                    gl.validateProgram( program );
+                gl.attachShader( program, this._vertex.shader );
+                gl.attachShader( program, this._fragment.shader );
+                gl.linkProgram( program );
+                gl.validateProgram( program );
 
-                    // cache to compile and allocate only once
-                    // not polluting the inspector
-                    Program.prototype._failSafeCache = program;
-                }
                 Notify.warn( 'FailSafe shader Activated ' );
-                this._program = this._failSafeCache;
+                this._program = program;
             }
 
             this._uniformsCache = new CustomMap();
