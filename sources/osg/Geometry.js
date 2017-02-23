@@ -34,6 +34,8 @@ var Geometry = function () {
 
 };
 
+Geometry.enableVAO = true;
+
 /** @lends Geometry.prototype */
 Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
 
@@ -320,7 +322,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             // no cache for this combination of vertex attributes
             // compute new Draw Call
 
-            if ( this._extVAO === undefined ) { // will be null if not supported
+            if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
                 var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
                 this._extVAO = extVAO;
             }
