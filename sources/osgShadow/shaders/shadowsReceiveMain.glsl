@@ -60,7 +60,7 @@ if(!earlyOut) {
         }
 
     }
-}
+
 
 
 
@@ -71,7 +71,7 @@ if(!earlyOut) {
 
         if(any(bvec4 ( shadowUV.x > 1., shadowUV.x < 0., shadowUV.y > 1., shadowUV.y < 0.))) {
             earlyOut = true;// limits of light frustum
-
+        }
 
         // most precision near 0, make sure we are near 0 and in [0,1]
         shadowReceiverZ = - shadowVertexEye.z;
