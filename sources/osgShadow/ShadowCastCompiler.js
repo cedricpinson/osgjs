@@ -45,7 +45,8 @@ CompilerShadowCast.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
         this.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
 
             shadowDepthRange: this.getOrCreateUniform( 'vec4', 'uShadowDepthRange' ),
-            fragEye: this.getOrCreateVarying( 'vec4', 'vViewVertex' )
+            fragEye: this.getOrCreateVarying( 'vec4', 'vViewVertex' ),
+            shadowTextureMapSize: ( this._shadowCastAttribute.getReceiveAttribute().getAtlas() ? this.getOrCreateUniform( 'vec4', 'uShadowMapSize' ) : undefined )
 
         } ).outputs( {
 
