@@ -15,6 +15,7 @@ var RigGeometry = require( 'osgAnimation/RigGeometry' );
 var channel = require( 'osgAnimation/channel' );
 var createQuatChannel = channel.createQuatChannel;
 var createVec3Channel = channel.createVec3Channel;
+var BlendFunc = require( 'osg/BlendFunc' );
 
 var Geometry = require( 'osg/Geometry' );
 var Texture = require( 'osg/Texture' );
@@ -78,21 +79,20 @@ ReaderWriterGLTF.TEXTURE_FORMAT = {
     6410: Texture.LUMINANCE_ALPHA
 };
 
-ReaderWriterGLTF.PBR_EXTENSION = 'FRAUNHOFER_materials_pbr';
-ReaderWriterGLTF.PBR_METAL_MODE = 'PBR_metal_roughness';
+ReaderWriterGLTF.PBR_SPEC_EXT = 'KHR_materials_pbrSpecularGlossiness';
 ReaderWriterGLTF.PBR_SPEC_MODE = 'PBR_specular_glossiness';
+ReaderWriterGLTF.PBR_METAL_MODE = 'PBR_metal_roughness';
 
 ReaderWriterGLTF.ALBEDO_TEXTURE_UNIT = 2;
 ReaderWriterGLTF.DIFFUSE_TEXTURE_UNIT = 2;
-ReaderWriterGLTF.ROUGHNESS_TEXTURE_UNIT = 3;
-ReaderWriterGLTF.GLOSSINESS_TEXTURE_UNIT = 3;
-ReaderWriterGLTF.METALNESS_TEXTURE_UNIT = 4;
+ReaderWriterGLTF.SPECULAR_GLOSSINESS_TEXTURE_UNIT = 3;
+ReaderWriterGLTF.METALLIC_ROUGHNESS_TEXTURE_UNIT = 3;
 ReaderWriterGLTF.SPECULAR_TEXTURE_UNIT = 4;
 ReaderWriterGLTF.NORMAL_TEXTURE_UNIT = 5;
 ReaderWriterGLTF.AO_TEXTURE_UNIT = 6;
 
 ReaderWriterGLTF.ALBEDO_UNIFORM = 'albedoMap';
-ReaderWriterGLTF.ROUGHNESS_UNIFORM = 'roughnessMap';
+ReaderWriterGLTF.METALLIC_ROUGHNESS_UNIFORM = 'metallicRoughnessMap';
 ReaderWriterGLTF.SPECULAR_UNIFORM = 'specularMap';
 ReaderWriterGLTF.NORMAL_UNIFORM = 'normalMap';
 ReaderWriterGLTF.AO_UNIFORM = 'aoMap';
@@ -225,27 +225,26 @@ ReaderWriterGLTF.prototype = {
         node.addUpdateCallback( animationCallback );
     },
 
-    createTextureAndSetAttrib: P.method( function ( glTFTextureId, stateSet, location, uniform ) {
+    createTextureAndSetAttrib: P.method( function ( glTFTextureObject, stateSet, location, uniform ) {
 
-        if ( !glTFTextureId ) return;
+        if ( !glTFTextureObject ) return;
         var json = this._glTFJSON;
-        var glTFTexture = json.textures[ glTFTextureId ];
+        var glTFTexture = json.textures[ glTFTextureObject.index ];
         if ( !glTFTexture ) return;
 
         var image = json.images[ glTFTexture.source ];
 
         if ( !image ) return;
         var texture = new Texture();
+        // GLTF texture origin is correct
+        texture.setFlipY( false );
+        texture.setWrapS( 'REPEAT' );
+        texture.setWrapT( 'REPEAT' );
 
         this.loadFile( image.uri ).then( function ( data ) {
             if ( !data ) return;
             texture.setImage( data, ReaderWriterGLTF.TEXTURE_FORMAT[ glTFTexture.format ] );
-            texture.setFlipY( glTFTexture.flipY );
             stateSet.setTextureAttributeAndModes( location, texture );
-            var extras = glTFTexture.extras;
-            if ( extras ) {
-                stateSet.addUniform( Uniform.createInt1( extras.yUp ? 0 : 1, 'uFlipNormalY' ) );
-            }
             if ( uniform ) {
                 stateSet.addUniform( Uniform.createInt( location, uniform ) );
             }
@@ -502,39 +501,43 @@ ReaderWriterGLTF.prototype = {
         return this.preprocessBones( bonesToSkin );
     } ),
 
-    loadPBRMaterial: P.method( function ( materialId, glTFmaterial, geometryNode ) {
+    loadPBRMaterial: P.method( function ( materialId, glTFmaterial, geometryNode, extension ) {
 
-        var model = glTFmaterial.materialModel;
-        var values = glTFmaterial.values;
-
-        if ( !values ) return;
-
+        var pbrMetallicRoughness = glTFmaterial.pbrMetallicRoughness;
         var osgStateSet = geometryNode.getOrCreateStateSet();
 
         var promises = [];
-        if ( model === ReaderWriterGLTF.PBR_METAL_MODE ) {
-
-            promises.push( this.createTextureAndSetAttrib( values.baseColorTexture, osgStateSet, ReaderWriterGLTF.ALBEDO_TEXTURE_UNIT, ReaderWriterGLTF.ALBEDO_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.roughnessTexture, osgStateSet, ReaderWriterGLTF.ROUGHNESS_TEXTURE_UNIT, ReaderWriterGLTF.ROUGHNESS_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.metallicTexture, osgStateSet, ReaderWriterGLTF.METALNESS_TEXTURE_UNIT, ReaderWriterGLTF.SPECULAR_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, ReaderWriterGLTF.NORMAL_TEXTURE_UNIT, ReaderWriterGLTF.NORMAL_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, ReaderWriterGLTF.AO_TEXTURE_UNIT, ReaderWriterGLTF.AO_UNIFORM ) );
-
-        } else if ( model === ReaderWriterGLTF.PBR_SPEC_MODE ) {
-
-            promises.push( this.createTextureAndSetAttrib( values.diffuseTexture, osgStateSet, ReaderWriterGLTF.DIFFUSE_TEXTURE_UNIT, ReaderWriterGLTF.ALBEDO_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.glossinessTexture, osgStateSet, ReaderWriterGLTF.GLOSSINESS_TEXTURE_UNIT, ReaderWriterGLTF.ROUGHNESS_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.specularTexture, osgStateSet, ReaderWriterGLTF.SPECULAR_TEXTURE_UNIT, ReaderWriterGLTF.SPECULAR_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.normalTexture, osgStateSet, ReaderWriterGLTF.NORMAL_TEXTURE_UNIT, ReaderWriterGLTF.NORMAL_UNIFORM ) );
-            promises.push( this.createTextureAndSetAttrib( values.aoTexture, osgStateSet, ReaderWriterGLTF.AO_TEXTURE_UNIT, ReaderWriterGLTF.AO_UNIFORM ) );
-
+        var model = '';
+        if ( pbrMetallicRoughness ) {
+            if ( pbrMetallicRoughness.baseColorTexture )
+                promises.push( this.createTextureAndSetAttrib( pbrMetallicRoughness.baseColorTexture, osgStateSet, ReaderWriterGLTF.ALBEDO_TEXTURE_UNIT, ReaderWriterGLTF.ALBEDO_UNIFORM ) );
+            if ( pbrMetallicRoughness.metallicRoughnessTexture )
+                promises.push( this.createTextureAndSetAttrib( pbrMetallicRoughness.metallicRoughnessTexture, osgStateSet, ReaderWriterGLTF.METALLIC_ROUGHNESS_TEXTURE_UNIT, ReaderWriterGLTF.METALLIC_ROUGHNESS_UNIFORM ) );
+            model = ReaderWriterGLTF.PBR_METAL_MODE;
         }
+        if ( extension ) {
+            if ( extension.diffuseTexture ) {
+                promises.push( this.createTextureAndSetAttrib( extension.diffuseTexture, osgStateSet, ReaderWriterGLTF.DIFFUSE_TEXTURE_UNIT, ReaderWriterGLTF.ALBEDO_UNIFORM ) );
+            }
+            if ( extension.specularGlossinessTexture ) {
+                promises.push( this.createTextureAndSetAttrib( extension.specularGlossinessTexture, osgStateSet, ReaderWriterGLTF.SPECULAR_GLOSSINESS_TEXTURE_UNIT, ReaderWriterGLTF.METALLIC_ROUGHNESS_UNIFORM ) );
+            }
+            model = ReaderWriterGLTF.PBR_SPEC_MODE;
+        }
+        if ( glTFmaterial.normalTexture )
+            promises.push( this.createTextureAndSetAttrib( glTFmaterial.normalTexture, osgStateSet, ReaderWriterGLTF.NORMAL_TEXTURE_UNIT, ReaderWriterGLTF.NORMAL_UNIFORM ) );
+        if ( glTFmaterial.occlusionTexture )
+            promises.push( this.createTextureAndSetAttrib( glTFmaterial.occlusionTexture, osgStateSet, ReaderWriterGLTF.AO_TEXTURE_UNIT, ReaderWriterGLTF.AO_UNIFORM ) );
 
+        // TODO:Need to check for specular glossiness extension
         geometryNode.setUserData( {
             pbrWorklow: model
         } );
 
         geometryNode.stateset = osgStateSet;
+        osgStateSet.setRenderingHint( 'TRANSPARENT_BIN' );
+        osgStateSet.setRenderBinDetails( 1000, 'RenderBin' );
+        osgStateSet.setAttributeAndModes( new BlendFunc( 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA' ) );
         this._stateSetMap[ materialId ] = osgStateSet;
 
         return P.all( promises );
@@ -550,9 +553,9 @@ ReaderWriterGLTF.prototype = {
             return;
         }
 
-        var extension = this.findByKey( glTFmaterial.extensions, ReaderWriterGLTF.PBR_EXTENSION );
-        if ( extension )
-            return this.loadPBRMaterial( materialId, extension, geometryNode );
+        var extension = this.findByKey( glTFmaterial.extensions, ReaderWriterGLTF.PBR_SPEC_EXT );
+        if ( glTFmaterial.pbrMetallicRoughness || extension )
+            return this.loadPBRMaterial( materialId, glTFmaterial, geometryNode, extension );
 
         var values = glTFmaterial.values;
         if ( !values ) return;
@@ -683,7 +686,7 @@ ReaderWriterGLTF.prototype = {
 
         promisesArray.push( indicesPromise );
 
-        if ( primitive.material )
+        if ( primitive.material !== undefined )
             promisesArray.push( this.loadMaterial( primitive.material, geom ) );
 
         return P.all( promisesArray ).then( function () {
