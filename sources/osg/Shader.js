@@ -56,7 +56,7 @@ Shader.flushDeletedGLShaders = function ( gl, availableTime ) {
         deleteList.splice( i, 1 );
         elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
     }
-    return availableTime -= elapsedTime;
+    return availableTime - elapsedTime;
 };
 
 Shader.flushAllDeletedGLShaders = function ( gl ) {
@@ -101,15 +101,22 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
             r = /Shader compilation errors\n\((\d+)\, \d+\): (.+)/gmi;
         }
 
+        // we dont understand error try to print it instead of nothing
+        if ( r.exec( errors ) === null ) {
+            Notify.error( errors );
+            return;
+        }
+
         // reset index to start.
         r.lastIndex = 0;
 
-        while ( ( m = r.exec( errors ) ) != null ) {
+        while ( ( m = r.exec( errors ) ) !== null ) {
             if ( m.index === r.lastIndex ) {
-                r.lastIndex++; // moving between errors
+                // moving between errors
+                r.lastIndex++;
             }
             // get error line
-            var line = parseInt( m[ 1 ] );
+            var line = parseInt( m[ 1 ], 10 );
 
             if ( line > linesLength ) continue;
             // webgl error report.
@@ -174,7 +181,7 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
                 newText += i + ' ' + splittedText[ i ] + '\n';
             }
             // still logging whole source but folded
-            Notify.debugFold( 'can\'t compile shader', newText );
+            Notify.errorFold( 'can\'t compile shader', newText );
 
             return false;
         }
