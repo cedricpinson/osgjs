@@ -772,10 +772,11 @@
                         var specularWorkflow = ( workflows[ i ].workflow === window.GLTF_PBR_SPEC_MODE );
                         // Check we have textures, else generate 1x1 texture
                         if ( specularWorkflow && workflows[ i ].stateSet.getNumTextureAttributeLists() === 0 ) {
-                            var tex = this.getTexture0000();
-                            workflows[ i ].stateSet.setTextureAttributeAndModes( 2, tex );
-                            workflows[ i ].stateSet.setTextureAttributeAndModes( 3, tex );
-                            workflows[ i ].stateSet.setTextureAttributeAndModes( 5, tex );
+                            var tex1 = this.getTexture1111();
+                            var tex0 = this.getTexture0000();
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 2, tex1 );
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 3, tex1 );
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 5, tex0 );
                         }
 
                         var shaderConfig = {
@@ -856,7 +857,7 @@
                 var x = roughness * this._config.offset;
                 osg.mat4.fromTranslation( sample.getMatrix(), [ x, 0, 0 ] );
 
-                var metalRoughnessTexture = this.createMetalRoughnessTextureFromColors( 0, roughness, true );
+                var metalRoughnessTexture = this.createMetalRoughnessTextureFromColors( 0, roughness, false );
 
                 this.setMaterial( sample.getOrCreateStateSet(), albedo, metalRoughnessTexture, specularTexture );
                 group.addChild( sample );
