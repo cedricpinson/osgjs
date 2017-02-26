@@ -337,8 +337,21 @@
         handleDroppedFiles: function ( files ) {
             var self = this;
             $( '#loading' ).show();
-            osgDB.FileHelper.readFileList( files ).then( function ( root ) {
+
+
+            if ( files.length === 1 && files[ 0 ].name.split( '.' ).pop().toLowerCase() === 'zip' ) {
+                return this.loadZipFile( files[ 0 ], files[ 0 ].name ).then( function () {
+                    $( '#loading' ).hide();
+                } );
+            }
+
+            return osgDB.FileHelper.readFileList( files ).then( function ( root ) {
                 self.loadNode( root );
+            } ).catch( function ( fails ) {
+
+                $( '#loading' ).hide();
+                osg.error( 'cant\'t read file ' + fails );
+
             } );
         },
 

@@ -31,6 +31,9 @@ ReaderWriterZIP.prototype = {
                 // Now url is a File
                 var file = options.filesMap.get( url );
                 return this.readZipFile( file ).then( function () {
+
+                    if ( !self._fileName.length ) return P.reject( self );
+
                     // At this point we have the main file name and a Map containing all the resources
                     return ReaderParser.readNodeURL( self._fileName, {
                         filesMap: self._filesMap
