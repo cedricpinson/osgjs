@@ -312,25 +312,25 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
         var cachedDraw = this._cacheDrawCall[ prgID ];
 
-        // most of the time we should use vao
         if ( this._extVAO && !this._vao[ prgID ] ) state.setVertexArrayObject( null );
 
-        if ( cachedDraw === undefined ) {
-
-            if ( !this._primitives.length ) return;
-
-            // no cache for this combination of vertex attributes
-            // compute new Draw Call
-
-            if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
-                var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
-                this._extVAO = extVAO;
-            }
-
-            cachedDraw = this.generateDrawCommand( state, program, prgID );
+        if ( cachedDraw ) {
+            cachedDraw.call( this, state );
+            return;
         }
 
+        // generate cachedDraw
+
+        if ( !this._primitives.length ) return;
+
+        if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
+            var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
+            this._extVAO = extVAO;
+        }
+
+        cachedDraw = this.generateDrawCommand( state, program, prgID );
         cachedDraw.call( this, state );
+        state.setVertexArrayObject( null );
 
     },
 
