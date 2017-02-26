@@ -772,10 +772,11 @@
                         var specularWorkflow = ( workflows[ i ].workflow === window.GLTF_PBR_SPEC_MODE );
                         // Check we have textures, else generate 1x1 texture
                         if ( specularWorkflow && workflows[ i ].stateSet.getNumTextureAttributeLists() === 0 ) {
-                            var tex = this.getTexture0000();
-                            workflows[ i ].stateSet.setTextureAttributeAndModes( 2, tex );
-                            workflows[ i ].stateSet.setTextureAttributeAndModes( 3, tex );
-                            workflows[ i ].stateSet.setTextureAttributeAndModes( 5, tex );
+                            var tex1 = this.getTexture1111();
+                            var tex0 = this.getTexture0000();
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 2, tex1 );
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 3, tex1 );
+                            workflows[ i ].stateSet.setTextureAttributeAndModes( 5, tex0 );
                         }
 
                         var shaderConfig = {
