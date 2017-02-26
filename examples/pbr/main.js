@@ -856,7 +856,7 @@
                 var x = roughness * this._config.offset;
                 osg.mat4.fromTranslation( sample.getMatrix(), [ x, 0, 0 ] );
 
-                var metalRoughnessTexture = this.createMetalRoughnessTextureFromColors( 0, roughness, true );
+                var metalRoughnessTexture = this.createMetalRoughnessTextureFromColors( 0, roughness, false );
 
                 this.setMaterial( sample.getOrCreateStateSet(), albedo, metalRoughnessTexture, specularTexture );
                 group.addChild( sample );
