@@ -23,12 +23,10 @@ Shader.VERTEX_SHADER = 0x8B31;
 Shader.FRAGMENT_SHADER = 0x8B30;
 
 // Debug Pink shader for when shader fails
-Shader.VS_DBG = 'attribute vec3 Vertex;uniform mat4 uModelViewMatrix;uniform mat4 uProjectionMatrix;void main(void) {  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex, 1.0);}';
-Shader.FS_DBG = 'precision lowp float; void main(void) { gl_FragColor = vec4(1.0, 0.6, 0.6, 1.0);}';
-
 var debugName = '\n#define SHADER_NAME FailSafe\n';
-Shader.VS_DBG += debugName;
-Shader.FS_DBG += debugName;
+Shader.VS_DBG = '#define _DEBUG 1\n#ifdef _DEBUG\nattribute vec3 Vertex;uniform mat4 uModelViewMatrix;uniform mat4 uProjectionMatrix;void main(void) {  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex, 1.0);} \n' + debugName + '\n#else\n';
+Shader.FS_DBG = '#define _DEBUG 1\n#ifdef _DEBUG\n precision lowp float; void main(void) { gl_FragColor = vec4(1.0, 0.6, 0.6, 1.0);}\n' + debugName + '\n#else\n';
+
 
 
 // static cache of glShaders flagged for deletion, which will actually
@@ -79,9 +77,9 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         return this.text;
     },
     // this is where it creates a fail safe shader that should work everywhere
-    failSafe: function ( gl ) {
+    failSafe: function ( gl, shaderText ) {
         this.shader = gl.createShader( this.type );
-        gl.shaderSource( this.shader, this.type === Shader.VERTEX_SHADER ? Shader.VS_DBG : Shader.FS_DBG );
+        gl.shaderSource( this.shader, ( this.type === Shader.VERTEX_SHADER ? Shader.VS_DBG : Shader.FS_DBG ) + shaderText + '\n#endif\n' );
         gl.compileShader( this.shader );
     },
     // webgl shader compiler error to source contextualization
