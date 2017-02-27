@@ -25,13 +25,13 @@ if(!earlyOut) {
     shadowVertexEye =  shadowViewMatrix *  vec4(vertexWorld, 1.0);
 
     vec3 shadowLightDir = vec3(0.0, 0.0, 1.0); // in shadow view light is camera
-    vec4 normalFront = vec4( (gl_FrontFacing ? normalWorld : -normalWorld), 0.0);
+    vec4 normalFront = vec4(normalWorld, 0.0);
     shadowNormalEye =  shadowViewMatrix * normalFront;
     N_Dot_L = dot(shadowNormalEye.xyz, shadowLightDir);
 
     if (N_Dot_L <= 0.0) {
-      shadow = 1.0;
-      earlyOut = true;
+        shadow = 1.0;
+        earlyOut = true;
     }
 
     if(!earlyOut) {
@@ -82,14 +82,15 @@ if(!earlyOut) {
         }
 
     }
-
 }
 
 
 
 
+
+
 // pcf pbias to add on offset
-vec2 shadowBiasPCF = vec2(0.);
+vec2 shadowBiasPCF = vec2 (0.);
 
 #ifdef GL_OES_standard_derivatives
 

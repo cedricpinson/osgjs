@@ -309,6 +309,32 @@ var CompilerFragment = {
         return undefined;
     },
 
+    getOrCreateFrontModelNormal: function () {
+        var frontNormal = this.createVariable( 'vec3', 'frontModelNormal' );
+
+        this.getNode( 'FrontNormal' ).inputs( {
+            normal: this.getOrCreateVarying( 'vec3', 'vModelNormal' )
+        } ).outputs( {
+            normal: frontNormal
+        } );
+
+        return frontNormal;
+    },
+
+    getOrCreateNormalizedModelNormal: function () {
+        var normal = this._variables[ 'modelNormal' ];
+        if ( normal )
+            return normal;
+
+        var out = this.createVariable( 'vec3', 'modelNormal' );
+        this.getNode( 'Normalize' ).inputs( {
+            vec: this.getOrCreateFrontModelNormal()
+        } ).outputs( {
+            vec: out
+        } );
+        return out;
+    },
+
     createShadowingLight: function ( light, inputs, lightedOutput ) {
 
         var k;
@@ -344,13 +370,13 @@ var CompilerFragment = {
 
         // Varyings
         var vertexWorld = this.getOrCreateVarying( 'vec3', 'vModelVertex' );
-        var normalWorld = this.getOrCreateVarying( 'vec3', 'vModelNormal' );
+        var normalWorld = this.getOrCreateNormalizedModelNormal();
 
         // asserted we have a shadow we do the shadow node allocation
         // and mult with lighted output
         var shadowedOutput = this.createVariable( 'float' );
 
-        // shadow Attribute uniforms        
+        // shadow Attribute uniforms
         var shadowUniforms = this.getOrCreateStateAttributeUniforms( this._shadows[ lightIndex ], 'shadow' );
         var shadowInputs = MACROUTILS.objectMix( inputs, shadowUniforms );
 
@@ -387,7 +413,7 @@ var CompilerFragment = {
         var shadowTexSamplerName = 'Texture' + tUnit;
 
 
-        // we declare first this uniform so that the Int one 
+        // we declare first this uniform so that the Int one
         var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
 
         // per texture uniforms
