@@ -72,6 +72,8 @@ var FrontNormal = function () {
     NodeFunctions.call( this );
 };
 
+// https://twitter.com/pyalot/status/711956736639418369
+// https://github.com/mrdoob/three.js/issues/10331
 FrontNormal.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
 
     type: 'FrontNormal',
