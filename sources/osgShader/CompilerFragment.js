@@ -153,47 +153,43 @@ var CompilerFragment = {
         return roots;
     },
 
-    getOrCreateFrontTangent: function () {
-        var frontTangent = this.createVariable( 'vec4', 'frontTangent' );
+    getOrCreateFrontViewTangent: function () {
+        var out = this._variables[ 'frontViewTangent' ];
+        if ( out )
+            return out;
+
+        out = this.createVariable( 'vec4', 'frontViewTangent' );
 
         this.getNode( 'FrontNormal' ).inputs( {
             normal: this.getOrCreateVarying( 'vec4', 'vViewTangent' )
         } ).outputs( {
-            normal: frontTangent
+            normal: out
         } );
 
-        return frontTangent;
+        return out;
     },
 
-    getOrCreateFrontNormal: function () {
-        var frontNormal = this.createVariable( 'vec3', 'frontNormal' );
+    getOrCreateFrontViewNormal: function () {
+        var out = this._variables[ 'frontViewNormal' ];
+        if ( out )
+            return out;
+
+        out = this.createVariable( 'vec3', 'frontViewNormal' );
 
         this.getNode( 'FrontNormal' ).inputs( {
             normal: this.getOrCreateVarying( 'vec3', 'vViewNormal' )
         } ).outputs( {
-            normal: frontNormal
+            normal: out
         } );
 
-        return frontNormal;
-    },
-
-    getOrCreateNormalizedNormal: function () {
-        var normal = this._variables[ 'normal' ];
-        if ( normal )
-            return normal;
-
-        var out = this.createVariable( 'vec3', 'normal' );
-        this.getNode( 'Normalize' ).inputs( {
-            vec: this.getOrCreateFrontNormal()
-        } ).outputs( {
-            vec: out
-        } );
         return out;
     },
-    getOrCreateNormalizedPosition: function () {
+
+    getOrCreateNormalizedViewEyeDirection: function () {
         var eye = this._variables[ 'eyeVector' ];
         if ( eye )
             return eye;
+
         var nor = this.createVariable( 'vec3' );
         var castEye = this.createVariable( 'vec3' );
         this.getNode( 'SetFromNode' ).inputs( this.getOrCreateVarying( 'vec4', 'vViewVertex' ) ).outputs( castEye );
@@ -202,8 +198,55 @@ var CompilerFragment = {
         } ).outputs( {
             vec: nor
         } );
+
         var out = this.createVariable( 'vec3', 'eyeVector' );
         this.getNode( 'Mult' ).inputs( nor, this.createVariable( 'float' ).setValue( '-1.0' ) ).outputs( out );
+        return out;
+    },
+
+    getOrCreateNormalizedFrontViewNormal: function () {
+        var out = this._variables[ 'nFrontViewNormal' ];
+        if ( out )
+            return out;
+
+        out = this.createVariable( 'vec3', 'nFrontViewNormal' );
+        this.getNode( 'Normalize' ).inputs( {
+            vec: this.getOrCreateFrontViewNormal()
+        } ).outputs( {
+            vec: out
+        } );
+
+        return out;
+    },
+
+    getOrCreateFrontModelNormal: function () {
+        var out = this._variables[ 'frontModelNormal' ];
+        if ( out )
+            return out;
+
+        out = this.createVariable( 'vec3', 'frontModelNormal' );
+
+        this.getNode( 'FrontNormal' ).inputs( {
+            normal: this.getOrCreateVarying( 'vec3', 'vModelNormal' )
+        } ).outputs( {
+            normal: out
+        } );
+
+        return out;
+    },
+
+    getOrCreateNormalizedFrontModelNormal: function () {
+        var out = this._variables[ 'nFrontModelNormal' ];
+        if ( out )
+            return out;
+
+        out = this.createVariable( 'vec3', 'nFrontModelNormal' );
+        this.getNode( 'Normalize' ).inputs( {
+            vec: this.getOrCreateFrontModelNormal()
+        } ).outputs( {
+            vec: out
+        } );
+
         return out;
     },
 
@@ -309,32 +352,6 @@ var CompilerFragment = {
         return undefined;
     },
 
-    getOrCreateFrontModelNormal: function () {
-        var frontNormal = this.createVariable( 'vec3', 'frontModelNormal' );
-
-        this.getNode( 'FrontNormal' ).inputs( {
-            normal: this.getOrCreateVarying( 'vec3', 'vModelNormal' )
-        } ).outputs( {
-            normal: frontNormal
-        } );
-
-        return frontNormal;
-    },
-
-    getOrCreateNormalizedModelNormal: function () {
-        var normal = this._variables[ 'modelNormal' ];
-        if ( normal )
-            return normal;
-
-        var out = this.createVariable( 'vec3', 'modelNormal' );
-        this.getNode( 'Normalize' ).inputs( {
-            vec: this.getOrCreateFrontModelNormal()
-        } ).outputs( {
-            vec: out
-        } );
-        return out;
-    },
-
     createShadowingLight: function ( light, inputs, lightedOutput ) {
 
         var k;
@@ -370,7 +387,7 @@ var CompilerFragment = {
 
         // Varyings
         var vertexWorld = this.getOrCreateVarying( 'vec3', 'vModelVertex' );
-        var normalWorld = this.getOrCreateNormalizedModelNormal();
+        var normalWorld = this.getOrCreateNormalizedFrontModelNormal();
 
         // asserted we have a shadow we do the shadow node allocation
         // and mult with lighted output
@@ -535,9 +552,9 @@ var CompilerFragment = {
             inputs = MACROUTILS.objectMix( inputs, lightOutShadowIn );
 
             if ( !inputs.normal )
-                inputs.normal = this.getOrCreateNormalizedNormal();
+                inputs.normal = this.getOrCreateNormalizedFrontViewNormal();
             if ( !inputs.eyeVector )
-                inputs.eyeVector = this.getOrCreateNormalizedPosition();
+                inputs.eyeVector = this.getOrCreateNormalizedViewEyeDirection();
 
             this.getNode( nodeName ).inputs( inputs ).outputs( {
                 color: lightedOutput,
