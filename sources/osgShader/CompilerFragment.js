@@ -6,10 +6,7 @@ var MACROUTILS = require( 'osg/Utils' );
 
 var CompilerFragment = {
 
-    createFragmentShader: function () {
-
-        this._fragmentShaderMode = true;
-
+    _createFragmentShader: function () {
         // Call to specialised inhenrited shader Compiler
         var roots = this.createFragmentShaderGraph();
         var fname = this.getFragmentShaderName();
@@ -604,5 +601,20 @@ var CompilerFragment = {
         return texel;
     }
 };
+
+var wrapperFragmentOnly = function ( fn, name ) {
+    return function () {
+        if ( !this._fragmentShaderMode )
+            Notify.error( 'This function should not be called from vertex shader : ' + name );
+        return fn.apply( this, arguments );
+    };
+};
+
+var fns = window.Object.keys( CompilerFragment );
+var nbFunc = fns.length;
+for ( var i = 0; i < nbFunc; ++i ) {
+    var fnName = fns[ i ];
+    CompilerFragment[ fnName ] = wrapperFragmentOnly( CompilerFragment[ fnName ], fnName );
+}
 
 module.exports = CompilerFragment;

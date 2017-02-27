@@ -4,10 +4,7 @@ var Notify = require( 'osg/notify' );
 
 var CompilerVertex = {
 
-    createVertexShader: function () {
-
-        this._fragmentShaderMode = false;
-
+    _createVertexShader: function () {
         // Call to specialised inhenrited shader Compiler
         var roots = this.declareVertexMain();
         var vname = this.getVertexShaderName();
@@ -411,5 +408,20 @@ var CompilerVertex = {
         return vecOut;
     }
 };
+
+var wrapperVertexOnly = function ( fn, name ) {
+    return function () {
+        if ( this._fragmentShaderMode )
+            Notify.error( 'This function should not be called from fragment shader : ' + name );
+        return fn.apply( this, arguments );
+    };
+};
+
+var fns = window.Object.keys( CompilerVertex );
+var nbFunc = fns.length;
+for ( var i = 0; i < nbFunc; ++i ) {
+    var fnName = fns[ i ];
+    CompilerVertex[ fnName ] = wrapperVertexOnly( CompilerVertex[ fnName ], fnName );
+}
 
 module.exports = CompilerVertex;
