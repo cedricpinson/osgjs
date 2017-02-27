@@ -103,7 +103,7 @@ ShadowCast.prototype = MACROUTILS.objectInherit( Node.prototype, {
         var inp = this._inputs;
         var inputs = [].concat( [ inp.fragEye, inp.shadowDepthRange ] );
 
-        if ( this._shadowCast.getReceiveAttribute().getAtlas() ) {
+        if ( this._shadowCast.getReceiveAttribute().getAtlas() && !this._shadowCast.getScissor() ) {
             inputs.push( inp.shadowTextureMapSize );
         }
 

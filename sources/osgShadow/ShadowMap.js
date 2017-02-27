@@ -39,6 +39,12 @@ var CameraCullCallback = function ( shadowTechnique ) {
 CameraCullCallback.prototype = {
     cull: function ( node, nv ) {
 
+
+
+        if ( this._shadowTechnique._quad ) {
+            this._shadowTechnique._quad.accept( nv );
+        }
+
         this._shadowTechnique.getShadowedScene().nodeTraverse( nv );
 
         var cs = nv.getCurrentCullingSet();
@@ -169,7 +175,7 @@ var ShadowMap = function ( settings, shadowTexture ) {
 
     this._infiniteFrustum = true;
     var shadowStateAttribute = new ShadowCastAttribute( false, this._shadowReceiveAttribute );
-
+    this._shadowCastAttribute = shadowStateAttribute;
     this._casterStateSet.setAttributeAndModes( shadowStateAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
     this._casterStateSet.setShaderGeneratorName( this._shadowCastShaderGeneratorName, StateAttribute.OVERRIDE | StateAttribute.ON );
 
@@ -452,11 +458,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
                 }
             }
         }
-    },
-
-    updateShadowTechnic: function ( /*nv*/) {
-        Notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
-        this.updateShadowTechnique();
     },
 
     setTextureFiltering: function () {
@@ -941,6 +942,9 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             return;
         }
 
+        if ( this._debug ) {
+            this._debugNode.accept( cullVisitor );
+        }
 
         // get renderer to make the cull program
         // record the traversal mask on entry so we can reapply it later.
@@ -954,15 +958,12 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._cameraShadow.setEnableFrustumCulling( true );
         this._cameraShadow.setComputeNearFar( true );
 
-        if ( this._debug ) {
-            this._debugNode.accept( cullVisitor );
-        }
-
 
         // do RTT from the camera traversal mimicking light pos/orient
         this._cameraShadow.accept( cullVisitor );
 
-        // make sure no negative near 
+
+        // make sure no negative near
         this.nearFarBounding();
 
         // Here culling is done, we do have near/far.

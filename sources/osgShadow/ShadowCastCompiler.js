@@ -42,13 +42,20 @@ CompilerShadowCast.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
     // Depth Shadow Map Casted from Light POV Depth encoded in color buffer
     createShadowCastDepth: function ( out ) {
 
-        this.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
+        var inputs = {
 
             shadowDepthRange: this.getOrCreateUniform( 'vec4', 'uShadowDepthRange' ),
             fragEye: this.getOrCreateVarying( 'vec4', 'vViewVertex' ),
-            shadowTextureMapSize: ( this._shadowCastAttribute.getReceiveAttribute().getAtlas() ? this.getOrCreateUniform( 'vec4', 'uShadowMapSize' ) : undefined )
 
-        } ).outputs( {
+        };
+
+        if ( this._shadowCastAttribute.getReceiveAttribute().getAtlas() && !this._shadowCastAttribute.getScissor() ) {
+
+            inputs.shadowTextureMapSize = this.getOrCreateUniform( 'vec4', 'uShadowMapSize' );
+
+        }
+
+        this.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( inputs ).outputs( {
 
             color: out
 

@@ -31,6 +31,7 @@
             fov: 50,
             kernelSizePCF: '1Tap(4texFetch)',
             atlas: false,
+            noScissor: false,
             lightMovement: 'Rotate',
             lightSpeed: 0.5,
             lightDistance: 3.0,
