@@ -50,6 +50,16 @@ var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
 
 Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
+    createFragmentShader: function () {
+        this._fragmentShaderMode = true;
+        return this._createFragmentShader();
+    },
+
+    createVertexShader: function () {
+        this._fragmentShaderMode = false;
+        return this._createVertexShader();
+    },
+
     getOrCreateProjectionMatrix: function () {
         return this.getOrCreateUniform( 'mat4', 'uProjectionMatrix' );
     },
