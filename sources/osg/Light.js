@@ -37,8 +37,6 @@ var Light = function ( lightNum, disable ) {
 
     this._lightNumber = lightNumber;
 
-    this._invMatrix = mat4.create();
-
     this._enable = !disable;
 
 };
