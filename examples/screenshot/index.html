@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Load Model</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/core.js"></script>
+    <script type="text/javascript" src="../vendors/rStats.js"></script>
+    <script type="text/javascript" src="../vendors/rStats.extras.js"></script>
+    <script type="text/javascript" src="../vendors/bluebird.js"></script>
+    <script type="text/javascript" src="../vendors/hammer.js"></script>
+    <script type="text/javascript" src="../vendors/leap.js"></script>
+    <script type="text/javascript" src="../vendors/gunzip.min.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+
+</head>
+
+
+<body class="osgjs-theme-dark">
+
+  <div id="ViewContainer" class="osgjs-fullpage" style="left: 60%;height:250px;width:250px;" align = "center">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" oncontextmenu="return false;"></canvas>
+  </div>
+  <div id="ViewContainer2" class="osgjs-fullpage" style="height:250px;width:250px;left: 30%">
+    <canvas id="2DView" width="250" height="250" ></canvas>
+  </div>
+  <div class="osgjs-info osgjs-info-dark">
+
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
+    <a id="screenshot">click to download last screenshot</a>
+    <div class="osgjs-description">
+      Demonstrate how make a Screenshot Each 5 sec
+    </div>
+
+  </div>
+
+</body>
+
+</html>

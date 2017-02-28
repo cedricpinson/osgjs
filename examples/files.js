@@ -1,13 +1,20 @@
 /* exported files */
 var files = {
     'examples': [
+        'advanced-customshader',
+        'animate-lightcolor',
+        'animate-rotation',
+        'animate-transparency',
         'animation',
+        'basic-transform',
         'camera',
         'camera-gallery',
         'cubemap',
         'cubemotion',
+        'customshader',
         'dragndrop',
         'drawbuffers',
+        'findnode-visitor',
         'fog',
         'frustum-culling',
         'geometry',
@@ -15,9 +22,11 @@ var files = {
         'ground',
         'hdr',
         'lights',
+        'load-model',
         'materials',
         'menu3d',
         'morph',
+        'multiplelights',
         'multipleviewers',
         'pagedlod',
         'pbr',
@@ -26,6 +35,7 @@ var files = {
         'postprocess',
         'quad-texture',
         'scene-debug',
+        'screenshot',
         'shader-generator',
         'shadowmap',
         'sound-3d',
@@ -34,6 +44,7 @@ var files = {
         'temporal',
         'text2D',
         'texture-video',
+        'usercamera',
         'webVR'
     ],
 };
