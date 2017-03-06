@@ -66,7 +66,7 @@ EllipsoidModel.prototype = {
     computeLocalUpVector: function ( X, Y, Z ) {
         // Note latitude is angle between normal to ellipsoid surface and XY-plane
         var latitude, longitude, altitude;
-        var coord = this.convertXYZToLatLongHeight( X, Y, Z, latitude, longitude, altitude );
+        var coord = this.convertXYZToLatLongHeight( X, Y, Z, vec3.create() );
         latitude = coord[ 0 ];
         longitude = coord[ 1 ];
         altitude = coord[ 2 ];
@@ -92,7 +92,7 @@ EllipsoidModel.prototype = {
         return result;
     },
     computeLocalToWorldTransformFromXYZ: function ( X, Y, Z ) {
-        var lla = this.convertXYZToLatLongHeight( X, Y, Z );
+        var lla = this.convertXYZToLatLongHeight( X, Y, Z, vec3.create() );
         var m = mat4.fromTranslation( mat4.create(), vec3.fromValues( X, Y, Z ) );
         this.computeCoordinateFrame( lla[ 0 ], lla[ 1 ], m );
         return m;
