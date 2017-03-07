@@ -160,7 +160,6 @@
             var bbox = this._viewer.getSceneData().getBoundingBox();
             this._viewer.getManipulator().setTarget( bbox.center( osg.vec3.create() ) );
             this._viewer.getManipulator().setDistance( bbox.radius() * 2.5 );
-            //viewer.getCamera().setComputeNearFar( false );
             this._viewer.run();
         },
 

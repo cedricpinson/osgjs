@@ -54,8 +54,9 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
         for ( var j = 0, h = this._primitives.length; j < h; j++ ) {
             var prim = this._primitives[ j ];
             if ( prim.getIndices !== undefined ) {
-                if ( prim.getIndices() !== undefined && prim.getIndices() !== null ) {
-                    prim.indices.releaseGLObjects();
+                var indices = prim.getIndices();
+                if ( indices !== undefined && indices !== null ) {
+                    indices.releaseGLObjects();
                 }
             }
         }

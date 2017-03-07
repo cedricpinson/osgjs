@@ -54,7 +54,7 @@ functorDrawArrays[ PrimitiveSet.TRIANGLE_FAN ] = function ( first, count, cb ) {
 TriangleIndexFunctor.prototype = {
 
     // You feed it with a callback that will be called for each triangle
-    // (with the 3 indexes of vertices as arguments)
+    // (with the 3 indices of vertices as arguments)
     init: function ( geom, cb ) {
         this._geom = geom;
         this._cb = cb;
@@ -77,8 +77,8 @@ TriangleIndexFunctor.prototype = {
 
                 cbFunctor = functorDrawElements[ primitive.getMode() ];
                 if ( cbFunctor ) {
-                    var indexes = primitive.indices.getElements();
-                    cbFunctor( primitive.getFirst() / indexes.BYTES_PER_ELEMENT, primitive.getCount(), indexes, cb );
+                    var indices = primitive.getIndices().getElements();
+                    cbFunctor( primitive.getFirst() / indices.BYTES_PER_ELEMENT, primitive.getCount(), indices, cb );
                 }
 
             } else if ( primitive instanceof DrawArrays ) {

@@ -865,6 +865,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
             if ( divisor !== undefined ) {
                 var ext = WebGLCaps.instance( gl ).getWebGLExtension( 'ANGLE_instanced_arrays' );
+                if ( !ext ) Notify.error( 'Your browser does not support instanced arrays' );
                 ext.vertexAttribDivisorANGLE( attrib, divisor );
             }
         }

@@ -197,12 +197,12 @@ module.exports = function () {
                 var prim = geo.getPrimitives()[ 0 ];
                 var offset = vertices.length / 3;
                 if ( prim.getIndices ) {
-                    var indices = prim.indices.getElements();
+                    var indices = prim.getIndices().getElements();
                     var nbPrim = indices.length;
                     for ( j = 0; j < nbPrim; ++j )
                         indices[ j ] += offset;
                 } else
-                    prim.first = offset;
+                    prim.setFirst( offset );
                 primitives.push( geo.getPrimitives()[ 0 ] );
 
                 var verts = geo.getAttributes().Vertex.getElements();
