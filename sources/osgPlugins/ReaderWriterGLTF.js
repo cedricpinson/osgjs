@@ -276,15 +276,15 @@ ReaderWriterGLTF.prototype = {
         return mat;
     },
 
-    preprocessChannel: function ( glTFChannel, glTFAnim, glTFAnimParams ) {
+    preprocessChannel: function ( glTFChannel, glTFAnim ) {
 
         var json = this._glTFJSON;
         var promisesArray = [];
 
         var glTFSampler = glTFAnim.samplers[ glTFChannel.sampler ];
 
-        var timeAccessor = json.accessors[ glTFAnimParams[ glTFSampler.input ] ];
-        var valueAccessor = json.accessors[ glTFAnimParams[ glTFSampler.output ] ];
+        var timeAccessor = json.accessors[ glTFSampler.input ];
+        var valueAccessor = json.accessors[ glTFSampler.output ];
 
         var timePromise = this.loadAccessorBuffer( timeAccessor, null );
         var valuePromise = this.loadAccessorBuffer( valueAccessor, null );
@@ -341,7 +341,6 @@ ReaderWriterGLTF.prototype = {
         for ( var i = 0; i < animationsObjectKeys.length; ++i ) {
 
             var glTFAnim = json.animations[ animationsObjectKeys[ i ] ];
-            var glTFAnimParams = glTFAnim.parameters;
 
             var channelsPromiseArray = [];
             // Creates each OSGJS channel
@@ -349,7 +348,7 @@ ReaderWriterGLTF.prototype = {
 
                 var glTFChannel = glTFAnim.channels[ j ];
 
-                var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim, glTFAnimParams );
+                var osgChannel = this.preprocessChannel( glTFChannel, glTFAnim );
                 channelsPromiseArray.push( osgChannel );
             }
 
