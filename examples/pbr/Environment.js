@@ -112,7 +112,7 @@
         },
 
         getFormatList: function () {
-            return Object.keys( this._panoramaUE4 );
+            return Object.keys( this._cubemapUE4 );
         },
 
         init: function ( url, config ) {
