@@ -11,7 +11,7 @@ var BoundingBox = require( 'osg/BoundingBox' );
 
 
 /**
- * MorphGeometry manage up to 4 morphTargets
+ * MorphGeometry manage up to MorphGeometry.MAX_MORPH_GPU morphTargets
  * @class MorphGeometry
  * @inherits Geometry
  */
@@ -23,10 +23,12 @@ var MorphGeometry = function () {
 
     this._targets = []; // Target list (Geometry)
     this._stateSetAnimation = new StateSet(); // StateSet to handle morphAttribute
-    this._targetWeights = new Float32Array( 4 ); // Fixed length array feed by UpdateMorph
+    this._targetWeights = new Float32Array( MorphGeometry.MAX_MORPH_GPU ); // Fixed length array feed by UpdateMorph
 
+    this._morphAttribute = undefined;
     this._morphTargetNames = undefined;
-    this._updateMorph = undefined;
+
+    this._maxMorphGPU = MorphGeometry.MAX_MORPH_GPU; // used by updateMorph to limit the number of morphed attributes done by the gpu
 
     this._isInitialized = false;
 };
@@ -34,17 +36,24 @@ var MorphGeometry = function () {
 // sync with UpdateMorph
 var EFFECTIVE_EPS = MorphGeometry.EFFECTIVE_EPS = 0.05;
 
+// this should be constant, if you change it only do it at parse time, otherwise it's better to call setMaximumPossibleMorphGPU
+MorphGeometry.MAX_MORPH_GPU = 4;
+
 MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
 
     init: function () {
-        var animAttrib = new MorphAttribute( Math.min( 4, this.getMorphTargets().length ) );
-        this.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
-        animAttrib.setTargetWeights( this.getTargetsWeight() );
+        if ( this._morphAttribute ) {
+            this._isInitialized = true;
+            return;
+        }
 
+        this._morphAttribute = new MorphAttribute( Math.min( this._maxMorphGPU, this.getMorphTargets().length ) );
+        this.getStateSetAnimation().setAttributeAndModes( this._morphAttribute, StateAttribute.ON );
+        this._morphAttribute.setTargetWeights( this.getTargetsWeight() );
 
         if ( this._targets[ 0 ] ) {
             this._morphTargetNames = window.Object.keys( this._targets[ 0 ].getVertexAttributeList() );
-            animAttrib.copyTargetNames( this._morphTargetNames );
+            this._morphAttribute.copyTargetNames( this._morphTargetNames );
         } else {
             this._morphTargetNames = [];
             Notify.error( 'No Targets in the MorphGeometry !' );
@@ -52,6 +61,16 @@ MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
         this._isInitialized = true;
         return true;
+    },
+
+    getMaximumPossibleMorphGPU: function () {
+        return this._maxMorphGPU;
+    },
+
+    setMaximumPossibleMorphGPU: function ( nb ) {
+        this._maxMorphGPU = nb;
+        this._isInitialized = false; // it's mostly UpdateMorph that we want to dirty
+        if ( this._morphAttribute ) this._morphAttribute.setNumTargets( nb );
     },
 
     getMorphTargetNames: function () {

@@ -17,6 +17,8 @@ var MorphAttribute = function ( nbTarget, disable ) {
 
     this._targetNames = {};
     this._hashNames = ''; // compute only once target hash names
+
+    this._hash = ''; // cache of hash
 };
 
 MorphAttribute.uniforms = {};
@@ -45,6 +47,7 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         }
 
         this._hashNames = hash;
+        this._hash = '';
     },
 
     getOrCreateUniforms: function () {
@@ -58,6 +61,11 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         obj.uniforms[ unifHash ] = new Map( uniforms );
 
         return obj.uniforms[ unifHash ];
+    },
+
+    setNumTargets: function ( nb ) {
+        this._nbTarget = nb;
+        this._hash = '';
     },
 
     getNumTargets: function () {
@@ -77,7 +85,8 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     },
 
     getHash: function () {
-        return this.getTypeMember() + this._hashNames + this.getNumTargets() + this.isEnabled();
+        if ( !this._hash ) this._hash = this.getTypeMember() + this._hashNames + this.getNumTargets() + this.isEnabled();
+        return this._hash;
     },
 
     apply: function () {
