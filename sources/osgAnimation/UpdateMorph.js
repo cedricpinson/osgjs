@@ -9,15 +9,16 @@ var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 var UpdateMorph = function () {
     AnimationUpdateCallback.call( this );
 
-    this._isInitialized = false;
     this._targets = []; // float target
     this._targetNames = []; // names of targets
     this._morphs = []; // the update morph can update several morphs
 
-    this._weights = new Float32Array( 4 );
-    // stuffs to handles > 4 targets
-    this._indexMap = [ 0, 0, 0, 0 ]; // we map VA to the first 4th VA targets
+    this._weights = new Float32Array( MorphGeometry.MAX_MORPH_GPU );
+    // stuffs to handles > max morph gpu targets
+    this._indexMap = new Uint32Array( MorphGeometry.MAX_MORPH_GPU ); // we map VA to the last gpu morphed VA targets
     this._gpuMorphed = []; // size of this._targets, for each target a bool states if it's gpu morphed or not
+
+    this._maxMorphGPU = -1;
 };
 
 var EFFECTIVE_EPS = MorphGeometry.EFFECTIVE_EPS; // in case we have more than 4 morphs, we can skip low effective weights
@@ -30,6 +31,9 @@ var funcWeights = function ( a, b ) {
 UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
 
     init: function ( node ) {
+        this._maxMorphGPU = MorphGeometry.MAX_MORPH_GPU;
+        this._morphs.length = 0;
+
         //Find the morph geometry & init it
         var children = node.getChildren();
         for ( var i = 0, l = children.length; i < l; i++ ) {
@@ -49,13 +53,21 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
                     morph.init();
 
                 this._morphs.push( morph );
-                this._isInitialized = true;
+                this._maxMorphGPU = Math.min( this._maxMorphGPU, morph.getMaximumPossibleMorphGPU() );
             }
         }
     },
 
     isInitialized: function () {
-        return this._isInitialized;
+        var morphs = this._morphs;
+        var nbMorphs = morphs.length;
+        if ( !nbMorphs ) return false;
+
+        for ( var i = 0; i < nbMorphs; ++i ) {
+            if ( !morphs[ i ].isInitialized() ) return false;
+        }
+
+        return true;
     },
 
     getNumTarget: function () {
@@ -80,7 +92,7 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         // basically, this function remaps all the active morphed VA to the 4th first morphTargets VA
         var indexMap = this._indexMap;
         var morphs = this._morphs;
-        for ( var i = 0; i < 4; ++i ) {
+        for ( var i = 0; i < this._maxMorphGPU; ++i ) {
             var index = indexMap[ i ];
             var strI = '_' + i;
             var strIndex = '_' + index;
@@ -141,7 +153,7 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         }
 
         // map on last index target
-        attrs[ attName + '_3' ].setBufferArray( vAttr._cpuMorph );
+        attrs[ attName + '_' + ( this._maxMorphGPU - 1 ) ].setBufferArray( vAttr._cpuMorph );
         vAttr._cpuMorph.dirty();
     },
 
@@ -179,7 +191,7 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         // (w4 is extraWeightSum and t4 will be computed in _mergeExtraMorphTarget)
 
         // compute new weights for the 4th target (all the extra target will be merged inside this one)
-        var extraWeightSum = this._weights[ 3 ] = this._computeExtraWeightsSum();
+        var extraWeightSum = this._weights[ this._maxMorphGPU - 1 ] = this._computeExtraWeightsSum();
 
         var processed = {}; // handles referenced buffer array (avoid useless double morph computation the same buffer)
         var morphs = this._morphs;
@@ -204,6 +216,9 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
 
     updateWeights: function () {
 
+        if ( this._maxMorphGPU === 0 )
+            return;
+
         var i = 0;
         var targets = this._targets;
         var nbTargets = targets.length;
@@ -212,7 +227,7 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         weights[ 0 ] = weights[ 1 ] = weights[ 2 ] = weights[ 3 ] = 0.0;
 
         // no need to swap VA or to use CPU morph
-        if ( nbTargets <= 4 ) {
+        if ( nbTargets <= this._maxMorphGPU ) {
             for ( i = 0; i < nbTargets; ++i ) {
                 weights[ i ] = targets[ i ].value;
             }
@@ -230,7 +245,7 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
 
         var sortedTargets = targets.slice( 0 ).sort( funcWeights );
 
-        for ( i = 0; i < 4; ++i ) {
+        for ( i = 0; i < this._maxMorphGPU; ++i ) {
             var ti = targets.indexOf( sortedTargets[ i ] );
             gpuMorphed[ ti ] = true;
             indexMap[ i ] = ti;
@@ -238,8 +253,8 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         }
 
         // check more than 4 targets, we compute all the extra targets influence and merge in the last 4th morphs targets
-        var extraMorphCPU = Math.abs( sortedTargets[ 4 ].value ) >= EFFECTIVE_EPS;
-        gpuMorphed[ indexMap[ 3 ] ] = !extraMorphCPU;
+        var extraMorphCPU = Math.abs( sortedTargets[ this._maxMorphGPU ].value ) >= EFFECTIVE_EPS;
+        gpuMorphed[ indexMap[ this._maxMorphGPU - 1 ] ] = !extraMorphCPU;
 
         this._remapBufferArrays();
         if ( extraMorphCPU ) {
@@ -254,7 +269,7 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         this.updateWeights();
 
         var weights = this._weights;
-        var nbTargets = Math.min( 4, this._targets.length );
+        var nbTargets = Math.min( this._maxMorphGPU, this._targets.length );
         var morphs = this._morphs;
         for ( var i = 0, nbMorphs = morphs.length; i < nbMorphs; ++i ) {
 
