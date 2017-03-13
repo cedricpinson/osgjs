@@ -10,7 +10,7 @@
     <title>osgjs examples</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link href="templates/css/sidebar.css" rel="stylesheet">
+    <link href="examples/templates/css/sidebar.css" rel="stylesheet">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -26,7 +26,7 @@
         <div id="sidebar-wrapper">
             <ul id="sidebar-nav" class="sidebar-nav">
                 <li class="sidebar-brand">
-                    <a href="#">OSG.js Examples</a>
+                    <a href="#"><h2>OSG.js</h2></a>
                 </li>
             </ul>
         </div>
@@ -48,24 +48,51 @@
     <!-- /#wrapper -->
 
     <!-- Fill Sidebar script -->
-    <script src="files.js"></script>
+    <script src="examples/files.js"></script>
     <script>
     var selected = undefined;
     var sidebar = document.getElementById( 'sidebar-nav' );
     for ( var key in files ) {
         var category = files[ key ];
-
+        var header = document.createElement( 'a' );
+        h3 = document.createElement( 'h3' );
+        h3.textContent = key;
+        header.appendChild( h3 );
+        var li = document.createElement( 'li' );
+        li.setAttribute('data-toggle', 'collapse');
+        li.setAttribute('data-target', '#' + key);
+        li.appendChild( header );
+        sidebar.appendChild( li );
+        var div = document.createElement( 'div' );
+        div.className = 'dropdown collapse';
+        div.id = key;
+        var ul = document.createElement( 'ul' );
+        div.appendChild( ul );
+        sidebar.appendChild( div );
         for ( var i = 0; i < category.length; i ++ ) {
             var li = document.createElement( 'li' );
             var link = document.createElement( 'a' );
             link.className = 'link';
             link.textContent = category[ i ];
-            link.href = category[ i ] + '/index.html';
+            link.href = 'examples/' + category[ i ] + '/index.html';
             link.setAttribute( 'target', 'viewer' );
             li.appendChild( link );
-            sidebar.appendChild( li );
+            li.id = key;
+            ul.appendChild( li );
         }
     }
+    // Now add also tests
+    var li = document.createElement( 'li' );
+    var link = document.createElement( 'a' );
+    link.className = 'link';
+    var testsText = document.createElement( 'h3' );
+    testsText.textContent = 'Tests';
+    link.href = 'tests/index.html';
+    link.setAttribute( 'target', 'viewer' );
+    link.appendChild(testsText);
+    li.appendChild( link );
+    sidebar.appendChild( li );
+
     </script>
     <!-- Menu Toggle Script -->
     <script>

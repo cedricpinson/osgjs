@@ -4,9 +4,16 @@
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap/blob/gh-pages/LICENSE)
  */
 
- body {
-    overflow-x: hidden;
- }
+body {
+    overflow: hidden;
+
+    font-family: "Roboto", sans-serif;
+    font-weight: 300;
+    line-height: 1.5;
+
+    background: #444;
+    color: #FFF;
+}
 
 /* Toggle Styles */
 
@@ -72,7 +79,7 @@
 }
 
 .sidebar-nav li {
-    text-indent: 20px;
+    text-indent: 10px;
     line-height: 30px;
 }
 
@@ -94,7 +101,6 @@
 }
 
 .sidebar-nav > .sidebar-brand {
-    height: 65px;
     font-size: 18px;
     line-height: 60px;
 }
