@@ -342,14 +342,13 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
     // Map of uniform from a StateAttribute or TextureStateAttribute
     getOrCreateUniformFromUniformMap: function ( uniforms, prefix ) {
-        var keys = window.Object.keys( uniforms );
         var object = {};
 
         var prefixUniform = prefix ? prefix : '';
 
-        for ( var i = 0; i < keys.length; i++ ) {
-            var k = prefixUniform + keys[ i ];
-            object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+        for ( var keyUniform in uniforms ) {
+            var k = prefixUniform + keyUniform;
+            object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
         }
 
         return object;

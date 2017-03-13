@@ -3,7 +3,6 @@ var MACROUTILS = require( 'osg/Utils' );
 var Notify = require( 'osg/notify' );
 var GLObject = require( 'osg/GLObject' );
 var StateAttribute = require( 'osg/StateAttribute' );
-var CustomMap = require( 'osg/Map' );
 var Timer = require( 'osg/Timer' );
 
 /**
@@ -263,8 +262,8 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 this._program = program;
             }
 
-            this._uniformsCache = new CustomMap();
-            this._attributesCache = new CustomMap();
+            this._uniformsCache = {};
+            this._attributesCache = {};
 
             this.cacheUniformList( gl, this._vertex.text );
             this.cacheUniformList( gl, this._fragment.text );
@@ -289,7 +288,6 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 if ( location !== undefined && location !== null ) {
                     if ( map[ uniformName ] === undefined ) {
                         map[ uniformName ] = location;
-                        this._uniformsCache.dirty();
                     }
                 }
             }
@@ -308,7 +306,6 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             if ( location !== -1 && location !== undefined ) {
                 if ( map[ attr ] === undefined ) {
                     map[ attr ] = location;
-                    this._attributesCache.dirty();
                 }
             }
         }

@@ -188,7 +188,6 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
         return function ( state, program, prgID ) {
 
-            var attributesCacheKeys = program._attributesCache.getKeys();
             var attributesCacheMap = program._attributesCache;
             var geometryVertexAttributes = this.getVertexAttributeList();
 
@@ -197,16 +196,14 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
             // 1 - register valid vertex attributes and color flag
 
-            var attribute, i, l, j, m, key, attr;
+            var attribute, j, m, attr;
 
             var extVAO = this._extVAO;
             var listVABuff = extVAO ? [] : undefined;
 
             var hasVertexColor = false;
 
-            for ( i = 0, l = attributesCacheKeys.length; i < l; i++ ) {
-
-                key = attributesCacheKeys[ i ];
+            for ( var key in attributesCacheMap ) {
                 attribute = attributesCacheMap[ key ];
                 attr = geometryVertexAttributes[ key ];
 

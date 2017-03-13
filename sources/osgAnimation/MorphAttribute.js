@@ -1,6 +1,6 @@
 'use strict';
+
 var MACROUTILS = require( 'osg/Utils' );
-var Map = require( 'osg/Map' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 
@@ -56,9 +56,9 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
         if ( obj.uniforms[ unifHash ] ) return obj.uniforms[ unifHash ];
 
-        var uniforms = {};
-        uniforms.uTargetWeights = Uniform.createFloat4( 'uTargetWeights' );
-        obj.uniforms[ unifHash ] = new Map( uniforms );
+        obj.uniforms[ unifHash ] = {
+            uTargetWeights: Uniform.createFloat4( 'uTargetWeights' )
+        };
 
         return obj.uniforms[ unifHash ];
     },

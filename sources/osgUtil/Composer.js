@@ -531,11 +531,10 @@ Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.C
         // To make sure we don't forget any uniform
         // we make sure to get uniform from the filter itself and the uniform
         // from the parameters
-        var k, l, keys, unif, uniforms = this.getStateSet().getUniformList();
+        var unifKey, unif, uniforms = this.getStateSet().getUniformList();
         if ( uniforms ) {
-            keys = window.Object.keys( uniforms );
-            for ( k = 0, l = keys.length; k < l; k++ ) {
-                unif = uniforms[ keys[ k ] ].getUniform();
+            for ( unifKey in uniforms ) {
+                unif = uniforms[ unifKey ].getUniform();
                 st0.addUniform( unif );
                 st1.addUniform( unif );
             }
@@ -543,9 +542,8 @@ Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.C
 
         uniforms = this._uniforms;
         if ( uniforms ) {
-            keys = window.Object.keys( uniforms );
-            for ( k = 0, l = keys.length; k < l; k++ ) {
-                unif = uniforms[ keys[ k ] ];
+            for ( unifKey in uniforms ) {
+                unif = uniforms[ unifKey ];
                 st0.addUniform( unif );
                 st1.addUniform( unif );
             }

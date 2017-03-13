@@ -5,7 +5,7 @@ var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 var Image = require( 'osg/Image' );
 var GLObject = require( 'osg/GLObject' );
-var CustomMap = require( 'osg/Map' );
+
 var TextureManager = require( 'osg/TextureManager' );
 var WebglCaps = require( 'osg/WebGLCaps' );
 
@@ -172,13 +172,9 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         }
         if ( Texture.uniforms[ unit ] === undefined ) {
             var name = this.getType() + unit;
-            var uniformMap = new CustomMap();
-            var uniform = Uniform.createInt1( unit, name );
-            uniformMap.setMap( {
-                texture: uniform
-            } );
-
-            Texture.uniforms[ unit ] = uniformMap;
+            Texture.uniforms[ unit ] = {
+                texture: Uniform.createInt1( unit, name )
+            };
         }
 
         // uniform for an texture attribute should directly in Texture.uniforms[unit]

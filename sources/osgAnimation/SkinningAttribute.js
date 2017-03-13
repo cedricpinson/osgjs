@@ -1,5 +1,5 @@
 'use strict';
-var Map = require( 'osg/Map' );
+
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
@@ -44,9 +44,9 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
 
         if ( obj.uniforms[ unifHash ] ) return obj.uniforms[ unifHash ];
 
-        var uniforms = {};
-        uniforms.uBones = Uniform.createFloat4Array( 'uBones' );
-        obj.uniforms[ unifHash ] = new Map( uniforms );
+        obj.uniforms[ unifHash ] = {
+            uBones: Uniform.createFloat4Array( 'uBones' )
+        };
 
         return obj.uniforms[ unifHash ];
     },

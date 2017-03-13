@@ -1,11 +1,11 @@
 'use strict';
+
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
-var Map = require( 'osg/Map' );
 
 // use the same kind of opengl lights
 // see http://www.glprogramming.com/red/chapter05.html
@@ -75,7 +75,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
         if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
 
-        var uniforms = {
+        obj.uniforms[ typeMember ] = {
             ambient: Uniform.createFloat4( this.getUniformName( 'ambient' ) ),
             diffuse: Uniform.createFloat4( this.getUniformName( 'diffuse' ) ),
             specular: Uniform.createFloat4( this.getUniformName( 'specular' ) ),
@@ -88,8 +88,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
             matrix: Uniform.createMatrix4( this.getUniformName( 'matrix' ) ),
             invMatrix: Uniform.createMatrix4( this.getUniformName( 'invMatrix' ) )
         };
-
-        obj.uniforms[ typeMember ] = new Map( uniforms );
 
         return obj.uniforms[ typeMember ];
     },

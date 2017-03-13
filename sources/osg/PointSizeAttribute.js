@@ -3,7 +3,6 @@
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
-var Map = require( 'osg/Map' );
 
 
 var PointSizeAttribute = function ( disable ) {
@@ -47,11 +46,10 @@ PointSizeAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
         var obj = PointSizeAttribute;
         if ( obj.uniforms ) return obj.uniforms;
 
-        var uniformList = {
+        obj.uniforms = {
             pointSize: Uniform.createFloat( 1.0, 'uPointSize' )
         };
 
-        obj.uniforms = new Map( uniformList );
         return obj.uniforms;
     },
 

@@ -432,15 +432,12 @@ var CompilerFragment = {
 
 
         // get subset of shadow texture uniform corresponding to light
-        var keys = window.Object.keys( uniforms );
         var object = {};
 
         var prefixUniform = 'shadowTexture';
 
-        for ( var i = 0; i < keys.length; i++ ) {
-
-            var key = keys[ i ];
-            var lightIndexed = key.split( '_' );
+        for ( var keyUniform in uniforms ) {
+            var lightIndexed = keyUniform.split( '_' );
 
             var k;
 
@@ -449,13 +446,13 @@ var CompilerFragment = {
                 if ( Number( lightIndexed[ 1 ] ) === lightNum ) {
 
                     k = prefixUniform + lightIndexed[ 0 ];
-                    object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+                    object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
                 }
 
             } else {
 
-                k = prefixUniform + keys[ i ];
-                object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+                k = prefixUniform + keyUniform;
+                object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
 
             }
 

@@ -20,9 +20,9 @@
             var obj = TemporalAttribute;
             if ( obj.uniforms ) return obj.uniforms;
 
-            obj.uniforms = new osg.Map( {
-                'enable': osg.Uniform.createInt1( 0, 'temporalEnable' )
-            } );
+            obj.uniforms = {
+                enable: osg.Uniform.createInt1( 0, 'temporalEnable' )
+            };
 
             return obj.uniforms;
         },
