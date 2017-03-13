@@ -233,37 +233,30 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             // we should use a map in camera to avoid to regenerate the keys
             // each time. But because we dont have a lot of camera I guess
             // it does not change a lot
-            var keys = window.Object.keys( attachments );
+            // texture and renderbuffer must be same size.
+            for ( var keyAttachment in attachments ) {
+                colorAttachment = attachments[ keyAttachment ];
 
-            if ( keys.length ) {
+                var attach = {};
+                attach.attachment = colorAttachment.attachment;
 
-                // texture and renderbuffer must be same size.
+                if ( colorAttachment.texture === undefined ) { //renderbuffer
 
-                for ( var i = 0, l = keys.length; i < l; i++ ) {
-                    var key = keys[ i ];
-                    var a = attachments[ key ];
+                    attach.format = colorAttachment.format;
+                    attach.width = framebufferWidth !== undefined ? framebufferWidth : viewport.width();
+                    attach.height = framebufferHeight !== undefined ? framebufferHeight : viewport.height();
 
-                    var attach = {};
-                    attach.attachment = a.attachment;
+                } else {
 
-                    if ( a.texture === undefined ) { //renderbuffer
+                    attach.texture = colorAttachment.texture;
+                    attach.textureTarget = colorAttachment.textureTarget;
 
-                        attach.format = a.format;
-                        attach.width = framebufferWidth !== undefined ? framebufferWidth : viewport.width();
-                        attach.height = framebufferHeight !== undefined ? framebufferHeight : viewport.height();
-
-                    } else if ( a.texture !== undefined ) {
-
-                        attach.texture = a.texture;
-                        attach.textureTarget = a.textureTarget;
-
-                        if ( a.format ) {
-                            attach.format = a.format;
-                        }
+                    if ( colorAttachment.format ) {
+                        attach.format = colorAttachment.format;
                     }
-
-                    fbo.setAttachment( attach );
                 }
+
+                fbo.setAttachment( attach );
             }
         }
         fbo.apply( state );

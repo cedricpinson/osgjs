@@ -43,17 +43,13 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
         if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
 
-        var keys = window.Object.keys( this._attributes );
-        var value;
-        var i, l;
-
-        for ( i = 0, l = keys.length; i < l; i++ ) {
-            value = this._attributes[ keys[ i ] ];
+        for ( var keyAttribute in this._attributes ) {
+            var value = this._attributes[ keyAttribute ];
             value.releaseGLObjects();
         }
 
-        for ( var j = 0, h = this._primitives.length; j < h; j++ ) {
-            var prim = this._primitives[ j ];
+        for ( var i = 0, h = this._primitives.length; i < h; i++ ) {
+            var prim = this._primitives[ i ];
             if ( prim.getIndices !== undefined ) {
                 if ( prim.getIndices() !== undefined && prim.getIndices() !== null ) {
                     prim.indices.releaseGLObjects();
@@ -69,9 +65,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
         if ( !this._extVAO ) return;
 
-        var keys = window.Object.keys( this._vao );
-        for ( var i = 0, l = keys.length; i < l; i++ ) {
-            var prgID = keys[ i ];
+        for ( var prgID in this._vao ) {
             if ( this._vao[ prgID ] ) {
                 var vao = this._vao[ prgID ];
                 this._extVAO.deleteVertexArrayOES( vao );
@@ -397,18 +391,12 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
 Geometry.appendVertexAttributeToList = function ( from, to, postfix ) {
 
-    var keys = window.Object.keys( from );
-    var key, keyPostFix;
-
-    for ( var i = 0, l = keys.length; i < l; i++ ) {
-
-        key = keys[ i ];
-        keyPostFix = key;
+    for ( var key in from ) {
+        var keyPostFix = key;
         if ( postfix !== undefined )
             keyPostFix += '_' + postfix;
 
         to[ keyPostFix ] = from[ key ];
-
     }
 
 };

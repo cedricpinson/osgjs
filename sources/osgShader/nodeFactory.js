@@ -28,10 +28,9 @@ var Factory = function () {
 Factory.prototype = {
 
     registerNodes: function ( obj ) {
-        var self = this;
-        window.Object.keys( obj ).forEach( function ( key ) {
-            self.registerNode( key, obj[ key ] );
-        } );
+        for ( var key in obj ) {
+            this.registerNode( key, obj[ key ] );
+        }
     },
 
     registerNode: function ( name, constructor ) {

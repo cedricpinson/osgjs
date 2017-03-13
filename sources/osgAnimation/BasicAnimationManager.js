@@ -424,11 +424,8 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
         var name;
         var uniqueTargetName;
 
-        var animationCallbackMap = this._animationsUpdateCallback;
-        var keys = window.Object.keys( animationCallbackMap );
-        for ( var i = 0, ni = keys.length; i < ni; i++ ) {
-            var key = keys[ i ];
-            var animationCallback = animationCallbackMap[ key ];
+        for ( var keyAnimation in this._animationsUpdateCallback ) {
+            var animationCallback = this._animationsUpdateCallback[ keyAnimation ];
 
             // handle UpdateBone and UpdateMatrixTransform but not stateSet
             if ( animationCallback.getStackedTransforms && animationCallback.getStackedTransforms().length ) {
@@ -613,11 +610,9 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
         // dont really start animation if we dont have yet targets
         if ( !this._targets.length ) return;
 
-        var animations = this._startAnimations;
-        var keys = window.Object.keys( animations );
-        for ( var i = 0, ni = keys.length; i < ni; i++ ) {
-            var key = keys[ i ];
-            var cmd = animations[ key ];
+        var keyAnimation;
+        for ( keyAnimation in this._startAnimations ) {
+            var cmd = this._startAnimations[ keyAnimation ];
             var name = cmd.name;
 
             if ( this.isPlaying( name ) )
@@ -626,7 +621,7 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
             this._addActiveAnimation( t, cmd );
         }
 
-        if ( keys.length ) this._startAnimations = {};
+        if ( keyAnimation !== undefined ) this._startAnimations = {};
     },
 
     _resetTargets: function () {

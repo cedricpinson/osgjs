@@ -148,10 +148,8 @@ RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( O
             return;
         }
 
-        var bins = this._bins;
-        var keys = window.Object.keys( bins );
-        for ( var i = 0, l = keys.length; i < l; i++ ) {
-            bins[ keys[ i ] ].sort();
+        for ( var keyBin in this._bins ) {
+            this._bins[ keyBin ].sort();
         }
         this.sortImplementation();
 
@@ -230,16 +228,11 @@ RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( O
     drawImplementation: function ( state, previousRenderLeaf ) {
 
         var previousLeaf = previousRenderLeaf;
-        var binsKeys = window.Object.keys( this._bins );
-        var bins = this._bins;
 
         var binsArray = [];
-
-        for ( var i = 0, l = binsKeys.length; i < l; i++ ) {
-            var k = binsKeys[ i ];
-            binsArray.push( bins[ k ] );
+        for ( var keyBin in this._bins ) {
+            binsArray.push( this._bins[ keyBin ] );
         }
-
         binsArray.sort( sortBinNumberFunction );
 
         var current = 0;

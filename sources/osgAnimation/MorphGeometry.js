@@ -118,15 +118,12 @@ MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
             // change BufferArray to BufferArrayProxy
             var attributeList = target.getVertexAttributeList();
-            var names = window.Object.keys( attributeList );
-            for ( var j = 0, jn = names.length; j < jn; j++ ) {
-
-                var name = names[ j ];
-                var att = attributeList[ name ];
+            for ( var keyAttribute in attributeList ) {
+                var att = attributeList[ keyAttribute ];
                 // check it's a buffer array before swtiching to proxy
                 if ( att && !att.getBufferArray ) {
 
-                    attributeList[ name ] = new BufferArrayProxy( att );
+                    attributeList[ keyAttribute ] = new BufferArrayProxy( att );
 
                 }
 

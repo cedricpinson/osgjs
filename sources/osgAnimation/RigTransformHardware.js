@@ -39,15 +39,10 @@ RigTransformHardware.prototype = {
     //    Bone0 object
     // ]
     computeBonePalette: function ( boneMap, boneNameID ) {
-        var keys = window.Object.keys( boneMap );
-        var size = keys.length;
         var bones = this._bones;
-
-
-        for ( var i = 0; i < size; i++ ) {
-            var bName = keys[ i ];
-            var index = boneNameID[ bName ];
-            var bone = boneMap[ bName ];
+        for ( var boneName in boneMap ) {
+            var index = boneNameID[ boneName ];
+            var bone = boneMap[ boneName ];
 
             if ( index !== undefined )
                 bones[ index ] = bone;

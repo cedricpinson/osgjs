@@ -77,10 +77,8 @@ DisplayGraphRenderer.prototype = {
 
         // register bins
         var bins = rb._bins;
-        var binKeys = window.Object.keys( bins );
-        for ( var i = 0, ni = binKeys.length; i < ni; i++ ) {
-            var bin = bins[ binKeys[ i ] ];
-            this.apply( bin );
+        for ( var binKey in bins ) {
+            this.apply( bins[ binKey ] );
         }
 
         // register fine grained leafs

@@ -220,11 +220,9 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         this._compiledNodeList = {};
 
         // list all vars
-        var vars = window.Object.keys( this._variables );
         var variables = [];
-        for ( var j = 0, jl = vars.length; j < jl; j++ ) {
-
-            var varNode = this._variables[ vars[ j ] ];
+        for ( var keyVariable in this._variables ) {
+            var varNode = this._variables[ keyVariable ];
             var d = varNode.declare();
             if ( d ) {
                 variables.push( d );
@@ -539,10 +537,10 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
         var inputs = node.getInputs();
         if ( !Array.isArray( inputs ) ) {
-            var keys = window.Object.keys( inputs );
             var objectToArray = [];
-            for ( var j = 0; j < keys.length; j++ )
-                objectToArray.push( inputs[ keys[ j ] ] );
+            for ( var keyInput in inputs ) {
+                objectToArray.push( inputs[ keyInput ] );
+            }
             inputs = objectToArray;
         }
 

@@ -15,8 +15,7 @@ var lib = {};
 // add all sub component to root level of the lib
 subnamespace.forEach( function ( component /*, index */ ) {
 
-    window.Object.keys( component ).forEach( function ( key ) {
-
+    for ( var key in component ) {
         var element = component[ key ];
 
         if ( this[ key ] !== undefined ) { // if exist throw exception
@@ -24,8 +23,7 @@ subnamespace.forEach( function ( component /*, index */ ) {
         }
 
         this[ key ] = element;
-
-    }, this );
+    }
 
 }, lib );
 

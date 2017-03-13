@@ -175,9 +175,7 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         this._reserveCullSettingsStackCurrent = 0;
 
         // renderstage / renderbin pools
-        var resetStages = window.Object.keys( this._reserveRenderStageStacks );
-        for ( var i = 0, l = resetStages.length; i < l; i++ ) {
-            var key = resetStages[ i ];
+        for ( var key in this._reserveRenderStageStacks ) {
             this._reserveRenderStageStacks[ key ].reset();
         }
         RenderBin.resetStack();

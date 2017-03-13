@@ -217,14 +217,14 @@ TextureManager.prototype = {
     updateStats: function ( frameNumber, rStats ) {
         var totalUsed = 0;
         var totalUnused = 0;
-        window.Object.keys( this._textureSetMap ).forEach( function ( key ) {
-            var profile = this._textureSetMap[ key ].getProfile();
+        for ( var keyTexture in this._textureSetMap ) {
+            var profile = this._textureSetMap[ keyTexture ].getProfile();
             var size = profile.getSize();
-            var nbUsed = this._textureSetMap[ key ].getUsedTextureObjects().length;
-            var nbUnused = this._textureSetMap[ key ].getOrphanedTextureObjects().length;
+            var nbUsed = this._textureSetMap[ keyTexture ].getUsedTextureObjects().length;
+            var nbUnused = this._textureSetMap[ keyTexture ].getOrphanedTextureObjects().length;
             totalUsed += nbUsed * size;
             totalUnused += nbUnused * size;
-        }, this );
+        }
 
         var MB = 1024 * 1024;
         rStats( 'textureused' ).set( totalUsed / MB );
@@ -234,28 +234,29 @@ TextureManager.prototype = {
 
     reportStats: function () {
         var total = 0;
-        window.Object.keys( this._textureSetMap ).forEach( function ( key ) {
-            var profile = this._textureSetMap[ key ].getProfile();
+        for ( var keyTexture in this._textureSetMap ) {
+            var profile = this._textureSetMap[ keyTexture ].getProfile();
             var size = profile.getSize() / ( 1024 * 1024 );
-            var nb = this._textureSetMap[ key ].getUsedTextureObjects().length;
+            var nb = this._textureSetMap[ keyTexture ].getUsedTextureObjects().length;
             size *= nb;
             total += size;
             Notify.notice( String( size ) + ' MB with ' + nb + ' texture of ' + profile._width + 'x' + profile._height + ' ' + profile._internalFormat );
-        }, this );
+        }
+
         Notify.notice( String( total ) + ' MB in total' );
     },
 
     flushAllDeletedTextureObjects: function ( gl ) {
-        window.Object.keys( this._textureSetMap ).forEach( function ( key ) {
-            this._textureSetMap[ key ].flushAllDeletedTextureObjects( gl );
-        }, this );
+        for ( var keyTexture in this._textureSetMap ) {
+            this._textureSetMap[ keyTexture ].flushAllDeletedTextureObjects( gl );
+        }
     },
 
     flushDeletedTextureObjects: function ( gl, availableTimeArg ) {
         var availableTime = availableTimeArg;
-        var keys = window.Object.keys( this._textureSetMap );
-        for ( var i = 0, j = keys.length; i < j && availableTime > 0.0; i++ ) {
-            availableTime = this._textureSetMap[ keys[ i ] ].flushDeletedTextureObjects( gl, availableTime );
+        for ( var keyTexture in this._textureSetMap ) {
+            availableTime = this._textureSetMap[ keyTexture ].flushDeletedTextureObjects( gl, availableTime );
+            if ( availableTime <= 0.0 ) break;
         }
         return availableTime;
     },
