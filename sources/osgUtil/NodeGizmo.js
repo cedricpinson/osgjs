@@ -156,6 +156,10 @@ var NodeGizmo = function ( viewer ) {
     this._iv = new IntersectionVisitor();
     this._iv.setIntersector( this._lsi );
 
+    // disable mouse camera event when interacting with gizmo
+    this._eventMouse = viewer._eventProxy.StandardMouseKeyboard;
+    this._enableMouseBack = false;
+
     this.init();
 };
 
@@ -701,7 +705,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         getCanvasCoord( this._downCanvasCoord, e );
         if ( !this._hoverNode || !this._attachedNode )
             return;
-        this._viewer._eventProxy.StandardMouseKeyboard._enable = false;
+
+        this._enableMouseBack = this._eventMouse.getEnable();
+        this._eventMouse.setEnable( false );
 
         this.saveEditMatrices();
         var nm = this._hoverNode.getParents()[ 0 ].getNodeMask();
@@ -837,11 +843,12 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     },
 
     onMouseUp: function ( e ) {
-        var smk = this._viewer._eventProxy.StandardMouseKeyboard;
-        if ( smk._enable === false ) {
-            smk._enable = true;
-            this._viewer._eventProxy.StandardMouseKeyboard.mouseup( e );
+        if ( this._enableMouseBack ) {
+            this._enableMouseBack = false;
+            this._eventMouse.setEnable( true );
+            this._eventMouse.mouseup( e );
         }
+
         if ( this._debugNode )
             this._debugNode.setNodeMask( 0x0 );
 
