@@ -26,8 +26,6 @@ StandardMouseKeyboard.prototype = {
 
     init: function ( options ) {
 
-        this.removeEventListeners( this._mouseEventNode, this._wheelEventNode, this._keyboardEventNode );
-
         var mouse = options.mouseEventNode;
 
         var mousewheel = options.wheelEventNode || mouse;
@@ -36,51 +34,56 @@ StandardMouseKeyboard.prototype = {
         if ( options.getBoolean( 'scrollwheel' ) === false )
             mousewheel = null;
 
-        this.addEventListeners( mouse, mousewheel, keyboard );
         this._mouseEventNode = mouse;
         this._wheelEventNode = mousewheel;
         this._keyboardEventNode = keyboard;
+
+        // to remove listeners, you need the exact same callback
+        this._callbacks = {
+            mousedown: this.mousedown.bind( this ),
+            mouseup: this.mouseup.bind( this ),
+            mouseout: this.mouseout.bind( this ),
+            mousemove: this.mousemove.bind( this ),
+            dblclick: this.dblclick.bind( this ),
+            mousewheel: this.mousewheel.bind( this ),
+            preventDefault: this.preventDefault.bind( this )
+        };
+
+        this.addEventListeners();
     },
 
-    addEventListeners: function ( mouse, mousewheel, keyboard ) {
-        if ( mouse ) {
+    _addOrRemoveEventListeners: function ( remove ) {
+        var callbacks = this._callbacks;
+        var cb = remove ? 'removeEventListener' : 'addEventListener';
+        var cbMouse = this._mouseEventNode && this._mouseEventNode[ cb ].bind( this._mouseEventNode );
+        var cbMousewheel = this._wheelEventNode && this._wheelEventNode[ cb ].bind( this._wheelEventNode );
+        var cbKeyboard = this._keyboardEventNode && this._keyboardEventNode[ cb ].bind( this._keyboardEventNode );
+
+        if ( cbMouse ) {
             for ( var i = 0, l = this._eventList.length; i < l; i++ ) {
                 var ev = this._eventList[ i ];
-                if ( this[ ev ] ) {
-                    mouse.addEventListener( ev, this[ ev ].bind( this ), false );
-                }
+                cbMouse( ev, callbacks[ ev ], false );
             }
         }
-        if ( mousewheel ) {
-            mousewheel.addEventListener( 'DOMMouseScroll', this.mousewheel.bind( this ), false );
-            mousewheel.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
-            mousewheel.addEventListener( 'MozMousePixelScroll', this.preventDefault.bind( this ), false );
+
+        if ( cbMousewheel ) {
+            cbMousewheel( 'DOMMouseScroll', callbacks.mousewheel, false );
+            cbMousewheel( 'mousewheel', callbacks.mousewheel, false );
+            cbMousewheel( 'MozMousePixelScroll', callbacks.preventDefault, false );
         }
 
-        if ( keyboard ) {
-            keyboard.addEventListener( 'keydown', this.keydown.bind( this ), false );
-            keyboard.addEventListener( 'keyup', this.keyup.bind( this ), false );
+        if ( cbKeyboard ) {
+            cbKeyboard( 'keydown', callbacks.keydown, false );
+            cbKeyboard( 'keyup', callbacks.keyup, false );
         }
     },
 
-    removeEventListeners: function ( mouse, mousewheel, keyboard ) {
-        if ( mouse ) {
-            for ( var i = 0, l = this._eventList.length; i < l; i++ ) {
-                var ev = this._eventList[ i ];
-                if ( this[ ev ] ) {
-                    mouse.removeEventListener( ev, this[ ev ] );
-                }
-            }
-        }
-        if ( mousewheel ) {
-            mousewheel.removeEventListener( 'DOMMouseScroll', this.mousewheel );
-            mousewheel.removeEventListener( 'mousewheel', this.mousewheel );
-            mousewheel.removeEventListener( 'MozMousePixelScroll', this.preventDefault );
-        }
-        if ( keyboard ) {
-            keyboard.removeEventListener( 'keydown', this.keydown );
-            keyboard.removeEventListener( 'keyup', this.keyup );
-        }
+    addEventListeners: function () {
+        return this._addOrRemoveEventListeners( false );
+    },
+
+    removeEventListeners: function () {
+        return this._addOrRemoveEventListeners( true );
     },
 
     isValid: function () {
