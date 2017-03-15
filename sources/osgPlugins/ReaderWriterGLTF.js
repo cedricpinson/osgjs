@@ -302,15 +302,15 @@ ReaderWriterGLTF.prototype = {
 
             if ( ReaderWriterGLTF.TYPE_TABLE[ valueAccessor.type ] === 4 ) {
 
-                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.node, glTFSampler.output, null );
 
             } else if ( ReaderWriterGLTF.TYPE_TABLE[ valueAccessor.type ] === 3 ) {
 
-                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.id, glTFSampler.output, null );
+                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.node, glTFSampler.output, null );
 
             }
 
-            self._animatedNodes[ glTFChannel.target.id ] = true;
+            self._animatedNodes[ glTFChannel.target.node ] = true;
 
             return osgChannel;
 
@@ -762,14 +762,12 @@ ReaderWriterGLTF.prototype = {
         }
         // Loads meshes contained in the node
         // Adds RigGeometry to corresponding skeleton if any
-        if ( glTFNode.meshes ) {
-            for ( i = 0; i < glTFNode.meshes.length; ++i ) {
-                var meshId = glTFNode.meshes[ i ];
-                if ( !glTFNode.skeletons ) {
-                    var geomPromise = this.loadGLTFPrimitives( meshId, currentNode, null );
-                    promises.push( geomPromise );
-                    continue;
-                }
+        if ( glTFNode.mesh !== undefined ) {
+            var meshId = glTFNode.mesh;
+            if ( !glTFNode.skeletons ) {
+                var geomPromise = this.loadGLTFPrimitives( meshId, currentNode, null );
+                promises.push( geomPromise );
+            } else {
 
                 for ( var j = 0; j < glTFNode.skeletons.length; ++j ) {
                     var rootJointId = glTFNode.skeletons[ j ];

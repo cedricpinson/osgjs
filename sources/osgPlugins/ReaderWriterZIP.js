@@ -77,13 +77,12 @@ ReaderWriterZIP.prototype = {
                 if ( type === 'blob' ) type = 'base64'; // Images are base64 encoded in ZIP files
                 var p = zip.file( fileName ).async( type ).then( function ( fileData ) {
                     var data = fileData;
-                    var name = fileName.split( '/' ).pop();
                     // Is an image
                     if ( type === 'base64' ) {
                         data = new window.Image();
                         data.src = 'data:image/' + extension + ';base64,' + fileData;
                     }
-                    self._filesMap.set( name, data );
+                    self._filesMap.set( fileName, data );
                 } );
                 promisesArray.push( p );
             } );
