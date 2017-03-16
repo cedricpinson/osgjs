@@ -29,11 +29,6 @@ if(!earlyOut) {
     shadowNormalEye =  shadowViewMatrix * normalFront;
     N_Dot_L = dot(shadowNormalEye.xyz, shadowLightDir);
 
-    if (N_Dot_L <= 0.0) {
-        shadow = 1.0;
-        earlyOut = true;
-    }
-
     if(!earlyOut) {
 
 #ifdef _NORMAL_OFFSET
