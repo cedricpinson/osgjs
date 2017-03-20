@@ -49,9 +49,9 @@
                 // The red is sampled towards the center
                 // The blue is sampled in the opposite direction
                 // The green sampling location is untouched
-                '   float r = texture2D(input_texture, vTexCoord0 - offset).r;',
-                '   float g = texture2D(input_texture, vTexCoord0).g;',
-                '   float b = texture2D(input_texture, vTexCoord0 + offset).b;',
+                '   float r = texture2D(inputTexture, vTexCoord0 - offset).r;',
+                '   float g = texture2D(inputTexture, vTexCoord0).g;',
+                '   float b = texture2D(inputTexture, vTexCoord0 + offset).b;',
 
                 '   gl_FragColor = vec4(r, g, b, 1.0);',
 
