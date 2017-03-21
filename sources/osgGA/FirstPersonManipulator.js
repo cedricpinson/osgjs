@@ -1,7 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Manipulator = require( 'osgGA/Manipulator' );
-var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec2 = require( 'osg/glMatrix' ).vec2;
 var vec3 = require( 'osg/glMatrix' ).vec3;
@@ -10,6 +9,7 @@ var FirstPersonManipulatorDeviceOrientationController = require( 'osgGA/FirstPer
 var FirstPersonManipulatorHammerController = require( 'osgGA/FirstPersonManipulatorHammerController' );
 var FirstPersonManipulatorWebVRController = require( 'osgGA/FirstPersonManipulatorWebVRController' );
 var FirstPersonManipulatorStandardMouseKeyboardController = require( 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController' );
+var DelayInterpolator = require( 'osgUtil/DelayInterpolator' );
 
 
 /**
@@ -48,13 +48,13 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         this._eye = vec3.fromValues( 0.0, 25.0, 10.0 );
         this._up = vec3.fromValues( 0.0, 0.0, 1.0 );
         this._distance = 1.0;
-        this._forward = new OrbitManipulator.Interpolator( 1 );
-        this._side = new OrbitManipulator.Interpolator( 1 );
-        this._lookPosition = new OrbitManipulator.Interpolator( 2 );
+        this._forward = new DelayInterpolator( 1 );
+        this._side = new DelayInterpolator( 1 );
+        this._lookPosition = new DelayInterpolator( 2 );
 
         // direct pan interpolator (not based on auto-move)
-        this._pan = new OrbitManipulator.Interpolator( 2 );
-        this._zoom = new OrbitManipulator.Interpolator( 1 );
+        this._pan = new DelayInterpolator( 2 );
+        this._zoom = new DelayInterpolator( 1 );
 
         this._stepFactor = 1.0; // meaning radius*stepFactor to move
         this._angleVertical = 0.0;

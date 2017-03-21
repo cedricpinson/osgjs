@@ -9,6 +9,7 @@ var OrbitManipulatorHammerController = require( 'osgGA/OrbitManipulatorHammerCon
 var OrbitManipulatorLeapMotionController = require( 'osgGA/OrbitManipulatorLeapMotionController' );
 var OrbitManipulatorStandardMouseKeyboardController = require( 'osgGA/OrbitManipulatorStandardMouseKeyboardController' );
 var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRController' );
+var DelayInterpolator = require( 'osgUtil/DelayInterpolator' );
 
 
 /**
@@ -20,77 +21,6 @@ var OrbitManipulator = function ( boundStrategy ) {
     this._homePosition = vec3.create();
     this._frustum = {};
     this.init();
-};
-
-OrbitManipulator.Interpolator = function ( size, delay ) {
-    this._current = new Float32Array( size );
-    this._target = new Float32Array( size );
-    this._delta = new Float32Array( size );
-    this._delay = ( delay !== undefined ) ? delay : 0.15;
-    this._reset = false;
-    this._start = 0.0;
-    this.reset();
-};
-OrbitManipulator.Interpolator.prototype = {
-    setDelay: function ( delay ) {
-        this._delay = delay;
-    },
-    reset: function () {
-        for ( var i = 0, l = this._current.length; i < l; i++ ) {
-            this._current[ i ] = this._target[ i ] = 0.0;
-        }
-        this._reset = true;
-    },
-    update: function ( dt ) {
-        // assume 60 fps to be consistent with the old _delay values for backward compatibility
-        // (otherwise we'd have to adjust the _delay values by multiplying to 60 )
-        var dtDelay = Math.min( 1.0, this._delay * dt * 60.0 );
-        for ( var i = 0, l = this._current.length; i < l; i++ ) {
-            var d = ( this._target[ i ] - this._current[ i ] ) * dtDelay;
-            this._delta[ i ] = d;
-            this._current[ i ] += d;
-        }
-        return this._delta;
-    },
-    set: function () {
-        for ( var i = 0, l = this._current.length; i < l; i++ ) {
-            this._current[ i ] = this._target[ i ] = arguments[ i ];
-        }
-        this._reset = false;
-    },
-    isReset: function () {
-        return this._reset;
-    },
-    getCurrent: function () {
-        return this._current;
-    },
-    setTarget: function () {
-        for ( var i = 0, l = this._target.length; i < l; i++ ) {
-            if ( this._reset ) {
-                this._target[ i ] = this._current[ i ] = arguments[ i ];
-            } else {
-                this._target[ i ] = arguments[ i ];
-            }
-        }
-        this._reset = false;
-    },
-    addTarget: function () {
-        for ( var i = 0; i < arguments.length; i++ ) {
-            this._target[ i ] += arguments[ i ];
-        }
-    },
-    getTarget: function () {
-        return this._target;
-    },
-    getDelta: function () {
-        return this._delta;
-    },
-    getStart: function () {
-        return this._start;
-    },
-    setStart: function ( start ) {
-        this._start = start;
-    }
 };
 
 OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
@@ -125,9 +55,9 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
         this._vrMatrix = mat4.create();
 
-        this._rotate = new OrbitManipulator.Interpolator( 2 );
-        this._pan = new OrbitManipulator.Interpolator( 2 );
-        this._zoom = new OrbitManipulator.Interpolator( 1 );
+        this._rotate = new DelayInterpolator( 2 );
+        this._pan = new DelayInterpolator( 2 );
+        this._zoom = new DelayInterpolator( 1 );
 
         this._minSpeed = 1e-4; // set a limit to pan/zoom speed
         this._scaleMouseMotion = 1.0;

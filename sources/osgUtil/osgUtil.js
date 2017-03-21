@@ -1,6 +1,7 @@
 'use strict';
 var Composer = require( 'osgUtil/Composer' );
 var debug = require( 'osgUtil/debug' );
+var DelayInterpolator = require( 'osgUtil/DelayInterpolator' );
 var DisplayNormalVisitor = require( 'osgUtil/DisplayNormalVisitor' );
 var DisplayGeometryVisitor = require( 'osgUtil/DisplayGeometryVisitor' );
 var DisplayGraph = require( 'osgUtil/DisplayGraph' );
@@ -22,6 +23,7 @@ var osgUtil = {};
 
 osgUtil.Composer = Composer;
 MACROUTILS.objectMix( osgUtil, debug );
+osgUtil.DelayInterpolator = DelayInterpolator;
 osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
 osgUtil.DisplayGeometryVisitor = DisplayGeometryVisitor;
 osgUtil.DisplayGraph = DisplayGraph;
