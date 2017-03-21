@@ -434,6 +434,20 @@ var gruntTasks = {};
     };
 } )();
 
+/*jshint camelcase:false */
+( function () {
+    gruntTasks.update_submodules = {
+        default: {
+            options: {
+                    // default command line parameters will be used: --init --recursive
+                }
+            }
+        };
+} )();
+
+/*jshint camelcase:true */
+
+
 ( function () {
     gruntTasks.copy = {
         staticWeb: {
@@ -494,6 +508,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-release' );
     grunt.loadNpmTasks( 'grunt-contrib-connect' );
 
+    grunt.loadNpmTasks( 'grunt-update-submodules' );
+
     grunt.loadNpmTasks( 'grunt-eslint' );
     grunt.loadNpmTasks( 'grunt-contrib-jshint' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
@@ -510,6 +526,8 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'lint', [ 'eslint' ] );
     grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 
+    grunt.registerTask( 'sync', [ 'update_submodules:default' ] );
+
     grunt.registerTask( 'test', [ 'connect:server', 'mocha:test' ] );
     grunt.registerTask( 'benchmarks', [ 'connect:server', 'mocha:bench' ] );
 
@@ -520,7 +538,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build-debug', [ 'copyto', 'webpack:builddebug' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
-    grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive' ] );
+    grunt.registerTask( 'serve', [ 'sync', 'build', 'connect:dist:keepalive' ] );
 
 
 };
