@@ -33,7 +33,8 @@ var files = {
         'temporal',
         'text2D',
         'texture-video',
-        'webVR'
+        'webVR',
+        '3dtiles'
     ],
     'Tutorials': [
         'advanced-customshader',
