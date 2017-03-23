@@ -121,7 +121,7 @@
             texture.setMinFilter( 'LINEAR' );
             texture.setMagFilter( 'LINEAR' );
             var self = this;
-            osgDB.readImageURL( '../media/textures/seamless/wood1.jpg' ).then( function ( image ) {
+            osgDB.readImageURL( '../media/textures/seamless/bricks1.jpg' ).then( function ( image ) {
                 texture.setImage( image );
                 g.getOrCreateStateSet().setAttributeAndModes( self.createProgram() );
             } );
@@ -129,15 +129,14 @@
             g.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
             g.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
 
-            var vertex = g.getAttributes().Vertex;
-            vertex.setAttributeDivisor( 0 );
-
             var offsetBuffer = new osg.BufferArray( 'ARRAY_BUFFER', this.createOffsets( this._nInstances ), 3 );
-            offsetBuffer.setAttributeDivisor( 1 );
             g.getAttributes().Offset = offsetBuffer;
+            // Set attribute divisors
+            g.setAttribArrayDivisor( 'Vertex', 0 );
+            g.setAttribArrayDivisor( 'Offset', 1 );
+
             var indices = this.createIndices();
             // We need to compute our own bounding volume as the CullVisitor is not aware of the instances bounding volume.
-            g.setComputeBoundingBoxCallback( this.computeBoundCallback );
             g.setComputeBoundingBoxCallback( this.computeBoundCallback );
             g.getPrimitives()[ 0 ] = new osg.DrawElementsInstanced( osg.PrimitiveSet.TRIANGLES, new osg.BufferArray( 'ELEMENT_ARRAY_BUFFER', indices, 1 ), this._nInstances );
             return g;

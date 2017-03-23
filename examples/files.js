@@ -13,6 +13,7 @@ var files = {
         'gizmo',
         'ground',
         'hdr',
+        'instanced-arrays',
         'lights',
         'materials',
         'menu3d',

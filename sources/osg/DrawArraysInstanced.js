@@ -6,8 +6,8 @@ var MACROUTILS = require( 'osg/Utils' );
 var notify = require( 'osg/notify' );
 
 /**
- * DrawElements manage rendering of indexed primitives
- * @class DrawElements
+ * DrawArrays manage rendering of indexed primitives
+ * @class DrawArrays
  */
 var DrawArraysInstanced = function ( mode, first, count, numInstances ) {
     DrawArrays.call( this, mode, first, count );
@@ -15,16 +15,20 @@ var DrawArraysInstanced = function ( mode, first, count, numInstances ) {
     this._extension = undefined;
 };
 
-/** @lends DrawElements.prototype */
+/** @lends DrawArrays.prototype */
 DrawArraysInstanced.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( DrawArrays.prototype, {
 
     draw: function ( state ) {
         if ( this._count === 0 )
             return;
         var gl = state.getGraphicContext();
-        if ( this._extension === undefined )
+        if ( !this._extension ) {
             this._extension = WebGLCaps.instance( gl ).getWebGLExtension( 'ANGLE_instanced_arrays' );
-        if ( !this._extension ) notify.error( 'Your browser does not support instanced arrays extension' );
+            if ( !this._extension ) {
+                notify.error( 'Your browser does not support instanced arrays extension' );
+                return;
+            }
+        }
         this._extension.drawArraysInstancedANGLE( this._mode, this._first, this._count, this._numInstances );
     },
 
