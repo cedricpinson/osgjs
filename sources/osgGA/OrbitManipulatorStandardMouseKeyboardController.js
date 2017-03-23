@@ -98,7 +98,6 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
             manipulator.getZoomInterpolator().setStart( pos[ 1 ] );
             manipulator.getZoomInterpolator().set( 0.0 );
         }
-        ev.preventDefault();
     },
     mouseup: function ( /*ev */) {
         this.releaseButton();
