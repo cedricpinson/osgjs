@@ -14,6 +14,7 @@ var CompilerFragment = {
 
         var shader = this.createShaderFromGraphs( roots );
 
+        Notify.debug( this.getDebugIdentifier() );
         Notify.debug( shader );
 
         this.cleanAfterFragment();
@@ -605,7 +606,7 @@ var CompilerFragment = {
 var wrapperFragmentOnly = function ( fn, name ) {
     return function () {
         if ( !this._fragmentShaderMode )
-            Notify.error( 'This function should not be called from vertex shader : ' + name );
+            this.logError( 'This function should not be called from vertex shader : ' + name );
         return fn.apply( this, arguments );
     };
 };

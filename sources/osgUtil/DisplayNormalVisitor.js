@@ -24,7 +24,7 @@ var CompilerOffsetNormal = function () {
 };
 
 CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
-    getFragmentShaderName: function () {
+    getCompilerName: function () {
         return 'CompilerOffsetNormal';
     },
     initTextureAttributes: function () {},
@@ -91,7 +91,7 @@ var CompilerOffsetTangent = function () {
 };
 
 CompilerOffsetTangent.prototype = MACROUTILS.objectInherit( CompilerOffsetNormal.prototype, {
-    getFragmentShaderName: function () {
+    getCompilerName: function () {
         return 'CompilerOffsetTangent';
     },
     getOffsetDirection: function () {

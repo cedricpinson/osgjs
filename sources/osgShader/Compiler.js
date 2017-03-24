@@ -64,12 +64,39 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         return this.getOrCreateUniform( 'mat4', 'uProjectionMatrix' );
     },
 
-    getFragmentShaderName: function () {
+    getCompilerName: function () {
         return this._material ? 'CompilerOSGJS' : 'NoMaterialCompilerOSGJS';
+    },
+
+    getFragmentShaderName: function () {
+        var compilerName = this.getCompilerName();
+
+        var materialName = this._material && this._material.getName();
+        if ( materialName ) {
+            // escape everything but letter and number
+            materialName = materialName.replace( /[^a-zA-Z0-9]+/g, '_' ).slice( 0, 20 );
+            compilerName += '(' + materialName + ')';
+        }
+
+        return compilerName;
     },
 
     getVertexShaderName: function () {
         return this.getFragmentShaderName();
+    },
+
+    getDebugIdentifier: function () {
+        var vname = this.getVertexShaderName();
+        var fname = this.getFragmentShaderName();
+        return vname === fname ? fname : vname + '|' + fname;
+    },
+
+    logError: function ( msg ) {
+        Notify.error( this.getDebugIdentifier() + ' : ' + msg );
+    },
+
+    logWarn: function ( msg ) {
+        Notify.warn( this.getDebugIdentifier() + ' : ' + msg );
     },
 
     getOrCreateConstantOne: function ( type ) {
@@ -226,7 +253,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
         // make sure we have at least one output
         if ( roots.length === 0 ) {
-            Notify.error( 'shader without any final Node output (need at least one)' );
+            this.logError( 'shader without any final Node output (need at least one)' );
         }
 
         shaderStack.push( this.evaluate( roots ) );
@@ -250,7 +277,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
                 var node = this._activeNodeList[ i ];
                 var name = node.getName();
                 if ( name === 'Variable' ) name += ' ' + node.getVariable() + ' (' + node.getType() + ')';
-                Notify.warn( 'Nodes requested, but not compiled: ' + i + ' ' + name + ' ' + node.toString() );
+                this.logWarn( 'Nodes requested, but not compiled: ' + i + ' ' + name + ' ' + node.toString() );
             }
             return found;
         }, this );
@@ -355,7 +382,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
             nameID = uniform.getName();
 
         } else if ( nameID === undefined ) {
-            Notify.error( 'Cannot create unamed Uniform' );
+            this.logError( 'Cannot create unamed Uniform' );
         }
 
         var exist = this._variables[ nameID ];
@@ -368,7 +395,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
             // texture has a particular "dual" type of uniform a sampler2D
             // a int pointing to the texture unit the sampler2D represents
             if ( exist.getType() === 'sampler2D' && type !== 'sampler2D' ) {
-                Notify.error( 'Same uniform, but different type (' + type + ', ' + exist.getType() + ', ' + exist.getVariable() + ')' );
+                this.logError( 'Same uniform, but different type (' + type + ', ' + exist.getType() + ', ' + exist.getVariable() + ')' );
             }
             /*develblock:end*/
         }
@@ -383,7 +410,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
     getOrCreateSampler: function ( type, varname ) {
 
         if ( varname === undefined ) {
-            Notify.error( 'No name given for sampler type : ' + type );
+            this.logError( 'No name given for sampler type : ' + type );
         }
 
         var exist = this._variables[ varname ];
@@ -401,7 +428,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
     getOrCreateAttribute: function ( type, nameID ) {
 
         if ( this._fragmentShaderMode ) {
-            Notify.error( 'No Vertex Attribute in Fragment Shader' );
+            this.logError( 'No Vertex Attribute in Fragment Shader' );
         }
 
         var exist = this._variables[ nameID ];
@@ -409,7 +436,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
             /*develblock:start*/
             if ( exist.getType() !== type ) {
-                Notify.error( 'Same attribute, but different type' );
+                this.logError( 'Same attribute, but different type' );
             }
             /*develblock:end*/
 
@@ -437,7 +464,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
                 /*develblock:start*/
                 if ( exist.getType() !== type ) {
-                    Notify.error( 'Same constant name, but different type' );
+                    this.logError( 'Same constant name, but different type' );
                 }
                 /*develblock:end*/
 
@@ -456,17 +483,17 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
     getOrCreateVarying: function ( type, nameID ) {
 
         if ( nameID === undefined ) {
-            Notify.error( 'Error: Mandatory to name varying (as you need to retrieve them)' );
+            this.logError( 'Error: Mandatory to name varying (as you need to retrieve them)' );
         }
 
         var variable = this._variables[ nameID ];
         if ( variable ) {
             if ( !this._varyings[ nameID ] ) {
-                Notify.error( 'Error: requesting a varying not declared with getOrCreateVarying previously' );
+                this.logError( 'Error: requesting a varying not declared with getOrCreateVarying previously' );
             }
 
             if ( variable.getType() !== type ) {
-                Notify.error( 'Error: Same varying, but different type' );
+                this.logError( 'Error: Same varying, but different type' );
             }
 
             return variable;
@@ -474,7 +501,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
         // if it's not in Varying Cache, but requested from vertex shader it means => error
         if ( !this._fragmentShaderMode && !this._customFragmentShader ) {
-            Notify.error( 'Error: requesting a varying not declared in Fragment Shader Graph (for Custom Vertex Shader, add this._customFragmentShader to the processor): ' + nameID + ' ' + type );
+            this.logError( 'Error: requesting a varying not declared in Fragment Shader Graph (for Custom Vertex Shader, add this._customFragmentShader to the processor): ' + nameID + ' ' + type );
         }
 
         variable = this._variables[ nameID ] = this._varyings[ nameID ] = this.getNode( 'Varying', type, nameID );
@@ -491,7 +518,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         if ( this._activeNodeList[ cacheID ] === n ) {
             this._compiledNodeList[ cacheID ] = n;
         } else {
-            Notify.warn( 'Node not requested by using Compiler getNode and/or not registered in nodeFactory ' + n.toString() );
+            this.logWarn( 'Node not requested by using Compiler getNode and/or not registered in nodeFactory ' + n.toString() );
         }
     },
 
@@ -563,7 +590,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
             var idx = node.getType();
             if ( idx === undefined || idx === '' ) {
-                Notify.error( 'Your node ' + node + ' has no type' );
+                this.logError( 'Your node ' + node + ' has no type' );
             }
             if ( node[ field ] && this._map[ idx ] === undefined ) {
 
@@ -598,7 +625,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
             var idx = node.getType();
 
             if ( idx === undefined || idx === '' ) {
-                Notify.error( 'Your node ' + node + ' has no type' );
+                this.logError( 'Your node ' + node + ' has no type' );
             }
             if ( node.globalFunctionDeclaration &&
                 this._map[ idx ] === undefined ) {
