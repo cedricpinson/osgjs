@@ -12,10 +12,6 @@ CompilerShadowCast.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
         return 'ShadowCast';
     },
 
-    getFragmentShaderName: function () {
-        return this.getCompilerName();
-    },
-
     initAttributes: function () {
         var attributes = this._attributes;
 

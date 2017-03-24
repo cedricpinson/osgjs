@@ -23,7 +23,7 @@ var CompilerColorGeometry = function () {
 };
 
 CompilerColorGeometry.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
-    getFragmentShaderName: function () {
+    getCompilerName: function () {
         return 'CompilerDebugGeometry';
     },
     initTextureAttributes: function () {},
@@ -56,7 +56,7 @@ var CompilerColorSkinning = function () {
 };
 
 CompilerColorSkinning.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
-    getFragmentShaderName: function () {
+    getCompilerName: function () {
         return 'CompilerDebugSkinning';
     },
     initTextureAttributes: function () {},
