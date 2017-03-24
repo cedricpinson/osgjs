@@ -23,7 +23,7 @@
 
             var camera = new osg.Camera();
             camera.setName( 'camera ' + index );
-            var size = texture.getWidth()/num;
+            var size = texture.getWidth() / num;
             var offset = index * size;
             camera.setViewport( new osg.Viewport( offset, 0, size, texture.getHeight() ) );
             camera.setClearColor( clearColor );
@@ -38,8 +38,7 @@
 
         createCameraFinal: function ( texture ) {
 
-            var texturedQuadUsingTargetTexture = osg.createTexturedQuadGeometry(
-                -1, -1, 0,
+            var texturedQuadUsingTargetTexture = osg.createTexturedQuadGeometry( -1, -1, 0,
                 2, 0, 0,
                 0, 2, 0
             );
@@ -114,7 +113,7 @@
                     osg.vec3.fromValues( 0, 0, 0 ),
                     osg.vec3.fromValues( 0, 1, 0 ) ) );
 
-                camera.setProjectionMatrix( osg.mat4.perspective( osg.mat4.create(), Math.PI / 180 * 60, width/height, 0.1, 100.0 ) );
+                camera.setProjectionMatrix( osg.mat4.perspective( osg.mat4.create(), Math.PI / 180 * 60, width / height, 0.1, 100.0 ) );
 
                 camera.addChild( scene );
                 this._root.addChild( camera );
