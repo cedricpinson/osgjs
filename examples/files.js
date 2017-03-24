@@ -1,6 +1,7 @@
 /* exported files */
 var files = {
-    'Examples': [
+
+    Examples: [
         'animation',
         'camera',
         'camera-gallery',
@@ -35,7 +36,9 @@ var files = {
         'texture-video',
         'webVR'
     ],
-    'Tutorials': [
+
+    Tutorials: [
+        'multi-viewport-rtt',
         'advanced-customshader',
         'animate-lightcolor',
         'animate-rotation',
@@ -47,7 +50,7 @@ var files = {
         'load-model',
         'multiplelights',
         'screenshot',
-        'usercamera',
-    ],
+        'usercamera'
+    ]
 
 };
