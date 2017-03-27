@@ -282,7 +282,9 @@ Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
 Composer.Filter = function () {
     this._stateSet = new StateSet();
     this._dirty = true;
-    this._fragmentName = 'FilterOSGJS';
+    // no default shader name (in case we use a compiler and it's already provided)
+    // ideally we should check the string and add a default name if there is none
+    this._fragmentName = '';
     this._vertexName = '';
 };
 
@@ -300,9 +302,11 @@ Composer.Filter.prototype = {
         return this._vertexName;
     },
     getDefineFragmentName: function () {
+        if ( !this._fragmentName ) return '';
         return '\n#define SHADER_NAME ' + this._fragmentName + '\n';
     },
     getDefineVertexName: function () {
+        if ( !this._vertexName && !this._fragmentName ) return '';
         return '\n#define SHADER_NAME ' + ( this._vertexName || this._fragmentName ) + '\n';
     },
     getStateSet: function () {
