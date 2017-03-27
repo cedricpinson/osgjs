@@ -1,7 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Manipulator = require( 'osgGA/Manipulator' );
-var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
@@ -12,6 +11,7 @@ var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
 var CADManipulatorStandardMouseKeyboardController = require( 'osgGA/CADManipulatorStandardMouseKeyboardController' );
 var CADManipulatorHammerController = require( 'osgGA/CADManipulatorHammerController' );
+var DelayInterpolator = require( 'osgUtil/DelayInterpolator' );
 
 /**
  *  CADManipulator
@@ -128,7 +128,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
         this._rotate = new CADManipulator.Interpolator();
         this._pan = new CADManipulator.Interpolator();
-        this._zoom = new OrbitManipulator.Interpolator( 1 );
+        this._zoom = new DelayInterpolator( 1 );
 
         this._panFactor = 1.5;
         this._rotateFactor = 1;

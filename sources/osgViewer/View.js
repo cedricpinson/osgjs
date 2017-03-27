@@ -25,7 +25,11 @@ var Notify = require( 'osg/notify' );
 var View = function () {
 
     this._camera = new Camera();
+    this._camera.setName( 'OSGJS camera' );
+
     this._scene = new Scene();
+    this._camera.setName( 'OSGJS Scene' );
+
     this._frameStamp = new FrameStamp();
     this._lightingMode = undefined;
     this._manipulator = undefined;
