@@ -49,7 +49,11 @@ The built version of osgjs will be put in the `build/` subdirectory.
 Running the examples
 --------------------
 
-Simply type in the command-line:
+Download the osgjs-data submodule repository. It will be added to the examples/media folder:
+
+    grunt sync
+
+Then simply type in the command-line:
 
     grunt serve
 

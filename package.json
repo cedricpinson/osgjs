@@ -8,7 +8,8 @@
     "grunt-release": "^0.10.0",
     "mocha": "^2.5.3",
     "webpack-strip-block": "0.0.1",
-    "grunt-plato": "~0.2.1"
+    "grunt-plato": "~0.2.1",
+    "grunt-update-submodules": "^0.4.1"
   },
   "peerDependencies": {
     "grunt": ">=0.4.0"

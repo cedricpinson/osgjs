@@ -1,0 +1,3 @@
+[submodule "examples/media"]
+	path = examples/media
+	url = https://github.com/cedricpinson/osgjs-data
