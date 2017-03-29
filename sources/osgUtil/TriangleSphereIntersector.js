@@ -3,12 +3,17 @@ var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 
-var TriangleIntersection = function ( normal, i1, i2, i3 ) {
+// implicitly match with TriangleLineSegment intersection
+var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
     this.normal = normal;
 
     this.i1 = i1;
     this.i2 = i2;
     this.i3 = i3;
+
+    this.r1 = r1;
+    this.r2 = r2;
+    this.r3 = r3;
 };
 
 var TriangleSphereIntersector = function () {
@@ -225,7 +230,7 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleIntersec
             this._intersections.push( {
                 ratio: Math.sqrt( sqrDistance ),
                 nodepath: this._nodePath.slice( 0 ),
-                TriangleIntersection: new TriangleIntersection( normal, i1, i2, i3 ),
+                TriangleIntersection: new TriangleIntersection( normal, i1, i2, i3, 1 - s - t, s, t ),
                 point: closest,
                 zone: zone
             } );
