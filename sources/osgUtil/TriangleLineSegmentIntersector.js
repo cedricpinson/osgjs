@@ -5,7 +5,7 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
 var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
 
-var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
+var TriangleLineSegmentIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
     this.normal = normal;
 
     this.i1 = i1;
@@ -17,14 +17,14 @@ var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
     this.r3 = r3;
 };
 
-var TriangleIntersector = function () {
+var TriangleLineSegmentIntersector = function () {
 
     this._intersections = [];
     this._nodePath = [];
     this._dir = vec3.create();
 };
 
-TriangleIntersector.prototype = {
+TriangleLineSegmentIntersector.prototype = {
     reset: function () {
         this._intersections.length = 0;
     },
@@ -157,7 +157,7 @@ TriangleIntersector.prototype = {
                 ratio: r,
                 backface: this.isBackFace( det, this._nodePath ),
                 nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
-                TriangleIntersection: new TriangleIntersection( vec3.clone( normal ), i0, i1, i2, r0, r1, r2 ),
+                TriangleIntersection: new TriangleLineSegmentIntersection( vec3.clone( normal ), i0, i1, i2, r0, r1, r2 ),
                 point: vec3.fromValues( interX, interY, interZ )
             } );
             this.hit = true;
@@ -165,4 +165,4 @@ TriangleIntersector.prototype = {
     } )()
 };
 
-module.exports = TriangleIntersector;
+module.exports = TriangleLineSegmentIntersector;

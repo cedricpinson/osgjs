@@ -1,6 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
-var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
+var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/shape' );
 var DrawElements = require( 'osg/DrawElements' );
@@ -12,10 +12,10 @@ var Geometry = require( 'osg/Geometry' );
 
 module.exports = function () {
 
-    test( 'TriangleIntersector', function () {
+    test( 'TriangleLineSegmentIntersector', function () {
 
         var checkPrimitive = function ( geom, msg ) {
-            var ti = new TriangleIntersector();
+            var ti = new TriangleLineSegmentIntersector();
             var start = [ 0.4, 0.2, -2.0 ];
             var end = [ 0.4, 0.2, 0.5 ];
             var dir = vec3.sub( vec3.create(), end, start );
@@ -27,7 +27,7 @@ module.exports = function () {
             var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, ti._intersections[ 0 ].ratio ) );
             assert.equalVector( found, result, 1e-4 );
 
-            var ti2 = new TriangleIntersector();
+            var ti2 = new TriangleLineSegmentIntersector();
             ti2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );
             ti2.apply( geom );
             assert.isOk( ti2._intersections.length === 0, msg + ' Intersections should be 0 ' + ti2._intersections.length );

@@ -1,15 +1,15 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
+var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
 
-var KdTreeRayIntersector = function () {
-    this._intersector = new TriangleIntersector();
+var KdTreeLineSegmentIntersector = function () {
+    this._intersector = new TriangleLineSegmentIntersector();
     this._dInvX = vec3.create();
     this._dInvY = vec3.create();
     this._dInvZ = vec3.create();
 };
 
-KdTreeRayIntersector.prototype = {
+KdTreeLineSegmentIntersector.prototype = {
     setKdtree: function ( vertices, nodes, triangles ) {
         this._vertices = vertices;
         this._kdNodes = nodes;
@@ -221,4 +221,4 @@ KdTreeRayIntersector.prototype = {
     } )()
 };
 
-module.exports = KdTreeRayIntersector;
+module.exports = KdTreeLineSegmentIntersector;

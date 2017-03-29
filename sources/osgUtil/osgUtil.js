@@ -14,7 +14,7 @@ var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
 var PolytopePrimitiveIntersector = require( 'osgUtil/PolytopePrimitiveIntersector' );
 var SphereIntersector = require( 'osgUtil/SphereIntersector' );
 var TangentSpaceGenerator = require( 'osgUtil/TangentSpaceGenerator' );
-var TriangleIntersect = require( 'osgUtil/TriangleIntersector' );
+var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
 var WebVRCustom = require( 'osgUtil/WebVRCustom' );
 var WebVR = require( 'osgUtil/WebVR' );
 
@@ -36,7 +36,7 @@ osgUtil.PolytopeIntersector = PolytopeIntersector;
 osgUtil.PolytopePrimitiveIntersector = PolytopePrimitiveIntersector;
 osgUtil.SphereIntersector = SphereIntersector;
 osgUtil.TangentSpaceGenerator = TangentSpaceGenerator;
-osgUtil.TriangleIntersect = TriangleIntersect;
+osgUtil.TriangleLineSegmentIntersector = TriangleLineSegmentIntersector;
 osgUtil.WebVR = WebVR;
 
 module.exports = osgUtil;
