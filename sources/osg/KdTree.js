@@ -4,7 +4,7 @@ var vec3 = require( 'osg/glMatrix' ).vec3;
 var BoundingBox = require( 'osg/BoundingBox' );
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
 var PrimitiveSet = require( 'osg/primitiveSet' );
-var KdTreeRayIntersector = require( 'osg/KdTreeRayIntersector' );
+var KdTreeLineSegmentIntersector = require( 'osg/KdTreeLineSegmentIntersector' );
 var KdTreeSphereIntersector = require( 'osg/KdTreeSphereIntersector' );
 
 
@@ -403,7 +403,7 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
         var numIntersectionsBefore = intersections.length;
 
         if ( !this._rayIntersector ) {
-            this._rayIntersector = new KdTreeRayIntersector();
+            this._rayIntersector = new KdTreeLineSegmentIntersector();
             this._rayIntersector.setKdtree( this._vertices, this._kdNodes, this._triangles );
         }
         this._rayIntersector.init( intersections, start, end, nodePath );

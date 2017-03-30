@@ -1,7 +1,7 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
+var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
 
 
 var LineSegmentIntersector = function () {
@@ -76,7 +76,7 @@ LineSegmentIntersector.prototype = {
 
     intersect: ( function () {
 
-        var ti = new TriangleIntersector();
+        var ti = new TriangleLineSegmentIntersector();
 
         return function ( iv, node ) {
 

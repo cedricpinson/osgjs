@@ -1,17 +1,15 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var KdTreeRayIntersector = require( 'osg/KdTreeRayIntersector' );
+var KdTreeLineSegmentIntersector = require( 'osg/KdTreeLineSegmentIntersector' );
 var TriangleSphereIntersector = require( 'osgUtil/TriangleSphereIntersector' );
 
 
 var KdTreeSphereIntersector = function () {
-
     this._intersector = new TriangleSphereIntersector();
-
 };
 
-KdTreeSphereIntersector.prototype = MACROUTILS.objectInherit( KdTreeRayIntersector.prototype, {
+KdTreeSphereIntersector.prototype = MACROUTILS.objectInherit( KdTreeLineSegmentIntersector.prototype, {
 
     init: function ( intersections, center, radius, nodePath ) {
 

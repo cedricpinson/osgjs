@@ -1,13 +1,13 @@
 'use strict';
 var LineSegmentIntersector = require( 'tests/osgUtil/LineSegmentIntersector' );
-var TriangleIntersector = require( 'tests/osgUtil/TriangleIntersector' );
+var TriangleLineSegmentIntersector = require( 'tests/osgUtil/TriangleLineSegmentIntersector' );
 var PolytopeIntersector = require( 'tests/osgUtil/PolytopeIntersector' );
 var IntersectionVisitor = require( 'tests/osgUtil/IntersectionVisitor' );
 
 
 module.exports = function () {
     LineSegmentIntersector();
-    TriangleIntersector();
+    TriangleLineSegmentIntersector();
     PolytopeIntersector();
     IntersectionVisitor();
 };
