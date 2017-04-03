@@ -1,6 +1,7 @@
 'use strict';
 var Notify = require( 'osg/notify' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
+var Options = require( 'osg/Options' );
 var Texture;
 
 var WebGLCaps = function () {
@@ -64,12 +65,16 @@ WebGLCaps.instance = function ( glParam ) {
             var c = document.createElement( 'canvas' );
             c.width = 32;
             c.height = 32;
-            // not necessary, but for some reasons it crashed on chromium vr build
-            var opt = {
-                antialias: false
-            };
 
-            gl = WebGLUtils.setupWebGL( c, opt, function () {} );
+            var options = new Options();
+            // not necessary, but for some reasons it crashed on chromium vr build
+            options.extend( {
+                antialias: false
+            } );
+            // in case of webgl2
+            options.extendWithOptionsURL();
+
+            gl = WebGLUtils.setupWebGL( c, options, function () {} );
 
         }
 
@@ -119,7 +124,8 @@ WebGLCaps.prototype = {
 
         // store context in case of multiple context
         this._gl = gl;
-
+        // We need to check if this is a webGL2 context to get the extensions work.
+        this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
         // Takes care of circular dependencies on Texture
         // Texture should be resolved at this point
         // Texture = require( 'osg/Texture' );
@@ -147,17 +153,7 @@ WebGLCaps.prototype = {
 
         this.initContextDependant( gl );
 
-        this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
-
         if ( this._isGL2 ) {
-
-
-            // osgjs code is webgl1, so we fake webgl2 capabilities
-            // and calls for retrocompatibility with webgl1
-            this._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
-            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.NEAREST ] = true;
-            this._checkRTT[ Texture.FLOAT + ',' + Texture.LINEAR ] = true;
-            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.LINEAR ] = true;
 
             var nativeExtension = [
                 'OES_element_index_uint',
@@ -169,6 +165,8 @@ WebGLCaps.prototype = {
                 'OES_standard_derivatives',
                 'OES_texture_float',
                 'OES_texture_half_float',
+                'OES_texture_half_float_linear',
+                'OES_texture_float_linear',
                 'OES_vertex_array_object',
                 'WEBGL_draw_buffers',
                 'OES_fbo_render_mipmap',
@@ -187,6 +185,7 @@ WebGLCaps.prototype = {
     isWebGL2: function () {
         return this._isGL2;
     },
+
     // inevitable bugs per platform (browser/OS/GPU)
     initBugDB: function () {
 
@@ -217,9 +216,11 @@ WebGLCaps.prototype = {
         p.Mobile = /Mobi/.test( navigator.userAgent ) || /ablet/.test( navigator.userAgent );
 
     },
+
     getWebGLPlatform: function ( str ) {
         return this._webGLPlatforms[ str ];
     },
+
     getWebGLPlatforms: function () {
         return this._webGLPlatforms;
     },
@@ -227,18 +228,26 @@ WebGLCaps.prototype = {
     getWebGLParameter: function ( str ) {
         return this._webGLParameters[ str ];
     },
+
     getWebGLParameters: function () {
         return this._webGLParameters;
     },
+
     getShaderMaxPrecisionFloat: function () {
         return this._webGLParameters.MAX_SHADER_PRECISION_FLOAT;
     },
+
     getShaderMaxPrecisionInt: function () {
         return this._webGLParameters.MAX_SHADER_PRECISION_INT;
     },
+
     checkSupportRTT: function ( gl, typeFloat, typeTexture ) {
 
         var key = typeFloat + ',' + typeTexture;
+
+        if ( this._isGL2 ) {
+            return !!this._webGLExtensions[ 'EXT_color_buffer_float' ];
+        }
 
         // check once only
         if ( this._checkRTT[ key ] !== undefined )
@@ -272,23 +281,33 @@ WebGLCaps.prototype = {
 
         return status;
     },
+
     hasLinearHalfFloatRTT: function ( gl ) {
-        return this._webGLExtensions[ 'OES_texture_half_float_linear' ] && this.checkSupportRTT( gl, Texture.HALF_FLOAT, Texture.LINEAR );
+        return this._webGLExtensions[ 'OES_texture_half_float_linear' ] && this.checkSupportRTT( gl, Texture.HALF_FLOAT_OES, Texture.LINEAR );
     },
+
     hasLinearFloatRTT: function ( gl ) {
         return this._webGLExtensions[ 'OES_texture_float_linear' ] && this.checkSupportRTT( gl, Texture.FLOAT, Texture.LINEAR );
     },
+
     hasHalfFloatRTT: function ( gl ) {
-        return this._webGLExtensions[ 'OES_texture_half_float' ] && this.checkSupportRTT( gl, Texture.HALF_FLOAT, Texture.NEAREST );
+        return this._webGLExtensions[ 'OES_texture_half_float' ] && this.checkSupportRTT( gl, Texture.HALF_FLOAT_OES, Texture.NEAREST );
     },
+
     hasFloatRTT: function ( gl ) {
         return this._webGLExtensions[ 'OES_texture_float' ] && this.checkSupportRTT( gl, Texture.FLOAT, Texture.NEAREST );
     },
+
     queryPrecision: function ( gl, shaderType, precision ) {
         var answer = gl.getShaderPrecisionFormat( shaderType, precision );
         if ( !answer ) return false;
         return answer.precision !== 0;
     },
+
+    hasVAO: function () {
+        return !!this._webGLExtensions[ 'OES_vertex_array_object' ];
+    },
+
     initWebGLParameters: function ( gl ) {
         if ( !gl ) return;
         var limits = [
@@ -351,12 +370,37 @@ WebGLCaps.prototype = {
         // TODO ?
         // try to compile a small shader to test the spec is respected
     },
+
+    applyExtension: function ( gl, name ) {
+        // Borrowed from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
+        var ext = gl.getExtension( name );
+        var suffix = name.split( '_' )[ 0 ];
+        var prefix = '_' + suffix;
+        var suffixRE = new RegExp( suffix + '$' );
+        var prefixRE = new RegExp( prefix );
+        for ( var key in ext ) {
+            var val = ext[ key ];
+            if ( typeof ( val ) === 'function' ) {
+                // remove suffix (eg: bindVertexArrayOES -> bindVertexArray)
+                var unsuffixedKey = key.replace( suffixRE, '' );
+                if ( key.substring )
+                    gl[ unsuffixedKey ] = ext[ key ].bind( ext );
+            } else {
+                var unprefixedKey = key.replace( prefixRE, '' );
+                if ( gl[ unprefixedKey ] === undefined )
+                    gl[ unprefixedKey ] = ext[ key ];
+            }
+        }
+    },
+
     getWebGLExtension: function ( str ) {
         return this._webGLExtensions[ str ];
     },
+
     getWebGLExtensions: function () {
         return this._webGLExtensions;
     },
+
     initWebGLExtensions: function ( gl, filterBugs ) {
 
         // nodejs, phantomjs
@@ -378,6 +422,8 @@ WebGLCaps.prototype = {
             }
 
             ext[ sup ] = gl.getExtension( sup );
+            if ( !this._isGL2 )
+                this.applyExtension( gl, sup );
         }
 
         var anisoExt = this.getWebGLExtension( 'EXT_texture_filter_anisotropic' );

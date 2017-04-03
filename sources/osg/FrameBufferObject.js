@@ -14,16 +14,18 @@ var FrameBufferObject = function () {
 
     GLObject.call( this );
     StateAttribute.call( this );
+
     this._fbo = undefined;
     this._rbo = undefined;
     this._attachments = [];
     this._dirty = true;
-    this._extDrawBuffers = undefined;
+    this._hasMRT = WebglCaps.instance().getWebGLExtension( 'WEBGL_draw_buffers' );
 };
 
 FrameBufferObject.COLOR_ATTACHMENT0 = 0x8CE0;
 FrameBufferObject.DEPTH_ATTACHMENT = 0x8D00;
 FrameBufferObject.DEPTH_COMPONENT16 = 0x81A5;
+
 // static cache of glFrameBuffer flagged for deletion, which will actually
 // be deleted in the correct GL context.
 FrameBufferObject._sDeletedGLFrameBufferCache = new window.Map();
@@ -227,7 +229,9 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
             return false;
         }
 
-        gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment, textureTarget, texture.getTextureObject().id(), 0 );
+        // gl2 vs gl1
+        var target = gl.DRAW_FRAMEBUFFER || gl.FRAMEBUFFER;
+        gl.framebufferTexture2D( target, attachment, textureTarget, texture.getTextureObject().id(), 0 );
 
         /* develblock:start */
         // only visible with webgl-insector enabled
@@ -274,88 +278,77 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
         var attachments = this._attachments;
 
+        // ?
+        if ( attachments.length === 0 && !this._fbo ) {
+            gl.bindFramebuffer( gl.FRAMEBUFFER, null );
+            return;
+        }
+
+        // each frame
+        if ( !this.isDirty() ) {
+            gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
+            if ( Notify.reportWebGLError === true ) this.checkStatus();
+            return;
+        }
+
         // if the fbo is created manually, we want to just bind it
-        if ( attachments.length > 0 || this._fbo ) {
+        if ( !this._fbo ) this.createFrameBufferObject( state );
 
-            if ( this.isDirty() ) {
+        this.bindFrameBufferObject();
 
-                if ( !this._fbo )
-                    this.createFrameBufferObject( state );
+        // Check extDrawBuffers extension
+        var bufs = this._hasMRT ? [] : undefined;
+        var hasRenderBuffer = false;
 
-                this.bindFrameBufferObject();
+        for ( var i = 0, l = attachments.length; i < l; ++i ) {
 
+            var attachment = attachments[ i ];
 
-                // Check extDrawBuffers extension
-                var extDrawBuffers = this._extDrawBuffers;
-                if ( extDrawBuffers === undefined ) { // will be null if not supported
-                    extDrawBuffers = WebglCaps.instance( gl ).getWebGLExtension( 'WEBGL_draw_buffers' );
-                    this._extDrawBuffers = extDrawBuffers;
-                }
-                var bufs = extDrawBuffers ? [] : undefined;
-                var hasRenderBuffer = false;
+            // render buffer
+            if ( !attachment.texture ) {
 
-                for ( var i = 0, l = attachments.length; i < l; ++i ) {
-
-                    var attachment = attachments[ i ];
-
-                    // render buffer
-                    if ( !attachment.texture ) {
-
-                        if ( !this._checkAllowedSize( attachment.width, attachment.height ) ) {
-                            this.releaseGLObjects();
-                            return;
-                        }
-
-                        this._rbo = this.createRenderBuffer( attachment.format, attachment.width, attachment.height );
-                        this.framebufferRenderBuffer( attachment.attachment, this._rbo );
-                        hasRenderBuffer = true;
-
-                    } else {
-
-                        // use texture
-                        var texture = attachment.texture;
-
-                        if ( !this._checkAllowedSize( texture.getWidth(), texture.getHeight() ) ) {
-                            this.releaseGLObjects();
-                            return;
-                        }
-
-                        // Not sure is needed to check the attachment.attachment
-                        if ( extDrawBuffers && attachment.attachment >= extDrawBuffers.COLOR_ATTACHMENT0_WEBGL && attachment.attachment <= extDrawBuffers.COLOR_ATTACHMENT15_WEBGL ) {
-                            bufs.push( attachment.attachment );
-                        }
-
-                        if ( !this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture ) ) {
-                            this.releaseGLObjects();
-                            return;
-
-                        }
-                    }
+                if ( !this._checkAllowedSize( attachment.width, attachment.height ) ) {
+                    this.releaseGLObjects();
+                    return;
                 }
 
-                if ( extDrawBuffers && bufs.length > 0 )
-                    extDrawBuffers.drawBuffersWEBGL( bufs );
-
-                this.checkStatus();
-
-                // set it to null only if used renderbuffer
-                if ( hasRenderBuffer )
-                    gl.bindRenderbuffer( gl.RENDERBUFFER, null );
-
-                this._dirty = false;
+                this._rbo = this.createRenderBuffer( attachment.format, attachment.width, attachment.height );
+                this.framebufferRenderBuffer( attachment.attachment, this._rbo );
+                hasRenderBuffer = true;
 
             } else {
 
-                gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
+                // use texture
+                var texture = attachment.texture;
 
-                if ( Notify.reportWebGLError === true )
-                    this.checkStatus();
+                if ( !this._checkAllowedSize( texture.getWidth(), texture.getHeight() ) ) {
+                    this.releaseGLObjects();
+                    return;
+                }
 
+                // Not sure is needed to check the attachment.attachment
+                if ( this._hasMRT && attachment.attachment >= gl.COLOR_ATTACHMENT0 && attachment.attachment <= gl.COLOR_ATTACHMENT15 ) {
+                    bufs.push( attachment.attachment );
+                }
+
+                if ( !this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture ) ) {
+                    this.releaseGLObjects();
+                    return;
+
+                }
             }
-
-        } else {
-            gl.bindFramebuffer( gl.FRAMEBUFFER, null );
         }
+
+        if ( bufs && bufs.length > 0 )
+            gl.drawBuffers( bufs );
+
+        this.checkStatus();
+
+        // set it to null only if used renderbuffer
+        if ( hasRenderBuffer )
+            gl.bindRenderbuffer( gl.RENDERBUFFER, null );
+
+        this._dirty = false;
     }
 } ) );
 

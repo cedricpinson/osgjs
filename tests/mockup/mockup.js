@@ -69,6 +69,7 @@ var createFakeRenderer = function () {
         TEXTURE_CUBE_MAP_NEGATIVE_Z: 0x851A,
         MAX_CUBE_MAP_TEXTURE_SIZE: 0x851C,
         UNPACK_FLIP_Y_WEBGL: 0,
+        drawBuffers: function () {},
         drawElements: function () {},
         createBuffer: function () {},
         deleteBuffer: function () {},
@@ -137,6 +138,10 @@ var createFakeRenderer = function () {
         createProgram: function () {
             return {};
         },
+        createVertexArray: function () {
+            return {};
+        },
+        bindVertexArray: function () {},
         deleteProgram: function () {},
         attachShader: function () {},
         validateProgram: function () {},

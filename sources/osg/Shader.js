@@ -179,7 +179,7 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
             var err = gl.getShaderInfoLog( this.shader );
             this.processErrors( err, shaderText );
 
-            var tmpText = '\n' + shaderText;
+            var tmpText = shaderText;
             var splittedText = tmpText.split( '\n' );
             var newText = '\n';
             for ( var i = 0, l = splittedText.length; i < l; ++i ) {

@@ -289,8 +289,6 @@
         getDebugProgram: function () {
             if ( this._debugProgram === undefined ) {
                 var vertexShader = [
-                    '',
-                    '#version 100',
                     '#define SHADER_NAME DEBUG_RTT',
                     'attribute vec3 Vertex;',
                     'attribute vec2 TexCoord0;',
@@ -306,8 +304,6 @@
                 ].join( '\n' );
 
                 var fragmentShader = [
-                    '',
-
                     '#ifdef GL_FRAGMENT_PRECISION_HIGH',
                     'precision highp float;',
                     '#else',
@@ -334,8 +330,6 @@
         getDebugDepthProgram: function () {
             if ( this._debugDepthProgram === undefined ) {
                 var vertexShader = [
-                    '',
-                    '#version 100',
                     '#define SHADER_NAME DEBUG_RTT',
                     'attribute vec3 Vertex;',
                     'attribute vec2 TexCoord0;',
@@ -351,8 +345,6 @@
                 ].join( '\n' );
 
                 var fragmentShader = [
-                    '',
-
                     '#ifdef GL_FRAGMENT_PRECISION_HIGH',
                     'precision highp float;',
                     '#else',

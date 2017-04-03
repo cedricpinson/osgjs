@@ -81,9 +81,9 @@ vec2 normalToPanoramaUVZ( const in vec3 dir )
 #define normalToPanoramaUV normalToPanoramaUVY
 
 
-vec3 texturePanorama(const in sampler2D texture, const in vec2 uv)
+vec3 texturePanorama(const in sampler2D tex, const in vec2 uv)
 {
-    vec4 rgba = texture2D(texture, uv );
+    vec4 rgba = texture2D(tex, uv );
 #ifdef FLOAT
     return rgba.rgb;
 #endif
@@ -100,7 +100,7 @@ vec3 texturePanorama(const in sampler2D texture, const in vec2 uv)
 #endif
 }
 
-vec3 texturePanoramaLod(const in sampler2D texture,
+vec3 texturePanoramaLod(const in sampler2D tex,
                          const in vec2 size ,
                          const in vec3 direction,
                          const in float lodInput,
@@ -114,11 +114,11 @@ vec3 texturePanoramaLod(const in sampler2D texture,
 
     float lod0 = floor(lod);
     vec2 uv0 = computeUVForMipmap(lod0, uvBase, size.x, maxLOD );
-    vec3 texel0 = texturePanorama( texture, uv0.xy);
+    vec3 texel0 = texturePanorama( tex, uv0.xy);
 
     float lod1 = ceil(lod);
     vec2 uv1 = computeUVForMipmap(lod1, uvBase, size.x, maxLOD );
-    vec3 texel1 = texturePanorama( texture, uv1.xy);
+    vec3 texel1 = texturePanorama( tex, uv1.xy);
 
     return mix(texel0, texel1, fract( lod ) );
 }

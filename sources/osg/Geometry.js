@@ -25,7 +25,7 @@ var Geometry = function () {
 
     // VAO cached data, per combination of vertex buffer
     // program id also the cache key
-    this._extVAO = undefined;
+    this._useVAO = undefined;
     this._vao = {};
     this._cacheVertexAttributeBufferList = {};
 
@@ -63,12 +63,11 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
     releaseVAO: function () {
 
-        if ( !this._extVAO ) return;
+        if ( !this._useVAO || !this._glContext ) return;
 
         for ( var prgID in this._vao ) {
             if ( this._vao[ prgID ] ) {
-                var vao = this._vao[ prgID ];
-                this._extVAO.deleteVertexArrayOES( vao );
+                this._glContext.deleteVertexArray( this._vao[ prgID ] );
                 this._vao[ prgID ] = undefined;
             }
         }
@@ -198,8 +197,8 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
             var attribute, j, m, attr;
 
-            var extVAO = this._extVAO;
-            var listVABuff = extVAO ? [] : undefined;
+            var useVAO = this._useVAO;
+            var listVABuff = useVAO ? [] : undefined;
 
             var hasVertexColor = false;
 
@@ -215,13 +214,13 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
                 // typically used for morphing
                 if ( attributeBuffer instanceof BufferArrayProxy ) {
                     attributeBuffer = attributeBuffer.getBufferArray();
-                    extVAO = false;
+                    useVAO = false;
                 }
 
                 if ( !attributeBuffer.isValid() ) return undefined;
 
                 // store for later usage at draw time/update
-                if ( extVAO ) listVABuff.push( attributeBuffer );
+                if ( useVAO ) listVABuff.push( attributeBuffer );
 
                 if ( !hasVertexColor && key === 'Color' )
                     hasVertexColor = true;
@@ -235,7 +234,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             var functionName;
 
             // generate specific function using VAO or standard
-            if ( extVAO ) {
+            if ( useVAO ) {
 
                 this._cacheVertexAttributeBufferList[ prgID ] = listVABuff;
 
@@ -246,7 +245,9 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
                 var vertexAttributeSetup = this._generateVertexSetup( validAttributeKeyList, validAttributeList, optimizeIndexBufferVAO );
 
                 state.clearVertexAttribCache();
-                var vao = this._extVAO.createVertexArrayOES();
+
+                var gl = state.getGraphicContext();
+                var vao = gl.createVertexArray();
                 state.setVertexArrayObject( vao );
                 this._vao[ prgID ] = vao;
 
@@ -303,7 +304,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
         var cachedDraw = this._cacheDrawCall[ prgID ];
 
-        if ( this._extVAO && !this._vao[ prgID ] ) state.setVertexArrayObject( null );
+        if ( this._useVAO && !this._vao[ prgID ] ) state.setVertexArrayObject( null );
 
         if ( cachedDraw ) {
             cachedDraw.call( this, state );
@@ -314,9 +315,9 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
         if ( !this._primitives.length ) return;
 
-        if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
-            var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
-            this._extVAO = extVAO;
+        if ( this._useVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
+            this._useVAO = WebGLCaps.instance().hasVAO();
+            this._glContext = state.getGraphicContext();
         }
 
         cachedDraw = this.generateDrawCommand( state, program, prgID );

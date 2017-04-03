@@ -40,10 +40,7 @@
             this._viewer.init();
             this._viewer.getCamera().setClearColor( osg.vec4.create() );
 
-            this._extDrawBuffers = this._viewer.getGraphicContext().getExtension( 'WEBGL_draw_buffers' );
-            if ( !this._extDrawBuffers ) {
-                osg.error( 'EXT_DrawBuffers not supported in your device' );
-            }
+            this._extDrawBuffers = osg.WebGLCaps.instance().getWebGLExtension( 'WEBGL_draw_buffers' );
             // add all nodes under this._root
             this._root.addChild( this.createScene() );
 
@@ -59,16 +56,16 @@
         createColorTexture: function ( width, height ) {
             var texture = new osg.Texture();
             texture.setTextureSize( width, height );
-            texture.setMinFilter( 'LINEAR' );
-            texture.setMagFilter( 'LINEAR' );
+            texture.setMinFilter( osg.Texture.LINEAR );
+            texture.setMagFilter( osg.Texture.LINEAR );
             return texture;
         },
 
         createDephTexture: function ( width, height ) {
             var depthTexture = new osg.Texture();
             depthTexture.setTextureSize( width, height );
-            depthTexture.setMinFilter( 'LINEAR' );
-            depthTexture.setMagFilter( 'LINEAR' );
+            depthTexture.setMinFilter( osg.Texture.NEAREST );
+            depthTexture.setMagFilter( osg.Texture.NEAREST );
             depthTexture.setInternalFormat( osg.Texture.DEPTH_COMPONENT );
             depthTexture.setInternalFormatType( osg.Texture.UNSIGNED_SHORT );
             return depthTexture;
@@ -124,8 +121,6 @@
 
         generateProgram: function () {
             var vertexShader = [
-                '',
-                '#version 100',
                 '#ifdef GL_FRAGMENT_PRECISION_HIGH',
                 'precision highp float;',
                 '#else',
@@ -143,7 +138,6 @@
                 ''
             ].join( '\n' );
             var fragmentShader = [
-                '',
                 '#ifdef GL_ES',
                 'precision highp float;',
                 '#endif',
@@ -163,8 +157,6 @@
 
         generateFinalPassProgram: function () {
             var vertexShader = [
-                '',
-                '#version 100',
                 '#ifdef GL_FRAGMENT_PRECISION_HIGH',
                 'precision highp float;',
                 '#else',
@@ -215,7 +207,7 @@
                 camera.addChild( scene );
             } );
 
-            var ext = this._extDrawBuffers;
+            var gl = this._viewer.getGraphicContext();
             // createColorTextures
             for ( var i = 0; i < NUM_TEXTURES; i++ ) {
                 this._textureList[ i ] = this.createColorTexture( width, height );
@@ -224,10 +216,10 @@
             var depthTexture = this.createDephTexture( width, height );
             this._textureList.push( depthTexture );
             // attach textures
-            camera.attachTexture( ext.COLOR_ATTACHMENT0_WEBGL, this._textureList[ 0 ], 0 );
-            camera.attachTexture( ext.COLOR_ATTACHMENT1_WEBGL, this._textureList[ 1 ], 0 );
-            camera.attachTexture( ext.COLOR_ATTACHMENT2_WEBGL, this._textureList[ 2 ], 0 );
-            camera.attachTexture( ext.COLOR_ATTACHMENT3_WEBGL, this._textureList[ 3 ], 0 );
+            camera.attachTexture( gl.COLOR_ATTACHMENT0, this._textureList[ 0 ], 0 );
+            camera.attachTexture( gl.COLOR_ATTACHMENT1, this._textureList[ 1 ], 0 );
+            camera.attachTexture( gl.COLOR_ATTACHMENT2, this._textureList[ 2 ], 0 );
+            camera.attachTexture( gl.COLOR_ATTACHMENT3, this._textureList[ 3 ], 0 );
             camera.attachTexture( osg.FrameBufferObject.DEPTH_ATTACHMENT, depthTexture, 0 );
 
             mrtGroup.addChild( camera );
