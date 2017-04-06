@@ -48,9 +48,10 @@ FirstPersonManipulatorStandardMouseKeyboardController.prototype = {
         var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
         this._manipulator.getLookPositionInterpolator().setDelay( this._delay );
         this._manipulator.getLookPositionInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
+
+        ev.preventDefault();
     },
     mousewheel: function ( ev, intDelta /*, deltaX, deltaY */ ) {
-        ev.preventDefault();
         this._stepFactor = Math.min( Math.max( 0.001, this._stepFactor + intDelta * 0.01 ), 4.0 );
         this._manipulator.setStepFactor( this._stepFactor );
     },

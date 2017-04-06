@@ -99,7 +99,6 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
             manipulator.getZoomInterpolator().setStart( pos[ 1 ] );
             manipulator.getZoomInterpolator().set( 0.0 );
         }
-        ev.preventDefault();
     },
     mouseup: function ( /*ev */) {
         this.releaseButton();
@@ -107,7 +106,6 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
     },
     mousewheel: function ( ev, intDelta /*, deltaX, deltaY */ ) {
         var manipulator = this._manipulator;
-        ev.preventDefault();
         var zoomTarget = manipulator.getZoomInterpolator().getTarget()[ 0 ] - intDelta;
         manipulator.getZoomInterpolator().setTarget( zoomTarget );
         var timer;

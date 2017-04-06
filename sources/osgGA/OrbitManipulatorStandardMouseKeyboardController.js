@@ -109,7 +109,6 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
     },
     mousewheel: function ( ev, intDelta /*, deltaX, deltaY */ ) {
         var manipulator = this._manipulator;
-        ev.preventDefault();
         var zoomTarget = manipulator.getZoomInterpolator().getTarget()[ 0 ] - intDelta;
         manipulator.getZoomInterpolator().setTarget( zoomTarget );
     },
