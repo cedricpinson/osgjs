@@ -434,7 +434,7 @@ var createTexturedQuadGeometry = function ( cornerx, cornery, cornerz,
 
 var createAxisGeometry = function ( size ) {
     if ( size === undefined ) {
-        size = 5.0;
+        size = 1.0;
     }
     if ( createAxisGeometry.getShader === undefined ) {
         createAxisGeometry.getShader = function () {
@@ -509,7 +509,7 @@ var createAxisGeometry = function ( size ) {
  * @author Darrell Esau
  */
 var createTexturedSphere = function ( radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength ) {
-    radius = radius || 50.0;
+    radius = radius || 1.0;
 
     phiStart = phiStart !== undefined ? phiStart : 0.0;
     phiLength = phiLength !== undefined ? phiLength : Math.PI * 2;
