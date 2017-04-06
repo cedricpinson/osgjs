@@ -42,6 +42,7 @@
             shaderComplexity: 0,
             nbTotalItems: 0,
             nbTotalNodes: 0,
+            complexStateSet: false,
             ms: 0.0,
             fps: 0.0,
 
@@ -70,6 +71,48 @@
     Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
 
+        createComplexStateSet: function () {
+            // to stress test the internal system state.push/popStateSet and applyStateSet
+            if ( this._indexStateSet === undefined ) this._indexStateSet = 0;
+
+            var texture0, texture1;
+            var realTexture;
+            if ( this._indexStateSet % 2 ) {
+
+                texture0 = this.getTexture();
+                texture1 = osg.Texture.textureNull;
+                realTexture = texture0;
+            } else {
+
+                texture0 = osg.Texture.textureNull;
+                texture1 = this.getTexture();
+                realTexture = texture1;
+
+            }
+            var stateSet = new osg.StateSet();
+
+            var cullFace = new osg.CullFace();
+            var material = new osg.Material();
+            var depth = new osg.Depth();
+
+            stateSet.setAttributeAndModes( cullFace );
+            stateSet.setAttributeAndModes( material );
+            stateSet.setAttributeAndModes( depth );
+
+            stateSet.setTextureAttributeAndModes( 0, texture0 );
+            stateSet.setTextureAttributeAndModes( 1, texture1 );
+            stateSet.setTextureAttributeAndModes( 2, texture0 );
+            stateSet.setTextureAttributeAndModes( 3, texture1 );
+            stateSet.setTextureAttributeAndModes( 4, texture0 );
+            stateSet.setTextureAttributeAndModes( 5, texture1 );
+            stateSet.setTextureAttributeAndModes( 6, texture0 );
+            stateSet.setTextureAttributeAndModes( 7, realTexture );
+
+            this._indexStateSet++;
+            return stateSet;
+        },
+
+
         createItem: function () {
 
             var item;
@@ -87,9 +130,10 @@
 
             if ( this._config.texture ) {
 
-                var tex = this.getTexture();
-                if ( tex ) {
-                    item.getOrCreateStateSet().setTextureAttributeAndModes( 0, tex );
+                if ( this._config.complexStateSet ) item.setStateSet( this.createComplexStateSet() );
+                else {
+                    var tex = this.getTexture();
+                    if ( tex ) item.getOrCreateStateSet().setTextureAttributeAndModes( 0, tex );
                 }
 
             }
@@ -212,6 +256,7 @@
             this._gui.add( this._config, 'instance' );
 
             this._gui.add( this._config, 'texture' );
+            this._gui.add( this._config, 'complexStateSet' );
             this._gui.add( this._config, 'textureSize', [ '64', '128', '256', '512', '1024', '2048', '4096' ] );
             this._gui.add( this._config, 'numTextures', 0, 60 ).step( 1 );
 
