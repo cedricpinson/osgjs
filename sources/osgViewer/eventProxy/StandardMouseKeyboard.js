@@ -46,7 +46,9 @@ StandardMouseKeyboard.prototype = {
             mousemove: this.mousemove.bind( this ),
             dblclick: this.dblclick.bind( this ),
             mousewheel: this.mousewheel.bind( this ),
-            preventDefault: this.preventDefault.bind( this )
+            preventDefault: this.preventDefault.bind( this ),
+            keydown: this.keydown.bind( this ),
+            keyup: this.keyup.bind( this )
         };
 
         this.addEventListeners();
