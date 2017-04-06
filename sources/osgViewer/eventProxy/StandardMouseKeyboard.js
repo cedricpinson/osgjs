@@ -46,7 +46,9 @@ StandardMouseKeyboard.prototype = {
             mousemove: this.mousemove.bind( this ),
             dblclick: this.dblclick.bind( this ),
             mousewheel: this.mousewheel.bind( this ),
-            preventDefault: this.preventDefault.bind( this )
+            preventDefault: this.preventDefault.bind( this ),
+            keydown: this.keydown.bind( this ),
+            keyup: this.keyup.bind( this )
         };
 
         this.addEventListeners();
@@ -113,8 +115,13 @@ StandardMouseKeyboard.prototype = {
 
     mousedown: function ( ev ) {
 
-        if ( this.isValid() && this.getManipulatorController().mousedown )
+        if ( this.isValid() && this.getManipulatorController().mousedown ) {
+
+            // prevent browser to enter in scroll mode
+            if ( ev.button === 1 ) ev.preventDefault();
+
             return this.getManipulatorController().mousedown( ev );
+        }
 
         return undefined;
     },
@@ -160,6 +167,8 @@ StandardMouseKeyboard.prototype = {
 
         if ( !manipulatorAdapter.mousewheel )
             return undefined;
+
+        event.preventDefault();
 
         // from jquery
         var orgEvent = event || window.event,
