@@ -29,12 +29,15 @@ var prototype = {
 };
 
 // adds original method of BufferArray prototype for the proxy for convenient usage
-var keys = window.Object.keys( BufferArray.prototype );
-keys.forEach( function ( methodName ) {
-    prototype[ methodName ] = function () {
-        return BufferArray.prototype[ methodName ].apply( this._bufferArray, arguments );
+var makeFunc = function ( func ) {
+    return function () {
+        return func.apply( this._bufferArray, arguments );
     };
-} );
+};
+
+for ( var methodName in BufferArray.prototype ) {
+    prototype[ methodName ] = makeFunc( BufferArray.prototype[ methodName ] );
+}
 
 BufferArrayProxy.prototype = prototype;
 module.exports = BufferArrayProxy;

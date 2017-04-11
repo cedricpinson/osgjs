@@ -1,5 +1,5 @@
 'use strict';
-var Map = require( 'osg/Map' );
+
 var Notify = require( 'osg/notify' );
 var Texture = require( 'osg/Texture' );
 var Uniform = require( 'osg/Uniform' );
@@ -62,7 +62,7 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
         if ( obj.uniforms[ unit ] !== undefined ) return obj.uniforms[ unit ];
 
-        var uniforms = {
+        var uniforms = obj.uniforms[ unit ] = {
             ViewMatrix: Uniform.createMat4( this.getUniformName( 'viewMatrix' ) ),
             ProjectionMatrix: Uniform.createMat4( this.getUniformName( 'projectionMatrix' ) ),
             DepthRange: Uniform.createFloat4( this.getUniformName( 'depthRange' ) ),
@@ -77,9 +77,6 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         var name = 'Texture' + unit;
         var uniform = Uniform.createInt1( unit, name );
         uniforms[ name ] = uniform;
-
-        // Per Class Uniform Cache
-        obj.uniforms[ unit ] = new Map( uniforms );
 
         return obj.uniforms[ unit ];
     },

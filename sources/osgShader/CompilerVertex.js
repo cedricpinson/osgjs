@@ -67,9 +67,8 @@ var CompilerVertex = {
             } );
         }
 
-        var vars = window.Object.keys( varyings );
-        for ( var j = 0, jl = vars.length; j < jl; j++ ) {
-            var varying = varyings[ vars[ j ] ];
+        for ( var keyVarying in varyings ) {
+            var varying = varyings[ keyVarying ];
             roots.push( varying );
 
             var name = varying.getVariable();
@@ -418,10 +417,7 @@ var wrapperVertexOnly = function ( fn, name ) {
     };
 };
 
-var fns = window.Object.keys( CompilerVertex );
-var nbFunc = fns.length;
-for ( var i = 0; i < nbFunc; ++i ) {
-    var fnName = fns[ i ];
+for ( var fnName in CompilerVertex ) {
     CompilerVertex[ fnName ] = wrapperVertexOnly( CompilerVertex[ fnName ], fnName );
 }
 

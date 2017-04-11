@@ -611,9 +611,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
 
         // loop on each devices and try to initialize it
-        var keys = window.Object.keys( lists );
-        for ( var i = 0, l = keys.length; i < l; i++ ) {
-            var device = keys[ i ];
+        for ( var device in lists ) {
 
             // check if the config has a require
             var initialize = true;
@@ -659,12 +657,11 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         return deviceEnabled;
     },
     updateEventProxy: function ( list, frameStamp ) {
-        var keys = window.Object.keys( list );
-        keys.forEach( function ( key ) {
+        for ( var key in list ) {
             var device = list[ key ];
             if ( device.update )
                 device.update( frameStamp );
-        } );
+        }
     },
 
     setManipulator: function ( manipulator ) {
@@ -680,12 +677,11 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
     removeEventProxy: function () {
         var list = this._eventProxy;
-        var keys = window.Object.keys( list );
-        keys.forEach( function ( key ) {
+        for ( var key in list ) {
             var device = list[ key ];
             if ( device.remove )
                 device.remove();
-        } );
+        }
     },
 
     getEventProxy: function () {

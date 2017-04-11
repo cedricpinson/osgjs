@@ -1,5 +1,4 @@
 'use strict';
-var Map = require( 'osg/Map' );
 var Object = require( 'osg/Object' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var MACROUTILS = require( 'osg/Utils' );
@@ -18,7 +17,7 @@ var StateSet = function () {
     Object.call( this );
 
     this._parents = [];
-    this.attributeMap = new Map();
+    this.attributeMap = {};
 
     this.textureAttributeMapList = [];
 
@@ -31,7 +30,7 @@ var StateSet = function () {
 
     this._updateCallbackList = [];
 
-    this.uniforms = new Map();
+    this.uniforms = {};
 
     this._drawID = -1; // used by the RenderLeaf to decide if it should apply the stateSet
 };
@@ -75,7 +74,6 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
         var name = uniform.getName();
         this.uniforms[ name ] = this.getAttributePair( uniform, mode );
-        this.uniforms.dirty();
     },
 
     addParent: function ( node ) {
@@ -89,11 +87,11 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     },
 
     removeUniform: function ( uniform ) {
-        this.uniforms.remove( uniform.getName() );
+        delete this.uniforms[ uniform.getName() ];
     },
 
     removeUniformByName: function ( uniformName ) {
-        this.uniforms.remove( uniformName );
+        delete this.uniforms[ uniformName ];
     },
 
     getUniform: function ( uniform ) {
@@ -131,8 +129,7 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         if ( textureAttributeMap[ attributeName ] === undefined ) return;
 
 
-        textureAttributeMap.remove( attributeName );
-        this.textureAttributeMapList[ unit ].dirty();
+        delete textureAttributeMap[ attributeName ];
     },
 
     getAttribute: function ( attributeType ) {
@@ -157,7 +154,6 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         if ( this.attributeMap[ attributeName ] !== undefined ) {
             delete this.attributeMap[ attributeName ];
-            this.attributeMap.dirty();
         }
     },
 
@@ -232,13 +228,9 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._binName = binName;
     },
     getAttributeList: function () {
-        var attributeMap = this.attributeMap;
-        var attributeMapKeys = attributeMap.getKeys();
-
-        var l = attributeMapKeys.length;
         var list = [];
-        for ( var i = 0; i < l; i++ ) {
-            list.push( attributeMap[ attributeMapKeys[ i ] ] );
+        for ( var keyAttribute in this.attributeMap ) {
+            list.push( this.attributeMap[ keyAttribute ] );
         }
         return list;
     },
@@ -271,14 +263,13 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     _setTextureAttribute: function ( unit, attributePair ) {
 
         if ( this.textureAttributeMapList[ unit ] === undefined ) {
-            this.textureAttributeMapList[ unit ] = new Map();
+            this.textureAttributeMapList[ unit ] = {};
         }
 
         var name = attributePair.getAttribute().getTypeMember();
         var textureUnitAttributeMap = this.textureAttributeMapList[ unit ];
 
         textureUnitAttributeMap[ name ] = attributePair;
-        textureUnitAttributeMap.dirty();
 
     },
 
@@ -287,7 +278,6 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         var name = attributePair.getAttribute().getTypeMember();
         this.attributeMap[ name ] = attributePair;
-        this.attributeMap.dirty();
 
     }
 

@@ -42,14 +42,10 @@ ShaderProcessor.prototype = {
     // };
     addShaders: function ( shaders ) {
 
-        var keys = window.Object.keys( shaders );
-
-        keys.forEach( function ( key ) {
-
+        for ( var key in shaders ) {
             this._shadersList[ key ] = key;
             this._shadersText[ key ] = shaders[ key ];
-
-        }, this );
+        }
 
     },
 

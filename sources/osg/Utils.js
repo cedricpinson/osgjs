@@ -1,11 +1,9 @@
 'use strict';
+
 var osgPool = require( 'osgUtil/osgPool' );
-var StateGraph = require( 'osg/StateGraph' );
+require( 'osg/StateGraph' );
 var Timer = require( 'osg/Timer' );
 var Notify = require( 'osg/notify' );
-
-// make the warning about StateGraph desappear
-window.Object.keys( StateGraph );
 
 var Utils = {};
 

@@ -12,11 +12,9 @@ var OptionsDefault = {
 };
 
 var Options = function () {
-
-    window.Object.keys( OptionsDefault ).forEach( function ( key ) {
-        this[ key ] = OptionsDefault[ key ];
-    }.bind( this ) );
-
+    for ( var keyOption in OptionsDefault ) {
+        this[ keyOption ] = OptionsDefault[ keyOption ];
+    }
 };
 
 

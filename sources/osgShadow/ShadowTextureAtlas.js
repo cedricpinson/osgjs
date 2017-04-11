@@ -1,5 +1,5 @@
 'use strict';
-var Map = require( 'osg/Map' );
+
 var notify = require( 'osg/notify' );
 var Texture = require( 'osg/Texture' );
 var Uniform = require( 'osg/Uniform' );
@@ -82,8 +82,7 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
             return obj.uniforms[ unit ];
         }
 
-        var uniforms = {};
-
+        var uniforms = obj.uniforms[ unit ] = {};
 
         // shadowmap texture size used for texel space which is viewport independant
         var renderSizeUniform = Uniform.createFloat4( this.getUniformName( 0, 'renderSize' ) );
@@ -108,9 +107,6 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
         var name = 'Texture' + unit;
         var uniform = Uniform.createInt1( unit, name );
         uniforms[ name ] = uniform;
-
-        // Per Class Uniform Cache
-        obj.uniforms[ unit ] = new Map( uniforms );
 
         return obj.uniforms[ unit ];
     },

@@ -57,40 +57,45 @@ ReaderWriterZIP.prototype = {
         return defer.promise;
     },
 
+    _registerZipImage: function ( fileName, type, extension, fileData ) {
+        var data = fileData;
+        // Is an image
+        if ( type === 'base64' ) {
+            data = new window.Image();
+            data.src = 'data:image/' + extension + ';base64,' + fileData;
+        }
+        this._filesMap.set( fileName, data );
+    },
+
     readZipFile: function ( fileOrBlob ) {
-        var self = this;
         var defer = P.defer();
         JSZip.loadAsync( fileOrBlob ).then( function ( zip ) {
             var promisesArray = [];
-            window.Object.keys( zip.files ).forEach( function ( fileName ) {
+
+            for ( var fileName in zip.files ) {
                 var extension = fileName.substr( fileName.lastIndexOf( '.' ) + 1 );
                 // Check if the file is readable by any osgDB plugin
                 var readerWriter = Registry.instance().getReaderWriterForExtension( extension );
                 // We need a hack for osgjs til it is converted to a readerwriter
                 if ( readerWriter !== undefined || extension === 'osgjs' ) {
                     // So this is the main file to read
-                    self._fileName = fileName;
+                    this._fileName = fileName;
                 }
+
                 var type = FileHelper.getTypeForExtension( extension );
                 // We don't need to parse this file
                 if ( type === undefined ) return;
                 if ( type === 'blob' ) type = 'base64'; // Images are base64 encoded in ZIP files
-                var p = zip.file( fileName ).async( type ).then( function ( fileData ) {
-                    var data = fileData;
-                    // Is an image
-                    if ( type === 'base64' ) {
-                        data = new window.Image();
-                        data.src = 'data:image/' + extension + ';base64,' + fileData;
-                    }
-                    self._filesMap.set( fileName, data );
-                } );
+
+                var p = zip.file( fileName ).async( type ).then( this._registerZipImage.bind( this, fileName, type, extension ) );
                 promisesArray.push( p );
-            } );
+            }
 
             P.all( promisesArray ).then( function () {
                 defer.resolve();
             } );
-        } );
+        }.bind( this ) );
+
         return defer.promise;
 
     }

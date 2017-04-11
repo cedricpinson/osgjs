@@ -1,8 +1,8 @@
 'use strict';
+
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
-var Map = require( 'osg/Map' );
 var Notify = require( 'osg/notify' );
 
 
@@ -113,12 +113,10 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
         if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
 
-        var uniforms = {
+        obj.uniforms[ typeMember ] = {
             bias: Uniform.createFloat( this.getUniformName( 'bias' ) ),
             normalBias: Uniform.createFloat( this.getUniformName( 'normalBias' ) )
         };
-
-        obj.uniforms[ typeMember ] = new Map( uniforms );
 
         return obj.uniforms[ typeMember ];
     },

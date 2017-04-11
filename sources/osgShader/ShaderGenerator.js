@@ -1,8 +1,8 @@
 'use strict';
+
 var Notify = require( 'osg/notify' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
-var Map = require( 'osg/Map' );
 var Compiler = require( 'osgShader/Compiler' );
 var ShaderProcessor = require( 'osgShader/ShaderProcessor' );
 
@@ -92,11 +92,7 @@ ShaderGenerator.prototype = {
 
         var hash = '';
         var attributeMap = state.attributeMap;
-        var attributeMapKeys = attributeMap.getKeys();
-
-        for ( var j = 0, k = attributeMapKeys.length; j < k; j++ ) {
-
-            var keya = attributeMapKeys[ j ];
+        for ( var keya in attributeMap ) {
             var attributeStack = attributeMap[ keya ];
             var attr = attributeStack.lastApplied;
 
@@ -126,11 +122,7 @@ ShaderGenerator.prototype = {
             }
             list[ i ] = [];
 
-            var attributeMapForUnitKeys = attributeMapForUnit.getKeys();
-
-            for ( var j = 0, m = attributeMapForUnitKeys.length; j < m; j++ ) {
-
-                var key = attributeMapForUnitKeys[ j ];
+            for ( var key in attributeMapForUnit ) {
                 var attributeStack = attributeMapForUnit[ key ];
                 if ( attributeStack.values().length === 0 ) {
                     continue;
@@ -165,11 +157,8 @@ ShaderGenerator.prototype = {
                 var attributeUniformMap = at.getOrCreateUniforms();
                 // It could happen that uniforms are declared conditionally
                 if ( attributeUniformMap !== undefined ) {
-                    var attributeUniformMapKeys = attributeUniformMap.getKeys();
-
-                    for ( var j = 0, m = attributeUniformMapKeys.length; j < m; j++ ) {
-                        var name = attributeUniformMapKeys[ j ];
-                        var uniform = attributeUniformMap[ name ];
+                    for ( var keyAttribute in attributeUniformMap ) {
+                        var uniform = attributeUniformMap[ keyAttribute ];
                         uniforms[ uniform.getName() ] = uniform;
                     }
                 }
@@ -183,10 +172,8 @@ ShaderGenerator.prototype = {
                     var attr = tat[ b ];
 
                     var texUniformMap = attr.getOrCreateUniforms( a );
-                    var texUniformMapKeys = texUniformMap.getKeys();
 
-                    for ( var t = 0, tl = texUniformMapKeys.length; t < tl; t++ ) {
-                        var tname = texUniformMapKeys[ t ];
+                    for ( var tname in texUniformMap ) {
                         var tuniform = texUniformMap[ tname ];
                         uniforms[ tuniform.getName() ] = tuniform;
                     }
@@ -194,7 +181,7 @@ ShaderGenerator.prototype = {
             }
         }
 
-        return new Map( uniforms );
+        return uniforms;
     },
 
     getOrCreateProgram: ( function () {

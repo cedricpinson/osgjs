@@ -187,14 +187,7 @@ ReaderWriterGLTF.prototype = {
 
 
     findByKey: function ( obj, key ) {
-        if ( !obj )
-            return null;
-        var keys = window.Object.keys( obj );
-        for ( var i = 0; i < keys.length; ++i ) {
-            if ( keys[ i ] === key )
-                return obj[ keys[ i ] ];
-        }
-        return null;
+        return obj && obj[ key ];
     },
 
     registerUpdateCallback: function ( callbackName, node ) {

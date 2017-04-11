@@ -124,9 +124,7 @@ Node.prototype = {
         } else {
 
             // iterate on objects keys
-            var keys = window.Object.keys( this._outputs );
-            for ( var i = 0; i < keys.length; i++ ) {
-                var key = keys[ i ];
+            for ( var key in this._outputs ) {
                 this.autoLink( this._outputs[ key ] );
             }
         }

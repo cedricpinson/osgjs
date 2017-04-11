@@ -41,20 +41,15 @@ var CompilerFragment = {
         this._activeNodeList = {};
 
         // clean texture cache variable (for vertex shader re-usage)
-        var textures = this._texturesByName;
-        var keys = window.Object.keys( textures );
-        for ( var i = 0; i < keys.length; i++ ) {
-            textures[ keys[ i ] ].variable = undefined;
+        for ( var keyTexture in this._texturesByName ) {
+            this._texturesByName[ keyTexture ].variable = undefined;
         }
 
-        var varyings = this._varyings;
-        var vars = window.Object.keys( varyings );
-        for ( var j = 0, jl = vars.length; j < jl; j++ ) {
-            var name = vars[ j ];
-            var varying = varyings[ name ];
+        for ( var keyVarying in this._varyings ) {
+            var varying = this._varyings[ keyVarying ];
             varying.reset();
             this._activeNodeList[ varying.getID() ] = varying;
-            this._variables[ name ] = varying;
+            this._variables[ keyVarying ] = varying;
         }
     },
 
@@ -313,15 +308,13 @@ var CompilerFragment = {
         var texturesInput = [];
         var textures = this._texturesByName;
 
-        var keys = window.Object.keys( textures );
-        for ( var i = 0; i < keys.length; i++ ) {
-            var name = keys[ i ];
-            var texture = textures[ name ];
+        for ( var keyTexture in textures ) {
+            var texture = textures[ keyTexture ];
 
             if ( texture.shadow )
                 continue;
 
-            texturesInput.push( this.getTextureByName( name ).variable );
+            texturesInput.push( this.getTextureByName( keyTexture ).variable );
         }
 
         // if multi texture multiply them all with diffuse
@@ -439,15 +432,12 @@ var CompilerFragment = {
 
 
         // get subset of shadow texture uniform corresponding to light
-        var keys = window.Object.keys( uniforms );
         var object = {};
 
         var prefixUniform = 'shadowTexture';
 
-        for ( var i = 0; i < keys.length; i++ ) {
-
-            var key = keys[ i ];
-            var lightIndexed = key.split( '_' );
+        for ( var keyUniform in uniforms ) {
+            var lightIndexed = keyUniform.split( '_' );
 
             var k;
 
@@ -456,13 +446,13 @@ var CompilerFragment = {
                 if ( Number( lightIndexed[ 1 ] ) === lightNum ) {
 
                     k = prefixUniform + lightIndexed[ 0 ];
-                    object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+                    object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
                 }
 
             } else {
 
-                k = prefixUniform + keys[ i ];
-                object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+                k = prefixUniform + keyUniform;
+                object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
 
             }
 
@@ -611,10 +601,8 @@ var wrapperFragmentOnly = function ( fn, name ) {
     };
 };
 
-var fns = window.Object.keys( CompilerFragment );
-var nbFunc = fns.length;
-for ( var i = 0; i < nbFunc; ++i ) {
-    var fnName = fns[ i ];
+
+for ( var fnName in CompilerFragment ) {
     CompilerFragment[ fnName ] = wrapperFragmentOnly( CompilerFragment[ fnName ], fnName );
 }
 

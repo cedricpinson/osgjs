@@ -1,5 +1,5 @@
 'use strict';
-var Map = require( 'osg/Map' );
+
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var mat3 = require( 'osg/glMatrix' ).mat3;
 var Notify = require( 'osg/notify' );
@@ -61,11 +61,11 @@ var State = function ( shaderGeneratorProxy ) {
     this.vertexAttribList = [];
     this.stateSets = new Stack();
     this._shaderGeneratorNames = new Stack();
-    this.uniforms = new Map();
+    this.uniforms = {};
 
     this.textureAttributeMapList = [];
 
-    this.attributeMap = new Map();
+    this.attributeMap = {};
 
     this.projectionMatrix = Uniform.createMatrix4( mat4.create(), 'uProjectionMatrix' );
     this.modelMatrix = Uniform.createMatrix4( mat4.create(), 'uModelMatrix' );
@@ -78,10 +78,7 @@ var State = function ( shaderGeneratorProxy ) {
     var arrayColorEnable = new Stack();
     arrayColorEnable.globalDefault = Uniform.createFloat1( 0.0, 'uArrayColorEnabled' );
 
-    this.uniforms.setMap( {
-        ArrayColorEnabled: arrayColorEnable
-    } );
-
+    this.uniforms.ArrayColorEnabled = arrayColorEnable;
 
     this._previousColorAttribPair = {};
     this.vertexAttribMap = {};
@@ -369,7 +366,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         attributeMap[ key ] = attributeStack;
         attributeMap[ key ].globalDefault = globalDefault;
-        attributeMap.dirty();
 
         return attributeStack;
 
@@ -415,7 +411,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var key = attribute.getTypeMember();
 
         if ( !this.textureAttributeMapList[ unit ] ) {
-            this.textureAttributeMapList[ unit ] = new Map();
+            this.textureAttributeMapList[ unit ] = {};
         }
 
         var textureUnitAttributeMap = this.getOrCreateTextureAttributeMap( unit );
@@ -495,11 +491,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     applyAttributeMap: function ( attributeMap ) {
 
         var attributeStack;
-        var attributeMapKeys = attributeMap.getKeys();
-
-        for ( var i = 0, l = attributeMapKeys.length; i < l; i++ ) {
-            var key = attributeMapKeys[ i ];
-
+        for ( var key in attributeMap ) {
             attributeStack = attributeMap[ key ];
             if ( !attributeStack || !attributeStack.asChanged ) {
                 continue;
@@ -542,10 +534,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var name;
         var uniform;
 
-        var stateSetUniformMapKeys = stateSetUniformMap.getKeys();
-
-        for ( var i = 0, l = stateSetUniformMapKeys.length; i < l; i++ ) {
-            var key = stateSetUniformMapKeys[ i ];
+        for ( var key in stateSetUniformMap ) {
             var uniformPair = stateSetUniformMap[ key ];
             uniform = uniformPair.getUniform();
             name = uniform.getName();
@@ -560,10 +549,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     popUniformsList: function ( uniformMap, stateSetUniformMap ) {
 
-        var stateSetUniformMapKeys = stateSetUniformMap.getKeys();
-
-        for ( var i = 0, l = stateSetUniformMapKeys.length; i < l; i++ ) {
-            var key = stateSetUniformMapKeys[ i ];
+        for ( var key in stateSetUniformMap ) {
             uniformMap[ key ].pop();
         }
     },
@@ -604,11 +590,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             }
 
 
-            var textureAttributeMapKeys = textureAttributeMap.getKeys();
-
-            for ( var i = 0, lt = textureAttributeMapKeys.length; i < lt; i++ ) {
-                var key = textureAttributeMapKeys[ i ];
-
+            for ( var key in textureAttributeMap ) {
                 var attributeStack = textureAttributeMap[ key ];
 
                 // skip if not stack or not changed in stack
@@ -671,18 +653,13 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     getOrCreateTextureAttributeMap: function ( unit ) {
-        if ( !this.textureAttributeMapList[ unit ] ) this.textureAttributeMapList[ unit ] = new Map();
+        if ( !this.textureAttributeMapList[ unit ] ) this.textureAttributeMapList[ unit ] = {};
         return this.textureAttributeMapList[ unit ];
     },
 
     pushAttributeMap: function ( attributeMap, stateSetAttributeMap ) {
-        /*jshint bitwise: false */
-        var attributeStack;
-        var stateSetAttributeMapKeys = stateSetAttributeMap.getKeys();
 
-        for ( var i = 0, l = stateSetAttributeMapKeys.length; i < l; i++ ) {
-
-            var type = stateSetAttributeMapKeys[ i ];
+        for ( var type in stateSetAttributeMap ) {
             var attributePair = stateSetAttributeMap[ type ];
             var attribute = attributePair.getAttribute();
 
@@ -690,22 +667,16 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 this._createAttributeStack( attributeMap, type, attribute.cloneType() );
             }
 
-            attributeStack = attributeMap[ type ];
+            var attributeStack = attributeMap[ type ];
             this.pushCheckOverride( attributeStack, attribute, attributePair.getValue() );
             attributeStack.asChanged = true;
         }
-        /*jshint bitwise: true */
     },
 
     popAttributeMap: function ( attributeMap, stateSetAttributeMap ) {
 
-        var attributeStack;
-        var stateSetAttributeMapKeys = stateSetAttributeMap.getKeys();
-
-        for ( var i = 0, l = stateSetAttributeMapKeys.length; i < l; i++ ) {
-
-            var type = stateSetAttributeMapKeys[ i ];
-            attributeStack = attributeMap[ type ];
+        for ( var type in stateSetAttributeMap ) {
+            var attributeStack = attributeMap[ type ];
             attributeStack.pop();
             attributeStack.asChanged = true;
 
@@ -889,10 +860,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 }
 
                 var uniformMap = attribute.getOrCreateUniforms();
-                var uniformKeys = uniformMap.getKeys();
-
-                for ( var a = 0, b = uniformKeys.length; a < b; a++ ) {
-                    activeUniformsList.push( uniformMap[ uniformKeys[ a ] ] );
+                for ( var keyUniform in uniformMap ) {
+                    activeUniformsList.push( uniformMap[ keyUniform ] );
                 }
             }
 
@@ -925,10 +894,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                     continue;
                 }
                 var uniformMap = attribute.getOrCreateUniforms();
-                var uniformMapKeys = uniformMap.getKeys();
-
-                for ( var a = 0, b = uniformMapKeys.length; a < b; a++ ) {
-                    activeUniformsList.push( uniformMap[ uniformMapKeys[ a ] ] );
+                for ( var keyUniform in uniformMap ) {
+                    activeUniformsList.push( uniformMap[ keyUniform ] );
                 }
             }
         }
@@ -944,7 +911,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         // now we have a list on uniforms we want to track but we will filter them to use only what is needed by our program
         // not that if you create a uniforms whith the same name of a tracked attribute, and it will override it
-        var uniformsFinal = new Map();
+        var uniformsFinal = {};
 
         for ( var i = 0, l = activeUniformsList.length; i < l; i++ ) {
             var u = activeUniformsList[ i ];
@@ -954,7 +921,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 uniformsFinal[ uniformName ] = u;
             }
         }
-        uniformsFinal.dirty();
         program.trackUniforms = uniformsFinal;
 
     },
@@ -978,7 +944,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             }
 
             var programUniformMap = program.getUniformsCache();
-            var programUniformKeys = programUniformMap.getKeys();
             var uniformMapStackContent = this.uniforms;
 
             var programTrackUniformMap;
@@ -986,8 +951,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 programTrackUniformMap = program.trackUniforms;
 
             var uniform;
-            for ( var i = 0, l = programUniformKeys.length; i < l; i++ ) {
-                var uniformKey = programUniformKeys[ i ];
+            for ( var uniformKey in programUniformMap ) {
                 var location = programUniformMap[ uniformKey ];
                 var uniformStack = uniformMapStackContent[ uniformKey ];
 
@@ -1038,26 +1002,23 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     _computeForeignUniforms: function ( programUniformMap, activeUniformMap ) {
 
-        var uniformMapKeys = programUniformMap.getKeys();
         var uniformMap = programUniformMap;
 
         var foreignUniforms = [];
-        for ( var i = 0, l = uniformMapKeys.length; i < l; i++ ) {
+        for ( var keyUniform in programUniformMap ) {
+            var location = uniformMap[ keyUniform ];
 
-            var name = uniformMapKeys[ i ];
-            var location = uniformMap[ name ];
-
-            if ( location !== undefined && activeUniformMap[ name ] === undefined ) {
+            if ( location !== undefined && activeUniformMap[ keyUniform ] === undefined ) {
 
                 // filter 'standard' uniform matrix that will be applied for all shader
-                if ( name !== this.modelViewMatrix.getName() &&
-                    name !== this.modelMatrix.getName() &&
-                    name !== this.viewMatrix.getName() &&
-                    name !== this.projectionMatrix.getName() &&
-                    name !== this.modelViewNormalMatrix.getName() &&
-                    name !== this.modelNormalMatrix.getName() &&
-                    name !== 'uArrayColorEnabled' ) {
-                    foreignUniforms.push( name );
+                if ( keyUniform !== this.modelViewMatrix.getName() &&
+                    keyUniform !== this.modelMatrix.getName() &&
+                    keyUniform !== this.viewMatrix.getName() &&
+                    keyUniform !== this.projectionMatrix.getName() &&
+                    keyUniform !== this.modelViewNormalMatrix.getName() &&
+                    keyUniform !== this.modelNormalMatrix.getName() &&
+                    keyUniform !== 'uArrayColorEnabled' ) {
+                    foreignUniforms.push( keyUniform );
                 }
             }
 
@@ -1068,14 +1029,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     _removeUniformsNotRequiredByProgram: function ( activeUniformMap, programUniformMap ) {
 
-        var activeUniformMapKeys = activeUniformMap.getKeys();
-
-        for ( var i = 0, l = activeUniformMapKeys.length; i < l; i++ ) {
-            var name = activeUniformMapKeys[ i ];
-            var location = programUniformMap[ name ];
+        for ( var keyUniform in activeUniformMap ) {
+            var location = programUniformMap[ keyUniform ];
             if ( location === undefined || location === null ) {
-                delete activeUniformMap[ name ];
-                activeUniformMap.dirty();
+                delete activeUniformMap[ keyUniform ];
             }
         }
     },
@@ -1105,7 +1062,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     _initUniformCache: function ( program ) {
 
         var activeUniformMap = program.getActiveUniforms();
-        var activeUniformKeys = activeUniformMap.getKeys();
 
         var foreignUniformKeys = program.getForeignUniforms();
         var uniformMapStack = this.uniforms;
@@ -1132,14 +1088,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             }
         }
 
-        if ( activeUniformKeys.length ) {
-            cache = cacheActiveUniforms;
-            for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
-                name = activeUniformKeys[ i ];
-                uniform = activeUniformMap[ name ];
-                cacheData = this._copyUniformEntry( uniform );
-                cache.push( cacheData );
-            }
+        for ( var keyUniform in activeUniformMap ) {
+            uniform = activeUniformMap[ keyUniform ];
+            cacheData = this._copyUniformEntry( uniform );
+            cacheActiveUniforms.push( cacheData );
         }
 
         this._programUniformCache[ program._cacheUniformId ].foreign = cacheForeignUniforms;
@@ -1147,7 +1099,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     },
 
-    _checkCacheAndApplyUniform: function ( uniform, cacheArray, i, programUniformMap, name ) {
+    _checkCacheAndApplyUniform: function ( uniform, cacheArray, i, programUniformMap, nameUniform ) {
         var isCached;
         var internalArray = uniform.getInternalArray();
         var uniformArrayLength = internalArray.length;
@@ -1159,7 +1111,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         }
 
         if ( !isCached ) {
-            var location = programUniformMap[ name ];
+            var location = programUniformMap[ nameUniform ];
             uniform.apply( this._graphicContext, location );
         }
     },
@@ -1186,23 +1138,20 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         // apply active uniforms
         // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
-        var i, l, name, uniform;
-        var activeUniformKeys = activeUniformMap.getKeys();
-
-        for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
-
-            name = activeUniformKeys[ i ];
-            uniform = activeUniformMap[ name ];
-
-            this._checkCacheAndApplyUniform( uniform, cacheUniformsActive, i, programUniformMap, name );
+        var l, uniform, keyUniform;
+        var i = 0;
+        for ( keyUniform in activeUniformMap ) {
+            uniform = activeUniformMap[ keyUniform ];
+            this._checkCacheAndApplyUniform( uniform, cacheUniformsActive, i, programUniformMap, keyUniform );
+            i++; // TODO not good, for in ordered consistency, etc...
         }
 
         var uniformMapStack = this.uniforms;
 
         // apply now foreign uniforms, it's uniforms needed by the program but not contains in attributes used to generate this program
         for ( i = 0, l = foreignUniformKeys.length; i < l; i++ ) {
-            name = foreignUniformKeys[ i ];
-            var uniformStack = uniformMapStack[ name ];
+            keyUniform = foreignUniformKeys[ i ];
+            var uniformStack = uniformMapStack[ keyUniform ];
             if ( uniformStack !== undefined ) {
                 if ( uniformStack.values().length === 0 ) {
                     uniform = uniformStack.globalDefault;
@@ -1212,7 +1161,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 }
             }
 
-            this._checkCacheAndApplyUniform( uniform, cacheUniformsForeign, i, programUniformMap, name );
+            this._checkCacheAndApplyUniform( uniform, cacheUniformsForeign, i, programUniformMap, keyUniform );
 
         }
     },

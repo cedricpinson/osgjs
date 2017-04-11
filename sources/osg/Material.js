@@ -1,9 +1,9 @@
 'use strict';
+
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var Uniform = require( 'osg/Uniform' );
-var Map = require( 'osg/Map' );
 
 // Define a material attribute
 var Material = function () {
@@ -31,7 +31,7 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
         var obj = Material;
         if ( obj.uniforms ) return obj.uniforms;
 
-        var uniformList = {
+        obj.uniforms = {
             ambient: Uniform.createFloat4( 'uMaterialAmbient' ),
             diffuse: Uniform.createFloat4( 'uMaterialDiffuse' ),
             specular: Uniform.createFloat4( 'uMaterialSpecular' ),
@@ -39,7 +39,6 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
             shininess: Uniform.createFloat1( 'uMaterialShininess' )
         };
 
-        obj.uniforms = new Map( uniformList );
         return obj.uniforms;
     },
 

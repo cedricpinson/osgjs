@@ -51,17 +51,14 @@ ReaderParser.parseSceneGraph = function ( node, options ) {
     if ( node.Version !== undefined && node.Version > 0 ) {
         MACROUTILS.time( 'osgjs.metric:ReaderParser.parseSceneGraph' );
 
-        var getPropertyValue = function ( o ) {
-            var props = window.Object.keys( o );
-            for ( var i = 0, l = props.length; i < l; i++ ) {
-                if ( props[ i ] !== 'Generator' && props[ i ] !== 'Version' ) {
-                    return props[ i ];
-                }
+        var key;
+        for ( var prop in node ) {
+            if ( prop !== 'Generator' && prop !== 'Version' ) {
+                key = prop;
+                break;
             }
-            return undefined;
-        };
+        }
 
-        var key = getPropertyValue( node );
         if ( key ) {
             var obj = {};
             obj[ key ] = node[ key ];
@@ -210,11 +207,9 @@ ReaderParser.parseSceneGraphDeprecated = function ( node ) {
             }
         }
 
-        var attrKeys = window.Object.keys( attributes );
-        for ( var i = 0, li = attrKeys.length; i < li; i++ ) {
-            var key = attrKeys[ i ];
-            var attributeArray = attributes[ key ];
-            geom.getVertexAttributeList()[ key ] = new BufferArray( attributeArray.type, attributeArray.elements, attributeArray.itemSize );
+        for ( var attr in attributes ) {
+            var attributeArray = attributes[ attr ];
+            geom.getVertexAttributeList()[ attr ] = new BufferArray( attributeArray.type, attributeArray.elements, attributeArray.itemSize );
         }
 
     }

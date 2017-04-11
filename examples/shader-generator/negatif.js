@@ -23,9 +23,9 @@
             var obj = NegatifAttribute;
             if ( obj.uniforms ) return obj.uniforms;
 
-            obj.uniforms = new osg.Map( {
+            obj.uniforms = {
                 enable: osg.Uniform.createInt1( 0, 'negatifEnable' )
-            } );
+            };
 
             return obj.uniforms;
         },

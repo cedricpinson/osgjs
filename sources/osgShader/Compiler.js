@@ -220,11 +220,9 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         this._compiledNodeList = {};
 
         // list all vars
-        var vars = window.Object.keys( this._variables );
         var variables = [];
-        for ( var j = 0, jl = vars.length; j < jl; j++ ) {
-
-            var varNode = this._variables[ vars[ j ] ];
+        for ( var keyVariable in this._variables ) {
+            var varNode = this._variables[ keyVariable ];
             var d = varNode.declare();
             if ( d ) {
                 variables.push( d );
@@ -344,14 +342,13 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
     // Map of uniform from a StateAttribute or TextureStateAttribute
     getOrCreateUniformFromUniformMap: function ( uniforms, prefix ) {
-        var keys = window.Object.keys( uniforms );
         var object = {};
 
         var prefixUniform = prefix ? prefix : '';
 
-        for ( var i = 0; i < keys.length; i++ ) {
-            var k = prefixUniform + keys[ i ];
-            object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
+        for ( var keyUniform in uniforms ) {
+            var k = prefixUniform + keyUniform;
+            object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
         }
 
         return object;
@@ -539,10 +536,10 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
 
         var inputs = node.getInputs();
         if ( !Array.isArray( inputs ) ) {
-            var keys = window.Object.keys( inputs );
             var objectToArray = [];
-            for ( var j = 0; j < keys.length; j++ )
-                objectToArray.push( inputs[ keys[ j ] ] );
+            for ( var keyInput in inputs ) {
+                objectToArray.push( inputs[ keyInput ] );
+            }
             inputs = objectToArray;
         }
 
