@@ -1,4 +1,5 @@
 'use strict';
+var notify = require( 'osg/notify' );
 
 /**
  * Uniform manage variable used in glsl shader.
@@ -45,6 +46,7 @@ Uniform.prototype = {
 
     // no type checking, so array should be valid
     setInternalArray: function ( array ) {
+        notify.warn( 'setInternalArray deprecated, please use getInternalArray instead: ' + array.length );
         this._data = array;
     },
 
@@ -121,11 +123,15 @@ Uniform.prototype.setInt3 = Uniform.prototype.setFloat3;
 Uniform.prototype.setInt4 = Uniform.prototype.setFloat4;
 
 
-var createUniformX = function ( dataOrName, uniformName, defaultConstructor, glSignature, type, isMatrix ) {
-    var data = uniformName === undefined ? undefined : dataOrName;
-    var uniform = new Uniform( uniformName === undefined ? dataOrName : uniformName );
+// data, name
+// name
+// data, name, nbItem
+// name, nbItem
+var createUniformX = function ( dataOrName, nameOrNbItem, internalArray, glSignature, type, isMatrix ) {
+    var data = ( nameOrNbItem && nameOrNbItem.length ) ? dataOrName : undefined;
+    var uniform = new Uniform( data !== undefined ? nameOrNbItem : dataOrName );
 
-    uniform._data = defaultConstructor();
+    uniform._data = internalArray;
 
     if ( data !== undefined ) {
         if ( data.length ) {
@@ -142,116 +148,82 @@ var createUniformX = function ( dataOrName, uniformName, defaultConstructor, glS
     return uniform;
 };
 
-var constructorFloat = function () {
-    return new Float32Array( 1 );
-};
-
-var constructorFloat2 = function () {
-    return new Float32Array( 2 );
-};
-
-var constructorFloat3 = function () {
-    return new Float32Array( 3 );
-};
-
-var constructorFloat4 = function () {
-    return new Float32Array( 4 );
-};
-
-var constructorInt = function () {
-    return new Int32Array( 1 );
-};
-
-var constructorInt2 = function () {
-    return new Int32Array( 2 );
-};
-
-var constructorInt3 = function () {
-    return new Int32Array( 3 );
-};
-
-var constructorInt4 = function () {
-    return new Int32Array( 4 );
-};
-
-var constructorMat2 = function () {
-    var out = new Float32Array( 4 );
-    out[ 0 ] = out[ 3 ] = 1.0;
+var createMat2 = function ( nbItem ) {
+    var out = new Float32Array( nbItem * 4 );
+    for ( var i = 0; i < out.length; i += 4 ) out[ i ] = out[ i + 3 ] = 1.0;
     return out;
 };
 
-var constructorMat3 = function () {
-    var out = new Float32Array( 9 );
-    out[ 0 ] = out[ 4 ] = out[ 8 ] = 1.0;
+var createMat3 = function ( nbItem ) {
+    var out = new Float32Array( nbItem * 9 );
+    for ( var i = 0; i < out.length; i += 9 ) out[ i ] = out[ i + 4 ] = out[ i + 8 ] = 1.0;
     return out;
 };
 
-var constructorMat4 = function () {
-    var out = new Float32Array( 16 );
-    out[ 0 ] = out[ 5 ] = out[ 10 ] = out[ 15 ] = 1.0;
+var createMat4 = function ( nbItem ) {
+    var out = new Float32Array( nbItem * 16 );
+    for ( var i = 0; i < out.length; i += 16 ) out[ i ] = out[ i + 5 ] = out[ i + 10 ] = out[ i + 15 ] = 1.0;
     return out;
+};
+
+var _getNbItem = function ( nameOrNbItem, nbItem ) {
+    if ( nbItem ) return nbItem;
+    if ( nameOrNbItem && !nameOrNbItem.length ) return nameOrNbItem;
+    return 1;
 };
 
 // works also for float array but data must be given
-Uniform.createFloat1 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorFloat, 'uniform1fv', 'float' );
+Uniform.createFloat1 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 1 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform1fv', 'float' );
+};
+Uniform.createFloat2 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 2 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform2fv', 'vec2' );
+};
+Uniform.createFloat3 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 3 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform3fv', 'vec3' );
+};
+Uniform.createFloat4 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 4 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform4fv', 'vec4' );
 };
 
-Uniform.createInt1 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorInt, 'uniform1iv', 'int' );
+Uniform.createInt1 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 1 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform1iv', 'int' );
+};
+Uniform.createInt2 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 2 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform2iv', 'vec2i' );
+};
+Uniform.createInt3 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 3 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform3iv', 'vec3i' );
+};
+Uniform.createInt4 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 4 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform4iv', 'vec4i' );
 };
 
-Uniform.createFloat2 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorFloat2, 'uniform2fv', 'vec2' );
+Uniform.createMatrix2 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, createMat2( _getNbItem( nameOrNbItem, nbItem ) ), 'uniformMatrix2fv', 'mat2', true );
 };
 
-Uniform.createInt2 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorInt2, 'uniform2iv', 'vec2i' );
+Uniform.createMatrix3 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, createMat3( _getNbItem( nameOrNbItem, nbItem ) ), 'uniformMatrix3fv', 'mat3', true );
 };
 
-Uniform.createFloat3 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorFloat3, 'uniform3fv', 'vec3' );
-};
-
-Uniform.createInt3 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorInt3, 'uniform3iv', 'vec3i' );
-};
-
-Uniform.createFloat4 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorFloat4, 'uniform4fv', 'vec4' );
-};
-
-Uniform.createInt4 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorInt4, 'uniform4iv', 'vec4i' );
-};
-
-Uniform.createMatrix2 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorMat2, 'uniformMatrix2fv', 'mat2', true );
-};
-
-Uniform.createMatrix3 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorMat3, 'uniformMatrix3fv', 'mat3', true );
-};
-
-Uniform.createMatrix4 = function ( data, uniformName ) {
-    return createUniformX( data, uniformName, constructorMat4, 'uniformMatrix4fv', 'mat4', true );
+Uniform.createMatrix4 = function ( dataOrName, nameOrNbItem, nbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, createMat4( _getNbItem( nameOrNbItem, nbItem ) ), 'uniformMatrix4fv', 'mat4', true );
 };
 
 // alias
 Uniform.float = Uniform.createFloatArray = Uniform.createFloat = Uniform.createFloat1;
-Uniform.int = Uniform.createIntArray = Uniform.createInt = Uniform.createInt1;
-
 Uniform.vec2 = Uniform.createFloat2Array = Uniform.createFloat2;
-Uniform.vec2i = Uniform.createInt2Array = Uniform.createInt2;
-
 Uniform.vec3 = Uniform.createFloat3Array = Uniform.createFloat3;
-Uniform.vec3i = Uniform.createInt3Array = Uniform.createInt3;
-
 Uniform.vec4 = Uniform.createFloat4Array = Uniform.createFloat4;
+
+Uniform.int = Uniform.createIntArray = Uniform.createInt = Uniform.createInt1;
+Uniform.vec2i = Uniform.createInt2Array = Uniform.createInt2;
+Uniform.vec3i = Uniform.createInt3Array = Uniform.createInt3;
 Uniform.vec4i = Uniform.createInt4Array = Uniform.createInt4;
 
-Uniform.mat2 = Uniform.createMat2 = Uniform.createMatrix2;
-Uniform.mat3 = Uniform.createMat3 = Uniform.createMatrix3;
-Uniform.mat4 = Uniform.createMat4 = Uniform.createMatrix4;
+Uniform.mat2 = Uniform.createMat2Array = Uniform.createMat2 = Uniform.createMatrix2;
+Uniform.mat3 = Uniform.createMat3Array = Uniform.createMat3 = Uniform.createMatrix3;
+Uniform.mat4 = Uniform.createMat4Array = Uniform.createMat4 = Uniform.createMatrix4;
 
 module.exports = Uniform;
