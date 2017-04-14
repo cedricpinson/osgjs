@@ -80,8 +80,8 @@ window.EnvironmentSphericalHarmonics = ( function () {
                 return value * this._sphCoef[ index ];
             }.bind( this ) );
 
-            this._uniformSpherical = osg.Uniform.createFloat3Array( 'uEnvironmentSphericalHarmonics' );
-            this._uniformSpherical.setInternalArray( this._sphCoef );
+            this._uniformSpherical = osg.Uniform.createFloat3Array( 'uEnvironmentSphericalHarmonics', 9 );
+            this._uniformSpherical.getInternalArray().set( this._sphCoef );
 
         },
 

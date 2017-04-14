@@ -30,25 +30,21 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
         return new SkinningAttribute( true );
     },
 
-    setBoneUniformSize: function ( boneUniformSize ) {
-        this._boneUniformSize = boneUniformSize;
-    },
-
     getBoneUniformSize: function () {
         return this._boneUniformSize !== undefined ? this._boneUniformSize : SkinningAttribute.maxBoneUniformSize;
     },
 
     getOrCreateUniforms: function () {
         var obj = SkinningAttribute;
-        var unifHash = this.getBoneUniformSize();
+        var boneSize = this.getBoneUniformSize();
 
-        if ( obj.uniforms[ unifHash ] ) return obj.uniforms[ unifHash ];
+        if ( obj.uniforms[ boneSize ] ) return obj.uniforms[ boneSize ];
 
-        obj.uniforms[ unifHash ] = {
-            uBones: Uniform.createFloat4Array( 'uBones' )
+        obj.uniforms[ boneSize ] = {
+            uBones: Uniform.createFloat4Array( 'uBones', boneSize )
         };
 
-        return obj.uniforms[ unifHash ];
+        return obj.uniforms[ boneSize ];
     },
 
     setMatrixPalette: function ( matrixPalette ) {
@@ -71,13 +67,7 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
     },
 
     getHash: function () {
-        // bonesize is important, as the shader itself
-        // has a different code and uniform are not shared
-        // geoms have each their own bones matrix palette
-        // it's up to rigGeometry to use same anim Attrib per
-        // same bone matrix palette
-        // as uniform array size must be statically declared
-        // in shader code
+        // bone uniform size is hashed because the size of uniform is statically declared in the shader
         return this.getTypeMember() + this.getBoneUniformSize() + this.isEnabled();
     },
 
@@ -85,7 +75,7 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
 
         if ( !this._enable ) return;
 
-        this.getOrCreateUniforms().uBones.setInternalArray( this._matrixPalette );
+        this.getOrCreateUniforms().uBones.getInternalArray().set( this._matrixPalette );
 
     }
 
