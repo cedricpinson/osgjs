@@ -39,6 +39,8 @@ OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
     'WebVR'
 ];
 
+var TWO_PI = 2 * Math.PI;
+
 /** @lends OrbitManipulator.prototype */
 OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     init: function () {
@@ -234,7 +236,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         };
     } )(),
     computeRotation: ( function () {
-        var right = vec3.fromValues( 1.0, 0.0, 0.0 );
+        var rightDir = vec3.fromValues( 1.0, 0.0, 0.0 );
 
         return function ( dx, dy ) {
             var pitch = Math.atan( -this._rotation[ 6 ] / this._rotation[ 5 ] ) + dy / 10.0;
@@ -242,20 +244,43 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
             var deltaYaw = dx / 10.0;
             var previousYaw = Math.atan2( this._rotation[ 4 ], this._rotation[ 0 ] );
-            var yaw = previousYaw + deltaYaw;
-
-            if ( this._limitYawRight !== Math.PI || this._limitYawLeft !== -Math.PI ) {
-                if ( deltaYaw > 0.0 && previousYaw <= this._limitYawRight && yaw > this._limitYawRight ) {
-                    yaw = this._limitYawRight;
-                } else if ( deltaYaw < 0.0 && previousYaw >= this._limitYawLeft && yaw < this._limitYawLeft ) {
-                    yaw = this._limitYawLeft;
-                }
-            }
-
-            mat4.fromRotation( this._rotation, -pitch, right );
+            var yaw = this._computeYaw( previousYaw, deltaYaw, this._limitYawLeft, this._limitYawRight );
+            mat4.fromRotation( this._rotation, -pitch, rightDir );
             mat4.rotate( this._rotation, this._rotation, -yaw, this._upz );
         };
     } )(),
+
+    _computeYaw: function ( previousYaw, deltaYaw, left, right ) {
+        var yaw = previousYaw + deltaYaw;
+
+        if ( right !== Math.PI || left !== -Math.PI ) {
+            if ( right < left ) {
+                if ( yaw > Math.PI ) {
+                    previousYaw -= TWO_PI;
+                    yaw -= TWO_PI;
+                }
+                if ( yaw < -Math.PI ) {
+                    previousYaw += TWO_PI;
+                    yaw += TWO_PI;
+                }
+            }
+
+            if ( deltaYaw === 0 ) {
+                var isOutsideLimit = false;
+                if ( left > right ) isOutsideLimit = ( yaw < left && yaw > right );
+                else isOutsideLimit = yaw < left || yaw > right;
+                if ( isOutsideLimit ) yaw = Math.abs( yaw - left ) > Math.abs( yaw - right ) ? right : left;
+            }
+
+            if ( deltaYaw > 0.0 && previousYaw <= right && yaw > right ) {
+                yaw = right;
+            } else if ( deltaYaw < 0.0 && previousYaw >= left && yaw < left ) {
+                yaw = left;
+            }
+        }
+        return yaw;
+    },
+
     computeZoom: function ( dz ) {
         this.zoom( dz );
     },
