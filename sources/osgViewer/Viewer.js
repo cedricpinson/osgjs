@@ -17,81 +17,6 @@ var WebGLDebugUtils = require( 'osgViewer/webgl-debug' );
 var requestFile = require( 'osgDB/requestFile' );
 
 
-var OptionsURL = ( function () {
-    var options = {};
-    ( function ( options ) {
-        var vars = [],
-            hash;
-        if ( !window.location.search ) return;
-
-        // slice(1) to remove leading '?'
-        var hashes = window.location.search.slice( 1 ).split( '&' );
-        for ( var i = 0; i < hashes.length; i++ ) {
-            hash = hashes[ i ].split( '=' );
-            var element = hash[ 0 ];
-            vars.push( element );
-            var result = hash[ 1 ];
-            if ( result === undefined ) {
-                result = '1';
-            }
-            options[ element ] = result;
-        }
-    } )( options );
-
-    if ( options.log !== undefined ) {
-        var level = options.log.toLowerCase();
-
-        switch ( level ) {
-        case 'debug':
-            Notify.setNotifyLevel( Notify.DEBUG );
-            break;
-        case 'info':
-            Notify.setNotifyLevel( Notify.INFO );
-            break;
-        case 'notice':
-            Notify.setNotifyLevel( Notify.NOTICE );
-            break;
-        case 'warn':
-            Notify.setNotifyLevel( Notify.WARN );
-            break;
-        case 'error':
-            Notify.setNotifyLevel( Notify.ERROR );
-            break;
-        case 'html':
-            ( function () {
-                var logContent = [];
-                var divLogger = document.createElement( 'div' );
-                var codeElement = document.createElement( 'pre' );
-                document.addEventListener( 'DOMContentLoaded', function () {
-                    document.body.appendChild( divLogger );
-                    divLogger.appendChild( codeElement );
-                } );
-                var logFunc = function ( str ) {
-                    logContent.unshift( str );
-                    codeElement.innerHTML = logContent.join( '\n' );
-                };
-                divLogger.style.overflow = 'hidden';
-                divLogger.style.position = 'absolute';
-                divLogger.style.zIndex = '10000';
-                divLogger.style.height = '100%';
-                divLogger.style.maxWidth = '600px';
-                codeElement.style.overflow = 'scroll';
-                codeElement.style.width = '105%';
-                codeElement.style.height = '100%';
-                codeElement.style.fontSize = '10px';
-
-                [ 'log', 'error', 'warn', 'info', 'debug' ].forEach( function ( value ) {
-                    window.console[ value ] = logFunc;
-                } );
-            } )();
-            break;
-        }
-    }
-
-    return options;
-} )();
-
-
 var getGLSLOptimizer = function () {
 
     var deferOptimizeGLSL = P.defer();
@@ -203,7 +128,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         }
 
         // if url options override url options
-        options.extend( OptionsURL );
+        options.extendWithOptionsURL();
 
         // Activate global trace on log call
         if ( options.getBoolean( 'traceLogCall' ) === true ) Notify.traceLogCall = true;

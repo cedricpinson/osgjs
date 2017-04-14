@@ -1,7 +1,7 @@
 #pragma include "colorSpace.glsl"
 
-vec3 textureCubeRGBE(const in samplerCube texture, const in vec3 uv) {
-    vec4 rgbe = textureCube(texture, uv );
+vec3 textureCubeRGBE(const in samplerCube tex, const in vec3 uv) {
+    vec4 rgbe = textureCube(tex, uv );
     return RGBEToRGB( rgbe );
 }
 
@@ -16,12 +16,12 @@ vec3 scaleDirection(const in float scale, const in vec3 dirIn)
     return dir;
 }
 
-vec3 textureCubemapLod(const in samplerCube texture, const in vec3 dir, const in float lod )
+vec3 textureCubemapLod(const in samplerCube tex, const in vec3 dir, const in float lod )
 {
 #ifdef CUBEMAP_LOD
-    vec4 rgba = textureCubeLodEXT( texture, dir, lod );
+    vec4 rgba = textureCubeLodEXT( tex, dir, lod );
 #else
-    vec4 rgba = textureCube( texture, dir );
+    vec4 rgba = textureCube( tex, dir );
 #endif
 #ifdef FLOAT
     return rgba.rgb;
@@ -37,9 +37,9 @@ vec3 textureCubemapLod(const in samplerCube texture, const in vec3 dir, const in
 #endif
 }
 
-vec3 textureCubemap(const in samplerCube texture, const in vec3 dir )
+vec3 textureCubemap(const in samplerCube tex, const in vec3 dir )
 {
-    vec4 rgba = textureCube( texture, dir );
+    vec4 rgba = textureCube( tex, dir );
 #ifdef FLOAT
     return rgba.rgb;
 #endif
@@ -71,7 +71,7 @@ vec3 cubemapSeamlessFixDirection(const in vec3 direction, const in float scale )
     return dir;
 }
 
-vec3 textureCubeLodEXTFixed(const in samplerCube texture, const in vec3 direction, const in float lodInput )
+vec3 textureCubeLodEXTFixed(const in samplerCube tex, const in vec3 direction, const in float lodInput )
 {
 
     float lod = min( uEnvironmentLodRange[0], lodInput );
@@ -80,15 +80,15 @@ vec3 textureCubeLodEXTFixed(const in samplerCube texture, const in vec3 directio
     float scale = 1.0 - exp2(lod) / uEnvironmentSize[0];
     vec3 dir = cubemapSeamlessFixDirection( direction, scale);
 
-    return textureCubemapLod( texture, dir, lod ).rgb;
+    return textureCubemapLod( tex, dir, lod ).rgb;
 }
 
 
 // seamless cubemap for background ( no lod )
-vec3 textureCubeFixed(const in samplerCube texture, const in vec3 direction )
+vec3 textureCubeFixed(const in samplerCube tex, const in vec3 direction )
 {
     // http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
     float scale = 1.0 - 1.0 / uEnvironmentSize[0];
     vec3 dir = cubemapSeamlessFixDirection( direction, scale);
-    return textureCubemap( texture, dir );
+    return textureCubemap( tex, dir );
 }

@@ -787,7 +787,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         if ( this._currentVAO !== vao ) {
 
-            this._extVAO.bindVertexArrayOES( vao );
+            this._graphicContext.bindVertexArray( vao );
             this._currentVAO = vao;
 
             // disable cache to force a re enable of array

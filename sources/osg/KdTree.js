@@ -121,7 +121,7 @@ BuildKdTree.prototype = {
             if ( mode === PrimitiveSet.TRIANGLES )
                 totalLenArray += prim.getCount();
             else if ( mode === PrimitiveSet.TRIANGLE_STRIP || mode === PrimitiveSet.TRIANGLE_FAN )
-                totalLenArray += ( prim.getCount() - 2 ) * 3;
+                totalLenArray += Math.abs( ( prim.getCount() - 2 ) ) * 3;
         }
         var indices = new MACROUTILS.Uint32Array( totalLenArray );
         var next = 0;

@@ -429,6 +429,12 @@ Composer.Filter.Custom = function ( fragmentShader, uniforms ) {
 };
 
 Composer.Filter.Custom.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+    getFragmentShader: function () {
+        return this._fragmentShader;
+    },
+    getVertexShader: function () {
+        return this._vertexShader;
+    },
     setFragmentShader: function ( f ) {
         this._fragmentShader = f;
     },

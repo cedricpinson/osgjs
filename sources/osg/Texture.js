@@ -58,11 +58,12 @@ Texture.BROWSER_DEFAULT_WEBGL = 0x9244;
 Texture.NONE = 0x0;
 
 Texture.DEPTH_COMPONENT = 0x1902;
-Texture.ALPHA = 0x1906;
-Texture.RGB = 0x1907;
-Texture.RGBA = 0x1908;
-Texture.LUMINANCE = 0x1909;
-Texture.LUMINANCE_ALPHA = 0x190A;
+Texture.DEPTH_COMPONENT16 = 0x81A5;
+Texture.DEPTH_STENCIL = 0x84F9;
+// gl2
+Texture.DEPTH24_STENCIL8 = 0x88F0;
+Texture.DEPTH_COMPONENT24 = 0x81A6;
+Texture.DEPTH_COMPONENT32F = 0x8CAC;
 
 // DXT formats, from:
 // http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/
@@ -116,13 +117,127 @@ Texture.TEXTURE_CUBE_MAP_POSITIVE_Z = 0x8519;
 Texture.TEXTURE_CUBE_MAP_NEGATIVE_Z = 0x851A;
 Texture.MAX_CUBE_MAP_TEXTURE_SIZE = 0x851C;
 
+// https: //www.khronos.org/registry/webgl/specs/latest/2.0/#3.7.6
+///////////
+// TYPE GL1
+///////////
 Texture.UNSIGNED_BYTE = 0x1401;
 Texture.UNSIGNED_SHORT = 0x1403;
 Texture.UNSIGNED_SHORT_4_4_4_4 = 0x8033;
 Texture.UNSIGNED_SHORT_5_5_5_1 = 0x8034;
 Texture.UNSIGNED_SHORT_5_6_5 = 0x8363;
 Texture.FLOAT = 0x1406;
-Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
+Texture.HALF_FLOAT_OES = 0x8D61;
+// TYPE GL2
+Texture.HALF_FLOAT = 0x140B;
+Texture.UNSIGNED_INT_10F_11F_11F_REV = 0x8C3B;
+Texture.UNSIGNED_INT_24_8 = 0x84FA;
+
+/////////////
+// FORMAT GL1
+/////////////
+Texture.ALPHA = 0x1906;
+Texture.RGB = 0x1907;
+Texture.RGBA = 0x1908;
+Texture.LUMINANCE = 0x1909;
+Texture.LUMINANCE_ALPHA = 0x190A;
+// format gl2
+Texture.RED_INTEGER = 0x8D94;
+Texture.RGB_INTEGER = 0x8D98;
+Texture.RGBA_INTEGER = 0x8D99;
+Texture.RG_INTEGER = 0x8228;
+Texture.RED = 0x1903;
+
+//////////////////////
+// INTERNAL FORMAT GL2
+//////////////////////
+Texture.R8 = 0x8229;
+Texture.R8UI = 0x8232;
+Texture.RG8 = 0x822B;
+Texture.RG8UI = 0x8238;
+Texture.RGB8 = 0x8F96;
+Texture.RGB565 = 0x8D62;
+Texture.RGB9_E5 = 0x8C3D;
+Texture.RGB8UI = 0x8D7D;
+Texture.RGBA8 = 0x8058;
+Texture.RGB5_A1 = 0x8057;
+Texture.RGBA4 = 0x8056;
+Texture.RGBA8UI = 0x8D7C;
+Texture.SRGB8_ALPHA8 = 0x8C43;
+Texture.SRGB8 = 0x8C41;
+
+// HALF FLOAT - FLOAT
+Texture.R16F = 0x822D;
+Texture.RG16F = 0x822F;
+Texture.RGB16F = 0x881B;
+Texture.RGBA16F = 0x881A;
+Texture.R11F_G11F_B10F = 0x8C3A; // and UNSIGNED_INT_10F_11F_11F_REV
+// FLOAT
+Texture.R32F = 0x822E;
+Texture.RG32F = 0x8230;
+Texture.RGB32F = 0x8815;
+Texture.RGBA32F = 0x8814;
+
+var createMapGl2ToGl1 = function () {
+    var map = {};
+
+    map[ Texture.R8 ] = Texture.LUMINANCE;
+    map[ Texture.R8UI ] = Texture.LUMINANCE;
+    map[ Texture.R16F ] = Texture.LUMINANCE;
+    map[ Texture.R32F ] = Texture.LUMINANCE;
+    map[ Texture.SRGB8 ] = Texture.LUMINANCE;
+    map[ Texture.RG8 ] = Texture.RGB;
+    map[ Texture.RG8UI ] = Texture.RGB;
+    map[ Texture.RG16F ] = Texture.RGB;
+    map[ Texture.RG32F ] = Texture.RGB;
+    map[ Texture.RGB8 ] = Texture.RGB;
+    map[ Texture.RGB565 ] = Texture.RGB;
+    map[ Texture.RGB9_E5 ] = Texture.RGB;
+    map[ Texture.RGB8UI ] = Texture.RGB;
+    map[ Texture.RGB5_A1 ] = Texture.RGB;
+    map[ Texture.RGB16F ] = Texture.RGB;
+    map[ Texture.RGB32F ] = Texture.RGB;
+    map[ Texture.RGBA8 ] = Texture.RGBA;
+    map[ Texture.R11F_G11F_B10F ] = Texture.RGBA;
+    map[ Texture.RGBA16F ] = Texture.RGBA;
+    map[ Texture.RGBA32F ] = Texture.RGBA;
+    map[ Texture.SRGB8_ALPHA8 ] = Texture.RGBA;
+
+    return map;
+};
+
+var createMapGl1ToGl2 = function () {
+    var map = {};
+
+    var float = {};
+    var halfFloat = {};
+    var ushort = {};
+    var uint = {};
+    var uin24 = {};
+
+    map[ Texture.FLOAT ] = float;
+    map[ Texture.HALF_FLOAT ] = map[ Texture.HALF_FLOAT_OES ] = halfFloat;
+    map[ Texture.UNSIGNED_SHORT ] = ushort;
+    map[ Texture.UNSIGNED_INT ] = uint;
+    map[ Texture.UNSIGNED_INT_24_8 ] = uin24;
+
+    halfFloat[ Texture.LUMINANCE ] = Texture.R16F;
+    halfFloat[ Texture.RGB ] = Texture.RGB16F;
+    halfFloat[ Texture.RGBA ] = Texture.RGBA16F;
+
+    float[ Texture.LUMINANCE ] = Texture.R32F;
+    float[ Texture.RGB ] = Texture.RGB32F;
+    float[ Texture.RGBA ] = Texture.RGBA32F;
+
+    ushort[ Texture.DEPTH_COMPONENT ] = Texture.DEPTH_COMPONENT16;
+    uint[ Texture.DEPTH_COMPONENT ] = Texture.DEPTH_COMPONENT32F;
+    uin24[ Texture.DEPTH_STENCIL ] = Texture.DEPTH24_STENCIL8;
+
+    return map;
+};
+
+var internalFormatGl2ToGl1 = createMapGl2ToGl1();
+var internalFormatGl1ToGl2 = createMapGl1ToGl2();
 
 Texture._sTextureManager = new window.Map();
 
@@ -441,6 +556,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     setInternalFormatType: function ( value ) {
+        // UNSIGNED_BYTE, HALF_FLOAT, FLOAT
 
         if ( typeof value === 'string' ) {
             this._type = Texture[ value ];
@@ -480,6 +596,9 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     setInternalFormat: function ( formatSource ) {
+        // RGB, RGBA, ALPHA, LUMINANCE, LUMINANCE_ALPHA
+        // RGB16F, RGB32F, etc...
+        // DEPTH_COMPONENT, DEPTH_STENCIL
 
         var format = formatSource;
         if ( format ) {
@@ -551,14 +670,14 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         var img = this._image;
         if ( img && img.hasMipmap() ) {
 
-            var internalFormat = this._internalFormat;
+            var internalFormat = this._getInternalFormatGL();
             var mips = img.getMipmap();
             for ( var level = 1, nbLevel = mips.length; level < nbLevel; level++ ) {
                 var imi = mips[ level ];
                 if ( this._isCompressed )
-                    this.applyTexImage2D( gl, this._textureTarget, level, this._internalFormat, imi.getWidth(), imi.getHeight(), 0, imi.getImage() );
+                    this.applyTexImage2D( gl, this._textureTarget, level, internalFormat, imi.getWidth(), imi.getHeight(), 0, imi.getImage() );
                 else
-                    this.applyTexImage2D( gl, this._textureTarget, level, internalFormat, imi.getWidth(), imi.getHeight(), 0, internalFormat, this._type, imi.getImage() );
+                    this.applyTexImage2D( gl, this._textureTarget, level, internalFormat, imi.getWidth(), imi.getHeight(), 0, this._internalFormat, this._type, imi.getImage() );
             }
 
         } else {
@@ -608,31 +727,23 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
     },
 
-    applyImage: function ( gl, image ) {
+    applyImage: function ( gl ) {
+
+        var internalFormat = this._getInternalFormatGL();
+        var image = this._image || null;
+        var data = image && this._image.getImage();
+
+        var type = this._getTypeGL();
 
         if ( this._isCompressed ) {
-            this.applyTexImage2D( gl, this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, image.getImage() );
-        } else if ( image.isTypedArray() ) {
-            this.applyTexImage2D( gl,
-                this._textureTarget,
-                0,
-                this._internalFormat,
-                this._textureWidth,
-                this._textureHeight,
-                0,
-                this._internalFormat,
-                this._type,
-                this._image.getImage() );
+            this.applyTexImage2D( gl, this._textureTarget, 0, internalFormat, this._textureWidth, this._textureHeight, 0, data );
+        } else if ( !data || image.isTypedArray() ) {
+            this.applyTexImage2D( gl, this._textureTarget, 0, internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, type, data );
         } else {
-            this.applyTexImage2D( gl,
-                this._textureTarget,
-                0,
-                this._internalFormat,
-                this._internalFormat,
-                this._type,
-                image.getImage() );
+            this.applyTexImage2D( gl, this._textureTarget, 0, internalFormat, this._internalFormat, type, data );
         }
-        image.setDirty( false );
+
+        if ( image ) image.setDirty( false );
 
     },
 
@@ -656,7 +767,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
             // image update like video
             if ( this._image !== undefined && this._image.isDirty() ) {
-                this.applyImage( gl, this._image );
+                this.applyImage( gl );
             }
 
         } else if ( this._textureNull ) {
@@ -685,7 +796,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
                     this._textureObject.bind( gl );
 
-                    this.applyImage( gl, this._image );
+                    this.applyImage( gl );
                     this.applyFilterParameter( gl, this._textureTarget );
                     this.generateMipmap( gl, this._textureTarget );
 
@@ -708,14 +819,35 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                     this.init( state );
                 }
                 this._textureObject.bind( gl );
-                this.applyTexImage2D( gl, this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, this._type, null );
+
+                this.applyImage( gl );
 
                 this.applyFilterParameter( gl, this._textureTarget );
                 this.generateMipmap( gl, this._textureTarget );
                 this._dirty = false;
             }
         }
+    },
+
+    _getInternalFormatGL: function () {
+        var internalFormat = this._internalFormat;
+
+        // gl1
+        if ( !WebglCaps.instance().isWebGL2() ) {
+            return internalFormatGl2ToGl1[ internalFormat ] || internalFormat;
+        }
+
+        // gl2
+        var map = internalFormatGl1ToGl2[ this._type ];
+        return ( map && map[ internalFormat ] ) || internalFormat;
+    },
+
+    _getTypeGL: function () {
+        if ( this._type === Texture.HALF_FLOAT && !WebglCaps.instance().isWebGL2() )
+            return Texture.HALF_FLOAT_OES;
+        return this._type;
     }
+
 
 } ) ), 'osg', 'Texture' );
 

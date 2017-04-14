@@ -2,13 +2,15 @@
 var Notify = require( 'osg/notify' );
 var shaderLib = require( 'osgShader/shaderLib' );
 var shadowShaderLib = require( 'osgShadow/shaderLib' );
+var WebglCaps = require( 'osg/WebGLCaps' );
 
+
+// webgl2 protected variable names : sample, texture
 
 //     Shader as vert/frag/glsl files Using requirejs text plugin
 //     Preprocess features like:    //
 //     - Handle (recursive) include, avoiding code repeat and help code factorization
 //     - Handle per shader and global define/precision
-
 
 var ShaderProcessor = function ( createInstance ) {
 
@@ -34,7 +36,6 @@ ShaderProcessor.prototype = {
     _defineR: /\#define\s+([a-zA-Z_0-9]+)/,
     _precisionR: /precision\s+(high|low|medium)p\s+float/,
 
-
     // {
     //     'functions.glsl': textShaderFunctions,
     //     'lights.glsl': textShaderFunctions,
@@ -48,7 +49,6 @@ ShaderProcessor.prototype = {
         }
 
     },
-
 
     instrumentShaderlines: function ( content, sourceID ) {
         // TODO instrumentShaderlines
@@ -94,8 +94,8 @@ ShaderProcessor.prototype = {
     // files (for now in the same folder.)
     preprocess: function ( content, sourceID, includeList, inputsDefines /*, type */ ) {
         var self = this;
-        return content.replace( this._includeCondR, function ( _, name ) {
-            var includeOpt = name.split( ' ' );
+        return content.replace( this._includeCondR, function ( _, strMatch ) {
+            var includeOpt = strMatch.split( ' ' );
             var includeName = includeOpt[ 0 ].replace( /"/g, '' );
 
             // pure include is
@@ -145,12 +145,73 @@ ShaderProcessor.prototype = {
 
     },
 
-    //  process a shader and define
-    //  get a full expanded single shader source code
-    //  resolving include dependencies
-    //  adding defines
-    //  adding line instrumenting.
+    _getSortedUnique: ( function () {
+
+        var filterDuplicate = function ( item, pos, self ) {
+            return !pos || item !== self[ pos - 1 ];
+        };
+
+        return function ( array ) {
+            return array && array.sort().filter( filterDuplicate );
+        };
+    } )(),
+
+    _convertExtensionsToWebGL2: function ( strExtension ) {
+        return strExtension.replace( '#extension GL_EXT_shader_texture_lod', '// bla' );
+    },
+
+    _convertToWebGL2: ( function () {
+
+        var frags = [];
+        var replaceMRT = function ( str ) {
+            var number = parseInt( str.match( /\d+/ ), 10 );
+            var varName = 'glFragData_' + number;
+            frags[ number ] = 'layout(location = ' + number + ') out vec4 ' + varName + ';';
+            return varName;
+        };
+
+        return function ( strShader, isFragment ) {
+            if ( !strShader ) return strShader;
+
+            strShader = strShader.replace( /attribute\s+/g, 'in ' );
+            strShader = strShader.replace( /varying\s+/g, isFragment ? 'in ' : 'out ' );
+            strShader = strShader.replace( /(texture2D|textureCube)\s*\(/g, 'texture(' );
+            strShader = strShader.replace( /(textureCubeLodEXT)\s*\(/g, 'textureLod(' );
+
+            strShader = strShader.replace( /#\s*extension \s*GL_EXT_shader_texture_lod/, '// core in gl2 : GL_EXT_shader_texture_lod' );
+            strShader = strShader.replace( /#\s*extension \s*GL_OES_standard_derivatives/, '// core in gl2 : GL_OES_standard_derivatives' );
+            strShader = strShader.replace( /#\s*extension \s*GL_EXT_draw_buffers/, '// core in gl2 : GL_EXT_draw_buffers' );
+            strShader = strShader.replace( /#\s*extension \s*GL_EXT_frag_depth /, '// core in gl2 : GL_EXT_frag_depth ' );
+
+            if ( isFragment ) {
+                frags.length = 0;
+                strShader = strShader.replace( /gl_FragData\s*\[\s*\d+\s*\]/g, replaceMRT );
+
+                if ( !frags.length ) frags.push( 'out vec4 glFragColor_0;' );
+                strShader = strShader.replace( /gl_FragColor/g, 'glFragColor_0' );
+                strShader = strShader.replace( /void\s*main\s*\(/g, frags.join( '\n' ) + '\nvoid main(' );
+            }
+
+            return strShader;
+        };
+    } )(),
+
+    _hasVersion: function ( shader ) {
+        // match first line starting with #
+        var version = shader.match( /^#(.*)$/m );
+        return version && version[ 0 ].replace( ' ', '' ).indexOf( 'version' ) !== -1;
+    },
+
+    // process shader
+    // - declare version, extensions, precision and defines
+    // - resolve pragma include
+    // - Convert webgl1 to webgl2 (glsl 100 to glsl 330 es)
     processShader: function ( shader, defines, extensions, type ) {
+
+        // if the shader has #version statement we skip the shader processing
+        if ( this._hasVersion( shader ) ) {
+            return shader;
+        }
 
         var includeList = [];
         var preShader = shader;
@@ -161,53 +222,38 @@ ShaderProcessor.prototype = {
         }
 
         // removes duplicates
-        if ( defines !== undefined ) {
-            defines = defines.sort().filter( function ( item, pos ) {
-                return !pos || item !== defines[ pos - 1 ];
-            } );
-        }
-        if ( extensions !== undefined ) {
-            extensions = extensions.sort().filter( function ( item, pos ) {
-                return !pos || item !== extensions[ pos - 1 ];
-            } );
-        }
+        defines = this._getSortedUnique( defines );
+        extensions = this._getSortedUnique( extensions );
 
-        var postShader = this.preprocess( preShader, sourceID, includeList, defines, type );
+        var strCore = this.preprocess( preShader, sourceID, includeList, defines, type );
 
-        var prePrend = '';
-        prePrend += '#version 100\n'; // webgl1  (webgl2 #version 130 ?)
+        var isFragment = strCore.indexOf( 'gl_Position' ) === -1;
+        var convertToWebGL2 = WebglCaps.instance().isWebGL2();
 
-        // then
-        // it's extensions first
-        // See https://khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf
-        // p14-15: before any non-processor token
-        // add them
-        if ( extensions !== undefined ) {
-            // could add an extension check support warning there...
-            prePrend += extensions.join( '\n' ) + '\n';
+        var strVersion = convertToWebGL2 ? '#version 300 es' : '#version 100';
+        strVersion += '\n';
+
+        var strExtensions = extensions ? extensions.join( '\n' ) + '\n' : '';
+
+        var strDefines = defines ? defines.join( '\n' ) + '\n' : '';
+
+        if ( convertToWebGL2 ) {
+            strExtensions = this._convertExtensionsToWebGL2( strExtensions );
+            strDefines = this._convertToWebGL2( strDefines, isFragment );
+            strCore = this._convertToWebGL2( strCore, isFragment );
         }
 
-        // vertex shader doesn't need precision, it's highp per default, enforced per spec
-        // but then not giving precision on uniform/varying might make conflicts arise
-        // between both FS and VS if FS default is mediump !
-        // && type !== 'vertex'
-        if ( this._globalDefaultprecision ) {
-            if ( !this._precisionR.test( postShader ) ) {
-                // use the shaderhighprecision flag at shaderloader start
-                //var highp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-                //var highpSupported = highp.precision != 0;
-                prePrend += this._globalDefaultprecision + '\n';
-            }
+        // vertex shader uses highp per default BUT if FS is using mediump then VS should too (conflict with varying/uniform otherwise)
+        // also make sure precision is not already providen
+        var strPrecision = '';
+        if ( this._globalDefaultprecision && !this._precisionR.test( strCore ) ) {
+            strPrecision = this._globalDefaultprecision + '\n';
         }
 
-        // if defines
-        // add them
-        if ( defines !== undefined ) {
-            prePrend += defines.join( '\n' ) + '\n';
-        }
-        postShader = prePrend + postShader;
 
-        return postShader;
+        // order is important
+        // See https://khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf (p14-15: extension before any non-processor token)
+        return strVersion + strExtensions + strPrecision + strDefines + strCore;
     }
 };
 module.exports = ShaderProcessor;
