@@ -118,7 +118,7 @@
         },
 
         setColor: function ( color ) {
-            this._color.setInternalArray( color );
+            osg.vec3.copy( this.getColor(), color );
         },
 
         getColor: function () {

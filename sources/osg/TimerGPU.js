@@ -20,7 +20,7 @@ var TimerGPU = function ( gl ) {
 
     if ( gl ) {
 
-        var ext = WebGLCaps.instance().getDisjointTimerQuery();
+        var ext = WebGLCaps.instance( gl ).getDisjointTimerQuery();
         if ( !ext ) return this;
 
         // webgl1 to webgl2
