@@ -308,6 +308,10 @@ WebGLCaps.prototype = {
         return !!this._webGLExtensions[ 'OES_vertex_array_object' ];
     },
 
+    getDisjointTimerQuery: function () {
+        return this._webGLExtensions[ 'EXT_disjoint_timer_query_webgl2' ] || this._webGLExtensions[ 'EXT_disjoint_timer_query' ];
+    },
+
     initWebGLParameters: function ( gl ) {
         if ( !gl ) return;
         var limits = [
