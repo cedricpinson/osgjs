@@ -1,6 +1,7 @@
 'use strict';
 
 var Notify = require( 'osg/notify' );
+var WebGLCaps = require( 'osg/WebGLCaps' );
 
 /*
 use EXT_disjoint_timer_queryto time webgl calls GPU side average over multiple frames
@@ -19,14 +20,17 @@ var TimerGPU = function ( gl ) {
 
     if ( gl ) {
 
-        var ext = gl.getExtension( 'EXT_disjoint_timer_query' );
+        var ext = WebGLCaps.instance( gl ).getDisjointTimerQuery();
         if ( !ext ) return this;
+
+        // webgl1 to webgl2
+        if ( !gl.getQueryParameter ) gl.getQueryParameter = ext.getQueryObjectEXT.bind( ext );
 
         // https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/extensions/ext-disjoint-timer-query.html#L102
         // run the page if strange results
         // to validate you gpu/browser has correct gpu queries support
-        this._hasTimeElapsed = ext.getQueryEXT( ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
-        this._hasTimeStamp = ext.getQueryEXT( ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
+        this._hasTimeElapsed = gl.getQuery( ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
+        this._hasTimeStamp = gl.getQuery( ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
 
         if ( !this._hasTimeElapsed && !this._hasTimeStamp ) {
             return this;
@@ -37,8 +41,8 @@ var TimerGPU = function ( gl ) {
         // BEFORE any other start (of other queryID)
         if ( !this._hasTimeStamp ) Notify.debug( 'Warning: do not use interleaved GPU query' );
 
+        this._ext = ext;
         this._gl = gl;
-        this._glTimer = ext;
         this._enabled = true;
 
     }
@@ -83,8 +87,8 @@ TimerGPU.prototype = {
         var glQueries = this._glQueries;
         for ( var i = 0, nbQueries = glQueries.length; i < nbQueries; ++i ) {
             var query = glQueries[ i ];
-            this._glTimer.deleteQueryEXT( query._pollingStartQuery );
-            if ( query._pollingEndQuery ) this._glTimer.deleteQueryEXT( query );
+            this._gl.deleteQuery( query._pollingStartQuery );
+            if ( query._pollingEndQuery ) this._gl.deleteQuery( query );
         }
 
         this._userQueries.length = 0;
@@ -100,7 +104,7 @@ TimerGPU.prototype = {
     // the marvellous gpu timers
     enable: function () {
         // enable only if we have the extension
-        this._enabled = this._glTimer;
+        this._enabled = !!this._ext;
     },
 
     disable: function () {
@@ -141,8 +145,8 @@ TimerGPU.prototype = {
         query._averageTimer = 0.0; // cumulative average time
         query._resultCount = 0; // cumulative average count
 
-        if ( this._hasTimeStamp ) query._pollingEndQuery = this._glTimer.createQueryEXT();
-        query._pollingStartQuery = this._glTimer.createQueryEXT();
+        if ( this._hasTimeStamp ) query._pollingEndQuery = this._gl.createQuery();
+        query._pollingStartQuery = this._gl.createQuery();
 
         this._glQueries.push( query );
 
@@ -165,7 +169,7 @@ TimerGPU.prototype = {
 
         var query = this.getOrCreateLastGLQuery();
         if ( !query._isWaiting ) {
-            this._glTimer.beginQueryEXT( this._glTimer.TIME_ELAPSED_EXT, query._pollingStartQuery );
+            this._gl.beginQuery( this._ext.TIME_ELAPSED_EXT, query._pollingStartQuery );
         }
     },
 
@@ -173,7 +177,7 @@ TimerGPU.prototype = {
         if ( this._nbOpened === 0 ) return;
 
         if ( !this.getOrCreateLastGLQuery()._isWaiting ) {
-            this._glTimer.endQueryEXT( this._glTimer.TIME_ELAPSED_EXT );
+            this._gl.endQuery( this._ext.TIME_ELAPSED_EXT );
         }
     },
 
@@ -221,7 +225,7 @@ TimerGPU.prototype = {
 
         if ( this._hasTimeStamp ) {
 
-            if ( !query._isWaiting ) this._glTimer.queryCounterEXT( query._pollingStartQuery, this._glTimer.TIMESTAMP_EXT );
+            if ( !query._isWaiting ) this._ext.queryCounterEXT( query._pollingStartQuery, this._ext.TIMESTAMP_EXT );
 
         } else {
 
@@ -248,7 +252,7 @@ TimerGPU.prototype = {
 
         if ( this._hasTimeStamp ) {
 
-            if ( !query._isWaiting ) this._glTimer.queryCounterEXT( query._pollingEndQuery, this._glTimer.TIMESTAMP_EXT );
+            if ( !query._isWaiting ) this._ext.queryCounterEXT( query._pollingEndQuery, this._ext.TIMESTAMP_EXT );
 
         } else {
 
@@ -310,7 +314,7 @@ TimerGPU.prototype = {
         var i;
 
         // all timer are corrupted, clear the queries
-        var disjoint = this._gl.getParameter( this._glTimer.GPU_DISJOINT_EXT );
+        var disjoint = this._gl.getParameter( this._ext.GPU_DISJOINT_EXT );
         if ( disjoint ) {
             for ( i = 0; i < nbGlQueries; ++i ) {
                 glQueries[ i ]._isWaiting = false;
@@ -343,7 +347,7 @@ TimerGPU.prototype = {
         var lastQuery = this._hasTimeStamp ? query._pollingEndQuery : query._pollingStartQuery;
 
         // wait till results are ready
-        var available = this._glTimer.getQueryObjectEXT( lastQuery, this._glTimer.QUERY_RESULT_AVAILABLE_EXT );
+        var available = this._gl.getQueryParameter( lastQuery, this._gl.QUERY_RESULT_AVAILABLE );
         if ( !available ) {
             query._isWaiting = true;
             return 0;
@@ -353,13 +357,13 @@ TimerGPU.prototype = {
 
         if ( this._hasTimeStamp ) {
 
-            var startTime = this._glTimer.getQueryObjectEXT( query._pollingStartQuery, this._glTimer.QUERY_RESULT_EXT );
-            var endTime = this._glTimer.getQueryObjectEXT( lastQuery, this._glTimer.QUERY_RESULT_EXT );
+            var startTime = this._gl.getQueryParameter( query._pollingStartQuery, this._gl.QUERY_RESULT );
+            var endTime = this._gl.getQueryParameter( lastQuery, this._gl.QUERY_RESULT );
             timeElapsed = endTime - startTime;
 
         } else {
 
-            timeElapsed = this._glTimer.getQueryObjectEXT( lastQuery, this._glTimer.QUERY_RESULT_EXT );
+            timeElapsed = this._gl.getQueryParameter( lastQuery, this._gl.QUERY_RESULT );
 
         }
 
