@@ -122,11 +122,6 @@ Uniform.prototype.setInt2 = Uniform.prototype.setFloat2;
 Uniform.prototype.setInt3 = Uniform.prototype.setFloat3;
 Uniform.prototype.setInt4 = Uniform.prototype.setFloat4;
 
-
-// data, name
-// name
-// data, name, nbItem
-// name, nbItem
 var createUniformX = function ( dataOrName, nameOrNbItem, internalArray, glSignature, type, isMatrix ) {
     var data = ( nameOrNbItem && nameOrNbItem.length ) ? dataOrName : undefined;
     var uniform = new Uniform( data !== undefined ? nameOrNbItem : dataOrName );
@@ -166,49 +161,53 @@ var createMat4 = function ( nbItem ) {
     return out;
 };
 
-var _getNbItem = function ( nameOrNbItem, nbItem ) {
-    if ( nbItem ) return nbItem;
-    if ( nameOrNbItem && !nameOrNbItem.length ) return nameOrNbItem;
-    return 1;
+// possibles signatures
+// name
+// data, name
+// name, nbItem
+var _getNbItem = function ( itemSize, dataOrName, nameOrNbItem ) {
+    if ( nameOrNbItem && !nameOrNbItem.length ) return nameOrNbItem; // name, nbItem
+    if ( typeof dataOrName !== 'string' ) return ( dataOrName.length || 1 ) / itemSize; // data, name
+    return 1; // name
 };
 
 // works also for float array but data must be given
-Uniform.createFloat1 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 1 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform1fv', 'float' );
+Uniform.createFloat1 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 1 * _getNbItem( 1, dataOrName, nameOrNbItem ) ), 'uniform1fv', 'float' );
 };
-Uniform.createFloat2 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 2 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform2fv', 'vec2' );
+Uniform.createFloat2 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 2 * _getNbItem( 2, dataOrName, nameOrNbItem ) ), 'uniform2fv', 'vec2' );
 };
-Uniform.createFloat3 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 3 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform3fv', 'vec3' );
+Uniform.createFloat3 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 3 * _getNbItem( 3, dataOrName, nameOrNbItem ) ), 'uniform3fv', 'vec3' );
 };
-Uniform.createFloat4 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 4 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform4fv', 'vec4' );
-};
-
-Uniform.createInt1 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 1 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform1iv', 'int' );
-};
-Uniform.createInt2 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 2 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform2iv', 'vec2i' );
-};
-Uniform.createInt3 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 3 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform3iv', 'vec3i' );
-};
-Uniform.createInt4 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 4 * _getNbItem( nameOrNbItem, nbItem ) ), 'uniform4iv', 'vec4i' );
+Uniform.createFloat4 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Float32Array( 4 * _getNbItem( 4, dataOrName, nameOrNbItem ) ), 'uniform4fv', 'vec4' );
 };
 
-Uniform.createMatrix2 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, createMat2( _getNbItem( nameOrNbItem, nbItem ) ), 'uniformMatrix2fv', 'mat2', true );
+Uniform.createInt1 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 1 * _getNbItem( 1, dataOrName, nameOrNbItem ) ), 'uniform1iv', 'int' );
+};
+Uniform.createInt2 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 2 * _getNbItem( 2, dataOrName, nameOrNbItem ) ), 'uniform2iv', 'vec2i' );
+};
+Uniform.createInt3 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 3 * _getNbItem( 3, dataOrName, nameOrNbItem ) ), 'uniform3iv', 'vec3i' );
+};
+Uniform.createInt4 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, new Int32Array( 4 * _getNbItem( 4, dataOrName, nameOrNbItem ) ), 'uniform4iv', 'vec4i' );
 };
 
-Uniform.createMatrix3 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, createMat3( _getNbItem( nameOrNbItem, nbItem ) ), 'uniformMatrix3fv', 'mat3', true );
+Uniform.createMatrix2 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, createMat2( _getNbItem( 4, dataOrName, nameOrNbItem ) ), 'uniformMatrix2fv', 'mat2', true );
 };
 
-Uniform.createMatrix4 = function ( dataOrName, nameOrNbItem, nbItem ) {
-    return createUniformX( dataOrName, nameOrNbItem, createMat4( _getNbItem( nameOrNbItem, nbItem ) ), 'uniformMatrix4fv', 'mat4', true );
+Uniform.createMatrix3 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, createMat3( _getNbItem( 9, dataOrName, nameOrNbItem ) ), 'uniformMatrix3fv', 'mat3', true );
+};
+
+Uniform.createMatrix4 = function ( dataOrName, nameOrNbItem ) {
+    return createUniformX( dataOrName, nameOrNbItem, createMat4( _getNbItem( 16, dataOrName, nameOrNbItem ) ), 'uniformMatrix4fv', 'mat4', true );
 };
 
 // alias
