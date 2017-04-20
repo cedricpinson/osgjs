@@ -187,9 +187,13 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         this._lightFrustum = lf;
 
-        this._depthRange[ 0 ] = near;
-        this._depthRange[ 1 ] = far;
-        this.nearFarBounding();
+        // in case of bad traversal
+        if ( Number.isFinite( near ) && Number.isFinite( far ) ) {
+
+            this._depthRange[ 0 ] = near;
+            this._depthRange[ 1 ] = far;
+            this.nearFarBounding();
+        }
 
         if ( this._debug ) {
 
