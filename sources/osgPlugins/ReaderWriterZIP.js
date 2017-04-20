@@ -84,7 +84,7 @@ ReaderWriterZIP.prototype = {
 
                 var type = FileHelper.getTypeForExtension( extension );
                 // We don't need to parse this file
-                if ( type === undefined ) return;
+                if ( type === undefined ) continue;
                 if ( type === 'blob' ) type = 'base64'; // Images are base64 encoded in ZIP files
 
                 var p = zip.file( fileName ).async( type ).then( this._registerZipImage.bind( this, fileName, type, extension ) );
