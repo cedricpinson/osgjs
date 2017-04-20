@@ -476,7 +476,8 @@ ReaderWriterGLTF.prototype = {
                     var subnode = json.nodes[ subnodeId ];
                     if ( !subnode.jointName )
                         continue;
-                    if ( subnode.jointName === rootJointId ) {
+                    var rootJoint = json.nodes[ rootJointId ];
+                    if ( subnode.jointName === rootJoint.jointName ) {
                         rootBoneId = subnodeId;
                         break;
                     }
