@@ -156,15 +156,31 @@ ShaderProcessor.prototype = {
         };
     } )(),
 
-    _convertExtensionsToWebGL2: function ( strExtension ) {
-        return strExtension.replace( '#extension GL_EXT_shader_texture_lod', '// bla' );
-    },
+    _convertExtensionsToWebGL2: ( function () {
+
+        var cbRenamer = function ( match, extension ) {
+            return 'core_' + extension;
+        };
+
+        var cbDefiner = function ( match, extension ) {
+            return '#define ' + extension;
+        };
+
+        var extensions = '(GL_EXT_shader_texture_lod|GL_OES_standard_derivatives|GL_EXT_draw_buffers|GL_EXT_frag_depth)';
+        var definer = new RegExp( '#\\s*extension\\s+' + extensions + '.*', 'g' );
+        var renamer = new RegExp( extensions, 'g' );
+
+        return function ( strShader ) {
+            strShader = strShader.replace( definer, cbDefiner ); // replace #extension by #define
+            strShader = strShader.replace( renamer, cbRenamer ); // rename extension
+            return strShader;
+        };
+    } )(),
 
     _convertToWebGL2: ( function () {
 
         var frags = [];
-        var replaceMRT = function ( str ) {
-            var number = parseInt( str.match( /\d+/ ), 10 );
+        var replaceMRT = function ( match, number ) {
             var varName = 'glFragData_' + number;
             frags[ number ] = 'layout(location = ' + number + ') out vec4 ' + varName + ';';
             return varName;
@@ -178,18 +194,15 @@ ShaderProcessor.prototype = {
             strShader = strShader.replace( /(texture2D|textureCube)\s*\(/g, 'texture(' );
             strShader = strShader.replace( /(textureCubeLodEXT)\s*\(/g, 'textureLod(' );
 
-            strShader = strShader.replace( /#\s*extension \s*GL_EXT_shader_texture_lod/, '// core in gl2 : GL_EXT_shader_texture_lod' );
-            strShader = strShader.replace( /#\s*extension \s*GL_OES_standard_derivatives/, '// core in gl2 : GL_OES_standard_derivatives' );
-            strShader = strShader.replace( /#\s*extension \s*GL_EXT_draw_buffers/, '// core in gl2 : GL_EXT_draw_buffers' );
-            strShader = strShader.replace( /#\s*extension \s*GL_EXT_frag_depth /, '// core in gl2 : GL_EXT_frag_depth ' );
+            strShader = this._convertExtensionsToWebGL2( strShader );
 
             if ( isFragment ) {
                 frags.length = 0;
-                strShader = strShader.replace( /gl_FragData\s*\[\s*\d+\s*\]/g, replaceMRT );
+                strShader = strShader.replace( /gl_FragData\s*\[\s*(\d+)\s*\]/g, replaceMRT );
 
                 if ( !frags.length ) frags.push( 'out vec4 glFragColor_0;' );
                 strShader = strShader.replace( /gl_FragColor/g, 'glFragColor_0' );
-                strShader = strShader.replace( /void\s*main\s*\(/g, frags.join( '\n' ) + '\nvoid main(' );
+                strShader = strShader.replace( /void\s+main\s*\(/g, frags.join( '\n' ) + '\nvoid main(' );
             }
 
             return strShader;
@@ -199,7 +212,7 @@ ShaderProcessor.prototype = {
     _hasVersion: function ( shader ) {
         // match first line starting with #
         var version = shader.match( /^#(.*)$/m );
-        return version && version[ 0 ].replace( ' ', '' ).indexOf( 'version' ) !== -1;
+        return version && version[ 0 ].indexOf( 'version' ) !== -1;
     },
 
     // process shader
