@@ -343,7 +343,6 @@ mat4.getLookAt = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.fromValues( 0.0, 1.0, 0.0 );
     var v3 = vec3.fromValues( 0.0, 0.0, -1.0 );
-
     return function ( eye, center, up, matrix, distance ) {
 
         var d = distance !== undefined ? distance : 1.0;
