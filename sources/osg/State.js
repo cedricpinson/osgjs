@@ -1152,13 +1152,15 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         for ( i = 0, l = foreignUniformKeys.length; i < l; i++ ) {
             keyUniform = foreignUniformKeys[ i ];
             var uniformStack = uniformMapStack[ keyUniform ];
-            if ( uniformStack !== undefined ) {
+            if ( uniformStack ) {
                 if ( uniformStack.values().length === 0 ) {
                     uniform = uniformStack.globalDefault;
                     Notify.warn( 'Uniform Default Not attached to a StateSet in Scene Hierarchy: ' + uniformStack.globalDefault.getName() );
                 } else {
                     uniform = uniformStack.back().object;
                 }
+            } else {
+                Notify.error( 'Uniform name not in the scene hierarchy! : ' + keyUniform );
             }
 
             this._checkCacheAndApplyUniform( uniform, cacheUniformsForeign, i, programUniformMap, keyUniform );

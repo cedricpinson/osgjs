@@ -11,7 +11,8 @@ var NodeLights = function () {
 
 NodeLights.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
-    validOutputs: [ 'color' ],
+    validOutputs: [ 'color', 'lighted' ],
+
     globalFunctionDeclaration: function () {
         return '#pragma include "lights.glsl"';
     }
@@ -33,51 +34,36 @@ PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
     validInputs: [
         'normal',
         'eyeVector',
-        'materialambient',
+
         'materialdiffuse',
         'materialspecular',
         'materialshininess',
 
-        'lightambient',
         'lightdiffuse',
         'lightspecular',
-
         'lightposition',
         'lightattenuation',
-
         'lightmatrix',
-
-        'lighted',
-        'lightEyePos',
-        'lightEyeDir'
-
     ],
 
     computeShader: function () {
 
-        return shaderUtils.callFunction(
-            'computePointLightShading',
-            this._outputs.color, [ this._inputs.normal,
-                this._inputs.eyeVector,
+        return shaderUtils.callFunction( 'computePointLightShading', this._outputs.color, [
+            this._inputs.normal,
+            this._inputs.eyeVector,
 
-                getVec3( this._inputs.materialambient ),
-                getVec3( this._inputs.materialdiffuse ),
-                getVec3( this._inputs.materialspecular ),
-                this._inputs.materialshininess,
+            getVec3( this._inputs.materialdiffuse ),
+            getVec3( this._inputs.materialspecular ),
+            this._inputs.materialshininess,
 
-                getVec3( this._inputs.lightambient ),
-                getVec3( this._inputs.lightdiffuse ),
-                getVec3( this._inputs.lightspecular ),
+            getVec3( this._inputs.lightdiffuse ),
+            getVec3( this._inputs.lightspecular ),
+            this._inputs.lightposition,
+            this._inputs.lightattenuation,
+            this._inputs.lightmatrix,
 
-                this._inputs.lightposition,
-                this._inputs.lightattenuation,
-
-                this._inputs.lightmatrix,
-
-                this._inputs.lightEyePos,
-                this._inputs.lightEyeDir,
-                this._inputs.lighted
-            ] );
+            this._outputs.lighted
+        ] );
     }
 
 } );
@@ -96,59 +82,43 @@ SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
         'normal',
         'eyeVector',
 
-        'materialambient',
         'materialdiffuse',
         'materialspecular',
         'materialshininess',
 
-        'lightambient',
         'lightdiffuse',
         'lightspecular',
-
         'lightdirection',
         'lightattenuation',
         'lightposition',
         'lightspotCutOff',
         'lightspotBlend',
-
         'lightmatrix',
         'lightinvMatrix',
-
-        'lighted',
-        'lightEyePos',
-        'lightEyeDir'
-
     ],
 
     computeShader: function () {
 
-        return shaderUtils.callFunction(
-            'computeSpotLightShading',
-            this._outputs.color, [ this._inputs.normal,
-                this._inputs.eyeVector,
+        return shaderUtils.callFunction( 'computeSpotLightShading', this._outputs.color, [
+            this._inputs.normal,
+            this._inputs.eyeVector,
 
-                getVec3( this._inputs.materialambient ),
-                getVec3( this._inputs.materialdiffuse ),
-                getVec3( this._inputs.materialspecular ),
-                this._inputs.materialshininess,
+            getVec3( this._inputs.materialdiffuse ),
+            getVec3( this._inputs.materialspecular ),
+            this._inputs.materialshininess,
 
-                getVec3( this._inputs.lightambient ),
-                getVec3( this._inputs.lightdiffuse ),
-                getVec3( this._inputs.lightspecular ),
+            getVec3( this._inputs.lightdiffuse ),
+            getVec3( this._inputs.lightspecular ),
+            this._inputs.lightdirection,
+            this._inputs.lightattenuation,
+            this._inputs.lightposition,
+            this._inputs.lightspotCutOff,
+            this._inputs.lightspotBlend,
+            this._inputs.lightmatrix,
+            this._inputs.lightinvMatrix,
 
-                this._inputs.lightdirection,
-                this._inputs.lightattenuation,
-                this._inputs.lightposition,
-                this._inputs.lightspotCutOff,
-                this._inputs.lightspotBlend,
-
-                this._inputs.lightmatrix,
-                this._inputs.lightinvMatrix,
-
-                this._inputs.lightEyePos,
-                this._inputs.lightEyeDir,
-                this._inputs.lighted
-            ] );
+            this._outputs.lighted
+        ] );
     }
 
 } );
@@ -165,47 +135,34 @@ SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
     validInputs: [
         'normal',
         'eyeVector',
-        'materialambient',
+
         'materialdiffuse',
         'materialspecular',
         'materialshininess',
 
-        'lightambient',
         'lightdiffuse',
         'lightspecular',
-
         'lightposition',
-
         'lightmatrix',
-
-        'lighted',
-        'lightEyeDir'
-
     ],
 
     computeShader: function () {
 
-        return shaderUtils.callFunction(
-            'computeSunLightShading',
-            this._outputs.color, [ this._inputs.normal,
-                this._inputs.eyeVector,
+        return shaderUtils.callFunction( 'computeSunLightShading', this._outputs.color, [
+            this._inputs.normal,
+            this._inputs.eyeVector,
 
-                getVec3( this._inputs.materialambient ),
-                getVec3( this._inputs.materialdiffuse ),
-                getVec3( this._inputs.materialspecular ),
-                this._inputs.materialshininess,
+            getVec3( this._inputs.materialdiffuse ),
+            getVec3( this._inputs.materialspecular ),
+            this._inputs.materialshininess,
 
-                getVec3( this._inputs.lightambient ),
-                getVec3( this._inputs.lightdiffuse ),
-                getVec3( this._inputs.lightspecular ),
+            getVec3( this._inputs.lightdiffuse ),
+            getVec3( this._inputs.lightspecular ),
+            this._inputs.lightposition,
+            this._inputs.lightmatrix,
 
-                this._inputs.lightposition,
-
-                this._inputs.lightmatrix,
-
-                this._inputs.lightEyeDir,
-                this._inputs.lighted
-            ] );
+            this._outputs.lighted
+        ] );
     }
 } );
 
@@ -220,42 +177,33 @@ HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
     validInputs: [
         'normal',
         'eyeVector',
+
         'materialdiffuse',
         'materialspecular',
         'materialshininess',
 
         'lightdiffuse',
         'lightground',
-
         'lightposition',
-
         'lightmatrix',
-
-        'lighted',
-        'lightEyeDir'
     ],
 
     computeShader: function () {
 
-        return shaderUtils.callFunction(
-            'computeHemiLightShading',
-            this._outputs.color, [ this._inputs.normal,
-                this._inputs.eyeVector,
+        return shaderUtils.callFunction( 'computeHemiLightShading', this._outputs.color, [
+            this._inputs.normal, this._inputs.eyeVector,
 
-                getVec3( this._inputs.materialdiffuse ),
-                getVec3( this._inputs.materialspecular ),
-                this._inputs.materialshininess,
+            getVec3( this._inputs.materialdiffuse ),
+            getVec3( this._inputs.materialspecular ),
+            this._inputs.materialshininess,
 
-                getVec3( this._inputs.lightdiffuse ),
-                getVec3( this._inputs.lightground ),
+            getVec3( this._inputs.lightdiffuse ),
+            getVec3( this._inputs.lightground ),
+            this._inputs.lightposition,
+            this._inputs.lightmatrix,
 
-                this._inputs.lightposition,
-
-                this._inputs.lightmatrix,
-
-                this._inputs.lightEyeDir,
-                this._inputs.lighted
-            ] );
+            this._outputs.lighted
+        ] );
     }
 } );
 

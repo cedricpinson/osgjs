@@ -2,7 +2,6 @@
 
 var Light = require( 'osg/Light' );
 var Notify = require( 'osg/notify' );
-var MACROUTILS = require( 'osg/Utils' );
 
 var CompilerFragment = {
 
@@ -72,60 +71,15 @@ var CompilerFragment = {
             return roots;
         }
 
-        var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material );
+        var finalColor = this.createLighting();
 
-        // vertex color needs to be computed to diffuse
-        var diffuseColor = this.getVertexColor( materialUniforms.diffuse );
+        var emission = this.getOrCreateMaterialEmission();
+        if ( emission ) this.getNode( 'Add' ).inputs( finalColor, emission ).outputs( finalColor );
 
-        var finalColor;
-
-        if ( this._lights.length > 0 ) {
-
-            var lightedOutput = this.createLighting( {
-                materialdiffuse: diffuseColor
-            } );
-            finalColor = lightedOutput;
-
-        } else {
-            finalColor = diffuseColor;
-        }
-
-        if ( materialUniforms.emission ) {
-            // add emission if any
-            var outputDiffEm = this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' );
-            this.getNode( 'Add' ).inputs( finalColor, materialUniforms.emission ).outputs( outputDiffEm );
-            finalColor = outputDiffEm;
-        }
-
-        // finalColor = primary color * texture color
         var textureColor = this.getDiffuseColorFromTextures();
-        if ( textureColor !== undefined ) {
-            this.getNode( 'InlineCode' ).code( '%color.rgb *= %texture.rgb;' ).inputs( {
-                texture: textureColor
-            } ).outputs( {
-                color: finalColor
-            } );
-        }
+        if ( textureColor ) this.getNode( 'Mult' ).inputs( finalColor, textureColor ).inputs( finalColor );
 
-        // compute alpha
-        var alpha = this.createVariable( 'float' );
-        var textureTexel = this.getFirstValidTexture();
-        var alphaCompute;
-        if ( textureTexel ) // use alpha of the first valid texture if has texture
-            alphaCompute = '%alpha = %color.a * %texelAlpha.a;';
-        else
-            alphaCompute = '%alpha = %color.a;';
-
-        // Discard fragments totally transparents when rendering billboards
-        if ( this._isBillboard )
-            alphaCompute += 'if ( %alpha == 0.0) discard;';
-
-        this.getNode( 'InlineCode' ).code( alphaCompute ).inputs( {
-            color: materialUniforms.diffuse,
-            texelAlpha: textureTexel
-        } ).outputs( {
-            alpha: alpha
-        } );
+        var alpha = this.getAlpha();
 
         // premult alpha
         finalColor = this.getPremultAlpha( finalColor, alpha );
@@ -144,6 +98,29 @@ var CompilerFragment = {
         roots.push( fragColor );
 
         return roots;
+    },
+
+    getAlpha: function () {
+        // compute alpha
+        var alpha = this.createVariable( 'float' );
+        var textureTexel = this.getFirstValidTexture();
+
+        var inputs = {
+            color: this.getOrCreateMaterialDiffuseColor()
+        };
+        if ( textureTexel ) inputs.texelAlpha = textureTexel;
+
+        var str = textureTexel ? '%alpha = %color.a * %texelAlpha.a;' : '%alpha = %color.a;';
+
+        // Discard fragments totally transparents when rendering billboards
+        if ( this._isBillboard )
+            str += 'if ( %alpha == 0.0) discard;';
+
+        this.getNode( 'InlineCode' ).code( str ).inputs( inputs ).outputs( {
+            alpha: alpha
+        } );
+
+        return alpha;
     },
 
     getOrCreateFrontViewTangent: function () {
@@ -272,16 +249,7 @@ var CompilerFragment = {
         return finalSrgbColor;
     },
 
-
-    // Declare variable / varying to handle vertex color
-    // return a variable that contains the following operation
-    // newDiffuseColor = diffuseColor * vertexColor
-    // TODO: this code should move in the shader instead
-    getVertexColor: function ( diffuseColor ) {
-
-        if ( diffuseColor === undefined )
-            return undefined;
-
+    multiplyDiffuseWithVertexColor: function ( diffuseColor ) {
         var vertexColor = this.getOrCreateVarying( 'vec4', 'vVertexColor' );
         var vertexColorUniform = this.getOrCreateUniform( 'float', 'uArrayColorEnabled' );
         var tmp = this.createVariable( 'vec4' );
@@ -343,238 +311,190 @@ var CompilerFragment = {
         return undefined;
     },
 
-    createShadowingLight: function ( light, inputs, lightedOutput ) {
-
-        var k;
-        var shadow;
-        var shadowTexture;
-        var hasShadows = false;
-        var shadowTextures = new Array( this._shadowsTextures.length );
-        var lightIndex = -1;
-
-        // seach current light its corresponding shadow and shadowTextures.
-        // if none, no shadow, hop we go.
-        // TODO: harder Link shadowTexture and shadowAttribute ?
-        // TODO: multi shadow textures for 1 light
-        var lightNum = light.getLightNumber();
-        for ( k = 0; k < this._shadows.length; k++ ) {
-
-            shadow = this._shadows[ k ];
-            if ( shadow.getLightNumber() !== lightNum ) continue;
-
-            lightIndex = k;
-            for ( var p = 0; p < this._shadowsTextures.length; p++ ) {
-
-                shadowTexture = this._shadowsTextures[ p ];
-                if ( shadowTexture && shadowTexture.hasLightNumber( lightNum ) ) {
-                    shadowTextures[ p ] = shadowTexture;
-                    hasShadows = true;
-                }
-
+    _getShadowFromLightNum: function ( array, lightNum ) {
+        // array is shadow textures or shadow receive attributes
+        for ( var i = 0; i < array.length; i++ ) {
+            var shadow = array[ i ];
+            if ( shadow && shadow.getLightNumber() === lightNum ) {
+                return shadow;
             }
         }
-
-        if ( !hasShadows ) return undefined;
-
-        // Varyings
-        var vertexWorld = this.getOrCreateVarying( 'vec3', 'vModelVertex' );
-        var normalWorld = this.getOrCreateNormalizedFrontModelNormal();
-
-        // asserted we have a shadow we do the shadow node allocation
-        // and mult with lighted output
-        var shadowedOutput = this.createVariable( 'float' );
-
-        // shadow Attribute uniforms
-        var shadowUniforms = this.getOrCreateStateAttributeUniforms( this._shadows[ lightIndex ], 'shadow' );
-        var shadowInputs = MACROUTILS.objectMix( inputs, shadowUniforms );
-
-        // shadowTexture  Attribute uniforms AND varying
-        // TODO: better handle multi texture shadow (CSM/PSM/etc.)
-        for ( k = 0; k < shadowTextures.length; k++ ) {
-            shadowTexture = shadowTextures[ k ];
-            if ( shadowTexture ) {
-                shadowInputs = this.createShadowTextureInputVarying( shadowTexture, shadowInputs, vertexWorld, normalWorld, k, lightNum );
-            }
-
-        }
-        // TODO: shadow Attributes in node, is this the legit way
-        this.getNode( 'ShadowReceive' ).inputs( inputs ).outputs( {
-            float: shadowedOutput
-        } ).setShadowAttribute( shadow );
-
-        // allow overwrite by inheriting compiler where shadow inputs ( NDotL notably) can be used for non standard shadows
-        return this.connectShadowLightNode( light, lightedOutput, shadowedOutput, shadowInputs );
-
     },
 
-    connectShadowLightNode: function ( light, lightedOutput, shadowedOutput ) {
+    getInputsFromShadow: function ( shadowReceive, shadowTexture, lighted ) {
+        var shadowUniforms = shadowReceive.getOrCreateUniforms();
+        var tUnit = this._shadowsTextures.indexOf( shadowTexture );
+        var textureUniforms = shadowTexture.getOrCreateUniforms( tUnit );
 
-        var lightAndShadowTempOutput = this.createVariable( 'vec3', 'lightAndShadowTempOutput' );
-
-        this.getNode( 'Mult' ).inputs( lightedOutput, shadowedOutput ).outputs( lightAndShadowTempOutput );
-
-        return lightAndShadowTempOutput;
-
-    },
-
-    createShadowTextureInputVarying: function ( shadowTexture, inputs, vertexWorld, normalWorld, tUnit, lightNum ) {
-        var shadowTexSamplerName = 'Texture' + tUnit;
-
-
-        // we declare first this uniform so that the Int one
-        var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
-
-        // per texture uniforms
-        var uniforms = shadowTexture.getOrCreateUniforms( tUnit );
-        var backupInt = uniforms[ shadowTexSamplerName ];
-        // remove the uniform texture unit uniform
-        delete uniforms[ shadowTexSamplerName ];
-
-
-        // get subset of shadow texture uniform corresponding to light
-        var object = {};
-
-        var prefixUniform = 'shadowTexture';
-
-        for ( var keyUniform in uniforms ) {
-            var lightIndexed = keyUniform.split( '_' );
-
-            var k;
-
-            if ( lightIndexed.length === 2 ) {
-
-                if ( Number( lightIndexed[ 1 ] ) === lightNum ) {
-
-                    k = prefixUniform + lightIndexed[ 0 ];
-                    object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
-                }
-
-            } else {
-
-                k = prefixUniform + keyUniform;
-                object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
-
-            }
-
-
-        }
-
-        var shadowTextureUniforms = object;
-
-
-        // tUnit, lightNum
-        uniforms[ shadowTexSamplerName ] = backupInt;
-
-        var inputsShadow = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
-
-        inputsShadow.shadowTexture = tex;
-
-        var shadowVarying = {
-            vertexWorld: vertexWorld,
-            normalWorld: normalWorld,
-            lightEyeDir: inputsShadow.lightEyeDir
-        };
-        inputsShadow = MACROUTILS.objectMix( inputsShadow, shadowVarying );
-        return inputsShadow;
-    },
-
-    createCommonLightingVars: function ( /*materials, enumLights*/) {
-        // Shared var between all lights and shadows useful for compilers overriding default compiler
-        return {};
-    },
-
-    // Shared var between each light and its respective shadow
-    createLightAndShadowVars: function ( materials, enumLights, lightNum ) {
-
-        var type = this._lights[ lightNum ].getLightType();
-
-        var lighted = this.createVariable( 'bool', 'lighted' + lightNum );
-        var lightPos;
-        if ( type === Light.SPOT || type === Light.POINT ) {
-            lightPos = this.createVariable( 'vec3', 'lightEyePos' + lightNum );
-        }
-        var lightDir = this.createVariable( 'vec3', 'lightEyeDir' + lightNum );
-
-
-
-        return {
+        var inputs = {
             lighted: lighted,
-            lightEyePos: lightPos,
-            lightEyeDir: lightDir
+            shadowTexture: this.getOrCreateSampler( 'sampler2D', 'Texture' + tUnit ),
+            shadowTextureRenderSize: this.getOrCreateUniform( textureUniforms.RenderSize ),
+            shadowTextureProjectionMatrix: this.getOrCreateUniform( textureUniforms.ProjectionMatrix ),
+            shadowTextureViewMatrix: this.getOrCreateUniform( textureUniforms.ViewMatrix ),
+            shadowTextureDepthRange: this.getOrCreateUniform( textureUniforms.DepthRange ),
+            normalWorld: this.getOrCreateNormalizedFrontModelNormal(),
+            vertexWorld: this.getOrCreateVarying( 'vec3', 'vModelVertex' ),
+            shadowBias: this.getOrCreateUniform( shadowUniforms.bias )
         };
 
+        if ( shadowReceive.getAtlas() ) inputs.shadowTextureMapSize = this.getOrCreateUniform( textureUniforms.MapSize );
+        if ( shadowReceive.getNormalBias() ) inputs.shadowNormalBias = this.getOrCreateUniform( shadowUniforms.normalBias );
+
+        return inputs;
     },
 
-    createLighting: function ( materials, overrideNodeName ) {
+    createShadowingLight: function ( light, lighted ) {
 
-        var output = this.createVariable( 'vec3' );
-        var lightOutputVarList = [];
+        var lightNum = light.getLightNumber();
+        var shadowTexture = this._getShadowFromLightNum( this._shadowsTextures, lightNum );
+        var shadowReceive = this._getShadowFromLightNum( this._shadows, lightNum );
+        if ( !shadowTexture || !shadowReceive ) return undefined;
 
-        var enumToNodeName = overrideNodeName || {
+        var inputs = this.getInputsFromShadow( shadowReceive, shadowTexture, lighted );
+
+        var shadowedOutput = this.createVariable( 'float' );
+        this.getNode( 'ShadowReceive' ).setShadowAttribute( shadowReceive ).inputs( inputs ).outputs( {
+            float: shadowedOutput
+        } );
+
+        return shadowedOutput;
+    },
+
+    getOrCreateMaterialNormal: function () {
+        return this.getOrCreateNormalizedFrontViewNormal();
+    },
+
+    getOrCreateMaterialDiffuseColor: function () {
+        var matDiffuse = this.getVariable( 'materialDiffuseColor' );
+        if ( matDiffuse ) return matDiffuse;
+        matDiffuse = this.createVariable( 'vec3', 'materialDiffuseColor' );
+
+        var diffuse = this.getOrCreateUniform( this._material.getOrCreateUniforms().diffuse ) || this.getOrCreateConstantOne( 'vec3' );
+        this.getNode( 'Mult' ).inputs( this.multiplyDiffuseWithVertexColor( diffuse ) ).outputs( matDiffuse );
+
+        return matDiffuse;
+    },
+
+    getOrCreateMaterialEmission: function () {
+        return this.getOrCreateUniform( this._material.getOrCreateUniforms().emission );
+    },
+
+    getOrCreateMaterialSpecularColor: function () {
+        return this.getOrCreateUniform( this._material.getOrCreateUniforms().specular );
+    },
+
+    getOrCreateMaterialSpecularHardness: function () {
+        return this.getOrCreateUniform( this._material.getOrCreateUniforms().shininess );
+    },
+
+    getOrCreateMaterialAmbient: function () {
+        return this.getOrCreateUniform( this._material.getOrCreateUniforms().ambient );
+    },
+
+    getInputsFromLight: function ( light ) {
+        var lightUniforms = light.getOrCreateUniforms();
+
+        var inputs = {
+            normal: this.getOrCreateMaterialNormal(),
+            eyeVector: this.getOrCreateNormalizedViewEyeDirection(),
+
+            materialdiffuse: this.getOrCreateMaterialDiffuseColor(),
+            materialspecular: this.getOrCreateMaterialSpecularColor(),
+            materialshininess: this.getOrCreateMaterialSpecularHardness(),
+
+            lightdiffuse: this.getOrCreateUniform( lightUniforms.diffuse ),
+            lightposition: this.getOrCreateUniform( lightUniforms.position ),
+            lightmatrix: this.getOrCreateUniform( lightUniforms.matrix )
+        };
+
+        var lightType = light.getLightType();
+        if ( lightType === Light.POINT ) {
+            inputs.lightspecular = this.getOrCreateUniform( lightUniforms.specular );
+            inputs.lightattenuation = this.getOrCreateUniform( lightUniforms.attenuation );
+
+        } else if ( lightType === Light.SPOT ) {
+            inputs.lightspecular = this.getOrCreateUniform( lightUniforms.specular );
+            inputs.lightattenuation = this.getOrCreateUniform( lightUniforms.attenuation );
+            inputs.lightdirection = this.getOrCreateUniform( lightUniforms.direction );
+            inputs.lightspotCutOff = this.getOrCreateUniform( lightUniforms.spotCutOff );
+            inputs.lightspotBlend = this.getOrCreateUniform( lightUniforms.spotBlend );
+            inputs.lightinvMatrix = this.getOrCreateUniform( lightUniforms.invMatrix );
+
+        } else if ( lightType === Light.DIRECTION ) {
+            inputs.lightspecular = this.getOrCreateUniform( lightUniforms.specular );
+
+        } else if ( lightType === Light.HEMI ) {
+            inputs.lightground = this.getOrCreateUniform( lightUniforms.ground );
+        }
+
+        return inputs;
+    },
+
+    getOutputsFromLight: function () {
+        var outputs = {
+            color: this.createVariable( 'vec3' ),
+            lighted: this.createVariable( 'bool' ),
+        };
+
+        return outputs;
+    },
+
+    getEnumLightToNodeName: function () {
+        return {
             DIRECTION: 'SunLight',
             SPOT: 'SpotLight',
             POINT: 'PointLight',
             HEMI: 'HemiLight'
         };
+    },
 
+    createLighting: function () {
+        var lightSum = [];
 
-        var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material, 'material' );
-        var sharedLightingVars = this.createCommonLightingVars( materials, enumToNodeName );
-
+        var enumToNodeName = this.getEnumLightToNodeName();
         for ( var i = 0; i < this._lights.length; i++ ) {
 
             var light = this._lights[ i ];
 
-            var lightedOutput = this.createVariable( 'vec3' );
             var nodeName = enumToNodeName[ light.getLightType() ];
+            var inputs = this.getInputsFromLight( light );
+            var outputs = this.getOutputsFromLight( light );
 
-            // create uniforms from stateAttribute and mix them with materials
-            // to pass the result as input for light node
-            var lightUniforms = this.getOrCreateStateAttributeUniforms( this._lights[ i ], 'light' );
-            var lightOutShadowIn = this.createLightAndShadowVars( materials, enumToNodeName, i );
+            this.getNode( nodeName ).inputs( inputs ).outputs( outputs );
 
-            var inputs = MACROUTILS.objectMix( {}, lightUniforms );
-            inputs = MACROUTILS.objectMix( inputs, materialUniforms );
-            inputs = MACROUTILS.objectMix( inputs, materials );
-            inputs = MACROUTILS.objectMix( inputs, sharedLightingVars );
-            inputs = MACROUTILS.objectMix( inputs, lightOutShadowIn );
+            var finalLight = outputs.color;
 
-            if ( !inputs.normal )
-                inputs.normal = this.getOrCreateNormalizedFrontViewNormal();
-            if ( !inputs.eyeVector )
-                inputs.eyeVector = this.getOrCreateNormalizedViewEyeDirection();
-
-            this.getNode( nodeName ).inputs( inputs ).outputs( {
-                color: lightedOutput,
-                lightEyePos: inputs.lightEyePos, // spot and point only
-                lightEyeDir: inputs.lightEyeDir,
-                lighted: inputs.lighted
-            } );
-
-            var shadowedOutput = this.createShadowingLight( light, inputs, lightedOutput );
-            if ( shadowedOutput ) {
-                lightOutputVarList.push( shadowedOutput );
-            } else {
-                lightOutputVarList.push( lightedOutput );
+            var shadowFactor = this.createShadowingLight( light, outputs.lighted );
+            if ( shadowFactor ) {
+                finalLight = this.createVariable( 'vec3' );
+                this.getNode( 'Mult' ).inputs( outputs.color, shadowFactor ).outputs( finalLight );
             }
 
-            var lightMatAmbientOutput = this.createVariable( 'vec3', 'lightMatAmbientOutput' );
-
-            this.getNode( 'Mult' ).inputs( inputs.materialambient, lightUniforms.lightambient ).outputs( lightMatAmbientOutput );
-
-
-            lightOutputVarList.push( lightMatAmbientOutput );
+            lightSum.push( finalLight );
         }
 
-        // do not delete on the assumption that light list is always filled
-        // in case CreateLighting is called with a empty lightList
-        // when Compiler is overriden.
-        if ( lightOutputVarList.length === 0 )
-            lightOutputVarList.push( this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' ) );
+        this.addAmbientLighting( lightSum );
 
-        this.getNode( 'Add' ).inputs( lightOutputVarList ).outputs( output );
+        if ( lightSum.length === 0 ) return this.getOrCreateConstantZero( 'vec3' );
+        if ( lightSum.length === 1 ) return lightSum[ 0 ];
 
+        var output = this.createVariable( 'vec3' );
+        this.getNode( 'Add' ).inputs( lightSum ).outputs( output );
         return output;
+    },
+
+    addAmbientLighting: function ( toBeAdded ) {
+        for ( var i = 0; i < this._lights.length; i++ ) {
+            var light = this._lights[ i ];
+
+            var ambient = this.createVariable( 'vec3' );
+            var lightambient = this.getOrCreateUniform( light.getOrCreateUniforms().ambient );
+            var materialambient = this.getOrCreateMaterialAmbient();
+            this.getNode( 'Mult' ).inputs( materialambient, lightambient ).outputs( ambient );
+
+            toBeAdded.push( ambient );
+        }
     },
 
     createTextureRGBA: function ( texture, textureSampler, texCoord ) {
