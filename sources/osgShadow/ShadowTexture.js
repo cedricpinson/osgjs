@@ -48,11 +48,6 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         return 'u' + prefix + '_' + name;
     },
 
-    getVaryingName: function ( name ) {
-        var prefix = this.getType() + this._lightNumber.toString();
-        return 'v' + prefix + '_' + name;
-    },
-
     getOrCreateUniforms: function ( unit ) {
         // uniform are once per CLASS attribute, not per instance
         var obj = ShadowTexture;

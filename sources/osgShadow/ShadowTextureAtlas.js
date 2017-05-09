@@ -65,13 +65,6 @@ ShadowTextureAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
 
     },
 
-    getVaryingName: function ( lightNumber, name ) {
-
-        var prefix = this.getType() + lightNumber.toString();
-        return 'v' + prefix + '_' + name;
-
-    },
-
     getOrCreateUniforms: function ( unit ) {
 
         // uniform are once per CLASS attribute, not per instance

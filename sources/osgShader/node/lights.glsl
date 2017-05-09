@@ -42,30 +42,25 @@ vec3 computeSpotLightShading(
     const in vec3 normal,
     const in vec3 eyeVector,
 
-    const in vec3 materialAmbient,
     const in vec3 materialDiffuse,
     const in vec3 materialSpecular,
     const in float materialShininess,
 
-    const in vec3 lightAmbient,
     const in vec3 lightDiffuse,
     const in vec3 lightSpecular,
-
     const in vec3  lightSpotDirection,
     const in vec4  lightAttenuation,
     const in vec4  lightSpotPosition,
     const in float lightCosSpotCutoff,
     const in float lightSpotBlend,
-
     const in mat4 lightMatrix,
     const in mat4 lightInvMatrix,
 
-    out vec3 eyeLightPos,
-    out vec3 eyeLightDir,
     out bool lighted) {
+
     lighted = false;
-    eyeLightPos = vec3(lightMatrix * lightSpotPosition);
-    eyeLightDir = eyeLightPos - vViewVertex.xyz;
+    vec3 eyeLightPos = vec3(lightMatrix * lightSpotPosition);
+    vec3 eyeLightDir = eyeLightPos - vViewVertex.xyz;
     // compute dist
     float dist = length(eyeLightDir);
     // compute attenuation
@@ -82,9 +77,8 @@ vec3 computeSpotLightShading(
             float spot = 1.0;
             if ( diffAngle < 0.0 ) {
                 spot = 0.0;
-            } else {
-                if ( lightSpotBlend > 0.0 )
-                    spot = cosCurAngle * smoothstep(0.0, 1.0, (cosCurAngle - lightCosSpotCutoff) / (lightSpotBlend));
+            } else if ( lightSpotBlend > 0.0 ) {
+                spot = cosCurAngle * smoothstep(0.0, 1.0, (cosCurAngle - lightCosSpotCutoff) / (lightSpotBlend));
             }
 
             if (spot > 0.0) {
@@ -101,6 +95,7 @@ vec3 computeSpotLightShading(
             }
         }
     }
+
     return vec3(0.0);
 }
 
@@ -108,26 +103,21 @@ vec3 computePointLightShading(
     const in vec3 normal,
     const in vec3 eyeVector,
 
-    const in vec3 materialAmbient,
     const in vec3 materialDiffuse,
     const in vec3 materialSpecular,
     const in float materialShininess,
 
-    const in vec3 lightAmbient,
     const in vec3 lightDiffuse,
     const in vec3 lightSpecular,
-
     const in vec4 lightPosition,
     const in vec4 lightAttenuation,
-
     const in mat4 lightMatrix,
 
-    out vec3 eyeLightPos,
-    out vec3 eyeLightDir,
     out bool lighted) {
 
-    eyeLightPos =  vec3(lightMatrix * lightPosition);
-    eyeLightDir = eyeLightPos - vViewVertex.xyz;
+    lighted = false;
+    vec3 eyeLightPos =  vec3(lightMatrix * lightPosition);
+    vec3 eyeLightDir = eyeLightPos - vViewVertex.xyz;
     float dist = length(eyeLightDir);
     // compute dist
     // compute attenuation
@@ -146,6 +136,7 @@ vec3 computePointLightShading(
             return attenuation * (diffuseContrib + specularContrib);
         }
     }
+
     return vec3(0.0);
 }
 
@@ -154,24 +145,19 @@ vec3 computeSunLightShading(
     const in vec3 normal,
     const in vec3 eyeVector,
 
-    const in vec3 materialAmbient,
     const in vec3 materialDiffuse,
     const in vec3 materialSpecular,
     const in float materialShininess,
 
-    const in vec3 lightAmbient,
     const in vec3 lightDiffuse,
     const in vec3 lightSpecular,
-
     const in vec4 lightPosition,
-
     const in mat4 lightMatrix,
 
-    out vec3 eyeLightDir,
     out bool lighted) {
 
-    lighted = false;
-    eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
+    lighted = false; 
+    vec3 eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
     // compute NdL   // compute NdL
     float NdotL = dot(eyeLightDir, normal);
     if (NdotL > 0.0) {
@@ -182,6 +168,7 @@ vec3 computeSunLightShading(
         specularCookTorrance(normal, eyeLightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
         return (diffuseContrib + specularContrib);
     }
+
     return vec3(0.0);
 }
 
@@ -196,17 +183,13 @@ vec3 computeHemiLightShading(
 
     const in vec3 lightDiffuse,
     const in vec3 lightGround,
-
     const in vec4 lightPosition,
-
     const in mat4 lightMatrix,
 
-    out vec3 eyeLightDir,
     out bool lighted) {
 
     lighted = false;
-
-    eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
+    vec3 eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
     float NdotL = dot(eyeLightDir, normal);
     float weight = 0.5 * NdotL + 0.5;
     vec3 diffuseContrib = materialDiffuse * mix(lightGround, lightDiffuse, weight);
