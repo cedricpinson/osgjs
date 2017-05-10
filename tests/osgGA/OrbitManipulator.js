@@ -87,6 +87,10 @@ module.exports = function () {
         yaw = orbit._computeYaw( 2.01, -0.02, 2.0, 3.0 );
         assert.isOk( yaw === 2.0, 'Right left same quadrant / small inc outside range (left). Yaw is ' + yaw + ' and should be 2.0' );
 
+        //edge case when prev yaw is slightly over limit
+        yaw = orbit._computeYaw( 1.9198621771937627, 0.00296099990606308, 1.8500490071139892, 1.9198621771937625 );
+        assert.isOk( yaw === 1.9198621771937625, 'Right left same quadrant / small inc outside range (right, rounding issue on equal). Yaw is ' + yaw + ' and should be 1.9198621771937625' );
+
 
     } );
 

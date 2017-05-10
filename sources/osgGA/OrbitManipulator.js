@@ -40,6 +40,9 @@ OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
 ];
 
 var TWO_PI = 2 * Math.PI;
+var lowerOrEqual = function ( val, limit ) {
+    return val < limit + 0.00001;
+};
 
 /** @lends OrbitManipulator.prototype */
 OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
@@ -272,9 +275,9 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                 if ( isOutsideLimit ) yaw = Math.abs( yaw - left ) > Math.abs( yaw - right ) ? right : left;
             }
 
-            if ( deltaYaw > 0.0 && previousYaw <= right && yaw > right ) {
+            if ( deltaYaw > 0.0 && lowerOrEqual( previousYaw, right ) && yaw > right ) {
                 yaw = right;
-            } else if ( deltaYaw < 0.0 && previousYaw >= left && yaw < left ) {
+            } else if ( deltaYaw < 0.0 && lowerOrEqual( left, previousYaw ) && yaw < left ) {
                 yaw = left;
             }
         }
