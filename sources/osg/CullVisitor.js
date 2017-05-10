@@ -17,6 +17,7 @@ var RenderBin = require( 'osg/RenderBin' );
 var RenderStage = require( 'osg/RenderStage' );
 var Node = require( 'osg/Node' );
 var Lod = require( 'osg/Lod' );
+var Switch = require( 'osg/Switch' );
 var PagedLOD = require( 'osg/PagedLOD' );
 var Camera = require( 'osg/Camera' );
 var TransformEnums = require( 'osg/transformEnums' );
@@ -673,6 +674,7 @@ CullVisitor.prototype[ AutoTransform.typeID ] = CullVisitor.prototype[ MatrixTra
 
 // same code like Node
 CullVisitor.prototype[ Lod.typeID ] = CullVisitor.prototype[ Node.typeID ];
+CullVisitor.prototype[ Switch.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
 // same code like Node
 CullVisitor.prototype[ PagedLOD.typeID ] = CullVisitor.prototype[ Node.typeID ];

@@ -24,6 +24,7 @@ var Quat = require( 'tests/osg/Quat' );
 var Shader = require( 'tests/osg/Shader' );
 var State = require( 'tests/osg/State' );
 var StateSet = require( 'tests/osg/StateSet' );
+var Switch = require( 'tests/osg/Switch' );
 var Texture = require( 'tests/osg/Texture' );
 var TextureCubeMap = require( 'tests/osg/TextureCubeMap' );
 var TextureManager = require( 'tests/osg/TextureManager' );
@@ -59,6 +60,7 @@ module.exports = function () {
     Shader();
     State();
     StateSet();
+    Switch();
     Texture();
     TextureCubeMap();
     TextureManager();
