@@ -71,8 +71,8 @@ Switch.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node
                 var numChildren = this.children.length;
                 if ( this._values.length < numChildren ) numChildren = this._values.length;
 
-                for ( var i = 0; i < numChildren; ++i ) {
-                    if ( this._values[ i ] == true ) {
+                for ( i = 0; i < numChildren; ++i ) {
+                    if ( this._values[ i ] === true ) {
                         this.children[ i ].accept( visitor );
                     }
                 }
