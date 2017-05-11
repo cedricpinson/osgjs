@@ -9,7 +9,6 @@ var Uniform = function ( name ) {
     this._data = undefined;
     this._transpose = false;
     this._glCall = '';
-    this._cache = undefined;
     this._name = name;
     this._type = undefined;
     this._isMatrix = false;
@@ -35,13 +34,10 @@ Uniform.prototype = {
 
     apply: function UniformApply( gl, location ) {
 
-        if ( !this._cache )
-            this._cache = gl[ this._glCall ];
-
         if ( this._isMatrix )
-            this._cache.call( gl, location, this._transpose, this._data );
+            gl[ this._glCall ]( location, this._transpose, this._data );
         else
-            this._cache.call( gl, location, this._data );
+            gl[ this._glCall ]( location, this._data );
     },
 
     // no type checking, so array should be valid
