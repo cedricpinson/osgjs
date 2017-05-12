@@ -642,7 +642,7 @@
             }
 
             var shadowMap;
-            if ( this._updateRTT || ( this._previousRTT === false && this._config.debugRTT ) ) {
+            if ( this._config.debugRTT && ( this._updateRTT || this._previousRTT === false ) ) {
 
                 this._RTT = [];
 
@@ -838,17 +838,24 @@
             var groundSubNode;
             // intentionally create many node/transform
             // to mimick real scene with many nodes
-            for ( var wG = 0; wG < numPlanes; wG++ ) {
-                for ( var wH = 0; wH < numPlanes; wH++ ) {
-                    var groundSubNodeTrans = new osg.MatrixTransform();
-                    groundSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ wG * groundSize - groundSize * numPlanes * 0.5, wH * groundSize - groundSize * numPlanes * 0.5, -5.0 ] ) );
-                    // only node are culled in CullVisitor frustum culling
-                    groundSubNode = new osg.Node();
-                    groundSubNode.setName( 'groundSubNode_' + wG + '_' + wH );
-                    groundSubNodeTrans.addChild( ground );
-                    groundSubNode.addChild( groundSubNodeTrans );
-                    groundNode.addChild( groundSubNode );
+            if ( !this._config.basicScene ) {
+                for ( var wG = 0; wG < numPlanes; wG++ ) {
+                    for ( var wH = 0; wH < numPlanes; wH++ ) {
+                        var groundSubNodeTrans = new osg.MatrixTransform();
+                        groundSubNodeTrans.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), [ wG * groundSize - groundSize * numPlanes * 0.5, wH * groundSize - groundSize * numPlanes * 0.5, -5.0 ] ) );
+                        // only node are culled in CullVisitor frustum culling
+                        groundSubNode = new osg.Node();
+                        groundSubNode.setName( 'groundSubNode_' + wG + '_' + wH );
+                        groundSubNodeTrans.addChild( ground );
+                        groundSubNode.addChild( groundSubNodeTrans );
+                        groundNode.addChild( groundSubNode );
+                    }
                 }
+            } else {
+                var mt = new osg.MatrixTransform();
+                osg.mat4.fromTranslation( mt.getMatrix(), [ -300,-300, -5.0 ] );
+                mt.addChild( ground );
+                groundNode = mt;
             }
 
             ShadowScene.addChild( groundNode );
