@@ -96,6 +96,11 @@ var WebGLUtils = function () {
         "It doesn't appear your computer can support WebGL.<br/>" +
         '<a href="http://get.webgl.org">Click here for more information.</a>';
 
+    /*
+     * Allows to prevent the global canvas error code on webgl2
+     * as we still have to check if we can fallback on webgl1
+     */
+    var doReportCreationError = true;
     /**
      * Creates a webgl context. If creation fails it will
      * change the contents of the container of the <canvas>
@@ -110,7 +115,7 @@ var WebGLUtils = function () {
         /** function:(msg) */
         opt_onError ) {
         function handleCreationError( msg ) {
-            if ( msg.indexOf( 'WebGL2' ) !== -1 ) return;
+            if ( !doReportCreationError ) return;
             var container = document.getElementsByTagName( "body" )[ 0 ];
             //var container = canvas.parentNode;
             if ( container ) {
@@ -122,6 +127,7 @@ var WebGLUtils = function () {
                 }
                 container.innerHTML = makeFailHTML( str );
             }
+
         }
 
         opt_onError = opt_onError || handleCreationError;
@@ -141,20 +147,13 @@ var WebGLUtils = function () {
     };
 
     /**
-     * Creates a webgl context.
-     * @param {!Canvas} canvas The canvas tag to get context
-     *     from. If one is not passed in one will be created.
+     * try to creaate webgl contexts
+     * @param {Canvas} canvas The canvas tag to get context
+     * @param {opt_attribs} webgl context options
+     * @param {names} list of webgl context type to try
      * @return {!WebGLContext} The created context.
      */
-    var create3DContext = function ( canvas, opt_attribs ) {
-
-        // only try to enable if URl options ?webgl2=1
-        var names = [];
-        if ( opt_attribs && opt_attribs.webgl2 ) {
-            names = names.concat( [ "webgl2", "experimental-webgl2" ] );
-        }
-        names = names.concat( [ "webgl", "experimental-webgl", "webkit-3d", "moz-webgl" ] );
-
+    var checkAndCreate3DContext = function ( canvas, opt_attribs, names ) {
         var context = null;
         for ( var ii = 0; ii < names.length; ++ii ) {
             try {
@@ -165,6 +164,24 @@ var WebGLUtils = function () {
             }
         }
         return context;
+    };
+
+    /**
+     * Creates a webgl context.
+     * @param !Canvas} canvas The canvas tag to get context
+     * @param {!opt_attribs} webgl context options
+     * @return {!WebGLContext} The created context.
+     */
+    var create3DContext = function ( canvas, opt_attribs ) {
+        var context;
+        // only try to enable if URl options ?webgl2=1
+        if ( opt_attribs && opt_attribs.webgl2 ) {
+            doReportCreationError = false;
+            context = checkAndCreate3DContext( canvas, opt_attribs, [ "webgl2", "experimental-webgl2" ] );
+            if ( context ) return context;
+            doReportCreationError = true;
+        }
+        return checkAndCreate3DContext( canvas, opt_attribs, [ "webgl", "experimental-webgl", "webkit-3d", "moz-webgl" ] );
     };
 
     return {
