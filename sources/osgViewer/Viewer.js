@@ -450,33 +450,33 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
     setVRDisplay: function ( hmd ) {
         this._hmd = hmd;
-        this._requestAnimationFrame = hmd.requestAnimationFrame.bind( hmd );
     },
 
     getVRDisplay: function () {
         return this._hmd;
     },
 
-    setPresentVR: function ( bool ) {
+    setPresentVR: function ( doPresentVR ) {
         if ( !this._hmd ) {
             Notify.warn( 'no hmd device provided to the viewer!' );
             return P.reject();
         }
 
-        // reset position/orientation of hmd device
-        if ( !this._hmd.capabilities.hasPosition )
-            this._hmd.resetPose();
-
         if ( !this._hmd.capabilities.canPresent )
             return P.reject();
 
-        if ( bool ) {
+        if ( doPresentVR ) {
+            // spec is not clear if it should be done after the requestPresent promise or before
+            this._requestAnimationFrame = this._hmd.requestAnimationFrame.bind( this._hmd );
+
             var layers = [ {
                 source: this.getGraphicContext().canvas
             } ];
             return this._hmd.requestPresent( layers );
 
         } else {
+
+            this._requestAnimationFrame = window.requestAnimationFrame.bind( window );
             return this._hmd.exitPresent();
         }
     },
