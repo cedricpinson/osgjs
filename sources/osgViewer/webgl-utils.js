@@ -110,7 +110,7 @@ var WebGLUtils = function () {
     var setupWebGL = function (
         /** Element */
         canvas,
-        /** WebGLContextCreationAttirbutes */
+        /** WebGLContextCreationAttributes */
         opt_attribs,
         /** function:(msg) */
         opt_onError ) {
