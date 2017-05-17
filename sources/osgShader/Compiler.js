@@ -340,33 +340,6 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         return v;
     },
 
-    // Map of uniform from a StateAttribute or TextureStateAttribute
-    getOrCreateUniformFromUniformMap: function ( uniforms, prefix ) {
-        var object = {};
-
-        var prefixUniform = prefix ? prefix : '';
-
-        for ( var keyUniform in uniforms ) {
-            var k = prefixUniform + keyUniform;
-            object[ k ] = this.getOrCreateUniform( uniforms[ keyUniform ] );
-        }
-
-        return object;
-    },
-
-    // specialized for texture, enforcing last parameter usage.
-    getOrCreateTextureStateAttributeUniforms: function ( stateAttribute, prefix, unit ) {
-
-        var uniforms = stateAttribute.getOrCreateUniforms( unit );
-        return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
-    },
-
-    getOrCreateStateAttributeUniforms: function ( stateAttribute, prefix ) {
-
-        var uniforms = stateAttribute.getOrCreateUniforms();
-        return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
-    },
-
     getOrCreateUniform: function ( type, varname, size ) {
 
         var nameID = varname;
