@@ -10,6 +10,7 @@ var vec3 = require( 'osg/glMatrix' ).vec3;
  */
 var LightSource = function () {
     Node.call( this );
+    this.setCullingActive( false );
     this._light = undefined;
     this._referenceFrame = TransformEnums.RELATIVE_RF;
 };

@@ -247,6 +247,13 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
             );
         }
 
+        // We need to check if culling is active in the child
+        if ( child.getNumChildrenWithCullingDisabled() > 0 || child.getCullingActive() === false ) {
+            this.setNumChildrenWithCullingDisabled(
+                this.getNumChildrenWithCullingDisabled() + 1
+            );
+        }
+
         return child;
     },
 
