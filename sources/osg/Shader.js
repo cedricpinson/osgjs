@@ -82,10 +82,10 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         this.shader = gl.createShader( this.type );
 
         // concat failsafe and broken shader under separate _DEBUG defines blocks
-        var name = shaderText.match( /#define[\s]+SHADER_NAME[\s]+([\S]+)(\n|$)/ );
-        if ( name ) name = name ? name[ 1 ] : '';
+        var shaderName = shaderText.match( /#define[\s]+SHADER_NAME[\s]+([\S]+)(\n|$)/ );
+        shaderName = shaderName ? shaderName[ 1 ] : '';
         var debugShaderTxt = ( this.type === Shader.VERTEX_SHADER ? Shader.VS_DBG : Shader.FS_DBG );
-        debugShaderTxt += debugName + name + '\n#else\n' + shaderText + '\n#endif\n';
+        debugShaderTxt += debugName + shaderName + '\n#else\n' + shaderText + '\n#endif\n';
         gl.shaderSource( this.shader, debugShaderTxt );
         gl.compileShader( this.shader );
     },
