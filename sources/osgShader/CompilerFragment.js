@@ -74,10 +74,18 @@ var CompilerFragment = {
         var finalColor = this.createLighting();
 
         var emission = this.getOrCreateMaterialEmission();
-        if ( emission ) this.getNode( 'Add' ).inputs( finalColor, emission ).outputs( finalColor );
+        if ( emission ) {
+            var emit = this.createVariable( 'vec3' );
+            this.getNode( 'Add' ).inputs( finalColor, emission ).outputs( emit );
+            finalColor = emit;
+        }
 
         var textureColor = this.getDiffuseColorFromTextures();
-        if ( textureColor ) this.getNode( 'Mult' ).inputs( finalColor, textureColor ).inputs( finalColor );
+        if ( textureColor ) {
+            var texColor = this.createVariable( 'vec3' );
+            this.getNode( 'Mult' ).inputs( finalColor, textureColor ).outputs( texColor );
+            finalColor = texColor;
+        }
 
         var alpha = this.getAlpha();
 
@@ -255,9 +263,9 @@ var CompilerFragment = {
         var tmp = this.createVariable( 'vec4' );
 
         var str = [ '',
-            '%color.rgb = %diffuse.rgb;',
+            '%color = %diffuse;',
             'if ( %hasVertexColor == 1.0)',
-            '  %color *= %vertexColor.rgba;'
+            '  %color *= %vertexColor;'
         ].join( '\n' );
 
         this.getNode( 'InlineCode' ).code( str ).inputs( {
@@ -368,9 +376,9 @@ var CompilerFragment = {
     getOrCreateMaterialDiffuseColor: function () {
         var matDiffuse = this.getVariable( 'materialDiffuseColor' );
         if ( matDiffuse ) return matDiffuse;
-        matDiffuse = this.createVariable( 'vec3', 'materialDiffuseColor' );
+        matDiffuse = this.createVariable( 'vec4', 'materialDiffuseColor' );
 
-        var diffuse = this.getOrCreateUniform( this._material.getOrCreateUniforms().diffuse ) || this.getOrCreateConstantOne( 'vec3' );
+        var diffuse = this.getOrCreateUniform( this._material.getOrCreateUniforms().diffuse );
         this.getNode( 'Mult' ).inputs( this.multiplyDiffuseWithVertexColor( diffuse ) ).outputs( matDiffuse );
 
         return matDiffuse;
@@ -476,7 +484,7 @@ var CompilerFragment = {
 
         this.addAmbientLighting( lightSum );
 
-        if ( lightSum.length === 0 ) return this.getOrCreateConstantZero( 'vec3' );
+        if ( lightSum.length === 0 ) return this.getOrCreateMaterialDiffuseColor();
         if ( lightSum.length === 1 ) return lightSum[ 0 ];
 
         var output = this.createVariable( 'vec3' );
