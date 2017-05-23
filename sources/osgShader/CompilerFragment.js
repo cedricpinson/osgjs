@@ -71,7 +71,7 @@ var CompilerFragment = {
             return roots;
         }
 
-        var finalColor = this.createLighting();
+        var finalColor = this._lights.length > 0 ? this.createLighting() : this.getOrCreateMaterialDiffuseColor();
 
         var emission = this.getOrCreateMaterialEmission();
         if ( emission ) {
@@ -484,7 +484,7 @@ var CompilerFragment = {
 
         this.addAmbientLighting( lightSum );
 
-        if ( lightSum.length === 0 ) return this.getOrCreateMaterialDiffuseColor();
+        if ( lightSum.length === 0 ) return this.getOrCreateConstantZero( 'vec3' );
         if ( lightSum.length === 1 ) return lightSum[ 0 ];
 
         var output = this.createVariable( 'vec3' );
