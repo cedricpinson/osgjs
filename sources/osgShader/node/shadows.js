@@ -103,8 +103,15 @@ ShadowCast.prototype = MACROUTILS.objectInherit( Node.prototype, {
     },
 
     computeShader: function () {
+
         var inp = this._inputs;
-        return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange ] );
+        var inputs = [].concat( [ inp.fragEye, inp.shadowDepthRange ] );
+
+        if ( this._shadowCast.getReceiveAttribute().getAtlas() && !this._shadowCast.getScissor() ) {
+            inputs.push( inp.shadowTextureMapSize );
+        }
+
+        return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, inputs );
     }
 
 } );

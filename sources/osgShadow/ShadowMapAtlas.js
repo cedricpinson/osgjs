@@ -3,12 +3,16 @@ var notify = require( 'osg/notify' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Texture = require( 'osg/Texture' );
 var Uniform = require( 'osg/Uniform' );
+var Program = require( 'osg/Program' );
+var Shader = require( 'osg/Shader' );
 var MACROUTILS = require( 'osg/Utils' );
 var Scissor = require( 'osg/Scissor' );
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var ShadowTechnique = require( 'osgShadow/ShadowTechnique' );
 var ShadowTextureAtlas = require( 'osgShadow/ShadowTextureAtlas' );
 var ShadowMap = require( 'osgShadow/ShadowMap' );
+var shape = require( 'osg/shape' );
+var Depth = require( 'osg/Depth' );
 
 /**
  *  ShadowMapAtlas provides an implementation of shadow textures.
@@ -44,6 +48,7 @@ var ShadowMapAtlas = function ( settings ) {
         this.setShadowSettings( settings );
         if ( settings.atlasSize ) this._textureSize = settings.atlasSize;
         if ( settings.textureSize ) this._shadowMapSize = settings.textureSize;
+        if ( settings.noScissor ) this._noScissor = settings.noScissor;
 
     }
 
@@ -56,11 +61,55 @@ var ShadowMapAtlas = function ( settings ) {
     this._numShadowWidth = this._textureSize / this._shadowMapSize;
     this._numShadowHeight = this._textureSize / this._shadowMapSize;
 
+
+    this._quad = shape.createTexturedQuadGeometry(
+        0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0 );
+    this._quad.getOrCreateStateSet().setAttributeAndModes( this.getShaderQuad() );
+    this._quad.getOrCreateStateSet().setAttributeAndModes( new Depth( Depth.ALWAYS ), StateAttribute.PROTECTED | StateAttribute.OVERRIDE | StateAttribute.ON );
+
 };
 
 
 /** @lends ShadowMapAtlas.prototype */
 ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( ShadowTechnique.prototype, {
+    getShaderQuad: function () {
+        if ( this._shaderQuad === undefined ) {
+            var vertexshader = [
+                '#define SHADER_NAME BLACK_QUAD',
+                'attribute vec3 Vertex;',
+                'attribute vec2 TexCoord0;',
+                'void main(void) {',
+                ' gl_Position.x = (TexCoord0.x) * 2.0 - 1.0 ;',
+                '',
+                ' gl_Position.y = (TexCoord0.y) * 2.0 - 1.0 ;',
+                '',
+                '  gl_Position.z = 1.0;',
+                '  gl_Position.w = 1.0;',
+                '}'
+            ].join( '\n' );
+
+            var fragmentshader = [
+                '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+                'precision highp float;',
+                '#else',
+                'precision mediump float;',
+                '#endif',
+                '#define SHADER_NAME BLACK_QUAD',
+                'void main(void) {',
+                '',
+                '  gl_FragColor = vec4(1.0,1.0,1.0,1.0);',
+                '}'
+            ].join( '\n' );
+
+            var program = new Program( new Shader( 'VERTEX_SHADER', vertexshader ),
+                new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+            this._shaderQuad = program;
+        }
+        return this._shaderQuad;
+
+    },
 
     getTexture: function () {
         return this._texture;
@@ -261,8 +310,8 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         this._shadowMaps.push( shadowMap );
 
         var mapSize = this._shadowMapSize;
-        var y = mapSize * ( lightCount % ( this._numShadowWidth ) );
-        var x = mapSize * ( Math.floor( lightCount / ( this._numShadowHeight ) ) );
+        var x = mapSize * ( lightCount % ( this._numShadowWidth ) );
+        var y = mapSize * ( Math.floor( lightCount / ( this._numShadowHeight ) ) );
 
         shadowMap.setShadowedScene( this._shadowedScene );
         this._viewportDimension.push( vec4.fromValues( x, y, mapSize, mapSize ) );
@@ -298,17 +347,43 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
 
             var mapSize = this._shadowMapSize;
-            var y = mapSize * ( i % ( this._numShadowWidth ) );
-            var x = mapSize * ( Math.floor( i / ( this._numShadowHeight ) ) );
+            var x = mapSize * ( i % ( this._numShadowWidth ) );
+            var y = mapSize * ( Math.floor( i / ( this._numShadowHeight ) ) );
 
 
-            this._viewportDimension[ i ] = vec4.fromValues( x, y, mapSize, mapSize );
+            var dimensions = vec4.fromValues( x, y, mapSize, mapSize );
+            this._viewportDimension[ i ] = dimensions;
             this._shadowMaps[ i ].init( this._texture, i, this._textureUnitBase );
             this._texture.setLightShadowMapSize( i, this._viewportDimension[ i ] );
 
-            var st = this._shadowMaps[ i ].getCamera().getOrCreateStateSet();
-            var scissor = new Scissor( x, y, mapSize, mapSize );
-            st.setAttributeAndModes( scissor, StateAttribute.ON | StateAttribute.OVERRIDE );
+            // scissor or not
+            var camera = this._shadowMaps[ i ].getCamera();
+
+            var doScissor = !this._noScissor;
+            this._shadowMaps[ i ]._shadowCastAttribute.setScissor( doScissor );
+
+            if ( doScissor ) {
+
+                var scissor = new Scissor( x, y, mapSize, mapSize );
+                var st = camera.getOrCreateStateSet();
+                st.setAttributeAndModes( scissor, StateAttribute.ON | StateAttribute.OVERRIDE );
+
+            } else {
+
+                camera.setClearMask( 0x0 );
+                this._shadowMaps[ i ]._quad = this._quad;
+                var data;
+                var casterStateSet = this._shadowMaps[ i ].getCasterStateSet();
+                var uShadowMapSize = casterStateSet.getUniformList()[ 'uShadowMapSize' ];
+                if ( !uShadowMapSize ) {
+                    uShadowMapSize = Uniform.createFloat4( 'uShadowMapSize' );
+                    casterStateSet.addUniform( uShadowMapSize );
+                    data = uShadowMapSize.getInternalArray();
+                    vec4.copy( data, dimensions );
+                }
+
+            }
+
 
         }
 
@@ -316,14 +391,6 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     valid: function () {
         // checks
         return true;
-    },
-
-    updateShadowTechnique: function ( nv ) {
-
-        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-            this._shadowMaps[ i ].updateShadowTechnique( nv, this._viewportDimension[ i ] );
-        }
-
     },
 
     // internal texture allocation
@@ -357,12 +424,31 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
     },
 
-    // Defines the frustum from light param.
-    //
+
+    updateShadowTechnique: function ( nv ) {
+
+        for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
+
+            var st = this._shadowMaps[ i ];
+            if ( st.isEnabled() || !st.isFilledOnce() ) {
+                this._shadowMaps[ i ].updateShadowTechnique( nv, this._viewportDimension[ i ] );
+            }
+
+        }
+
+    },
+
     cullShadowCasting: function ( cullVisitor ) {
 
         for ( var i = 0, l = this._shadowMaps.length; i < l; i++ ) {
-            this._shadowMaps[ i ].cullShadowCasting( cullVisitor );
+
+            var st = this._shadowMaps[ i ];
+            if ( st.isEnabled() || !st.isFilledOnce() ) {
+
+                st.cullShadowCasting( cullVisitor );
+
+            }
+
         }
 
     },
