@@ -1,8 +1,16 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
+var LineSegmentIntersectFunctor = require( 'osgUtil/LineSegmentIntersectFunctor' );
+var intersectionEnums = require( 'osgUtil/intersectionEnums' );
 
+var Settings = function () {
+    this._lineSegIntersector = undefined;
+    this._intersectionVisitor = undefined;
+    this._geometry = undefined;
+    this._vertices = [];
+    this._limitOneIntersection = false;
+};
 
 var LineSegmentIntersector = function () {
     this._start = vec3.create();
@@ -10,7 +18,9 @@ var LineSegmentIntersector = function () {
     this._iStart = vec3.create();
     this._iEnd = vec3.create();
     this._intersections = [];
+    this._intersectionLimit = intersectionEnums.NO_LIMIT;
 };
+
 
 LineSegmentIntersector.prototype = {
     set: function ( start, end ) {
@@ -29,11 +39,23 @@ LineSegmentIntersector.prototype = {
     },
     reset: function () {
         // Clear the intersections vector
-        this._intersections.length = 0;
+        this._intersections = [];
     },
     enter: function ( node ) {
         // Not working if culling disabled ??
         return !node.isCullingActive() || this.intersects( node.getBound() );
+    },
+
+    setIntersectionLimit: function ( limit ) {
+        this._intersectionLimit = limit;
+    },
+
+    getIntersectionLimit: function () {
+        return this._intersectionLimit;
+    },
+
+    leave: function () {
+        //Do nothing
     },
     // Intersection Segment/Sphere
     intersects: ( function () {
@@ -75,41 +97,39 @@ LineSegmentIntersector.prototype = {
     } )(),
 
     intersect: ( function () {
-
-        var ti = new TriangleLineSegmentIntersector();
-
+        var settings = new Settings();
+        var lsf = new LineSegmentIntersectFunctor();
         return function ( iv, node ) {
+            settings._lineSegIntersector = this;
+            settings._intersectionVisitor = iv;
 
+            // It's a leaf
+            if ( node.getPrimitives ) {
+                settings._geometry = node;
+                settings._vertices = node.getVertexAttributeList();
+            }
+            settings._limitOneIntersection = ( this._intersectionLimit === intersectionEnums.LIMIT_ONE_PER_DRAWABLE || this._intersectionLimit === intersectionEnums.LIMIT_ONE );
+            lsf.reset();
+            lsf.set( this._iStart, this._iEnd, settings );
             var kdtree = node.getShape();
-            if ( kdtree )
-                return kdtree.intersectRay( this._iStart, this._iEnd, this._intersections, iv.nodePath );
 
-            ti.reset();
-            ti.setNodePath( iv.nodePath );
-            ti.set( this._iStart, this._iEnd );
-
+            if ( kdtree ) {
+                return kdtree.intersect( lsf, kdtree.getNodes()[ 0 ] );
+            }
             // handle rig transformed vertices
             if ( node.computeTransformedVertices ) {
                 var vList = node.getVertexAttributeList();
                 var originVerts = vList.Vertex.getElements();
 
                 // temporarily hook vertex buffer for the tri intersections
-                // don't call setElements as it dirty some stuffs because of gl buffer
+                // don't call setElements as it dirties some stuffs because of gl buffer
                 vList.Vertex._elements = node.computeTransformedVertices();
-                ti.apply( node );
+                lsf.apply( node );
                 vList.Vertex._elements = originVerts;
             } else {
-                ti.apply( node );
+                lsf.apply( node );
             }
-
-            var trianglesIntersections = ti._intersections;
-            var intersections = this._intersections;
-            var l = trianglesIntersections.length;
-            for ( var i = 0; i < l; i++ ) {
-                intersections.push( trianglesIntersections[ i ] );
-            }
-
-            return l > 0;
+            return this._intersections > 0;
         };
     } )(),
 
