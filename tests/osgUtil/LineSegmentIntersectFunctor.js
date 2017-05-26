@@ -1,6 +1,7 @@
 'use strict';
 var assert = require( 'chai' ).assert;
-var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
+var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
+var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/shape' );
 var DrawElements = require( 'osg/DrawElements' );
@@ -12,25 +13,30 @@ var Geometry = require( 'osg/Geometry' );
 
 module.exports = function () {
 
-    test( 'TriangleLineSegmentIntersector', function () {
+    test( 'LineSegmentIntersectFunctor', function () {
 
         var checkPrimitive = function ( geom, msg ) {
-            var ti = new TriangleLineSegmentIntersector();
+
+            var lsi = new LineSegmentIntersector();
+            var iv = new IntersectionVisitor();
+            iv.setIntersector( lsi );
+
             var start = [ 0.4, 0.2, -2.0 ];
             var end = [ 0.4, 0.2, 0.5 ];
             var dir = vec3.sub( vec3.create(), end, start );
-            ti.set( start, end );
+            lsi.set( start, end );
 
-            ti.apply( geom );
-            assert.isOk( ti._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + ti._intersections.length );
+            geom.accept( iv );
+            assert.isOk( lsi._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + lsi._intersections.length );
             var result = [ 0.4, 0.2, 0 ];
-            var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, ti._intersections[ 0 ].ratio ) );
+            var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, lsi._intersections[ 0 ].ratio ) );
             assert.equalVector( found, result, 1e-4 );
 
-            var ti2 = new TriangleLineSegmentIntersector();
-            ti2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );
-            ti2.apply( geom );
-            assert.isOk( ti2._intersections.length === 0, msg + ' Intersections should be 0 ' + ti2._intersections.length );
+            var lsi2 = new LineSegmentIntersector();
+            lsi2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );
+            iv.setIntersector( lsi2 );
+            geom.accept( iv );
+            assert.isOk( lsi2._intersections.length === 0, msg + ' Intersections should be 0 ' + lsi2._intersections.length );
         };
 
         ( function () {

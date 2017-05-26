@@ -227,31 +227,36 @@ module.exports = function () {
         var end = [ 0.4, 0.2, 0.5 ];
 
         var hits = [];
-        kdTree.intersectRay( start, end, hits, [] );
+
+
+        // FIXME: Need to reimplement this tests, as intersectRay and intersectSphere
+        // does not exist anymore. 
+
+        // kdTree.intersectRay( start, end, hits, [] );
         //console.log( hits )
 
         // test ray intersection
 
-        assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
-        var result = [ 0.4, 0.2, 0 ];
-        var dir = vec3.sub( vec3.create(), end, start );
-        var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, hits[ 0 ].ratio ) );
-        assert.equalVector( found, result, 1e-4 );
+        // assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+        // var result = [ 0.4, 0.2, 0 ];
+        // var dir = vec3.sub( vec3.create(), end, start );
+        // var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, hits[ 0 ].ratio ) );
+        // assert.equalVector( found, result, 1e-4 );
 
-        hits.length = 0;
-        kdTree.intersectRay( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ], hits, [] );
-        assert.isOk( hits.length === 0, ' Hits should be 0 ' + hits.length );
+        // hits.length = 0;
+        // //kdTree.intersectRay( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ], hits, [] );
+        // //assert.isOk( hits.length === 0, ' Hits should be 0 ' + hits.length );
 
-        // test sphere intersection
-        // sphere center in on vertex 1 (see ascii art on top of the file)
+        // // test sphere intersection
+        // // sphere center in on vertex 1 (see ascii art on top of the file)
 
-        hits.length = 0;
-        kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 - 0.01, hits, [] );
-        assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+        // hits.length = 0;
+        // kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 - 0.01, hits, [] );
+        // assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
 
-        hits.length = 0;
-        kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 + 0.02, hits, [] );
-        var nbTriangles = nbPrimitives * 2; // the geometries are quad only
-        assert.isOk( hits.length === nbTriangles, ' Hits should be ' + nbTriangles + ' and result is ' + hits.length );
+        // hits.length = 0;
+        // kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 + 0.02, hits, [] );
+        // var nbTriangles = nbPrimitives * 2; // the geometries are quad only
+        // assert.isOk( hits.length === nbTriangles, ' Hits should be ' + nbTriangles + ' and result is ' + hits.length );
     } );
 };

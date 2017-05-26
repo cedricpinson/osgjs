@@ -1,29 +1,63 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
+var LineSegmentIntersectFunctor = require( 'osgUtil/LineSegmentIntersectFunctor' );
 
 // implicitly match with TriangleLineSegment intersection
-var TriangleSphereIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
-    this.normal = normal;
+var SphereIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
+    this._intersectionPoints = [];
+    this._primitiveIndex = undefined;
+    this._distance = 0;
+    this._maxDistance = 0;
+    this._nodePath = undefined;
+    this._drawable = undefined;
+    this._matrix = undefined;
+    this._localIntersectionPoint = undefined;
+    this._localIntersectionNormal = undefined;
+    this._numIntersectionPoints = 0;
+    this._zone = undefined;
 
-    this.i1 = i1;
-    this.i2 = i2;
-    this.i3 = i3;
+    this._i1 = i1;
+    this._i2 = i2;
+    this._i3 = i3;
 
-    this.r1 = r1;
-    this.r2 = r2;
-    this.r3 = r3;
+    this._r1 = r1;
+    this._r2 = r2;
+    this._r3 = r3;
 };
 
-var TriangleSphereIntersector = function () {
-    TriangleLineSegmentIntersector.apply( this );
+var SphereIntersectFunctor = function () {
+    LineSegmentIntersectFunctor.apply( this );
+    this._center = undefined;
+    this._radius = 0;
 };
 
-TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleLineSegmentIntersector.prototype, {
-    set: function ( center, radius ) {
+SphereIntersectFunctor.prototype = MACROUTILS.objectInherit( LineSegmentIntersectFunctor.prototype, {
+    set: function ( center, radius, settings ) {
         this._center = center;
         this._radius = radius;
+        this._settings = settings;
+    },
+
+    enter: function ( bbox ) {
+        // Intersection sphere box, from graphic gems 2
+        // https://github.com/erich666/GraphicsGems/blob/master/gems/BoxSphere.c
+        var r2 = this._radius * this._radius;
+        var dmin = 0;
+        var bmin = bbox.getMin();
+        var bmax = bbox.getMax();
+        var d = 0;
+        for ( var i = 0; i < 3; i++ ) {
+            if ( this._center[ i ] < bmin[ i ] ) {
+                d = this._center[ i ] - bmin[ i ];
+                dmin += d * d;
+
+            } else if ( this._center[ i ] > bmax[ i ] ) {
+                d = this._center[ i ] - bmax[ i ];
+                dmin += d * d;
+            }
+        }
+        return dmin <= r2;
     },
 
     //
@@ -42,7 +76,7 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleLineSegm
         var edge2 = vec3.create();
         var diff = vec3.create();
         return function ( v1, v2, v3, i1, i2, i3 ) {
-
+            if ( this._settings._limitOneIntersection && this._hit ) return;
             // sphere is a 'volume' here (so if the triangle is inside the ball it will intersects)
 
             vec3.sub( edge1, v2, v1 );
@@ -226,17 +260,20 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleLineSegm
             vec3.cross( normal, edge1, edge2 );
             vec3.normalize( normal, normal );
 
-            // TODO: gc TriangleIntersection, closest, normal ? (stack pool)
-            this._intersections.push( {
-                ratio: Math.sqrt( sqrDistance ),
-                nodepath: this._nodePath.slice( 0 ),
-                TriangleIntersection: new TriangleSphereIntersection( normal, i1, i2, i3, 1 - s - t, s, t ),
-                point: closest,
-                zone: zone
-            } );
-            this.hit = true;
+            var intersection = new SphereIntersection( i1, i2, i3, 1 - s - t, s, t );
+            intersection._ratio = Math.sqrt( sqrDistance );
+            intersection._matrix = this._settings._intersectionVisitor.getModelMatrix();
+            intersection._nodePath = this._settings._intersectionVisitor.getNodePath().slice();
+            intersection._drawable = this._settings._drawable;
+            intersection._primitiveIndex = this._primitiveIndex;
+            intersection._localIntersectionPoint = closest;
+            intersection._localIntersectionNormal = normal;
+            intersection._zone = zone;
+
+            this._settings._sphereIntersector.getIntersections().push( intersection );
+            this._hit = true;
         };
     } )()
 } );
 
-module.exports = TriangleSphereIntersector;
+module.exports = SphereIntersectFunctor;

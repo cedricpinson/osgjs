@@ -1,8 +1,16 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var TriangleSphereIntersector = require( 'osgUtil/TriangleSphereIntersector' );
+var SphereIntersectFunctor = require( 'osgUtil/SphereIntersectFunctor' );
+var intersectionEnums = require( 'osgUtil/intersectionEnums' );
 
+var Settings = function () {
+    this._sphereIntersector = undefined;
+    this._intersectionVisitor = undefined;
+    this._geometry = undefined;
+    this._vertices = [];
+    this._limitOneIntersection = false;
+};
 
 var SphereIntersector = function () {
     this._center = vec3.create();
@@ -35,6 +43,16 @@ SphereIntersector.prototype = {
         // Not working if culling disabled ??
         return !node.isCullingActive() || this.intersects( node.getBound() );
     },
+    leave: function () {
+        //Do nothing
+    },
+    setIntersectionLimit: function ( limit ) {
+        this._intersectionLimit = limit;
+    },
+
+    getIntersectionLimit: function () {
+        return this._intersectionLimit;
+    },
     // Intersection Sphere/Sphere
     intersects: function ( bsphere ) {
         if ( !bsphere.valid() ) return false;
@@ -44,38 +62,37 @@ SphereIntersector.prototype = {
 
     intersect: ( function () {
 
-        var ti = new TriangleSphereIntersector();
-
+        var settings = new Settings();
+        var sif = new SphereIntersectFunctor();
         return function ( iv, node ) {
 
+            settings._sphereIntersector = this;
+            settings._intersectionVisitor = iv;
+            // It's a leaf
+            if ( node.getPrimitives ) {
+                settings._geometry = node;
+                settings._vertices = node.getVertexAttributeList();
+            }
+            settings._limitOneIntersection = ( this._intersectionLimit === intersectionEnums.LIMIT_ONE_PER_DRAWABLE || this._intersectionLimit === intersectionEnums.LIMIT_ONE );
+            sif.set( this._iCenter, this._iRadius, settings );
+
             var kdtree = node.getShape();
-            if ( kdtree )
-                return kdtree.intersectSphere( this._iCenter, this._iRadius, this._intersections, iv.nodePath );
-
-            ti.reset();
-            ti.setNodePath( iv.nodePath );
-            ti.set( this._iCenter, this._iRadius );
-
-            // handle rig transformed vertices
+            if ( kdtree ) {
+                return kdtree.intersect( sif, kdtree.getNodes()[ 0 ] );
+            }
             if ( node.computeTransformedVertices ) {
                 var vList = node.getVertexAttributeList();
                 var originVerts = vList.Vertex.getElements();
 
                 // temporarily hook vertex buffer for the tri intersections
-                // don't call setElements as it dirty some stuffs because of gl buffer
+                // don't call setElements as it dirties some stuffs because of gl buffer
                 vList.Vertex._elements = node.computeTransformedVertices();
-                ti.apply( node );
+                sif.apply( node );
                 vList.Vertex._elements = originVerts;
             } else {
-                ti.apply( node );
+                sif.apply( node );
             }
-
-            var l = ti._intersections.length;
-            for ( var i = 0; i < l; i++ ) {
-                this._intersections.push( ti._intersections[ i ] );
-            }
-
-            return l > 0;
+            return this._intersections > 0;
         };
     } )(),
 

@@ -138,10 +138,10 @@
 
             myReservedMatrixStack.reset();
             // Node 0 in nodepath is the Camera of the Viewer, so we take next child
-            osg.mat4.mul( mat, mat, osg.computeLocalToWorld( hit.nodepath.slice( 1 ), true, myReservedMatrixStack.get() ) );
+            osg.mat4.mul( mat, mat, osg.computeLocalToWorld( hit._nodePath.slice( 1 ), true, myReservedMatrixStack.get() ) );
 
             var pt = [ 0.0, 0.0, 0.0 ];
-            osg.vec3.transformMat4( pt, hit.point, mat );
+            osg.vec3.transformMat4( pt, hit._localIntersectionPoint, mat );
             return pt;
         };
     } )();
@@ -165,7 +165,7 @@
 
         if ( hits.length === 0 )
             return;
-        var point = hits[ 0 ].point;
+        var point = hits[ 0 ]._localIntersectionPoint;
         var ptFixed = [ point[ 0 ].toFixed( 2 ), point[ 1 ].toFixed( 2 ), point[ 2 ].toFixed( 2 ) ];
 
         //update shader uniform
@@ -189,7 +189,7 @@
             //for sphere intersection
             var worldPoint = osg.vec3.create();
             myReservedMatrixStack.reset();
-            osg.vec3.transformMat4( worldPoint, point, osg.computeLocalToWorld( hits[ 0 ].nodepath.slice( 1 ), true, myReservedMatrixStack.get() ) );
+            osg.vec3.transformMat4( worldPoint, point, osg.computeLocalToWorld( hits[ 0 ]._nodePath.slice( 1 ), true, myReservedMatrixStack.get() ) );
 
             si.set( worldPoint, viewer.getSceneData().getBound().radius() * 0.1 );
             var iv = new osgUtil.IntersectionVisitor();
