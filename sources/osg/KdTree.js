@@ -2,11 +2,8 @@
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var BoundingBox = require( 'osg/BoundingBox' );
-var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
-var KdTreeLineSegmentIntersector = require( 'osg/KdTreeLineSegmentIntersector' );
-var KdTreeSphereIntersector = require( 'osg/KdTreeSphereIntersector' );
-
+var PrimitiveIndexFunctor = require( 'osg/PrimitiveIndexFunctor' );
+var notify = require( 'osg/notify' );
 
 // **** GENERAL INFO ON KDTREE ****
 // A KdTree is a Spatial Partitionning Tree (http://en.wikipedia.org/wiki/Space_partitioning)
@@ -51,11 +48,121 @@ var KdNode = function ( first, second ) {
     this._nodeRayEnd = vec3.create();
 };
 
+
+
+var PrimitiveIndicesCollector = function ( buildKdTree ) {
+    this._buildKdTree = buildKdTree;
+};
+
+PrimitiveIndicesCollector.prototype = {
+
+    buildKdTreePoint: ( function () {
+
+        var v = vec3.create();
+
+        return function ( i0 ) {
+            var vertices = this._buildKdTree._kdTree.getVertices();
+            vec3.set( v, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
+            this._buildKdTree._kdTree.addPoint( i0 );
+            var bb = new BoundingBox();
+            bb.expandByvec3( v );
+
+            this._buildKdTree._primitiveIndices.push( this._buildKdTree._centers.length );
+            var center = bb.center( vec3.create() );
+            this._buildKdTree._centers.push( center[ 0 ] );
+            this._buildKdTree._centers.push( center[ 1 ] );
+            this._buildKdTree._centers.push( center[ 2 ] );
+        };
+    } )(),
+
+    buildKdTreeLine: ( function () {
+        var v0 = vec3.create();
+        var v1 = vec3.create();
+        return function ( i0, i1 ) {
+            var vertices = this._buildKdTree._kdTree.getVertices();
+            vec3.set( v0, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
+            vec3.set( v1, vertices[ i1 * 3 ], vertices[ i1 * 3 + 1 ], vertices[ i1 * 3 + 2 ] );
+
+            if ( vec3.equals( v0, v1 ) ) return;
+
+            this._buildKdTree._kdTree.addLine( i0, i1 );
+
+            var bb = new BoundingBox();
+            bb.expandByvec3( v0 );
+            bb.expandByvec3( v1 );
+            this._buildKdTree._primitiveIndices.push( this._buildKdTree._centers.length );
+
+            var center = bb.center( vec3.create() );
+            this._buildKdTree._centers.push( center[ 0 ] );
+            this._buildKdTree._centers.push( center[ 1 ] );
+            this._buildKdTree._centers.push( center[ 2 ] );
+        };
+    } )(),
+    buildKdTreeTriangle: ( function () {
+
+        var v0 = vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        return function ( i0, i1, i2 ) {
+            if ( i0 === i1 || i0 === i2 || i1 === i2 )
+                return;
+            var vertices = this._buildKdTree._kdTree.getVertices();
+            vec3.set( v0, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
+            vec3.set( v1, vertices[ i1 * 3 ], vertices[ i1 * 3 + 1 ], vertices[ i1 * 3 + 2 ] );
+            vec3.set( v2, vertices[ i2 * 3 ], vertices[ i2 * 3 + 1 ], vertices[ i2 * 3 + 2 ] );
+
+            if ( vec3.equals( v0, v1 ) || vec3.equals( v1, v2 ) || vec3.equals( v0, v2 ) ) return;
+
+            this._buildKdTree._kdTree.addTriangle( i0, i1, i2 );
+
+            var bb = new BoundingBox();
+            bb.expandByvec3( v0 );
+            bb.expandByvec3( v1 );
+            bb.expandByvec3( v2 );
+
+            this._buildKdTree._primitiveIndices.push( ( this._buildKdTree._centers.length !== 0 ) ? this._buildKdTree._centers.length / 3 : 0 );
+
+            var center = bb.center( vec3.create() );
+            this._buildKdTree._centers.push( center[ 0 ] );
+            this._buildKdTree._centers.push( center[ 1 ] );
+            this._buildKdTree._centers.push( center[ 2 ] );
+        };
+    } )(),
+
+
+    apply: function ( node ) {
+        if ( !node.getAttributes().Vertex ) {
+            return;
+        }
+        var self = this;
+        // The callback must be defined as a closure
+        /* jshint asi: true */
+        var cb = function () {
+            return {
+                operatorPoint: function ( i0 ) {
+                    self.buildKdTreePoint( i0 );
+                },
+                operatorLine: function ( i1, i2 ) {
+                    self.buildKdTreeLine( i1, i2 );
+                },
+                operatorTriangle: function ( i1, i2, i3 ) {
+                    self.buildKdTreeTriangle( i1, i2, i3 );
+                }
+            }
+        };
+        var pf = new PrimitiveIndexFunctor( node, cb );
+        pf.apply();
+    }
+};
+
+
+
 var BuildKdTree = function ( kdTree ) {
     this._kdTree = kdTree;
     this._bb = new BoundingBox();
-    this._primitiveIndices = null; // Uint32Array
-    this._centers = null; // Float32Array
+    // Need to check if typed arrays can be used
+    this._primitiveIndices = []; // Uint32Array
+    this._centers = []; // Float32Array
     this._axisOrder = vec3.create();
     this._stackLength = 0;
 };
@@ -69,7 +176,7 @@ BuildKdTree.prototype = {
         var vertices = vertexAttrib.getElements();
         if ( !vertices )
             return false;
-        var nbVertices = vertices.length / 3;
+        var nbVertices = vertices.length / 3.0;
         if ( nbVertices < targetTris )
             return false;
 
@@ -79,7 +186,12 @@ BuildKdTree.prototype = {
         this.computeDivisions( options );
         options._numVerticesProcessed += nbVertices;
 
-        this.computeTriangles( geom );
+        // Here we can init the typed arrays
+        //this._primitiveIndices = new Uint32Array( nbVertices );
+        //this._centers = new Float32Array( nbVertices * 3 );
+
+        var pic = new PrimitiveIndicesCollector( this );
+        pic.apply( geom );
 
         var node = new KdNode( -1, this._primitiveIndices.length );
         node._bb.copy( this._bb );
@@ -89,107 +201,18 @@ BuildKdTree.prototype = {
         bb.copy( this._bb );
         nodeNum = this.divide( options, bb, nodeNum, 0 );
 
-        // Here we re-order the triangle list so that we can have a flat tree
-        // _primitiveIndices is the ordered array of the triangle indices
-        var triangles = this._kdTree.getTriangles();
-        var primitives = this._primitiveIndices;
-        var nbPrimitives = primitives.length;
-        var triangleOrdered = new MACROUTILS.Uint32Array( triangles.length );
-        for ( var i = 0, j = 0; i < nbPrimitives; ++i, j += 3 ) {
-            var id = primitives[ i ] * 3;
-            triangleOrdered[ j ] = triangles[ id ];
-            triangleOrdered[ j + 1 ] = triangles[ id + 1 ];
-            triangleOrdered[ j + 2 ] = triangles[ id + 2 ];
+        var primitiveIndices = this._kdTree.getPrimitiveIndices();
+        var newIndices = new Uint32Array( primitiveIndices.length );
+
+        var nbPrimitives = this._primitiveIndices.length;
+        for ( var i = 0; i < nbPrimitives; ++i ) {
+            newIndices[ i ] = primitiveIndices[ this._primitiveIndices[ i ] ];
         }
-        this._kdTree.setTriangles( triangleOrdered );
+        this._kdTree.setPrimitiveIndices( newIndices );
+
         return this._kdTree.getNodes().length > 0;
     },
-    // The function first gather all the triangles of the geometry
-    // It then computes the centroid for each triangle and initialize
-    // of triangles indices that will refer to the main triangles array
-    computeTriangles: function ( geom ) {
-        var kdTree = this._kdTree;
 
-        var totalLenArray = 0;
-        var geomPrimitives = geom.getPrimitiveSetList();
-        var nbPrimitives = geomPrimitives.length;
-        var i = 0;
-        for ( i = 0; i < nbPrimitives; i++ ) {
-            var prim = geomPrimitives[ i ];
-            var mode = prim.getMode();
-            // ignore points and line stuffs
-            if ( mode === PrimitiveSet.TRIANGLES )
-                totalLenArray += prim.getCount();
-            else if ( mode === PrimitiveSet.TRIANGLE_STRIP || mode === PrimitiveSet.TRIANGLE_FAN )
-                totalLenArray += Math.abs( ( prim.getCount() - 2 ) ) * 3;
-        }
-        var indices = new MACROUTILS.Uint32Array( totalLenArray );
-        var next = 0;
-        var cb = function ( i1, i2, i3 ) {
-            if ( i1 === i2 || i1 === i3 || i2 === i3 )
-                return;
-            indices[ next ] = i1;
-            indices[ next + 1 ] = i2;
-            indices[ next + 2 ] = i3;
-            next += 3;
-        };
-
-
-        var tif = new TriangleIndexFunctor();
-        tif.init( geom, cb );
-        tif.apply();
-
-        indices = indices.subarray( 0, next );
-
-        var nbTriangles = indices.length;
-        kdTree.setTriangles( indices );
-
-        var vertices = kdTree.getVertices();
-
-        this._centers = new MACROUTILS.Float32Array( nbTriangles );
-        var centers = this._centers;
-        this._primitiveIndices = new MACROUTILS.Uint32Array( nbTriangles / 3 );
-        var primitives = this._primitiveIndices;
-
-        var j = 0;
-        for ( i = 0, j = 0; i < nbTriangles; i += 3, ++j ) {
-            var iv0 = indices[ i ];
-            var iv1 = indices[ i + 1 ];
-            var iv2 = indices[ i + 2 ];
-
-            // discard degenerate points
-            if ( iv0 === iv1 || iv1 === iv2 || iv0 === iv2 )
-                return;
-
-            iv0 *= 3;
-            iv1 *= 3;
-            iv2 *= 3;
-
-            var v0x = vertices[ iv0 ];
-            var v0y = vertices[ iv0 + 1 ];
-            var v0z = vertices[ iv0 + 2 ];
-
-            var v1x = vertices[ iv1 ];
-            var v1y = vertices[ iv1 + 1 ];
-            var v1z = vertices[ iv1 + 2 ];
-
-            var v2x = vertices[ iv2 ];
-            var v2y = vertices[ iv2 + 1 ];
-            var v2z = vertices[ iv2 + 2 ];
-
-            var minx = Math.min( v0x, Math.min( v1x, v2x ) );
-            var miny = Math.min( v0y, Math.min( v1y, v2y ) );
-            var minz = Math.min( v0z, Math.min( v1z, v2z ) );
-
-            var maxx = Math.max( v0x, Math.max( v1x, v2x ) );
-            var maxy = Math.max( v0y, Math.max( v1y, v2y ) );
-            var maxz = Math.max( v0z, Math.max( v1z, v2z ) );
-            centers[ i ] = ( minx + maxx ) * 0.5;
-            centers[ i + 1 ] = ( miny + maxy ) * 0.5;
-            centers[ i + 2 ] = ( minz + maxz ) * 0.5;
-            primitives[ j ] = j;
-        }
-    },
     computeDivisions: function ( options ) {
         this._stackLength = options._maxNumLevels;
         var max = this._bb._max;
@@ -206,11 +229,11 @@ BuildKdTree.prototype = {
         axisOrder[ 1 ] = sum === 3 ? 0 : sum === 2 ? 1 : 2;
     },
     // The core function of the kdtree building
-    // It checks if the node need to be subdivide or not
-    // If it decides it's a leaf, it computes the final bounding box of the node
+    // It checks if the node needs to be subdivided or not
+    // If it's a leaf, it computes the final bounding box of the node
     // and it ends here
     // If it's a node, then it puts the splitting axis position on the median population
-    // On the same time it reorder the triangle index array
+    // On the same time it reorders the triangle index array
     divide: function ( options, bb, nodeIndex, level ) {
         var kdTree = this._kdTree;
         var primitives = this._primitiveIndices;
@@ -316,58 +339,46 @@ BuildKdTree.prototype = {
     },
     // It computes the bounding box of the node so that the box contains all the triangles
     // of the cell
-    computeNodeBox: function ( node, istart, iend ) {
-        var minx = Infinity,
-            miny = Infinity,
-            minz = Infinity,
-            maxx = -Infinity,
-            maxy = -Infinity,
-            maxz = -Infinity;
-        var triangles = this._kdTree.getTriangles();
-        var vertices = this._kdTree.getVertices();
-        var primitives = this._primitiveIndices;
-        for ( var i = istart; i <= iend; ++i ) {
-            var id = primitives[ i ] * 3;
-            var iv0 = triangles[ id ] * 3;
-            var iv1 = triangles[ id + 1 ] * 3;
-            var iv2 = triangles[ id + 2 ] * 3;
+    computeNodeBox: ( function () {
+        var v = vec3.create();
+        return function ( node, istart, iend ) {
 
-            var v0x = vertices[ iv0 ];
-            var v0y = vertices[ iv0 + 1 ];
-            var v0z = vertices[ iv0 + 2 ];
+            var vertexIndices = this._kdTree.getVertexIndices();
+            var primitives = this._kdTree.getPrimitiveIndices();
 
-            var v1x = vertices[ iv1 ];
-            var v1y = vertices[ iv1 + 1 ];
-            var v1z = vertices[ iv1 + 2 ];
+            for ( var i = istart; i <= iend; ++i ) {
+                var primitiveIndex = primitives[ this._primitiveIndices[ i ] ];
+                var numPoints = vertexIndices[ primitiveIndex++ ];
+                for ( var j = numPoints; j > 0; --j ) {
+                    var vi = vertexIndices[ primitiveIndex++ ];
+                    var vertices = this._kdTree.getVertices();
+                    vec3.set( v, vertices[ vi * 3 ], vertices[ vi * 3 + 1 ], vertices[ vi * 3 + 2 ] );
+                    node._bb.expandByvec3( v );
+                }
+            }
 
-            var v2x = vertices[ iv2 ];
-            var v2y = vertices[ iv2 + 1 ];
-            var v2z = vertices[ iv2 + 2 ];
+            if ( node._bb.valid() ) {
+                var epsilon = 1E-6;
+                var bnode = node._bb;
+                var bmin = bnode._min;
+                var bmax = bnode._max;
+                bmin[ 0 ] -= epsilon;
+                bmin[ 1 ] -= epsilon;
+                bmin[ 2 ] -= epsilon;
+                bmax[ 0 ] += epsilon;
+                bmax[ 1 ] += epsilon;
+                bmax[ 2 ] += epsilon;
+            }
+        };
+    } )(),
 
-            minx = Math.min( minx, Math.min( v0x, Math.min( v1x, v2x ) ) );
-            miny = Math.min( miny, Math.min( v0y, Math.min( v1y, v2y ) ) );
-            minz = Math.min( minz, Math.min( v0z, Math.min( v1z, v2z ) ) );
-
-            maxx = Math.max( maxx, Math.max( v0x, Math.max( v1x, v2x ) ) );
-            maxy = Math.max( maxy, Math.max( v0y, Math.max( v1y, v2y ) ) );
-            maxz = Math.max( maxz, Math.max( v0z, Math.max( v1z, v2z ) ) );
-        }
-        var epsilon = 1E-6;
-        var bnode = node._bb;
-        var bmin = bnode._min;
-        var bmax = bnode._max;
-        bmin[ 0 ] = minx - epsilon;
-        bmin[ 1 ] = miny - epsilon;
-        bmin[ 2 ] = minz - epsilon;
-        bmax[ 0 ] = maxx + epsilon;
-        bmax[ 1 ] = maxy + epsilon;
-        bmax[ 2 ] = maxz + epsilon;
-    }
 };
 
 var KdTree = function () {
     this._vertices = null;
     this._kdNodes = [];
+    this._primitiveIndices = [];
+    this._vertexIndices = [];
     this._triangles = null; // Float32Array
 };
 
@@ -378,15 +389,72 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
     setVertices: function ( vertices ) {
         this._vertices = vertices;
     },
-    getNodes: function () {
-        return this._kdNodes;
-    },
     getTriangles: function () {
         return this._triangles;
     },
     setTriangles: function ( triangles ) {
         this._triangles = triangles;
     },
+    setPrimitiveIndices: function ( indices ) {
+        this._primitiveIndices = indices;
+    },
+    getPrimitiveIndices: function () {
+        return this._primitiveIndices;
+    },
+
+    // vector containing the primitive vertex index data packed as no_vertice_indices then vertex indices 
+    // ie. for points it's (1, p0), for lines (2, p0, p1) etc.
+    setVertexIndices: function ( indices ) {
+        this._vertexIndices = indices;
+    },
+
+    getVertexIndices: function () {
+        return this._vertexIndices;
+    },
+
+
+    getNodes: function () {
+        return this._kdNodes;
+    },
+
+    addPoint: function ( p0 ) {
+        var i = this._vertexIndices.length;
+        this._primitiveIndices.push( i );
+        this._vertexIndices.push( 1 );
+        this._vertexIndices.push( p0 );
+        return i;
+    },
+
+    addLine: function ( p0, p1 ) {
+        var i = this._vertexIndices.length;
+        this._primitiveIndices.push( i );
+        this._vertexIndices.push( 2 );
+        this._vertexIndices.push( p0 );
+        this._vertexIndices.push( p1 );
+        return i;
+    },
+
+    addTriangle: function ( p0, p1, p2 ) {
+        var i = this._vertexIndices.length;
+        this._primitiveIndices.push( i );
+        this._vertexIndices.push( 3 );
+        this._vertexIndices.push( p0 );
+        this._vertexIndices.push( p1 );
+        this._vertexIndices.push( p2 );
+        return i;
+    },
+
+    addQuad: function ( p0, p1, p2, p3 ) {
+        var i = this._vertexIndices.length;
+        this._primitiveIndices.push( i );
+        this._vertexIndices.push( 3 );
+        this._vertexIndices.push( p0 );
+        this._vertexIndices.push( p1 );
+        this._vertexIndices.push( p2 );
+        this._vertexIndices.push( p3 );
+        return i;
+    },
+
     addNode: function ( node ) {
         this._kdNodes.push( node );
         return this._kdNodes.length - 1;
@@ -395,37 +463,39 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
         var buildTree = new BuildKdTree( this );
         return buildTree.build( options, geom );
     },
-    intersectRay: function ( start, end, intersections, nodePath ) {
-        if ( this._kdNodes.length === 0 ) {
-            return false;
+
+    intersect: function ( functor, node ) {
+        if ( node._first < 0 ) {
+            // treat as a leaf
+            var istart = -node._first - 1;
+            var iend = istart + node._second;
+
+            for ( var i = istart; i < iend; ++i ) {
+                var primitiveIndex = this._primitiveIndices[ i ];
+                var numVertices = this._vertexIndices[ primitiveIndex++ ];
+                switch ( numVertices ) {
+                case ( 1 ):
+                    functor.intersectPoint( this._vertices, i, this._vertexIndices[ primitiveIndex ] );
+                    break;
+                case ( 2 ):
+                    functor.intersectLine( this._vertices, i, this._vertexIndices[ primitiveIndex ], this._vertexIndices[ primitiveIndex + 1 ] );
+                    break;
+                case ( 3 ):
+                    functor.intersectTriangle( this._vertices, i, this._vertexIndices[ primitiveIndex ], this._vertexIndices[ primitiveIndex + 1 ], this._vertexIndices[ primitiveIndex + 2 ] );
+                    break;
+                    // case ( 4 ):
+                    //     functor.intersect( this._vertices, i, this._vertexIndices[ primitiveIndex ], this._vertexIndices[ primitiveIndex + 1 ], this._vertexIndices[ primitiveIndex + 2 ], this._vertexIndices[ primitiveIndex + 3 ] );
+                    //     break;
+                default:
+                    notify.warn( 'Warning: KdTree::intersect() encounted unsupported primitive size of ' + numVertices );
+                    break;
+                }
+            }
+        } else if ( functor.enter( node._bb ) ) {
+            if ( node._first > 0 ) this.intersect( functor, this._kdNodes[ node._first ] );
+            if ( node._second > 0 ) this.intersect( functor, this._kdNodes[ node._second ] );
+            functor.leave();
         }
-
-        var numIntersectionsBefore = intersections.length;
-
-        if ( !this._rayIntersector ) {
-            this._rayIntersector = new KdTreeLineSegmentIntersector();
-            this._rayIntersector.setKdtree( this._vertices, this._kdNodes, this._triangles );
-        }
-        this._rayIntersector.init( intersections, start, end, nodePath );
-        this._rayIntersector.intersect( this.getNodes()[ 0 ], start, end );
-
-        return numIntersectionsBefore !== intersections.length;
-    },
-    intersectSphere: function ( center, radius, intersections, nodePath ) {
-        if ( this._kdNodes.length === 0 ) {
-            return false;
-        }
-
-        var numIntersectionsBefore = intersections.length;
-
-        if ( !this._sphereIntersector ) {
-            this._sphereIntersector = new KdTreeSphereIntersector();
-            this._sphereIntersector.setKdtree( this._vertices, this._kdNodes, this._triangles );
-        }
-        this._sphereIntersector.init( intersections, center, radius, nodePath );
-        this._sphereIntersector.intersect( this.getNodes()[ 0 ] );
-
-        return numIntersectionsBefore !== intersections.length;
     }
 }, 'osg', 'KdTree' );
 

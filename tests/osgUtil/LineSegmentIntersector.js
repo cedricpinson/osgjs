@@ -93,7 +93,7 @@ module.exports = function () {
         iv.setIntersector( lsi );
         camera.accept( iv );
         assert.isOk( lsi._intersections.length === 1, 'Hits should be 1 and result is ' + lsi._intersections.length );
-        assert.isOk( lsi._intersections[ 0 ].nodepath.length === 4, 'NodePath should be 4 and result is ' + lsi._intersections[ 0 ].nodepath.length );
+        assert.isOk( lsi._intersections[ 0 ]._nodePath.length === 4, 'NodePath should be 4 and result is ' + lsi._intersections[ 0 ]._nodePath.length );
 
     } );
 
@@ -112,7 +112,7 @@ module.exports = function () {
         iv.setIntersector( lsi );
         camera.accept( iv );
         assert.isOk( lsi._intersections.length === 1, 'Hits should be 1 and result is ' + lsi._intersections.length );
-        assert.isOk( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
+        assert.isOk( lsi._intersections[ 0 ]._nodePath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ]._nodePath.length );
 
     } );
 
@@ -153,7 +153,7 @@ module.exports = function () {
         iv.setIntersector( lsi );
         camera.accept( iv );
         assert.isOk( lsi._intersections.length === 1, 'Intersections should be 1 and result is ' + lsi._intersections.length );
-        assert.isOk( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
+        assert.isOk( lsi._intersections[ 0 ]._nodePath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ]._nodePath.length );
     } );
 
     test( 'LineSegmentIntersector with kdtree', function () {
