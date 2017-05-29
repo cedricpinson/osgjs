@@ -146,7 +146,7 @@ PolytopeIntersectFunctor.prototype = {
     },
 
     containsPoint: function ( v0 ) {
-        if ( this._settings._polytopeIntersector.getPolytope().contains( v0 ) ) {
+        if ( this._settings._polytopeIntersector.getPolytope().containsVertex( v0 ) ) {
             // initialize the set of vertices to test.
             this._src = [];
             this._src[ 0 ] = v0;
@@ -225,38 +225,50 @@ PolytopeIntersectFunctor.prototype = {
         }
     },
 
-    intersectPoint: function ( vertices, primitiveIndex, p0 ) {
-        if ( this._settings._limitOneIntersection && this._hit ) return;
-        if ( ( this._settings._primitiveMask & intersectionEnums.POINT_PRIMITIVES ) === 0 ) return;
-        var v0 = vec3.fromValues( vertices[ 3 * p0 ], vertices[ 3 * p0 + 1 ], vertices[ 3 * p0 + 2 ] );
-        if ( this.containsPoint( v0 ) ) {
-            this._primitiveIndex = primitiveIndex;
-            this.addIntersection();
-        }
-    },
+    intersectPoint: ( function() {
+        var v = vec3.create();
+        return function ( vertices, primitiveIndex, p0 ) {
+            if ( this._settings._limitOneIntersection && this._hit ) return;
+            if ( ( this._settings._primitiveMask & intersectionEnums.POINT_PRIMITIVES ) === 0 ) return;
+            vec3.set( v, vertices[ 3 * p0 ], vertices[ 3 * p0 + 1 ], vertices[ 3 * p0 + 2 ] );
+            if ( this.containsPoint( v ) ) {
+                this._primitiveIndex = primitiveIndex;
+                this.addIntersection();
+            }
+        };
+    } )(),
 
-    intersectLine: function ( vertices, primitiveIndex, p0, p1 ) {
-        if ( this._settings._limitOneIntersection && this._hit ) return;
-        if ( ( this._settings._primitiveMask & intersectionEnums.LINE_PRIMITIVES ) === 0 ) return;
-        var v0 = vec3.fromValues( vertices[ 3 * p0 ], vertices[ 3 * p0 + 1 ], vertices[ 3 * p0 + 2 ] );
-        var v1 = vec3.fromValues( vertices[ 3 * p1 ], vertices[ 3 * p1 + 1 ], vertices[ 3 * p1 + 2 ] );
-        if ( this.containsLine( v0, v1 ) ) {
-            this._primitiveIndex = primitiveIndex;
-            this.addIntersection();
-        }
-    },
+    intersectLine: ( function () {
+        var v0 = vec3.create();
+        var v1 = vec3.create();
+        return function ( vertices, primitiveIndex, p0, p1 ) {
+            if ( this._settings._limitOneIntersection && this._hit ) return;
+            if ( ( this._settings._primitiveMask & intersectionEnums.LINE_PRIMITIVES ) === 0 ) return;
+            vec3.set( v0, vertices[ 3 * p0 ], vertices[ 3 * p0 + 1 ], vertices[ 3 * p0 + 2 ] );
+            vec3.set( v1, vertices[ 3 * p1 ], vertices[ 3 * p1 + 1 ], vertices[ 3 * p1 + 2 ] );
+            if ( this.containsLine( v0, v1 ) ) {
+                this._primitiveIndex = primitiveIndex;
+                this.addIntersection();
+            }
+        };
+    } )(),
 
-    intersectTriangle: function ( vertices, primitiveIndex, p0, p1, p2 ) {
-        if ( this._settings._limitOneIntersection && this._hit ) return;
-        if ( ( this._settings._primitiveMask & intersectionEnums.TRIANGLE_PRIMITIVES ) === 0 ) return;
-        var v0 = vec3.fromValues( vertices[ 3 * p0 ], vertices[ 3 * p0 + 1 ], vertices[ 3 * p0 + 2 ] );
-        var v1 = vec3.fromValues( vertices[ 3 * p1 ], vertices[ 3 * p1 + 1 ], vertices[ 3 * p1 + 2 ] );
-        var v2 = vec3.fromValues( vertices[ 3 * p2 ], vertices[ 3 * p2 + 1 ], vertices[ 3 * p2 + 2 ] );
-        if ( this.containsTriangle( v0, v1, v2 ) ) {
-            this._primitiveIndex = primitiveIndex;
-            this.addIntersection();
-        }
-    },
+    intersectTriangle: ( function() {
+        var v0 = vec3.create();
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        return function ( vertices, primitiveIndex, p0, p1, p2 ) {
+            if ( this._settings._limitOneIntersection && this._hit ) return;
+            if ( ( this._settings._primitiveMask & intersectionEnums.TRIANGLE_PRIMITIVES ) === 0 ) return;
+            vec3.set( v0, vertices[ 3 * p0 ], vertices[ 3 * p0 + 1 ], vertices[ 3 * p0 + 2 ] );
+            vec3.set( v1, vertices[ 3 * p1 ], vertices[ 3 * p1 + 1 ], vertices[ 3 * p1 + 2 ] );
+            vec3.set( v2, vertices[ 3 * p2 ], vertices[ 3 * p2 + 1 ], vertices[ 3 * p2 + 2 ] );
+            if ( this.containsTriangle( v0, v1, v2 ) ) {
+                this._primitiveIndex = primitiveIndex;
+                this.addIntersection();
+            }
+        };
+    } )(),
 
     apply: function ( node ) {
         if ( !node.getAttributes().Vertex ) {

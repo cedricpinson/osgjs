@@ -59,15 +59,16 @@ PrimitiveIndicesCollector.prototype = {
     buildKdTreePoint: ( function () {
 
         var v = vec3.create();
-
+        var bb = new BoundingBox();
         return function ( i0 ) {
             var vertices = this._buildKdTree._kdTree.getVertices();
             vec3.set( v, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
             this._buildKdTree._kdTree.addPoint( i0 );
-            var bb = new BoundingBox();
+            bb.init();
             bb.expandByvec3( v );
 
-            this._buildKdTree._primitiveIndices.push( this._buildKdTree._centers.length );
+            this._buildKdTree._primitiveIndices.push( ( this._buildKdTree._centers.length !== 0 ) ? this._buildKdTree._centers.length / 3 : 0 );
+
             var center = bb.center( vec3.create() );
             this._buildKdTree._centers.push( center[ 0 ] );
             this._buildKdTree._centers.push( center[ 1 ] );
@@ -78,19 +79,21 @@ PrimitiveIndicesCollector.prototype = {
     buildKdTreeLine: ( function () {
         var v0 = vec3.create();
         var v1 = vec3.create();
+        var bb = new BoundingBox();
         return function ( i0, i1 ) {
             var vertices = this._buildKdTree._kdTree.getVertices();
             vec3.set( v0, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
             vec3.set( v1, vertices[ i1 * 3 ], vertices[ i1 * 3 + 1 ], vertices[ i1 * 3 + 2 ] );
 
-            if ( vec3.equals( v0, v1 ) ) return;
+            if ( vec3.exactEquals( v0, v1 ) ) return;
 
             this._buildKdTree._kdTree.addLine( i0, i1 );
 
-            var bb = new BoundingBox();
+            bb.init();
             bb.expandByvec3( v0 );
             bb.expandByvec3( v1 );
-            this._buildKdTree._primitiveIndices.push( this._buildKdTree._centers.length );
+            this._buildKdTree._primitiveIndices.push( ( this._buildKdTree._centers.length !== 0 ) ? this._buildKdTree._centers.length / 3 : 0 );
+
 
             var center = bb.center( vec3.create() );
             this._buildKdTree._centers.push( center[ 0 ] );
@@ -103,6 +106,7 @@ PrimitiveIndicesCollector.prototype = {
         var v0 = vec3.create();
         var v1 = vec3.create();
         var v2 = vec3.create();
+        var bb = new BoundingBox();
         return function ( i0, i1, i2 ) {
             if ( i0 === i1 || i0 === i2 || i1 === i2 )
                 return;
@@ -111,11 +115,11 @@ PrimitiveIndicesCollector.prototype = {
             vec3.set( v1, vertices[ i1 * 3 ], vertices[ i1 * 3 + 1 ], vertices[ i1 * 3 + 2 ] );
             vec3.set( v2, vertices[ i2 * 3 ], vertices[ i2 * 3 + 1 ], vertices[ i2 * 3 + 2 ] );
 
-            if ( vec3.equals( v0, v1 ) || vec3.equals( v1, v2 ) || vec3.equals( v0, v2 ) ) return;
+            if ( vec3.exactEquals( v0, v1 ) || vec3.exactEquals( v1, v2 ) || vec3.exactEquals( v0, v2 ) ) return;
 
             this._buildKdTree._kdTree.addTriangle( i0, i1, i2 );
 
-            var bb = new BoundingBox();
+            bb.init();
             bb.expandByvec3( v0 );
             bb.expandByvec3( v1 );
             bb.expandByvec3( v2 );
@@ -491,9 +495,19 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
                     break;
                 }
             }
-        } else if ( functor.enter( node._bb ) ) {
-            if ( node._first > 0 ) this.intersect( functor, this._kdNodes[ node._first ] );
-            if ( node._second > 0 ) this.intersect( functor, this._kdNodes[ node._second ] );
+        } else {
+            var kdNode;
+            if ( node._first > 0 ) {
+                kdNode = this._kdNodes[ node._first ];
+                if ( functor.enter( kdNode._bb ) )
+                    this.intersect( functor, kdNode );
+            }
+
+            if ( node._second > 0 ) {
+                kdNode = this._kdNodes[ node._second ];
+                if ( functor.enter( kdNode._bb ) ) 
+                    this.intersect( functor, kdNode );
+            }
             functor.leave();
         }
     }
