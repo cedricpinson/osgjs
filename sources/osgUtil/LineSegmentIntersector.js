@@ -129,7 +129,6 @@ LineSegmentIntersector.prototype = {
             } else {
                 lsf.apply( node );
             }
-            return this._intersections > 0;
         };
     } )(),
 
