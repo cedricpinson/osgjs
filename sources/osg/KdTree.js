@@ -52,86 +52,110 @@ var KdNode = function ( first, second ) {
 
 var PrimitiveIndicesCollector = function ( buildKdTree ) {
     this._buildKdTree = buildKdTree;
+    this._numIndices = 0;
 };
 
 PrimitiveIndicesCollector.prototype = {
 
-    buildKdTreePoint: ( function () {
+    buildKdTreePoint: function ( i0 ) {
+        var vertices = this._buildKdTree._kdTree.getVertices();
+        var iv = i0 * 3;
+        this._buildKdTree._kdTree.addPoint( i0 );
+        this._buildKdTree._primitiveIndices[ this._numIndices ] = this._numIndices;
+        var centers = this._buildKdTree._centers;
+        var idCenter = this._numIndices * 3;
+        centers[ idCenter ] = vertices[ iv ];
+        centers[ idCenter + 1 ] = vertices[ iv + 1 ];
+        centers[ idCenter + 2 ] = vertices[ iv + 2 ];
+        this._numIndices++;
+    },
 
-        var v = vec3.create();
-        var bb = new BoundingBox();
-        return function ( i0 ) {
-            var vertices = this._buildKdTree._kdTree.getVertices();
-            vec3.set( v, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
-            this._buildKdTree._kdTree.addPoint( i0 );
-            bb.init();
-            bb.expandByvec3( v );
+    buildKdTreeLine: function ( i0, i1 ) {
+        if ( i0 === i1 )
+            return;
+        var vertices = this._buildKdTree._kdTree.getVertices();
+        var iv0 = i0 * 3;
+        var iv1 = i1 * 3;
 
-            this._buildKdTree._primitiveIndices.push( ( this._buildKdTree._centers.length !== 0 ) ? this._buildKdTree._centers.length / 3 : 0 );
+        // if ( vec3.exactEquals( v0, v1 ) || vec3.exactEquals( v1, v2 ) || vec3.exactEquals( v0, v2 ) ) return;
 
-            var center = bb.center( vec3.create() );
-            this._buildKdTree._centers.push( center[ 0 ] );
-            this._buildKdTree._centers.push( center[ 1 ] );
-            this._buildKdTree._centers.push( center[ 2 ] );
-        };
-    } )(),
+        this._buildKdTree._kdTree.addLine( i0, i1 );
 
-    buildKdTreeLine: ( function () {
-        var v0 = vec3.create();
-        var v1 = vec3.create();
-        var bb = new BoundingBox();
-        return function ( i0, i1 ) {
-            var vertices = this._buildKdTree._kdTree.getVertices();
-            vec3.set( v0, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
-            vec3.set( v1, vertices[ i1 * 3 ], vertices[ i1 * 3 + 1 ], vertices[ i1 * 3 + 2 ] );
+        var numIndices = this._numIndices;
+        this._buildKdTree._primitiveIndices[ numIndices ] = numIndices;
 
-            if ( vec3.exactEquals( v0, v1 ) ) return;
+        var idCenter = numIndices * 3;
 
-            this._buildKdTree._kdTree.addLine( i0, i1 );
+        var v0x = vertices[ iv0 ];
+        var v0y = vertices[ iv0 + 1 ];
+        var v0z = vertices[ iv0 + 2 ];
 
-            bb.init();
-            bb.expandByvec3( v0 );
-            bb.expandByvec3( v1 );
-            this._buildKdTree._primitiveIndices.push( ( this._buildKdTree._centers.length !== 0 ) ? this._buildKdTree._centers.length / 3 : 0 );
+        var v1x = vertices[ iv1 ];
+        var v1y = vertices[ iv1 + 1 ];
+        var v1z = vertices[ iv1 + 2 ];
 
+        var minx = v0x < v1x ? v0x : v1x;
+        var miny = v0y < v1y ? v0y : v1y;
+        var minz = v0z < v1z ? v0z : v1z;
 
-            var center = bb.center( vec3.create() );
-            this._buildKdTree._centers.push( center[ 0 ] );
-            this._buildKdTree._centers.push( center[ 1 ] );
-            this._buildKdTree._centers.push( center[ 2 ] );
-        };
-    } )(),
-    buildKdTreeTriangle: ( function () {
+        var maxx = v0x > v1x ? v0x : v1x;
+        var maxy = v0y > v1y ? v0y : v1y;
+        var maxz = v0z > v1z ? v0z : v1z;
 
-        var v0 = vec3.create();
-        var v1 = vec3.create();
-        var v2 = vec3.create();
-        var bb = new BoundingBox();
-        return function ( i0, i1, i2 ) {
-            if ( i0 === i1 || i0 === i2 || i1 === i2 )
-                return;
-            var vertices = this._buildKdTree._kdTree.getVertices();
-            vec3.set( v0, vertices[ i0 * 3 ], vertices[ i0 * 3 + 1 ], vertices[ i0 * 3 + 2 ] );
-            vec3.set( v1, vertices[ i1 * 3 ], vertices[ i1 * 3 + 1 ], vertices[ i1 * 3 + 2 ] );
-            vec3.set( v2, vertices[ i2 * 3 ], vertices[ i2 * 3 + 1 ], vertices[ i2 * 3 + 2 ] );
+        var centers = this._buildKdTree._centers;
+        centers[ idCenter ] = ( minx + maxx ) * 0.5;
+        centers[ idCenter + 1 ] = ( miny + maxy ) * 0.5;
+        centers[ idCenter + 2 ] = ( minz + maxz ) * 0.5;
 
-            if ( vec3.exactEquals( v0, v1 ) || vec3.exactEquals( v1, v2 ) || vec3.exactEquals( v0, v2 ) ) return;
+        this._numIndices++;
+    },
 
-            this._buildKdTree._kdTree.addTriangle( i0, i1, i2 );
+    buildKdTreeTriangle: function ( i0, i1, i2 ) {
 
-            bb.init();
-            bb.expandByvec3( v0 );
-            bb.expandByvec3( v1 );
-            bb.expandByvec3( v2 );
+        if ( i0 === i1 || i0 === i2 || i1 === i2 )
+            return;
 
-            this._buildKdTree._primitiveIndices.push( ( this._buildKdTree._centers.length !== 0 ) ? this._buildKdTree._centers.length / 3 : 0 );
+        var vertices = this._buildKdTree._kdTree.getVertices();
+        var iv0 = i0 * 3;
+        var iv1 = i1 * 3;
+        var iv2 = i2 * 3;
 
-            var center = bb.center( vec3.create() );
-            this._buildKdTree._centers.push( center[ 0 ] );
-            this._buildKdTree._centers.push( center[ 1 ] );
-            this._buildKdTree._centers.push( center[ 2 ] );
-        };
-    } )(),
+        // if ( vec3.exactEquals( v0, v1 ) || vec3.exactEquals( v1, v2 ) || vec3.exactEquals( v0, v2 ) ) return;
+
+        this._buildKdTree._kdTree.addTriangle( i0, i1, i2 );
+
+        var numIndices = this._numIndices;
+        this._buildKdTree._primitiveIndices[ numIndices ] = numIndices;
+
+        var idCenter = numIndices * 3;
+
+        var v0x = vertices[ iv0 ];
+        var v0y = vertices[ iv0 + 1 ];
+        var v0z = vertices[ iv0 + 2 ];
+
+        var v1x = vertices[ iv1 ];
+        var v1y = vertices[ iv1 + 1 ];
+        var v1z = vertices[ iv1 + 2 ];
+
+        var v2x = vertices[ iv2 ];
+        var v2y = vertices[ iv2 + 1 ];
+        var v2z = vertices[ iv2 + 2 ];
+
+        var minx = v0x < v1x ? v0x < v2x ? v0x : v2x : v1x < v2x ? v1x : v2x;
+        var miny = v0y < v1y ? v0y < v2y ? v0y : v2y : v1y < v2y ? v1y : v2y;
+        var minz = v0z < v1z ? v0z < v2z ? v0z : v2z : v1z < v2z ? v1z : v2z;
+
+        var maxx = v0x > v1x ? v0x > v2x ? v0x : v2x : v1x > v2x ? v1x : v2x;
+        var maxy = v0y > v1y ? v0y > v2y ? v0y : v2y : v1y > v2y ? v1y : v2y;
+        var maxz = v0z > v1z ? v0z > v2z ? v0z : v2z : v1z > v2z ? v1z : v2z;
+
+        var centers = this._buildKdTree._centers;
+        centers[ idCenter ] = ( minx + maxx ) * 0.5;
+        centers[ idCenter + 1 ] = ( miny + maxy ) * 0.5;
+        centers[ idCenter + 2 ] = ( minz + maxz ) * 0.5;
+
+        this._numIndices++;
+    },
 
 
     apply: function ( node ) {
@@ -191,12 +215,15 @@ BuildKdTree.prototype = {
         options._numVerticesProcessed += nbVertices;
 
         // Here we can init the typed arrays
-        //this._primitiveIndices = new Uint32Array( nbVertices );
-        //this._centers = new Float32Array( nbVertices * 3 );
+        var estimatedSize = vertices.length * 2.0;
+        this._primitiveIndices = new Uint32Array( estimatedSize );
+        this._centers = new Float32Array( estimatedSize * 3 );
 
         var pic = new PrimitiveIndicesCollector( this );
         pic.apply( geom );
 
+        this._primitiveIndices = this._primitiveIndices.subarray( 0, pic._numIndices );
+        this._centers = this._centers.subarray( 0, pic._numIndices * 3 );
         var node = new KdNode( -1, this._primitiveIndices.length );
         node._bb.copy( this._bb );
         var nodeNum = this._kdTree.addNode( node );
@@ -343,38 +370,46 @@ BuildKdTree.prototype = {
     },
     // It computes the bounding box of the node so that the box contains all the triangles
     // of the cell
-    computeNodeBox: ( function () {
-        var v = vec3.create();
-        return function ( node, istart, iend ) {
+    computeNodeBox: function ( node, istart, iend ) {
+        var minx = Infinity,
+            miny = Infinity,
+            minz = Infinity,
+            maxx = -Infinity,
+            maxy = -Infinity,
+            maxz = -Infinity;
+        var vertexIndices = this._kdTree.getVertexIndices();
+        var primitives = this._kdTree.getPrimitiveIndices();
 
-            var vertexIndices = this._kdTree.getVertexIndices();
-            var primitives = this._kdTree.getPrimitiveIndices();
+        for ( var i = istart; i <= iend; ++i ) {
+            var primitiveIndex = primitives[ this._primitiveIndices[ i ] ];
+            var numPoints = vertexIndices[ primitiveIndex++ ];
+            var vertices = this._kdTree.getVertices();
+            for ( var j = 0; j < numPoints; ++j ) {
+                var vi = vertexIndices[ primitiveIndex++ ] * 3;
+                var vx = vertices[ vi ];
+                var vy = vertices[ vi + 1 ];
+                var vz = vertices[ vi + 2 ];
 
-            for ( var i = istart; i <= iend; ++i ) {
-                var primitiveIndex = primitives[ this._primitiveIndices[ i ] ];
-                var numPoints = vertexIndices[ primitiveIndex++ ];
-                for ( var j = numPoints; j > 0; --j ) {
-                    var vi = vertexIndices[ primitiveIndex++ ];
-                    var vertices = this._kdTree.getVertices();
-                    vec3.set( v, vertices[ vi * 3 ], vertices[ vi * 3 + 1 ], vertices[ vi * 3 + 2 ] );
-                    node._bb.expandByvec3( v );
-                }
+                if ( vx < minx ) minx = vx;
+                if ( vy < miny ) miny = vy;
+                if ( vz < minz ) minz = vz;
+
+                if ( vx > maxx ) maxx = vx;
+                if ( vy > maxy ) maxy = vy;
+                if ( vz > maxz ) maxz = vz;
             }
-
-            if ( node._bb.valid() ) {
-                var epsilon = 1E-6;
-                var bnode = node._bb;
-                var bmin = bnode._min;
-                var bmax = bnode._max;
-                bmin[ 0 ] -= epsilon;
-                bmin[ 1 ] -= epsilon;
-                bmin[ 2 ] -= epsilon;
-                bmax[ 0 ] += epsilon;
-                bmax[ 1 ] += epsilon;
-                bmax[ 2 ] += epsilon;
-            }
-        };
-    } )(),
+        }
+        var epsilon = 1E-6;
+        var bnode = node._bb;
+        var bmin = bnode._min;
+        var bmax = bnode._max;
+        bmin[ 0 ] = minx - epsilon;
+        bmin[ 1 ] = miny - epsilon;
+        bmin[ 2 ] = minz - epsilon;
+        bmax[ 0 ] = maxx + epsilon;
+        bmax[ 1 ] = maxy + epsilon;
+        bmax[ 2 ] = maxz + epsilon;
+    },
 
 };
 
@@ -495,18 +530,12 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
                     break;
                 }
             }
-        } else {
-            var kdNode;
+        } else if ( functor.enter( node._bb ) ) {
             if ( node._first > 0 ) {
-                kdNode = this._kdNodes[ node._first ];
-                if ( functor.enter( kdNode._bb ) )
-                    this.intersect( functor, kdNode );
+                this.intersect( functor, this._kdNodes[ node._first ] );
             }
-
             if ( node._second > 0 ) {
-                kdNode = this._kdNodes[ node._second ];
-                if ( functor.enter( kdNode._bb ) ) 
-                    this.intersect( functor, kdNode );
+                this.intersect( functor, this._kdNodes[ node._second ] );
             }
             functor.leave();
         }
@@ -514,3 +543,15 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
 }, 'osg', 'KdTree' );
 
 module.exports = KdTree;
+// var kdNode;
+// if ( node._first > 0 ) {
+//     kdNode = this._kdNodes[ node._first ];
+//     if ( functor.enter( kdNode._bb ) )
+//         this.intersect( functor, kdNode );
+// }
+
+// if ( node._second > 0 ) {
+//     kdNode = this._kdNodes[ node._second ];
+//     if ( functor.enter( kdNode._bb ) )
+//         this.intersect( functor, kdNode );
+// }

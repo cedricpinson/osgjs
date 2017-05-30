@@ -160,7 +160,7 @@
         // console.log( hits.length );
 
         hits.sort( function ( a, b ) {
-            return a.ratio - b.ratio;
+            return a._ratio - b._ratio;
         } );
 
         if ( hits.length === 0 )

@@ -120,7 +120,7 @@ LineSegmentIntersectFunctor.prototype = {
             }
         }
 
-        // compate s and e against the yMin to yMax range of bb.
+        // compare s and e against the yMin to yMax range of bb.
         if ( s[ 1 ] <= e[ 1 ] ) {
 
             // trivial reject of segment wholely outside.
@@ -151,7 +151,7 @@ LineSegmentIntersectFunctor.prototype = {
             }
         }
 
-        // compate s and e against the zMin to zMax range of bb.
+        // compare s and e against the zMin to zMax range of bb.
         if ( s[ 2 ] <= e[ 2 ] ) {
             // trivial reject of segment wholely outside.
             if ( e[ 2 ] < zmin ) return false;

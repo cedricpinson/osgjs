@@ -225,7 +225,7 @@ PolytopeIntersectFunctor.prototype = {
         }
     },
 
-    intersectPoint: ( function() {
+    intersectPoint: ( function () {
         var v = vec3.create();
         return function ( vertices, primitiveIndex, p0 ) {
             if ( this._settings._limitOneIntersection && this._hit ) return;
@@ -253,7 +253,7 @@ PolytopeIntersectFunctor.prototype = {
         };
     } )(),
 
-    intersectTriangle: ( function() {
+    intersectTriangle: ( function () {
         var v0 = vec3.create();
         var v1 = vec3.create();
         var v2 = vec3.create();
