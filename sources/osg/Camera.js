@@ -158,7 +158,12 @@ MACROUTILS.createPrototypeNode(
                 this.renderOrder = order;
                 this.renderOrderNum = orderNum;
             },
-
+            getFrameBufferObject: function() {
+                return this.frameBufferObject;
+            },
+            setFrameBufferObject: function(fbo) {
+                this.frameBufferObject = fbo;
+            },
             detachAll: function() {
                 this._attachments = {};
 

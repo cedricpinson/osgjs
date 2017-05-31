@@ -369,15 +369,17 @@ var CompilerFragment = {
             normalWorld: this.getOrCreateNormalizedFrontModelNormal(),
             vertexWorld: this.getOrCreateVarying('vec3', 'vModelVertex'),
             shadowTexture: this.getOrCreateSampler('sampler2D', 'Texture' + tUnit),
-            shadowSize: this.getOrCreateUniform(textureUniforms.RenderSize),
-            shadowProjectionMatrix: this.getOrCreateUniform(textureUniforms.ProjectionMatrix),
-            shadowViewMatrix: this.getOrCreateUniform(textureUniforms.ViewMatrix),
-            shadowDepthRange: this.getOrCreateUniform(textureUniforms.DepthRange),
+            shadowSize: this.getOrCreateUniform(textureUniforms['RenderSize']),
+            shadowProjectionMatrix: this.getOrCreateUniform(
+                textureUniforms['ProjectionMatrix' + suffix]
+            ),
+            shadowViewMatrix: this.getOrCreateUniform(textureUniforms['ViewMatrix' + suffix]),
+            shadowDepthRange: this.getOrCreateUniform(textureUniforms['DepthRange' + suffix]),
             shadowBias: this.getOrCreateUniform(shadowUniforms.bias)
         };
 
         if (shadowReceive.getAtlas())
-            inputs.atlasSize = this.getOrCreateUniform(textureUniforms.MapSize);
+            inputs.atlasSize = this.getOrCreateUniform(textureUniforms['MapSize' + suffix]);
         if (shadowReceive.getNormalBias())
             inputs.normalBias = this.getOrCreateUniform(shadowUniforms.normalBias);
 
@@ -394,8 +396,8 @@ var CompilerFragment = {
     },
 
     hasLightShadow: function(lightNum) {
-        var shadowTexture = this._getShadowFromLightNum(this._shadowsTextures, lightNum);
-        var shadowReceive = this._getShadowFromLightNum(this._shadows, lightNum);
+        var shadowTexture = this._getShadowTextureFromLightNum(this._shadowsTextures, lightNum);
+        var shadowReceive = this._getShadowReceiveAttributeFromLightNum(this._shadows, lightNum);
         return !!shadowTexture && !!shadowReceive;
     },
 
@@ -405,7 +407,7 @@ var CompilerFragment = {
         var shadowReceive = this._getShadowReceiveAttributeFromLightNum(this._shadows, lightNum);
         if (!shadowTexture || !shadowReceive) return undefined;
 
-        var inputs = this.getInputsFromShadow(shadowReceive, shadowTexture, lighted);
+        var inputs = this.getInputsFromShadow(shadowReceive, shadowTexture, lighted, lightNum);
 
         var shadowedOutput = this.createVariable('float');
         var outputs = {

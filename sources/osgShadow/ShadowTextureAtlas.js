@@ -37,7 +37,7 @@ MACROUTILS.createPrototypeStateAttribute(
             return new ShadowTextureAtlas();
         },
 
-        gettLightNumberArray: function() {
+        getLightNumberArray: function() {
             return this._lightNumberArray;
         },
 
@@ -47,17 +47,27 @@ MACROUTILS.createPrototypeStateAttribute(
 
         setLightNumberArray: function(lightNumberArray) {
             this._lightNumberArray = lightNumberArray;
-
-            var l = lightNumberArray.length;
-            this._viewMatrices.length = l;
-            this._projectionMatrices.length = l;
-            this._depthRanges.length = l;
-            this._mapSizes.length = l;
         },
 
         getUniformName: function(lightNumber, name) {
             var prefix = 'Shadow_' + this.getType() + lightNumber.toString();
             return 'u' + prefix + '_' + name;
+        },
+
+        createUniforms: function(lightNumber, uniforms) {
+            uniforms['ViewMatrix_' + lightNumber] = Uniform.createMat4(
+                this.getUniformName(lightNumber, 'viewMatrix')
+            );
+            uniforms['ProjectionMatrix_' + lightNumber] = Uniform.createMat4(
+                this.getUniformName(lightNumber, 'projectionMatrix')
+            );
+            uniforms['DepthRange_' + lightNumber] = Uniform.createFloat4(
+                this.getUniformName(lightNumber, 'depthRange')
+            );
+            uniforms['MapSize_' + lightNumber] = Uniform.createFloat4(
+                this.getUniformName(lightNumber, 'mapSize')
+            );
+            uniforms['RenderSize_' + lightNumber] = uniforms['RenderSize'];
         },
 
         getOrCreateUniforms: function(unit) {
@@ -76,20 +86,7 @@ MACROUTILS.createPrototypeStateAttribute(
             uniforms['RenderSize'] = renderSizeUniform;
 
             for (var i = 0, l = this._lightNumberArray.length; i < l; i++) {
-                var lightNumber = this._lightNumberArray[i];
-                uniforms['ViewMatrix_' + lightNumber] = Uniform.createMat4(
-                    this.getUniformName(lightNumber, 'viewMatrix')
-                );
-                uniforms['ProjectionMatrix_' + lightNumber] = Uniform.createMat4(
-                    this.getUniformName(lightNumber, 'projectionMatrix')
-                );
-                uniforms['DepthRange_' + lightNumber] = Uniform.createFloat4(
-                    this.getUniformName(lightNumber, 'depthRange')
-                );
-                uniforms['MapSize_' + lightNumber] = Uniform.createFloat4(
-                    this.getUniformName(lightNumber, 'mapSize')
-                );
-                uniforms['RenderSize_' + lightNumber] = renderSizeUniform;
+                this.createUniforms(this._lightNumberArray[i], uniforms);
             }
 
             // Dual Uniform of texture, needs:
@@ -103,16 +100,51 @@ MACROUTILS.createPrototypeStateAttribute(
             return obj.uniforms[unit];
         },
 
-        setViewMatrix: function(lighNumberArrayIndex, viewMatrix) {
-            this._viewMatrices[lighNumberArrayIndex] = viewMatrix;
+        setViewMatrix: function(lightNumber, viewMatrix) {
+            this._viewMatrices[lightNumber] = viewMatrix;
         },
 
-        setProjectionMatrix: function(lighNumberArrayIndex, projectionMatrix) {
-            this._projectionMatrices[lighNumberArrayIndex] = projectionMatrix;
+        setProjectionMatrix: function(lightNumber, projectionMatrix) {
+            this._projectionMatrices[lightNumber] = projectionMatrix;
         },
 
-        setDepthRange: function(lighNumberArrayIndex, depthRange) {
-            this._depthRanges[lighNumberArrayIndex] = depthRange;
+        setDepthRange: function(lighNumber, depthRange) {
+            this._depthRanges[lighNumber] = depthRange;
+        },
+
+        setLightShadowMapSize: function(lightNumber, dimension) {
+            this._mapSizes[lightNumber] = dimension;
+        },
+
+        apply: function(state, texUnit) {
+            // Texture stuff: call parent class method
+            Texture.prototype.apply.call(this, state, texUnit);
+
+            if (this._lightNumberArray.length === 0) {
+                return;
+            }
+
+            // update Uniforms
+            var uniformMap = this.getOrCreateUniforms(texUnit);
+
+            for (var i = 0, l = this._lightNumberArray.length; i < l; i++) {
+                var lightNumber = this._lightNumberArray[i];
+
+                if (!uniformMap['ViewMatrix_' + lightNumber]) {
+                    // enable disable uniforms and yet using getOrCreate
+                    this.createUniforms(lightNumber, uniformMap);
+                }
+
+                uniformMap['ViewMatrix_' + lightNumber].setMatrix4(this._viewMatrices[lightNumber]);
+                uniformMap['ProjectionMatrix_' + lightNumber].setMatrix4(
+                    this._projectionMatrices[lightNumber]
+                );
+                uniformMap['DepthRange_' + lightNumber].setFloat4(this._depthRanges[lightNumber]);
+                uniformMap['MapSize_' + lightNumber].setFloat4(this._mapSizes[lightNumber]);
+                uniformMap['RenderSize_' + lightNumber].setFloat4(this._renderSize);
+            }
+
+            uniformMap['RenderSize'].setFloat4(this._renderSize);
         },
 
         setTextureSize: function(w, h) {
@@ -122,33 +154,6 @@ MACROUTILS.createPrototypeStateAttribute(
             this._renderSize[3] = 1.0 / h;
             Texture.prototype.setTextureSize.call(this, w, h);
             this.dirty();
-        },
-
-        setLightShadowMapSize: function(lighNumberArrayIndex, dimension) {
-            this._mapSizes[lighNumberArrayIndex] = dimension;
-        },
-
-        apply: function(state, texUnit) {
-            // Texture stuff: call parent class method
-            Texture.prototype.apply.call(this, state, texUnit);
-
-            if (this._lightNumberArray.length === 0) return;
-
-            // update Uniforms
-            var uniformMap = this.getOrCreateUniforms(texUnit);
-
-            for (var i = 0, l = this._lightNumberArray.length; i < l; i++) {
-                var lightNumber = this._lightNumberArray[i];
-                uniformMap['ViewMatrix_' + lightNumber].setMatrix4(this._viewMatrices[i]);
-                uniformMap['ProjectionMatrix_' + lightNumber].setMatrix4(
-                    this._projectionMatrices[i]
-                );
-                uniformMap['DepthRange_' + lightNumber].setFloat4(this._depthRanges[i]);
-                uniformMap['MapSize_' + lightNumber].setFloat4(this._mapSizes[i]);
-                uniformMap['RenderSize_' + lightNumber].setFloat4(this._renderSize);
-            }
-
-            uniformMap['RenderSize'].setFloat4(this._renderSize);
         },
 
         getHash: function() {
