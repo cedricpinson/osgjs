@@ -338,7 +338,7 @@ var CompilerFragment = {
         return undefined;
     },
 
-    _getShadowFromLightNum: function(array, lightNum) {
+    _getShadowReceiveAttributeFromLightNum: function(array, lightNum) {
         // array is shadow textures or shadow receive attributes
         for (var i = 0; i < array.length; i++) {
             var shadow = array[i];
@@ -348,11 +348,22 @@ var CompilerFragment = {
         }
     },
 
-    getInputsFromShadow: function(shadowReceive, shadowTexture, lighted) {
+    _getShadowTextureFromLightNum: function(array, lightNum) {
+        // array is shadow textures or shadow receive attributes
+        for (var i = 0; i < array.length; i++) {
+            var shadow = array[i];
+            if (shadow && shadow.hasLightNumber(lightNum)) {
+                return shadow;
+            }
+        }
+    },
+
+    getInputsFromShadow: function(shadowReceive, shadowTexture, lighted, lightNum) {
         var shadowUniforms = shadowReceive.getOrCreateUniforms();
         var tUnit = this._shadowsTextures.indexOf(shadowTexture);
         var textureUniforms = shadowTexture.getOrCreateUniforms(tUnit);
 
+        var suffix = shadowReceive.getAtlas() ? '_' + lightNum : '';
         var inputs = {
             lighted: lighted,
             normalWorld: this.getOrCreateNormalizedFrontModelNormal(),
@@ -390,8 +401,8 @@ var CompilerFragment = {
 
     createShadowingLight: function(light, lighted) {
         var lightNum = light.getLightNumber();
-        var shadowTexture = this._getShadowFromLightNum(this._shadowsTextures, lightNum);
-        var shadowReceive = this._getShadowFromLightNum(this._shadows, lightNum);
+        var shadowTexture = this._getShadowTextureFromLightNum(this._shadowsTextures, lightNum);
+        var shadowReceive = this._getShadowReceiveAttributeFromLightNum(this._shadows, lightNum);
         if (!shadowTexture || !shadowReceive) return undefined;
 
         var inputs = this.getInputsFromShadow(shadowReceive, shadowTexture, lighted);
