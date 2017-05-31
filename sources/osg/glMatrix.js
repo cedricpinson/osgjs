@@ -343,7 +343,7 @@ mat4.getLookAt = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.fromValues( 0.0, 1.0, 0.0 );
     var v3 = vec3.fromValues( 0.0, 0.0, -1.0 );
-
+    var distVec = vec3.create();
     return function ( eye, center, up, matrix, distance ) {
 
         var d = distance !== undefined ? distance : 1.0;
@@ -352,7 +352,7 @@ mat4.getLookAt = ( function () {
         vec3.transformMat4Rotate( up, v2, matrix );
         vec3.transformMat4Rotate( center, v3, matrix );
         vec3.normalize( center, center );
-        vec3.add( center, vec3.scale( v1, center, d ), eye );
+        vec3.add( center, vec3.scale( distVec, center, d ), eye );
     };
 } )();
 
