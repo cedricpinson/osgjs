@@ -1,4 +1,9 @@
 'use strict';
+
+// Check if we need to polyfill
+var polyfill = require( 'osg/polyfill' );
+polyfill.checkSetSupport();
+
 var osgNameSpace = require( 'osgNameSpace' );
 var osg = require( 'osg/osg' );
 var osgAnimation = require( 'osgAnimation/osgAnimation' );
