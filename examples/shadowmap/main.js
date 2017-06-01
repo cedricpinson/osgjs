@@ -997,7 +997,12 @@
 
             this._shadowScene = this.createSceneCasterReceiver();
 
-            var shadowedScene = new osgShadow.ShadowedScene();
+
+            var shadowedSettings = new osgShadow.ShadowSettings( this._config );
+            shadowedSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
+            shadowedSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
+            var shadowedScene = new osgShadow.ShadowedScene( shadowedSettings );
+
             this._lightAndShadowScene = shadowedScene;
 
             // here you can set/change the mask for node you want to be
