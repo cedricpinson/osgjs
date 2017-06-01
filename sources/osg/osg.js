@@ -77,7 +77,6 @@ var Timer = require( 'osg/Timer' );
 var TimerGPU = require( 'osg/TimerGPU' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 
-
 var osg = {};
 osg.AutoTransform = AutoTransform;
 osg.BillboardAttribute = BillboardAttribute;
@@ -169,6 +168,5 @@ osg.Transform.ABSOLUTE_RF = TransformEnums.ABSOLUTE_RF;
 osg.Timer = Timer;
 osg.TimerGPU = TimerGPU;
 osg.WebGLCaps = WebGLCaps;
-
 
 module.exports = osg;
