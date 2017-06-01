@@ -94,13 +94,13 @@ PrimitiveIndicesCollector.prototype = {
         var v1y = vertices[ iv1 + 1 ];
         var v1z = vertices[ iv1 + 2 ];
 
-        var minx = Math.min( v0x, v1x );
-        var miny = Math.min( v0y, v1y );
-        var minz = Math.min( v0z, v1z );
+        var minx = v0x < v1x ? v0x : v1x;
+        var miny = v0y < v1y ? v0y : v1y;
+        var minz = v0z < v1z ? v0z : v1z;
 
-        var maxx = Math.max( v0x, v1x );
-        var maxy = Math.max( v0y, v1y );
-        var maxz = Math.max( v0z, v1z );
+        var maxx = v0x > v1x ? v0x : v1x;
+        var maxy = v0y > v1y ? v0y : v1y;
+        var maxz = v0z > v1z ? v0z : v1z;
 
         var centers = this._buildKdTree._centers;
         centers[ idCenter ] = ( minx + maxx ) * 0.5;
@@ -141,13 +141,13 @@ PrimitiveIndicesCollector.prototype = {
         var v2y = vertices[ iv2 + 1 ];
         var v2z = vertices[ iv2 + 2 ];
 
-        var minx = Math.min( v0x, Math.min( v1x, v2x ) );
-        var miny = Math.min( v0y, Math.min( v1y, v2y ) );
-        var minz = Math.min( v0z, Math.min( v1z, v2z ) );
+        var minx = v0x < v1x ? v0x < v2x ? v0x : v2x : v1x < v2x ? v1x : v2x;
+        var miny = v0y < v1y ? v0y < v2y ? v0y : v2y : v1y < v2y ? v1y : v2y;
+        var minz = v0z < v1z ? v0z < v2z ? v0z : v2z : v1z < v2z ? v1z : v2z;
 
-        var maxx = Math.max( v0x, Math.max( v1x, v2x ) );
-        var maxy = Math.max( v0y, Math.max( v1y, v2y ) );
-        var maxz = Math.max( v0z, Math.max( v1z, v2z ) );
+        var maxx = v0x > v1x ? v0x > v2x ? v0x : v2x : v1x > v2x ? v1x : v2x;
+        var maxy = v0y > v1y ? v0y > v2y ? v0y : v2y : v1y > v2y ? v1y : v2y;
+        var maxz = v0z > v1z ? v0z > v2z ? v0z : v2z : v1z > v2z ? v1z : v2z;
 
         var centers = this._buildKdTree._centers;
         centers[ idCenter ] = ( minx + maxx ) * 0.5;
@@ -385,19 +385,18 @@ BuildKdTree.prototype = {
             var numPoints = vertexIndices[ primitiveIndex++ ];
             var vertices = this._kdTree.getVertices();
             for ( var j = 0; j < numPoints; ++j ) {
-                var vi = vertexIndices[ primitiveIndex++ ];
-                var vi = vi * 3;
+                var vi = vertexIndices[ primitiveIndex++ ] * 3;
                 var vx = vertices[ vi ];
                 var vy = vertices[ vi + 1 ];
                 var vz = vertices[ vi + 2 ];
 
-                minx = Math.min( minx, vx );
-                miny = Math.min( miny, vy );
-                minz = Math.min( minz, vz );
+                if ( vx < minx ) minx = vx;
+                if ( vy < miny ) miny = vy;
+                if ( vz < minz ) minz = vz;
 
-                maxx = Math.max( maxx, vx );
-                maxy = Math.max( maxy, vy );
-                maxz = Math.max( maxz, vz );
+                if ( vx > maxx ) maxx = vx;
+                if ( vy > maxy ) maxy = vy;
+                if ( vz > maxz ) maxz = vz;
             }
         }
         var epsilon = 1E-6;
