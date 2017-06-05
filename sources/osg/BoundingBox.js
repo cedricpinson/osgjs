@@ -7,6 +7,7 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var BoundingBox = function () {
     this._min = vec3.create();
     this._max = vec3.create();
+    this._lowerBBCorner = vec3.create();
     this.init();
 };
 BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
