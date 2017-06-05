@@ -63,7 +63,7 @@ var Plane = MACROUTILS.objectInherit( vec4, {
 
     /* using the plane equation, compute distance to plane of a point*/
     distanceToPlane: function ( plane, position ) {
-        return vec3.dot( plane, position ) + plane[ 3 ];
+        return plane[ 0 ] * position[ 0 ] + plane[ 1 ] * position[ 1 ] + plane[ 2 ] * position[ 2 ] + plane[ 3 ];
     },
 
 
@@ -84,32 +84,19 @@ var Plane = MACROUTILS.objectInherit( vec4, {
         return this.intersectsOrContainsBoundingSphere( plane, bSphere ) === Plane.INTERSECT;
     },
 
-    // absPlane optional paramter is an optimisation for the
-    // DOD case: on plane, many bounding boxes
-    intersectsOrContainsBoundingBox: function () {
-        var center = vec3.create();
-        var extent = vec3.create();
-        var absTemp = vec3.create();
-        return function ( plane, bbox, absPlane ) {
-            vec3.add( center, bbox.getMax(), bbox.getMin() );
-            vec3.scale( center, center, 0.5 );
 
-            vec3.sub( center, bbox.getMax(), bbox.getMin() );
-            vec3.scale( extent, extent, 0.5 );
+    intersectsOrContainsBoundingBox: ( function () {
+        var retCorner = vec3.create();
+        return function ( plane, bbox ) {
+            var upperBBCorner = ( plane[ 0 ] >= 0.0 ? 1 : 0 ) | ( plane[ 1 ] >= 0.0 ? 2 : 0 ) | ( plane[ 2 ] >= 0.0 ? 4 : 0 );
+            var lowerBBCorner = ( ~upperBBCorner ) & 7;
 
-            var d = vec3.dot( center, plane );
-            if ( !absPlane ) {
-                absPlane = absTemp;
-                absPlane[ 0 ] = Math.abs( plane[ 0 ] );
-                absPlane[ 1 ] = Math.abs( plane[ 1 ] );
-                absPlane[ 2 ] = Math.abs( plane[ 2 ] );
-            }
-            var r = vec3.dot( extent, absPlane );
-            if ( d + r > 0 ) return Plane.INTERSECT; // partially inside
-            if ( d - r >= 0 ) return Plane.INSIDE; // fully inside
-            return Plane.OUTSIDE;
+
+            if ( this.distanceToPlane( plane, bbox.corner( lowerBBCorner, retCorner ) ) > 0.0 ) return Plane.INSIDE;
+            if ( this.distanceToPlane( plane, bbox.corner( upperBBCorner, retCorner ) ) < 0.0 ) return Plane.OUTSIDE;
+            return Plane.INTERSECT; // partially inside
         };
-    },
+    } )(),
 
     intersectsBoundingBox: function ( plane, bbox, absPlane ) {
         return this.intersectsOrContainsBoundingBox( plane, bbox, absPlane ) === Plane.INTERSECT;

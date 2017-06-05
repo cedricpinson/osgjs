@@ -379,11 +379,10 @@ BuildKdTree.prototype = {
             maxz = -Infinity;
         var vertexIndices = this._kdTree.getVertexIndices();
         var primitives = this._kdTree.getPrimitiveIndices();
-
+        var vertices = this._kdTree.getVertices();
         for ( var i = istart; i <= iend; ++i ) {
             var primitiveIndex = primitives[ this._primitiveIndices[ i ] ];
             var numPoints = vertexIndices[ primitiveIndex++ ];
-            var vertices = this._kdTree.getVertices();
             for ( var j = 0; j < numPoints; ++j ) {
                 var vi = vertexIndices[ primitiveIndex++ ] * 3;
                 var vx = vertices[ vi ];
@@ -508,19 +507,19 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
             // treat as a leaf
             var istart = -node._first - 1;
             var iend = istart + node._second;
-
+            var vertexIndices = this._vertexIndices;
             for ( var i = istart; i < iend; ++i ) {
                 var primitiveIndex = this._primitiveIndices[ i ];
-                var numVertices = this._vertexIndices[ primitiveIndex++ ];
+                var numVertices = vertexIndices[ primitiveIndex++ ];
                 switch ( numVertices ) {
                 case ( 1 ):
-                    functor.intersectPoint( this._vertices, i, this._vertexIndices[ primitiveIndex ] );
+                    functor.intersectPoint( this._vertices, i, vertexIndices[ primitiveIndex ] );
                     break;
                 case ( 2 ):
-                    functor.intersectLine( this._vertices, i, this._vertexIndices[ primitiveIndex ], this._vertexIndices[ primitiveIndex + 1 ] );
+                    functor.intersectLine( this._vertices, i, vertexIndices[ primitiveIndex ], vertexIndices[ primitiveIndex + 1 ] );
                     break;
                 case ( 3 ):
-                    functor.intersectTriangle( this._vertices, i, this._vertexIndices[ primitiveIndex ], this._vertexIndices[ primitiveIndex + 1 ], this._vertexIndices[ primitiveIndex + 2 ] );
+                    functor.intersectTriangle( this._vertices, i, vertexIndices[ primitiveIndex ], vertexIndices[ primitiveIndex + 1 ], vertexIndices[ primitiveIndex + 2 ] );
                     break;
                     // case ( 4 ):
                     //     functor.intersect( this._vertices, i, this._vertexIndices[ primitiveIndex ], this._vertexIndices[ primitiveIndex + 1 ], this._vertexIndices[ primitiveIndex + 2 ], this._vertexIndices[ primitiveIndex + 3 ] );
