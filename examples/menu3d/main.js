@@ -57,7 +57,7 @@
         if ( !hits.length ) return undefined;
 
         for ( var i = 0, l = hits.length; i < l; i++ ) {
-            var np = hits[ i ].nodepath;
+            var np = hits[ i ]._nodePath;
             var node = np[ np.length - 1 ];
             if ( node && node.item ) {
                 // console.log( hits[i] );
@@ -206,7 +206,7 @@
             this.onBlur();
             var hit = getFirstItemFromIntersectionList( hits );
             if ( hit ) {
-                var node = hit.nodepath[ hit.nodepath.length - 1 ];
+                var node = hit._nodePath[ hit._nodePath.length - 1 ];
                 this.onHover( node );
                 window.location.hash = node.item.uid;
             }
@@ -217,7 +217,7 @@
             this.onBlur();
             var hit = getFirstItemFromIntersectionList( hits );
             if ( hit ) {
-                var node = hit.nodepath[ hit.nodepath.length - 1 ];
+                var node = hit._nodePath[ hit._nodePath.length - 1 ];
                 this.onHover( node );
                 return hit;
             }
@@ -371,7 +371,7 @@
                     if ( hit ) {
                         var tmp = osg.vec3.create();
                         osg.vec3.sub( tmp, end, start );
-                        osg.vec3.scale( tmp, tmp, hit.ratio );
+                        osg.vec3.scale( tmp, tmp, hit._ratio );
                         window.translateZ = Math.min( Math.max( osg.vec3.length( tmp ), 1.0 ), 4.0 );
                     }
 

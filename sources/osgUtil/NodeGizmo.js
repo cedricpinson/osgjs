@@ -337,7 +337,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             }
 
             // stop at the first X/Y/Z matrix node
-            var np = hit.nodepath;
+            var np = hit._nodePath;
             var i = np.length - 1;
             var node = np[ i ];
             while ( node._nbAxis === undefined ) {
@@ -759,9 +759,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         // compute tangent direction
         var sign = this._hoverNode._nbAxis === 0 ? -1.0 : 1.0;
         var tang = vec3.create();
-        tang[ 0 ] = sign * hit.point[ 1 ];
-        tang[ 1 ] = -sign * hit.point[ 0 ];
-        tang[ 2 ] = hit.point[ 2 ];
+
+        tang[ 0 ] = sign * hit._localIntersectionPoint[ 1 ];
+        tang[ 1 ] = -sign * hit._localIntersectionPoint[ 0 ];
+        tang[ 2 ] = hit._localIntersectionPoint[ 2 ];
 
         // project tangent on screen
         var projArc = vec3.create();
@@ -775,10 +776,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         // show angle
         this._showAngle.setNodeMask( NodeGizmo.NO_PICK );
-        hit.point[ 2 ] = 0.0;
+        hit._localIntersectionPoint[ 2 ] = 0.0;
         var stateAngle = this._showAngle.getStateSet();
         stateAngle.getUniform( 'uAngle' ).setFloat( 0.0 );
-        stateAngle.getUniform( 'uBase' ).setVec3( vec3.normalize( hit.point, hit.point ) );
+        stateAngle.getUniform( 'uBase' ).setVec3( vec3.normalize( hit._localIntersectionPoint, hit._localIntersectionPoint ) );
 
         getCanvasCoord( this._editLineOrigin, e );
     },
@@ -841,9 +842,9 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         this.setNodeMask( 0x0 );
         var hit = this.computeNearestIntersection( e, this._tmask );
         if ( this._autoInsertMT )
-            this.attachToGeometry( hit ? hit.nodepath[ hit.nodepath.length - 1 ] : hit );
+            this.attachToGeometry( hit ? hit._nodePath[ hit._nodePath.length - 1 ] : hit );
         else
-            this.attachToNodePath( hit ? hit.nodepath : hit );
+            this.attachToNodePath( hit ? hit._nodePath : hit );
     },
 
     onMouseUp: function ( e ) {

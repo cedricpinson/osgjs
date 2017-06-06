@@ -77,8 +77,6 @@ PrimitiveIndicesCollector.prototype = {
         var iv0 = i0 * 3;
         var iv1 = i1 * 3;
 
-        // if ( vec3.exactEquals( v0, v1 ) || vec3.exactEquals( v1, v2 ) || vec3.exactEquals( v0, v2 ) ) return;
-
         this._buildKdTree._kdTree.addLine( i0, i1 );
 
         var numIndices = this._numIndices;
@@ -119,8 +117,6 @@ PrimitiveIndicesCollector.prototype = {
         var iv0 = i0 * 3;
         var iv1 = i1 * 3;
         var iv2 = i2 * 3;
-
-        // if ( vec3.exactEquals( v0, v1 ) || vec3.exactEquals( v1, v2 ) || vec3.exactEquals( v0, v2 ) ) return;
 
         this._buildKdTree._kdTree.addTriangle( i0, i1, i2 );
 
@@ -417,7 +413,6 @@ var KdTree = function () {
     this._kdNodes = [];
     this._primitiveIndices = [];
     this._vertexIndices = [];
-    this._triangles = null; // Float32Array
 };
 
 KdTree.prototype = MACROUTILS.objectLibraryClass( {
@@ -427,12 +422,7 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
     setVertices: function ( vertices ) {
         this._vertices = vertices;
     },
-    getTriangles: function () {
-        return this._triangles;
-    },
-    setTriangles: function ( triangles ) {
-        this._triangles = triangles;
-    },
+
     setPrimitiveIndices: function ( indices ) {
         this._primitiveIndices = indices;
     },
@@ -521,9 +511,6 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
                 case ( 3 ):
                     functor.intersectTriangle( this._vertices, i, vertexIndices[ primitiveIndex ], vertexIndices[ primitiveIndex + 1 ], vertexIndices[ primitiveIndex + 2 ] );
                     break;
-                    // case ( 4 ):
-                    //     functor.intersect( this._vertices, i, this._vertexIndices[ primitiveIndex ], this._vertexIndices[ primitiveIndex + 1 ], this._vertexIndices[ primitiveIndex + 2 ], this._vertexIndices[ primitiveIndex + 3 ] );
-                    //     break;
                 default:
                     notify.warn( 'Warning: KdTree::intersect() encounted unsupported primitive size of ' + numVertices );
                     break;
@@ -542,15 +529,3 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
 }, 'osg', 'KdTree' );
 
 module.exports = KdTree;
-// var kdNode;
-// if ( node._first > 0 ) {
-//     kdNode = this._kdNodes[ node._first ];
-//     if ( functor.enter( kdNode._bb ) )
-//         this.intersect( functor, kdNode );
-// }
-
-// if ( node._second > 0 ) {
-//     kdNode = this._kdNodes[ node._second ];
-//     if ( functor.enter( kdNode._bb ) )
-//         this.intersect( functor, kdNode );
-// }

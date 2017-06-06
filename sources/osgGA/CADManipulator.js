@@ -463,9 +463,9 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                 hits = viewer.computeIntersections( pos[ 0 ], pos[ 1 ] );
 
                 if ( hits.length > 0 ) {
-                    point = hits[ 0 ].point;
-                    hits[ 0 ].nodepath.shift();
-                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodepath );
+                    point = hits[ 0 ]._localIntersectionPoint;
+                    hits[ 0 ]._nodePath.shift();
+                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ]._nodePath );
                     vec3.transformMat4( pTrans, point, matrix );
                     this.setPivotPoint( pTrans );
                 }
@@ -483,9 +483,9 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                     return a._distance - b._distance;
                 } );
                 if ( hits.length > 0 ) {
-                    point = hits[ 0 ]._center;
-                    hits[ 0 ].nodePath.shift();
-                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodePath );
+                    point = hits[ 0 ]._localIntersectionPoint;
+                    hits[ 0 ]._nodePath.shift();
+                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ]._nodePath );
                     vec3.transformMat4( pTrans, point, matrix );
                     this.setPivotPoint( pTrans );
                 }
