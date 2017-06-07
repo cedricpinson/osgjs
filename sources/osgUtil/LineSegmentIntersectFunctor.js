@@ -39,7 +39,6 @@ var LineSegmentIntersectFunctor = function () {
 
     this._start = vec3.create();
     this._end = vec3.create();
-    this._startEndStack = [];
     this._dInvX = vec3.create();
     this._dInvY = vec3.create();
     this._dInvZ = vec3.create();
@@ -50,7 +49,6 @@ LineSegmentIntersectFunctor.prototype = {
 
 
     reset: function () {
-        this._startEndStack = [];
         this._hit = false;
     },
 
@@ -59,7 +57,6 @@ LineSegmentIntersectFunctor.prototype = {
         this._settings = settings;
         this._start = start;
         this._end = end;
-        this._startEndStack.push( [ start, end ] );
         vec3.sub( this._d, end, start );
 
         this._length = vec3.length( this._d );
@@ -71,7 +68,7 @@ LineSegmentIntersectFunctor.prototype = {
         if ( this._d[ 2 ] !== 0.0 ) vec3.scale( this._dInvZ, this._d, 1.0 / this._d[ 2 ] );
     },
 
-    enter: function ( bbox ) {
+    enter: function ( bbox, s, e ) {
         var min = bbox._min;
         var xmin = min[ 0 ];
         var ymin = min[ 1 ];
@@ -85,11 +82,6 @@ LineSegmentIntersectFunctor.prototype = {
         var invX = this._dInvX;
         var invY = this._dInvY;
         var invZ = this._dInvZ;
-
-        var startEnd = this._startEndStack[ this._startEndStack.length - 1 ];
-
-        var s = vec3.clone( startEnd[ 0 ] );
-        var e = vec3.clone( startEnd[ 1 ] );
 
         if ( s[ 0 ] <= e[ 0 ] ) {
             // trivial reject of segment wholely outside.
@@ -180,7 +172,7 @@ LineSegmentIntersectFunctor.prototype = {
                 vec3.scaleAndAdd( s, s, invZ, zmax - s[ 2 ] );
             }
         }
-        this._startEndStack.push( [ s, e ] );
+
         return true;
     },
 
@@ -263,7 +255,8 @@ LineSegmentIntersectFunctor.prototype = {
             intersection._localIntersectionNormal = normal;
 
             this._settings._lineSegIntersector.getIntersections().push( intersection );
-            this._hit = true;
+            if ( !intersection._backface )
+                this._hit = true;
         };
     } )(),
     operatorPoint: function () {
@@ -295,8 +288,9 @@ LineSegmentIntersectFunctor.prototype = {
             this.intersect( v0, v1, v2, p0, p1, p2 );
         };
     } )(),
+
     leave: function () {
-        this._startEndStack.pop();
+        //Do nothing
     },
 
     apply: ( function () {

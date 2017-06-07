@@ -43,9 +43,7 @@ SphereIntersector.prototype = {
         // Not working if culling disabled ??
         return !node.isCullingActive() || this.intersects( node.getBound() );
     },
-    leave: function () {
-        //Do nothing
-    },
+
     setIntersectionLimit: function ( limit ) {
         this._intersectionLimit = limit;
     },

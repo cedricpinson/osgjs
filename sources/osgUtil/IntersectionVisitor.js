@@ -166,11 +166,6 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         if ( node.traverse ) {
             this.traverse( node );
         }
-        this.leave();
-    },
-
-    leave: function () {
-        this._intersector.leave();
     },
 
     applyTransform: function ( node ) {
@@ -197,7 +192,6 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF )
             this.popViewMatrix();
         this._intersector.setCurrentTransformation( this.getTransformation() );
-        this.leave();
     }
 } );
 

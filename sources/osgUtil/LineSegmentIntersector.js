@@ -54,9 +54,6 @@ LineSegmentIntersector.prototype = {
         return this._intersectionLimit;
     },
 
-    leave: function () {
-        //Do nothing
-    },
     // Intersection Segment/Sphere
     intersects: ( function () {
         var sm = vec3.create();
@@ -114,7 +111,7 @@ LineSegmentIntersector.prototype = {
             var kdtree = node.getShape();
 
             if ( kdtree ) {
-                return kdtree.intersect( lsf, kdtree.getNodes()[ 0 ] );
+                return kdtree.intersectLineSegment( lsf, kdtree.getNodes()[ 0 ], this._iStart, this._iEnd );
             }
             // handle rig transformed vertices
             if ( node.computeTransformedVertices ) {

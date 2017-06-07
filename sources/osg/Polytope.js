@@ -3,7 +3,6 @@ var Object = require( 'osg/Object' );
 var Plane = require( 'osg/Plane' );
 var MACROUTILS = require( 'osg/Utils' );
 var vec4 = require( 'osg/glMatrix' ).vec4;
-var vec3 = require( 'osg/glMatrix' ).vec3;
 /*jshint bitwise: false */
 /**
  * Polytope class for representing convex clipping volumes made up of a set of planes.
@@ -335,63 +334,7 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
             }
             selectorMask <<= 1;
         }
-    },
-
-    /** Check whether any part of a triangle is contained within the polytope.*/
-    contains: function ( v0, v1, v2 ) {
-        if ( !this._maskStack[ this._maskStack.length - 1 ] ) return;
-
-        // Note check whether it could be worth to do calculations in floats.
-        var src = [];
-        var dest = [];
-
-        src.push( v0 );
-        src.push( v1 );
-        src.push( v2 );
-        src.push( v0 );
-
-        this._resultMask = this._maskStack[ this._maskStack.length - 1 ];
-        var selectorMask = 0x1;
-
-        for ( var i = 0; i < this._planeList.length; ++i ) {
-            if ( this._resultMask & selectorMask ) {
-
-                var vPrevious = src[ 1 ];
-                var dPrevious = Plane.distanceToPlane( this._planeList[ i ], vPrevious );
-
-                for ( var j = 0; j < src.length; ++j ) {
-                    var vCurrent = src[ j ];
-                    var dCurrent = Plane.distanceToPlane( this._planeList[ i ], vCurrent );
-                    if ( dPrevious >= 0.0 ) {
-                        // We need to copy
-                        dest.push( vec3.clone( vPrevious ) );
-                    }
-                    if ( dPrevious * dCurrent < 0.0 ) {
-                        var distance = dPrevious - dCurrent;
-                        var rCurrent = dPrevious / distance;
-                        //(*v_previous)*(1.0-r_current) + (*v_current)*r_current;
-                        var vnew = vec3.add( vec3.create(), vec3.scale( vec3.create(), vPrevious, 1.0 - rCurrent ), vec3.scale( vec3.create(), vCurrent, rCurrent ) );
-                        dest.push( vnew );
-                    }
-                    dPrevious = dCurrent;
-                    vPrevious = vCurrent;
-                }
-                if ( dPrevious >= 0.0 ) {
-                    dest.push( vec3.clone( vPrevious ) );
-                }
-                if ( dest.length <= 1 ) {
-                    return false;
-                }
-                // swap values
-                var swap = src.slice();
-                src = dest.slice();
-                dest = swap;
-            }
-            selectorMask <<= 1;
-        }
-        return true;
     }
-
 } );
 
 /*jshint bitwise: true */

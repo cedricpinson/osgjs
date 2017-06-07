@@ -69,10 +69,6 @@ PolytopeIntersector.prototype = {
         return this._primitiveMask;
     },
 
-    leave: function () {
-        // Do nothing
-    },
-
     setPolytopeFromWindowCoordinates: function ( xMin, yMin, xMax, yMax ) {
         // Note: last polytope value depends on the Coordinate frame
         // Now we are only supporting WINDOW coordinate frame, so must change this if we decide to support
