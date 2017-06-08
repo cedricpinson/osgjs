@@ -145,32 +145,32 @@
 
             this._shaderProcessor = new osgShader.ShaderProcessor();
 
-            var defer = P.defer();
-            var shaderNames = shadersFilenames || this._shaderNames;
-            var shaders = shaderNames.map( function ( arg ) {
-                return this._shaderPath + arg;
-            }.bind( this ) );
+            return new P( function ( resolve ) {
+                var shaderNames = shadersFilenames || this._shaderNames;
+                var shaders = shaderNames.map( function ( arg ) {
+                    return this._shaderPath + arg;
+                }.bind( this ) );
 
 
-            var promises = [];
-            shaders.forEach( function ( shader ) {
-                promises.push( P.resolve( $.get( shader ) ) );
-            }.bind( this ) );
+                var promises = [];
+                shaders.forEach( function ( shader ) {
+                    promises.push( P.resolve( $.get( shader ) ) );
+                }.bind( this ) );
 
-            P.all( promises ).then( function ( args ) {
+                P.all( promises ).then( function ( args ) {
 
-                var shaderNameContent = {};
-                shaderNames.forEach( function ( name, idx ) {
-                    shaderNameContent[ name ] = args[ idx ];
-                } );
+                    var shaderNameContent = {};
+                    shaderNames.forEach( function ( name, idx ) {
+                        shaderNameContent[ name ] = args[ idx ];
+                    } );
 
-                this._shaderProcessor.addShaders( shaderNameContent );
+                    this._shaderProcessor.addShaders( shaderNameContent );
 
-                defer.resolve();
+                    resolve();
 
-            }.bind( this ) );
+                }.bind( this ) );
 
-            return defer.promise;
+            } );
 
             // wait for shaders:
             // this.readShaders.then(function(){ this.run(); }.bind(this))

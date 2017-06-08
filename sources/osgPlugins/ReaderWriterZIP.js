@@ -17,10 +17,13 @@ var ReaderWriterZIP = function () {
 ReaderWriterZIP.prototype = {
 
     readNodeURL: function ( url, options ) {
-        var defer = P.defer();
+        return new P( this._readNodeURLPromiseHandler.bind( this, url, options ) );
+    },
+
+    _readNodeURLPromiseHandler: function ( url, options, resolve, reject ) {
         if ( JSZip === undefined ) {
             Notify.error( 'You need to add JSZip as a dependency' );
-            return defer.reject();
+            return reject();
         }
         Notify.log( 'starting to read: ' + url );
         // Check if we already have the file
@@ -49,12 +52,11 @@ ReaderWriterZIP.prototype = {
         filePromise.then( function ( file ) {
             self.readZipFile( file ).then( function () {
                 // At this point we have the main file name and a Map containing all the resources
-                defer.resolve( ReaderParser.readNodeURL( self._fileName, {
+                resolve( ReaderParser.readNodeURL( self._fileName, {
                     filesMap: self._filesMap
                 } ) );
             } );
         } );
-        return defer.promise;
     },
 
     _registerZipImage: function ( fileName, type, extension, fileData ) {
@@ -68,38 +70,37 @@ ReaderWriterZIP.prototype = {
     },
 
     readZipFile: function ( fileOrBlob ) {
-        var defer = P.defer();
-        JSZip.loadAsync( fileOrBlob ).then( function ( zip ) {
-            var promisesArray = [];
+        return new P( this._readZipFilePromiseHandler.bind( this, fileOrBlob ) );
 
-            for ( var fileName in zip.files ) {
-                var extension = fileName.substr( fileName.lastIndexOf( '.' ) + 1 );
-                // Check if the file is readable by any osgDB plugin
-                var readerWriter = Registry.instance().getReaderWriterForExtension( extension );
-                // We need a hack for osgjs til it is converted to a readerwriter
-                if ( readerWriter !== undefined || extension === 'osgjs' ) {
-                    // So this is the main file to read
-                    this._fileName = fileName;
-                }
+    },
+    _readZipFilePromiseHandler: function ( fileOrBlob, resolve ) {
+        JSZip.loadAsync( fileOrBlob ).then( this._readLoadedZipFile.bind( this, resolve ) );
+    },
+    _readLoadedZipFile: function ( resolve, zip ) {
+        var promisesArray = [];
 
-                var type = FileHelper.getTypeForExtension( extension );
-                // We don't need to parse this file
-                if ( type === undefined ) continue;
-                if ( type === 'blob' ) type = 'base64'; // Images are base64 encoded in ZIP files
-
-                var p = zip.file( fileName ).async( type ).then( this._registerZipImage.bind( this, fileName, type, extension ) );
-                promisesArray.push( p );
+        for ( var i = 0; i < zip.files.length; i = i + 1 ) {
+            var fileName = zip.files[ i ];
+            var extension = fileName.substr( fileName.lastIndexOf( '.' ) + 1 );
+            // Check if the file is readable by any osgDB plugin
+            var readerWriter = Registry.instance().getReaderWriterForExtension( extension );
+            // We need a hack for osgjs til it is converted to a readerwriter
+            if ( readerWriter !== undefined || extension === 'osgjs' ) {
+                // So this is the main file to read
+                this._fileName = fileName;
             }
 
-            P.all( promisesArray ).then( function () {
-                defer.resolve();
-            } );
-        }.bind( this ) );
+            var type = FileHelper.getTypeForExtension( extension );
+            // We don't need to parse this file
+            if ( type === undefined ) continue;
+            if ( type === 'blob' ) type = 'base64'; // Images are base64 encoded in ZIP files
 
-        return defer.promise;
+            var p = zip.file( fileName ).async( type ).then( this._registerZipImage.bind( this, fileName, type, extension ) );
+            promisesArray.push( p );
+        }
 
+        P.all( promisesArray ).then( resolve );
     }
-
 };
 
 Registry.instance().addReaderWriter( 'zip', new ReaderWriterZIP() );

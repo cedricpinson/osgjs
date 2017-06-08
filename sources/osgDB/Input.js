@@ -140,7 +140,7 @@ Input.prototype = {
         return new( scope )();
     },
 
-    fetchImage: function ( image, url, options, defer ) {
+    fetchImage: function ( image, url, options, resolve ) {
         var checkInlineImage = 'data:image/';
         // crossOrigin does not work for inline data image
         var isInlineImage = ( url.substring( 0, checkInlineImage.length ) === checkInlineImage );
@@ -148,8 +148,8 @@ Input.prototype = {
         img.onerror = function () {
             Notify.warn( 'warning use white texture as fallback instead of ' + url );
             image.setImage( Input.imageFallback );
-            if ( defer ) {
-                defer.resolve( image );
+            if ( typeof resolve === 'function' ) {
+                resolve( image );
             }
         };
 
@@ -158,10 +158,9 @@ Input.prototype = {
         }
 
         img.onload = function () {
-
-            if ( defer ) {
+            if ( typeof resolve === 'function' ) {
                 if ( options.imageOnload ) options.imageOnload.call( image );
-                defer.resolve( image );
+                resolve( image );
             } else if ( options.imageOnload )
                 options.imageOnload.call( image );
 
@@ -199,13 +198,12 @@ Input.prototype = {
         if ( options.imageLoadingUsePromise !== true ) {
             return this.fetchImage( image, url, options );
         }
-
-        var defer = P.defer();
-        this.fetchImage( image, url, options, defer );
-
-        return defer.promise;
+        return new P( this._fetchImagePromiseHandler.bind( this, image, url, options ) );
     },
 
+    _fetchImagePromiseHandler: function ( image, url, options, resolve ) {
+        this.fetchImage( image, url, options, resolve );
+    },
 
     readNodeURL: function ( url, opt ) {
 
@@ -225,8 +223,10 @@ Input.prototype = {
 
         url = this.computeURL( url );
 
-        var defer = P.defer();
+        return new P( this._readNodeURLPromiseHandler.bind( this, url, options ) );
+    },
 
+    _readNodeURLPromiseHandler: function ( url, options, resolve, reject ) {
         // copy because we are going to modify it to have relative prefix to load assets
         options = MACROUTILS.objectMix( {}, options );
 
@@ -247,9 +247,9 @@ Input.prototype = {
         var readSceneGraph = function ( data ) {
 
             ReaderParser.parseSceneGraph( data, options ).then( function ( child ) {
-                defer.resolve( child );
+                resolve( child );
                 Notify.log( 'loaded ' + url );
-            } ).catch( defer.reject.bind( defer ) );
+            } ).catch( reject );
         };
 
         var ungzipFile = function ( arrayBuffer ) {
@@ -312,20 +312,17 @@ Input.prototype = {
             } ).catch( function ( status ) {
 
                 Notify.error( 'cant read file ' + url + ' status ' + status );
-                defer.reject();
+                reject();
 
-            } ).done();
+            } );
 
             return true;
 
         } ).catch( function ( status ) {
-
             Notify.error( 'cant get file ' + url + ' status ' + status );
-            defer.reject();
+            reject();
+        } );
 
-        } ).done();
-
-        return defer.promise;
     },
 
     _unzipTypedArray: function ( binary ) {
@@ -360,23 +357,21 @@ Input.prototype = {
 
         url = this.computeURL( url );
 
+        this._identifierMap[ url ] = new P( this._readBinaryArrayURLPromiseHandler.bind( this, url ) );
+        return this._identifierMap[ url ];
+    },
 
-        if ( this._identifierMap[ url ] !== undefined ) {
-            return this._identifierMap[ url ];
-        }
-        var defer = P.defer();
+    _readBinaryArrayURLPromiseHandler: function ( url, resolve ) {
 
         var filePromise = this.requestFile( url, {
             responseType: 'arraybuffer',
             progress: this._defaultOptions.progressXHRCallback
         } );
 
-        this._identifierMap[ url ] = defer.promise;
         filePromise.then( function ( file ) {
-            defer.resolve( this._unzipTypedArray( file ) );
+            resolve( this._unzipTypedArray( file ) );
         }.bind( this ) );
 
-        return defer.promise;
     },
 
     initializeBufferArray: function ( vb, type, buf, options ) {
@@ -386,7 +381,10 @@ Input.prototype = {
             return options.initializeBufferArray.call( this, vb, type, buf );
 
         var url = vb.File;
-        var defer = P.defer();
+        return new P( this._initializeBufferArrayPromiseHandler.bind( this, url, vb, type, buf ) );
+    },
+
+    _initializeBufferArrayPromiseHandler: function ( url, vb, type, buf, resolve ) {
         this.readBinaryArrayURL( url ).then( function ( array ) {
 
             var typedArray;
@@ -431,11 +429,12 @@ Input.prototype = {
             }
 
             buf.setElements( typedArray );
-            defer.resolve( buf );
-        } ).catch( function () {
+            resolve( buf );
+        } ).catch( function ( err ) {
+            Notify.warn( err.message );
+            Notify.warn( err );
             Notify.warn( 'Can\'t read binary array URL' );
         } );
-        return defer.promise;
     },
 
     readBufferArray: function ( options ) {

@@ -1,9 +1,6 @@
 var P = require( 'bluebird' );
 
-var requestFileFromURL = function ( url, options ) {
-
-    var defer = P.defer();
-
+var _requestFileFromURLPromiseHandler = function ( url, options, resolve, reject ) {
     var req = new XMLHttpRequest();
     req.open( 'GET', url, true );
 
@@ -16,32 +13,34 @@ var requestFileFromURL = function ( url, options ) {
     }
 
     req.addEventListener( 'error', function () {
-        defer.reject();
+        reject();
     }, false );
 
     req.addEventListener( 'load', function () {
 
         if ( req.responseType === 'arraybuffer' || req.responseType === 'blob' )
-            defer.resolve( req.response );
+            resolve( req.response );
         else
-            defer.resolve( req.responseText );
-
+            resolve( req.responseText );
     } );
 
     req.send( null );
-    return defer.promise;
 };
 
-var requestFileFromReader = function ( file, options ) {
-    var defer = Promise.defer();
+var requestFileFromURL = function ( url, options ) {
+    return new P( _requestFileFromURLPromiseHandler.bind( this, url, options ) );
+};
+
+var _requestFileFromReaderPromiseHandler = function ( file, options, resolve ) {
+
     var reader = new window.FileReader();
     reader.onload = function ( data ) {
         if ( options.responseType === 'blob' ) {
             var img = new window.Image();
             img.src = data.target.result;
-            defer.resolve( img );
+            resolve( img );
         } else {
-            defer.resolve( data.target.result );
+            resolve( data.target.result );
         }
     };
     // handle responseType
@@ -55,7 +54,10 @@ var requestFileFromReader = function ( file, options ) {
     } else {
         reader.readAsText( file );
     }
-    return defer.promise;
+};
+
+var requestFileFromReader = function ( file, options ) {
+    return new P( _requestFileFromReaderPromiseHandler.bind( this, file, options ) );
 };
 
 var requestFile = function ( urlOrFile, options ) {

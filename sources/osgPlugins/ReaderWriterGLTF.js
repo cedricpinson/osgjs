@@ -34,6 +34,27 @@ var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
 var mat4 = require( 'osg/glMatrix' ).mat4;
 
+var _readNodeURLPromiseHandler = function ( url, options, resolve ) {
+    var self = this;
+
+    this.init();
+    if ( options && options.filesMap !== undefined && options.filesMap.size > 0 ) {
+        // it comes from the ZIP plugin or from drag'n drop
+        // So we already have all the files.
+        this._filesMap = options.filesMap;
+        var glTFFile = this._filesMap.get( url );
+        return this.readJSON( glTFFile, url );
+    }
+
+    var index = url.lastIndexOf( '/' );
+    this._localPath = ( index === -1 ) ? '' : url.substr( 0, index + 1 );
+    // Else it is a usual XHR request
+    var filePromise = requestFile( url );
+    filePromise.then( function ( glTFFile ) {
+        resolve( self.readJSON( glTFFile ) );
+    } );
+};
+
 var ReaderWriterGLTF = function () {
 
     // Contains all the needed glTF files (.gltf, .bin, etc...)
@@ -787,26 +808,7 @@ ReaderWriterGLTF.prototype = {
     } ),
 
     readNodeURL: function ( url, options ) {
-        var defer = P.defer();
-        var self = this;
-
-        this.init();
-        if ( options && options.filesMap !== undefined && options.filesMap.size > 0 ) {
-            // it comes from the ZIP plugin or from drag'n drop
-            // So we already have all the files.
-            this._filesMap = options.filesMap;
-            var glTFFile = this._filesMap.get( url );
-            return this.readJSON( glTFFile, url );
-        }
-
-        var index = url.lastIndexOf( '/' );
-        this._localPath = ( index === -1 ) ? '' : url.substr( 0, index + 1 );
-        // Else it is a usual XHR request
-        var filePromise = requestFile( url );
-        filePromise.then( function ( glTFFile ) {
-            defer.resolve( self.readJSON( glTFFile ) );
-        } );
-        return defer.promise;
+        return new P( _readNodeURLPromiseHandler.bind( this, url, options ) );
     },
 
     readJSON: P.method( function ( glTFFile, url ) {

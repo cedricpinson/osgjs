@@ -499,55 +499,55 @@
 
         readShaders: function () {
 
-            var defer = P.defer();
+            return new P( function ( resolve ) {
 
-            var shaderNames = [
-                'math.glsl',
-                'cubemapVertex.glsl',
-                'cubemapFragment.glsl',
-                'cubemapSampler.glsl',
-                'panoramaVertex.glsl',
-                'panoramaFragment.glsl',
-                'panoramaSampler.glsl',
+                var shaderNames = [
+                    'math.glsl',
+                    'cubemapVertex.glsl',
+                    'cubemapFragment.glsl',
+                    'cubemapSampler.glsl',
+                    'panoramaVertex.glsl',
+                    'panoramaFragment.glsl',
+                    'panoramaSampler.glsl',
 
-                'pbrReferenceFragment.glsl',
-                'pbrReferenceVertex.glsl',
-                'colorSpace.glsl',
+                    'pbrReferenceFragment.glsl',
+                    'pbrReferenceVertex.glsl',
+                    'colorSpace.glsl',
 
-                'pbr_ue4.glsl',
+                    'pbr_ue4.glsl',
 
-                'sphericalHarmonics.glsl',
-                'sphericalHarmonicsVertex.glsl',
-                'sphericalHarmonicsFragment.glsl'
+                    'sphericalHarmonics.glsl',
+                    'sphericalHarmonicsVertex.glsl',
+                    'sphericalHarmonicsFragment.glsl'
 
-            ];
-
-
-            var shaders = shaderNames.map( function ( arg ) {
-                return this._shaderPath + arg;
-            }.bind( this ) );
+                ];
 
 
-            var promises = [];
-            shaders.forEach( function ( shader ) {
-                promises.push( P.resolve( $.get( shader ) ) );
-            } );
+                var shaders = shaderNames.map( function ( arg ) {
+                    return this._shaderPath + arg;
+                }.bind( this ) );
 
 
-            P.all( promises ).then( function ( args ) {
-
-                var shaderNameContent = {};
-                shaderNames.forEach( function ( name, idx ) {
-                    shaderNameContent[ name ] = args[ idx ];
+                var promises = [];
+                shaders.forEach( function ( shader ) {
+                    promises.push( P.resolve( $.get( shader ) ) );
                 } );
 
-                shaderProcessor.addShaders( shaderNameContent );
 
-                defer.resolve();
+                P.all( promises ).then( function ( args ) {
+
+                    var shaderNameContent = {};
+                    shaderNames.forEach( function ( name, idx ) {
+                        shaderNameContent[ name ] = args[ idx ];
+                    } );
+
+                    shaderProcessor.addShaders( shaderNameContent );
+
+                    resolve();
+
+                } );
 
             } );
-
-            return defer.promise;
         },
 
         // config = {

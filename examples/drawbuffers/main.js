@@ -106,17 +106,17 @@
         },
 
         createRTTScene: function () {
-            var defer = P.defer();
-            var that = this;
-            osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( node ) {
-                //root.addChild( node );
-                var stateSet = node.getOrCreateStateSet();
-                stateSet.setAttributeAndModes( that.generateProgram() );
-                that._viewer.getManipulator().setTarget( node.getBoundingSphere().center() );
-                that._viewer.getManipulator().setDistance( node.getBoundingSphere().radius() * 2.0 );
-                defer.resolve( node );
+            return new P( function ( resolve ) {
+                var that = this;
+                osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( node ) {
+                    //root.addChild( node );
+                    var stateSet = node.getOrCreateStateSet();
+                    stateSet.setAttributeAndModes( that.generateProgram() );
+                    that._viewer.getManipulator().setTarget( node.getBoundingSphere().center() );
+                    that._viewer.getManipulator().setDistance( node.getBoundingSphere().radius() * 2.0 );
+                    resolve( node );
+                } );
             } );
-            return defer.promise;
         },
 
         generateProgram: function () {

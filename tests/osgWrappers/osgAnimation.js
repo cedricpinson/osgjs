@@ -104,7 +104,7 @@ module.exports = function () {
             assert.isOk( info.nbKeysEmptySlot === nbChannels, 'nb times empty slot' );
 
             done();
-        } );
+        } )
 
     } );
 
