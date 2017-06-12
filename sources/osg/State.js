@@ -802,7 +802,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         return false;
     },
 
-    setVertexAttribArray: function ( attrib, array, normalize ) {
+    setVertexAttribArray: function ( attrib, array, normalize, divisor ) {
 
         var vertexAttribMap = this.vertexAttribMap;
         vertexAttribMap._disable[ attrib ] = false;
@@ -833,6 +833,12 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
             vertexAttribMap[ attrib ] = array;
             gl.vertexAttribPointer( attrib, array.getItemSize(), array.getType(), normalize, 0, 0 );
+
+            if ( divisor !== undefined ) {
+                var ext = WebGLCaps.instance( gl ).getWebGLExtension( 'ANGLE_instanced_arrays' );
+                if ( !ext ) Notify.error( 'Your browser does not support instanced arrays' );
+                ext.vertexAttribDivisorANGLE( attrib, divisor );
+            }
         }
     },
 

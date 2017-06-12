@@ -38,6 +38,9 @@ var Node = function () {
 
     // it's a tmp object for internal use, do not use
     this._tmpBox = new BoundingBox();
+    // User callbacks to allow users to override the default computation of bounding volumes
+    this._computeBoundingBoxCallback = undefined;
+    this._computeBoundingSphereCallback = undefined;
 };
 
 Node._reservedMatrixStack = new MatrixMemoryPool();
@@ -339,8 +342,19 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         return this._boundingBox;
     },
 
+    setComputeBoundingBoxCallback: function ( callback ) {
+        this._computeBoundingBoxCallback = callback;
+    },
+
+    getComputeBoundingBoxCallback: function () {
+        return this._computeBoundingBoxCallback;
+    },
+
     computeBoundingBox: function ( bbox ) {
 
+        if ( this._computeBoundingBoxCallback !== undefined ) {
+            return this._computeBoundingBoxCallback( bbox );
+        }
         // circular dependency... not sure if the global visitor instance should be instancied here
         var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
         var cbv = ComputeBoundsVisitor.instance = ComputeBoundsVisitor.instance || new ComputeBoundsVisitor();
@@ -364,7 +378,19 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         return this._boundingSphere;
     },
 
+    setComputeBoundingSphereCallback: function ( callback ) {
+        this._computeBoundingSphereCallback = callback;
+    },
+
+    getComputeBoundingSphereCallback: function () {
+        return this._computeBoundingSphereCallback;
+    },
+
     computeBoundingSphere: function ( bSphere ) {
+
+        if ( this._computeBoundingSphereCallback !== undefined ) {
+            return this._computeBoundingSphereCallback( bSphere );
+        }
 
         var children = this.children;
         var l = children.length;

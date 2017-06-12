@@ -4,6 +4,7 @@ var Node = require( 'osg/Node' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 var DrawElements = require( 'osg/DrawElements' );
 var BufferArrayProxy = require( 'osg/BufferArrayProxy' );
+var notify = require( 'osg/notify' );
 
 /**
  * Geometry manage array and primitives to draw a geometry.
@@ -31,7 +32,7 @@ var Geometry = function () {
 
     // null means the kdTree builder will skip the kdTree creation
     this._shape = undefined;
-
+    this._instancedArrayMap = undefined;
 };
 
 Geometry.enableVAO = true;
@@ -51,8 +52,9 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
         for ( var i = 0, h = this._primitives.length; i < h; i++ ) {
             var prim = this._primitives[ i ];
             if ( prim.getIndices !== undefined ) {
-                if ( prim.getIndices() !== undefined && prim.getIndices() !== null ) {
-                    prim.indices.releaseGLObjects();
+                var indices = prim.getIndices();
+                if ( indices !== undefined && indices !== null ) {
+                    indices.releaseGLObjects();
                 }
             }
         }
@@ -124,6 +126,19 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
         }
     },
 
+    /**
+     * Adds the attributeDivisor to an existing attribArray.
+     */
+    setAttribArrayDivisor: function ( attributeName, divisor ) {
+        if ( this._attributes[ attributeName ] === undefined ) {
+            notify.error( 'Attribute' + attributeName + 'does not exist.' );
+            return;
+        }
+        if ( this._instancedArrayMap === undefined )
+            this._instancedArrayMap = new window.Map();
+        this._instancedArrayMap.set( attributeName, divisor );
+    },
+
     _generateVertexSetup: function ( validAttributeKeyList, validAttributeIndexList, includeFirstIndexBuffer ) {
 
         // generate setup for vertex attribute
@@ -135,10 +150,15 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
         for ( var i = 0, l = validAttributeKeyList.length; i < l; i++ ) {
 
+            // Check if the attribute is instanced
+            var divisor = undefined;
+            if ( this._instancedArrayMap && this._instancedArrayMap.has( validAttributeKeyList[ i ] ) ) {
+                divisor = this._instancedArrayMap.get( validAttributeKeyList[ i ] );
+            }
             vertexAttributeSetup.push( 'attr = this._attributes[\'' + validAttributeKeyList[ i ] + '\'];' );
             vertexAttributeSetup.push( 'if ( attr.BufferArrayProxy ) attr = attr.getBufferArray();' );
             vertexAttributeSetup.push( 'if ( !attr.isValid() ) return;' );
-            vertexAttributeSetup.push( 'state.setVertexAttribArray(' + validAttributeIndexList[ i ] + ', attr, attr.getNormalize() );' );
+            vertexAttributeSetup.push( 'state.setVertexAttribArray(' + validAttributeIndexList[ i ] + ', attr, attr.getNormalize(), ' + divisor + ' )' );
 
         }
 
@@ -332,6 +352,10 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
     },
 
     computeBoundingBox: function ( boundingBox ) {
+
+        if ( this._computeBoundingBoxCallback !== undefined ) {
+            return this._computeBoundingBoxCallback( boundingBox );
+        }
 
         boundingBox.init();
 
