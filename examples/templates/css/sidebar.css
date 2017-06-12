@@ -4,6 +4,12 @@
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap/blob/gh-pages/LICENSE)
  */
 
+html {
+    font-size: 10px;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    height: 100%;
+}
+
 body {
     overflow: hidden;
 
@@ -13,6 +19,7 @@ body {
 
     background: #444;
     color: #FFF;
+    height: inherit;
 }
 
 /* Toggle Styles */
@@ -49,17 +56,17 @@ body {
 }
 
 #page-content-wrapper {
-    width: 40px;
+    width: 100%;
     position: absolute;
-    padding: 15px;
 }
 
 
 #viewer {
     width: 100%;
     height: 100%;
-    position: absolute;
+    position: relative;
     overflow: auto;
+    border-width: 0px;
 }
 
 #wrapper.toggled #page-content-wrapper {
@@ -114,10 +121,31 @@ body {
     background: none;
 }
 
+.container-fluid {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+    height: inherit;
+}
+.row {
+    margin-right: -15px;
+    margin-left: -15px;
+    height: inherit;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 20px;
+    position: absolute;
+    z-index: 10000;
+}
 
 @media(min-width:768px) {
     #wrapper {
         padding-left: 250px;
+        height: inherit;
     }
 
     #wrapper.toggled {
@@ -133,12 +161,17 @@ body {
     }
 
     #page-content-wrapper {
-        padding: 20px;
         position: relative;
+        height: inherit;
     }
 
     #wrapper.toggled #page-content-wrapper {
         position: relative;
         margin-right: 0;
+    }
+    .col-lg-12 {
+        width: 100%;
+        height: inherit;
+        padding: 0px;
     }
 }

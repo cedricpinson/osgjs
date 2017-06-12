@@ -263,7 +263,7 @@ var gruntTasks = {};
 
 ( function () {
 
-    var jsFiles = [ 'sources/**/*.js', 'examples/**/*.js', 'tutorials/**/*.js', 'tests/**/*.js', '!examples/vendors/*.js', '!tests/vendors/**/*.js', '!tests/mocha.js' ];
+    var jsFiles = [ 'index.html', 'sources/**/*.js', 'examples/**/*.js', 'tutorials/**/*.js', 'tests/**/*.js', '!examples/vendors/*.js', '!tests/vendors/**/*.js', '!tests/mocha.js' ];
 
     gruntTasks.jsbeautifier = {
         default: {

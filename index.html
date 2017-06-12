@@ -18,15 +18,15 @@
 </head>
 
 <body>
-    <iframe id="viewer" name="viewer" allowfullscreen allowvr onmousewheel=""></iframe>
 
     <div id="wrapper">
-
         <!-- Sidebar -->
         <div id="sidebar-wrapper">
             <ul id="sidebar-nav" class="sidebar-nav">
                 <li class="sidebar-brand">
-                    <a href="#"><h2>OSG.js</h2></a>
+                    <a href="#">
+                        <h2>OSG.js</h2>
+                    </a>
                 </li>
             </ul>
         </div>
@@ -38,6 +38,7 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <a href="#menu-toggle" class="btn btn-default" id="menu-toggle"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
+                        <iframe id="viewer" name="viewer" allowfullscreen allowvr onmousewheel=""></iframe>
                     </div>
                 </div>
             </div>
@@ -50,56 +51,88 @@
     <!-- Fill Sidebar script -->
     <script src="examples/files.js"></script>
     <script>
-    var selected = undefined;
-    var sidebar = document.getElementById( 'sidebar-nav' );
-    for ( var key in files ) {
-        var category = files[ key ];
-        var header = document.createElement( 'a' );
-        h3 = document.createElement( 'h3' );
-        h3.textContent = key;
-        header.appendChild( h3 );
-        var li = document.createElement( 'li' );
-        li.setAttribute('data-toggle', 'collapse');
-        li.setAttribute('data-target', '#' + key);
-        li.appendChild( header );
-        sidebar.appendChild( li );
-        var div = document.createElement( 'div' );
-        div.className = 'dropdown collapse';
-        div.id = key;
-        var ul = document.createElement( 'ul' );
-        div.appendChild( ul );
-        sidebar.appendChild( div );
-        for ( var i = 0; i < category.length; i ++ ) {
+        var updateIframe = function ( iframe, src ) {
+            var frame = iframe.cloneNode();
+            frame.src = baseURL + src.split( '#' )[ 1 ];
+            iframe.parentNode.replaceChild( frame, iframe );
+            return frame;
+        };
+        var sidebar = document.getElementById( 'sidebar-nav' );
+        var baseURL = window.location.href.split( '#' )[ 0 ]; // Returns full URL
+        var baseHash = window.location.hash;
+        var viewer = document.getElementById( 'viewer' );
+        for ( var key in files ) {
+            var category = files[ key ];
+            var header = document.createElement( 'a' );
+            h3 = document.createElement( 'h3' );
+            h3.textContent = key;
+            header.appendChild( h3 );
             var li = document.createElement( 'li' );
-            var link = document.createElement( 'a' );
-            link.className = 'link';
-            link.textContent = category[ i ];
-            link.href = 'examples/' + category[ i ] + '/index.html';
-            link.setAttribute( 'target', 'viewer' );
-            li.appendChild( link );
-            li.id = key;
-            ul.appendChild( li );
+            li.setAttribute( 'data-toggle', 'collapse' );
+            li.setAttribute( 'data-target', '#' + key );
+            li.appendChild( header );
+            sidebar.appendChild( li );
+            var div = document.createElement( 'div' );
+            div.className = 'dropdown collapse';
+            div.id = key;
+            var ul = document.createElement( 'ul' );
+            div.appendChild( ul );
+            sidebar.appendChild( div );
+            for ( var i = 0; i < category.length; i++ ) {
+                var li = document.createElement( 'li' );
+                var link = document.createElement( 'a' );
+                link.className = 'link';
+                link.textContent = category[ i ];
+                var path = 'examples/' + category[ i ] + '/index.html';
+                link.href = baseURL + '#' + path;
+                link.addEventListener( 'click', function ( event ) {
+                    event.preventDefault();
+                    viewer = updateIframe( viewer, this.href );
+                    window.history.pushState( null, null, this.href );
+                }.bind( link ) );
+                li.appendChild( link );
+                li.id = key;
+                ul.appendChild( li );
+            }
         }
-    }
-    // Now add also tests
-    var li = document.createElement( 'li' );
-    var link = document.createElement( 'a' );
-    link.className = 'link';
-    var testsText = document.createElement( 'h3' );
-    testsText.textContent = 'Tests';
-    link.href = 'tests/index.html';
-    link.setAttribute( 'target', 'viewer' );
-    link.appendChild(testsText);
-    li.appendChild( link );
-    sidebar.appendChild( li );
+
+        // Now add also tests
+        var li = document.createElement( 'li' );
+        var link = document.createElement( 'a' );
+        link.className = 'link';
+        var testsText = document.createElement( 'h3' );
+        testsText.textContent = 'Tests';
+        link.href = 'tests/index.html';
+        link.setAttribute( 'target', 'viewer' );
+        link.appendChild( testsText );
+        link.addEventListener( 'click', function ( event, link ) {
+            if ( event.button === 0 ) {
+                window.location = '#tests/index.html';
+            }
+        }.bind( link ) );
+        li.appendChild( link );
+        sidebar.appendChild( li );
+
+        // Handle refresh/reload
+        if ( baseHash ) {
+            viewer = updateIframe( viewer, window.location.href );
+        }
+
+        // Let's detect pop/refresh
+        window.addEventListener( 'popstate', function ( event ) {
+            var hash = window.location.hash;
+            if ( !hash ) window.location.href = baseURL;
+            viewer = updateIframe( viewer, window.location.href );
+        } );
 
     </script>
     <!-- Menu Toggle Script -->
     <script>
-    $("#menu-toggle").click(function(e) {
-        e.preventDefault();
-        $("#wrapper").toggleClass("toggled");
-    });
+        $( "#menu-toggle" ).click( function ( e ) {
+            e.preventDefault();
+            $( "#wrapper" ).toggleClass( "toggled" );
+        } );
+
     </script>
 
 </body>
