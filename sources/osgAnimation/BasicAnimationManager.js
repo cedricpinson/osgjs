@@ -443,7 +443,7 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
             } else if ( animationCallback instanceof UpdateMorph ) {
                 for ( var t = 0, numTarget = animationCallback.getNumTarget(); t < numTarget; t++ ) {
                     name = animationCallback.getTargetName( t );
-                    uniqueTargetName = name + '.' + t;
+                    uniqueTargetName = name + '.' + animationCallback.getName();
                     target = animationCallback.getTarget( t );
 
                     registerTarget( uniqueTargetName, target, name );
