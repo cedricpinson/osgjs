@@ -2,13 +2,12 @@
 
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;
-var ComputeMatrixFromNodePath = require( 'osg/computeMatrixFromNodePath' );
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
 
 var LineSegmentIntersection = function ( i1, i2, i3, r1, r2, r3 ) {
     this._intersectionPoints = [];
     this._primitiveIndex = undefined;
-    this._distance = 0;
+    this._ratio = 0;
     this._maxDistance = 0;
     this._nodePath = undefined;
     this._drawable = undefined;
@@ -176,23 +175,6 @@ LineSegmentIntersectFunctor.prototype = {
         return true;
     },
 
-    isBackFace: ( function () {
-
-        var mat = mat4.create();
-
-        return function ( det, nodepath ) {
-            mat4.identity( mat );
-            // http://gamedev.stackexchange.com/questions/54505/negative-scale-in-matrix-4x4
-            // https://en.wikipedia.org/wiki/Determinant#Orientation_of_a_basis
-            // you can't exactly extract scale of a matrix but the determinant will tell you
-            // if the orientation is preserved
-            ComputeMatrixFromNodePath.computeLocalToWorld( nodepath, true, mat );
-            var detMat = mat4.determinant( mat );
-            return detMat * det < 0.0;
-        };
-
-    } )(),
-
     intersect: ( function () {
 
         var normal = vec3.create();
@@ -205,10 +187,11 @@ LineSegmentIntersectFunctor.prototype = {
         return function ( v0, v1, v2, i1, i2, i3 ) {
 
             if ( this._settings._limitOneIntersection && this._hit ) return;
+            var d = this._d;
 
             vec3.sub( e2, v2, v0 );
             vec3.sub( e1, v1, v0 );
-            vec3.cross( pvec, this._d, e2 );
+            vec3.cross( pvec, d, e2 );
 
             var det = vec3.dot( pvec, e1 );
             if ( det > -epsilon && det < epsilon )
@@ -223,7 +206,7 @@ LineSegmentIntersectFunctor.prototype = {
 
             vec3.cross( qvec, tvec, e1 );
 
-            var v = vec3.dot( qvec, this._d ) * invDet;
+            var v = vec3.dot( qvec, d ) * invDet;
             if ( v < 0.0 || ( u + v ) > 1.0 )
                 return;
 
@@ -246,17 +229,20 @@ LineSegmentIntersectFunctor.prototype = {
 
             var intersection = new LineSegmentIntersection( i1, i2, i3, r0, r1, r2 );
             intersection._ratio = r;
-            intersection._matrix = this._settings._intersectionVisitor.getModelMatrix();
+            intersection._matrix = mat4.clone( this._settings._intersectionVisitor.getModelMatrix() );
             intersection._nodePath = this._settings._intersectionVisitor.getNodePath().slice();
             intersection._drawable = this._settings._drawable;
             intersection._primitiveIndex = this._primitiveIndex;
-            intersection._backface = this.isBackFace( det, intersection._nodePath );
+            // http://gamedev.stackexchange.com/questions/54505/negative-scale-in-matrix-4x4
+            // https://en.wikipedia.org/wiki/Determinant#Orientation_of_a_basis
+            // you can't exactly extract scale of a matrix but the determinant will tell you
+            // if the orientation is preserved
+            intersection._backface = mat4.determinant( intersection._matrix ) * det < 0;
             intersection._localIntersectionPoint = vec3.fromValues( interX, interY, interZ );
-            intersection._localIntersectionNormal = normal;
+            intersection._localIntersectionNormal = vec3.clone( normal );
 
             this._settings._lineSegIntersector.getIntersections().push( intersection );
-            if ( !intersection._backface )
-                this._hit = true;
+            this._hit = true;
         };
     } )(),
     operatorPoint: function () {

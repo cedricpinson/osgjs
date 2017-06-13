@@ -210,14 +210,15 @@ BuildKdTree.prototype = {
         options._numVerticesProcessed += nbVertices;
 
         // Here we can init the typed arrays
-        var estimatedSize = vertices.length * 2;
+        var estimatedSize = ( vertices.length / 3 ) * 2;
         this._primitiveIndices = new Uint32Array( estimatedSize );
         this._centers = new Float32Array( estimatedSize * 3 );
 
         // init kdtree arrays
         // Check if we can use Uint16 later
         this._kdTree.setPrimitiveIndices( new Uint32Array( estimatedSize ) );
-        this._kdTree.setVertexIndices( new Uint32Array( estimatedSize * 3 ) );
+        var vertexIndicesArray = nbVertices > 65535 ? new Uint32Array( estimatedSize * 3 ) : new Uint16Array( estimatedSize * 3 );
+        this._kdTree.setVertexIndices( vertexIndicesArray );
 
         var pic = new PrimitiveIndicesCollector( this );
         pic.apply( geom );
@@ -239,13 +240,12 @@ BuildKdTree.prototype = {
         nodeNum = this.divide( options, bb, nodeNum, 0 );
 
         var primitiveIndices = this._kdTree.getPrimitiveIndices();
-        var newIndices = new Uint32Array( primitiveIndices.length );
 
         var nbPrimitives = this._primitiveIndices.length;
         for ( var i = 0; i < nbPrimitives; ++i ) {
-            newIndices[ i ] = primitiveIndices[ this._primitiveIndices[ i ] ];
+            this._primitiveIndices[ i ] = primitiveIndices[ this._primitiveIndices[ i ] ];
         }
-        this._kdTree.setPrimitiveIndices( newIndices );
+        this._kdTree.setPrimitiveIndices( this._primitiveIndices );
 
         return this._kdTree.getNodes().length > 0;
     },
@@ -543,6 +543,7 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
             var vertexIndices = this._vertexIndices;
             for ( var i = istart; i < iend; ++i ) {
                 var primitiveIndex = this._primitiveIndices[ i ];
+                primitiveIndex++;
                 functor.intersectTriangle( vertices, i, vertexIndices[ primitiveIndex ], vertexIndices[ primitiveIndex + 1 ], vertexIndices[ primitiveIndex + 2 ] );
             }
         } else {

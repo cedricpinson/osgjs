@@ -15,7 +15,6 @@ var PolytopeIntersection = function () {
     this._matrix = undefined;
     this._localIntersectionPoint = undefined;
     this._numIntersectionPoints = 0;
-    // Fill this or move it.
 };
 
 // Settings are needed.
