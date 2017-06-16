@@ -1,7 +1,7 @@
 'use strict';
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
 var Program = require( 'osg/Program' );
@@ -129,7 +129,7 @@ var getOrCreateShaderQuadCircle = function () {
 var createDebugLineGeometry = function () {
     var g = new Geometry();
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, new Float32Array( 4 ), 2 );
-    var primitive = new DrawArrays( PrimitiveSet.LINES, 0, 2 );
+    var primitive = new DrawArrays( primitiveSet.LINES, 0, 2 );
     g.getPrimitives().push( primitive );
     g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader2D() );
     return g;
@@ -176,7 +176,7 @@ var createTorusGeometry = function ( argRadiusOut, argRadiusWidth, argNbRadial, 
     }
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
     g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
-    g.getPrimitives().push( new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) ) );
+    g.getPrimitives().push( new DrawElements( primitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) ) );
     return g;
 };
 
@@ -264,7 +264,7 @@ var createCylinderGeometry = function ( argRadiusTop, argRadiusBottom, argHeight
 
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
     g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
-    g.getPrimitives().push( new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) ) );
+    g.getPrimitives().push( new DrawElements( primitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) ) );
     return g;
 };
 
@@ -279,7 +279,7 @@ var createCircleGeometry = function ( nbVertices, radius, argArc ) {
         vertices[ j + 1 ] = Math.sin( segment ) * radius;
     }
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
-    var primitive = new DrawArrays( PrimitiveSet.LINE_STRIP, 0, nbVertices );
+    var primitive = new DrawArrays( primitiveSet.LINE_STRIP, 0, nbVertices );
     g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
     g.getPrimitives().push( primitive );
     return g;
@@ -304,7 +304,7 @@ var createPlaneGeometry = function ( width, height ) {
     vertices[ 10 ] = offy;
 
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
-    var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_STRIP, 0, 4 );
+    var primitive = new DrawArrays( primitiveSet.TRIANGLE_STRIP, 0, 4 );
     g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
     g.getPrimitives().push( primitive );
     return g;

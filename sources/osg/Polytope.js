@@ -128,10 +128,6 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         return this._planeList.length === 0;
     },
 
-    getPlaneList: function () {
-        return this._planeList;
-    },
-
     setReferenceVertexList: function ( vertices ) {
         this._referenceVertexList = vertices;
     },
@@ -335,13 +331,10 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
         for ( var i = 0; i < this._planeList.length; ++i ) {
             if ( this._resultMask & selectorMask ) {
                 Plane.transformProvidingInverse( this._planeList[ i ], matrix );
-                selectorMask <<= 1;
             }
+            selectorMask <<= 1;
         }
     }
-
-
-
 } );
 
 /*jshint bitwise: true */

@@ -5,7 +5,7 @@ var Uniform = require( 'osg/Uniform' );
 var BlendFunc = require( 'osg/BlendFunc' );
 var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
 var StateSet = require( 'osg/StateSet' );
@@ -195,11 +195,11 @@ ReaderParser.parseSceneGraphDeprecated = function ( node ) {
                 if ( !mode ) {
                     mode = 'TRIANGLES';
                 } else {
-                    mode = PrimitiveSet[ mode ];
+                    mode = primitiveSet[ mode ];
                 }
                 geom.getPrimitiveSetList().push( new DrawElements( mode, array ) );
             } else {
-                mode = PrimitiveSet[ mode ];
+                mode = primitiveSet[ mode ];
                 var first = primitives[ p ].first;
                 var count = primitives[ p ].count;
 

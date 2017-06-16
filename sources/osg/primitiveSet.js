@@ -1,11 +1,11 @@
 'use strict';
-var PrimitiveSet = {};
-PrimitiveSet.POINTS = 0x0000;
-PrimitiveSet.LINES = 0x0001;
-PrimitiveSet.LINE_LOOP = 0x0002;
-PrimitiveSet.LINE_STRIP = 0x0003;
-PrimitiveSet.TRIANGLES = 0x0004;
-PrimitiveSet.TRIANGLE_STRIP = 0x0005;
-PrimitiveSet.TRIANGLE_FAN = 0x0006;
+var primitiveSet = {};
+primitiveSet.POINTS = 0x0000;
+primitiveSet.LINES = 0x0001;
+primitiveSet.LINE_LOOP = 0x0002;
+primitiveSet.LINE_STRIP = 0x0003;
+primitiveSet.TRIANGLES = 0x0004;
+primitiveSet.TRIANGLE_STRIP = 0x0005;
+primitiveSet.TRIANGLE_FAN = 0x0006;
 
-module.exports = PrimitiveSet;
+module.exports = primitiveSet;

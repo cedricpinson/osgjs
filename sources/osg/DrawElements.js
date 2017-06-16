@@ -1,5 +1,5 @@
 'use strict';
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 
 
 /**
@@ -7,10 +7,10 @@ var PrimitiveSet = require( 'osg/primitiveSet' );
  * @class DrawElements
  */
 var DrawElements = function ( mode, indices ) {
-    this.mode = PrimitiveSet.POINTS;
+    this.mode = primitiveSet.POINTS;
     if ( mode !== undefined ) {
         if ( typeof ( mode ) === 'string' ) {
-            mode = PrimitiveSet[ mode ];
+            mode = primitiveSet[ mode ];
         }
         this.mode = mode;
     }

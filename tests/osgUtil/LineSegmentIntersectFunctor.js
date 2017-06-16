@@ -1,36 +1,42 @@
 'use strict';
 var assert = require( 'chai' ).assert;
-var TriangleLineSegmentIntersector = require( 'osgUtil/TriangleLineSegmentIntersector' );
+var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
+var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/shape' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 
 
 module.exports = function () {
 
-    test( 'TriangleLineSegmentIntersector', function () {
+    test( 'LineSegmentIntersectFunctor', function () {
 
         var checkPrimitive = function ( geom, msg ) {
-            var ti = new TriangleLineSegmentIntersector();
+
+            var lsi = new LineSegmentIntersector();
+            var iv = new IntersectionVisitor();
+            iv.setIntersector( lsi );
+
             var start = [ 0.4, 0.2, -2.0 ];
             var end = [ 0.4, 0.2, 0.5 ];
             var dir = vec3.sub( vec3.create(), end, start );
-            ti.set( start, end );
+            lsi.set( start, end );
 
-            ti.apply( geom );
-            assert.isOk( ti._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + ti._intersections.length );
+            geom.accept( iv );
+            assert.isOk( lsi._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + lsi._intersections.length );
             var result = [ 0.4, 0.2, 0 ];
-            var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, ti._intersections[ 0 ].ratio ) );
+            var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, lsi._intersections[ 0 ].ratio ) );
             assert.equalVector( found, result, 1e-4 );
 
-            var ti2 = new TriangleLineSegmentIntersector();
-            ti2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );
-            ti2.apply( geom );
-            assert.isOk( ti2._intersections.length === 0, msg + ' Intersections should be 0 ' + ti2._intersections.length );
+            var lsi2 = new LineSegmentIntersector();
+            lsi2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );
+            iv.setIntersector( lsi2 );
+            geom.accept( iv );
+            assert.isOk( lsi2._intersections.length === 0, msg + ' Intersections should be 0 ' + lsi2._intersections.length );
         };
 
         ( function () {
@@ -48,7 +54,7 @@ module.exports = function () {
             indexes[ 2 ] = 3;
             indexes[ 3 ] = 2;
 
-            var primitive = new DrawElements( PrimitiveSet.TRIANGLE_STRIP, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+            var primitive = new DrawElements( primitiveSet.TRIANGLE_STRIP, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
             quad.getPrimitives()[ 0 ] = primitive;
             checkPrimitive( quad, 'TriangleStrip indexed' );
         } )();
@@ -63,7 +69,7 @@ module.exports = function () {
             indexes[ 2 ] = 2;
             indexes[ 3 ] = 3;
 
-            var primitive = new DrawElements( PrimitiveSet.TRIANGLE_FAN, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+            var primitive = new DrawElements( primitiveSet.TRIANGLE_FAN, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
             quad.getPrimitives()[ 0 ] = primitive;
             checkPrimitive( quad, 'TriangleFan indexed' );
         } )();
@@ -107,7 +113,7 @@ module.exports = function () {
             vertexes[ 17 ] = cornerz + wz + hz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLES, 0, 6 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLES, 0, 6 );
             quad.getPrimitives().push( primitive );
             checkPrimitive( quad, 'Triangles not indexed' );
         } )();
@@ -143,7 +149,7 @@ module.exports = function () {
             vertexes[ 11 ] = cornerz + wz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_STRIP, 0, 4 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLE_STRIP, 0, 4 );
             quad.getPrimitives().push( primitive );
             checkPrimitive( quad, 'TriangleStrip not indexed' );
         } )();
@@ -178,7 +184,7 @@ module.exports = function () {
             vertexes[ 11 ] = cornerz + wz + hz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_FAN, 0, 4 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLE_FAN, 0, 4 );
             quad.getPrimitives().push( primitive );
             checkPrimitive( quad, 'TriangleFan not indexed' );
         } )();

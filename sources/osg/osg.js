@@ -47,7 +47,8 @@ var Polytope = require( 'osg/Polytope' );
 var PointSizeAttribute = require( 'osg/PointSizeAttribute' );
 var Plane = require( 'osg/Plane' );
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var PrimitiveIndexFunctor = require( 'osg/PrimitiveIndexFunctor' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var Program = require( 'osg/Program' );
 var Projection = require( 'osg/Projection' );
 var RenderBin = require( 'osg/RenderBin' );
@@ -75,7 +76,6 @@ var TransformEnums = require( 'osg/transformEnums' );
 var Timer = require( 'osg/Timer' );
 var TimerGPU = require( 'osg/TimerGPU' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
-
 
 var osg = {};
 osg.AutoTransform = AutoTransform;
@@ -127,8 +127,9 @@ osg.PagedLOD = PagedLOD;
 osg.Plane = Plane;
 osg.PointSizeAttribute = PointSizeAttribute;
 osg.Polytope = Polytope;
-osg.PrimitiveSet = PrimitiveSet;
+osg.primitiveSet = primitiveSet;
 osg.PrimitiveFunctor = PrimitiveFunctor;
+osg.PrimitiveIndexFunctor = PrimitiveIndexFunctor;
 osg.Program = Program;
 osg.Projection = Projection;
 osg.RenderBin = RenderBin;
@@ -167,6 +168,5 @@ osg.Transform.ABSOLUTE_RF = TransformEnums.ABSOLUTE_RF;
 osg.Timer = Timer;
 osg.TimerGPU = TimerGPU;
 osg.WebGLCaps = WebGLCaps;
-
 
 module.exports = osg;

@@ -3,7 +3,7 @@ var assert = require( 'chai' ).assert;
 var MACROUTILS = require( 'osg/Utils' );
 var mockup = require( 'tests/mockup/mockup' );
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var Geometry = require( 'osg/Geometry' );
@@ -15,7 +15,7 @@ module.exports = function () {
 
     test( 'PrimitiveFunctor Points', function () {
         // Test DrawArrays
-        var node = createGeometry( PrimitiveSet.POINTS, 0 );
+        var node = createGeometry( primitiveSet.POINTS, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
@@ -32,7 +32,7 @@ module.exports = function () {
         pf.apply();
         assert.equalVector( vertices, vectors, 0.00001 );
         // Test DrawElements
-        node = createGeometry( PrimitiveSet.POINTS, 1 );
+        node = createGeometry( primitiveSet.POINTS, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
         vectors = [];
         pf.apply();
@@ -50,7 +50,7 @@ module.exports = function () {
 
     test( 'PrimitiveFunctor Lines', function () {
         // Test DrawArrays
-        var node = createGeometry( PrimitiveSet.LINES, 0 );
+        var node = createGeometry( primitiveSet.LINES, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
@@ -67,7 +67,7 @@ module.exports = function () {
         assert.equalVector( vectors[ 0 ], [ 0, 0, 0 ] );
         assert.equalVector( vectors[ 1 ], [ 2, 2, 0 ] );
         // Test DrawElements
-        node = createGeometry( PrimitiveSet.LINES, 1 );
+        node = createGeometry( primitiveSet.LINES, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];
@@ -78,7 +78,7 @@ module.exports = function () {
 
     test( 'PrimitiveFunctor LineStrip', function () {
         // Test DrawArrays
-        var node = createGeometry( PrimitiveSet.LINE_STRIP, 0 );
+        var node = createGeometry( primitiveSet.LINE_STRIP, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
@@ -97,7 +97,7 @@ module.exports = function () {
         assert.equalVector( vectors[ 2 ], [ 2, 2, 0 ] );
         assert.equalVector( vectors[ 3 ], [ -2, 2, 0 ] );
         // Test DrawElements
-        node = createGeometry( PrimitiveSet.LINE_STRIP, 1 );
+        node = createGeometry( primitiveSet.LINE_STRIP, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];
@@ -110,7 +110,7 @@ module.exports = function () {
 
     test( 'PrimitiveFunctor LineLoop', function () {
         // Test DrawArrays
-        var node = createGeometry( PrimitiveSet.LINE_LOOP, 0 );
+        var node = createGeometry( primitiveSet.LINE_LOOP, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
@@ -131,7 +131,7 @@ module.exports = function () {
         assert.equalVector( vectors[ 4 ], [ -2, 2, 0 ] );
         assert.equalVector( vectors[ 5 ], [ 0, 0, 0 ] );
         // Test DrawElements
-        node = createGeometry( PrimitiveSet.LINE_LOOP, 1 );
+        node = createGeometry( primitiveSet.LINE_LOOP, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];
@@ -146,7 +146,7 @@ module.exports = function () {
 
     test( 'PrimitiveFunctor Triangle', function () {
         // Test DrawArrays
-        var node = createGeometry( PrimitiveSet.TRIANGLES, 0 );
+        var node = createGeometry( primitiveSet.TRIANGLES, 0 );
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
@@ -165,7 +165,7 @@ module.exports = function () {
         assert.equalVector( vectors[ 1 ], [ 2, 2, 0 ] );
         assert.equalVector( vectors[ 2 ], [ -2, 2, 0 ] );
         // Test DrawElements
-        node = createGeometry( PrimitiveSet.TRIANGLES, 1 );
+        node = createGeometry( primitiveSet.TRIANGLES, 1 );
         pf = new PrimitiveFunctor( node, cb, vertices );
 
         vectors = [];

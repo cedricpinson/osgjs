@@ -1,5 +1,5 @@
 'use strict';
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 
 
 /**
@@ -10,7 +10,7 @@ var DrawArrays = function ( mode, first, count ) {
     this.mode = mode;
     if ( mode !== undefined ) {
         if ( typeof ( mode ) === 'string' ) {
-            mode = PrimitiveSet[ mode ];
+            mode = primitiveSet[ mode ];
         }
         this.mode = mode;
     }

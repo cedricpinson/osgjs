@@ -10,7 +10,7 @@ var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var Compiler = require( 'osgShader/Compiler' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Depth = require( 'osg/Depth' );
 
@@ -194,7 +194,7 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
 
                     var geo = new Geometry();
                     geo.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, verts, 3 );
-                    var primitive = new DrawArrays( PrimitiveSet.LINES, 0, 6 );
+                    var primitive = new DrawArrays( primitiveSet.LINES, 0, 6 );
                     geo.getPrimitives().push( primitive );
 
                     var mt = new MatrixTransform();

@@ -3,7 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
@@ -32,13 +32,13 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
         this._texCoordUnit = texCoordUnit;
     },
 
-    computePrimitiveSet: function ( geometry, primitiveSet ) {
+    computePrimitiveSet: function ( geometry, primitive ) {
 
         // no indices -> exit
-        if ( !primitiveSet.getIndices )
+        if ( !primitive.getIndices )
             return;
 
-        var numIndices = primitiveSet.getNumIndices();
+        var numIndices = primitive.getNumIndices();
 
         var vx = geometry.getAttributes().Vertex;
         var nx = geometry.getAttributes().Normal;
@@ -46,19 +46,19 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
 
         var i;
 
-        if ( primitiveSet.getMode() === PrimitiveSet.TRIANGLES ) {
+        if ( primitive.getMode() === primitiveSet.TRIANGLES ) {
 
             for ( i = 0; i < numIndices; i += 3 ) {
-                this.compute( primitiveSet, vx, nx, tx, i, i + 1, i + 2 );
+                this.compute( primitive, vx, nx, tx, i, i + 1, i + 2 );
             }
 
-        } else if ( primitiveSet.getMode() === PrimitiveSet.TRIANGLE_STRIP ) {
+        } else if ( primitive.getMode() === primitiveSet.TRIANGLE_STRIP ) {
 
             for ( i = 0; i < numIndices - 2; ++i ) {
                 if ( ( i % 2 ) === 0 ) {
-                    this.compute( primitiveSet, vx, nx, tx, i, i + 1, i + 2 );
+                    this.compute( primitive, vx, nx, tx, i, i + 1, i + 2 );
                 } else {
-                    this.compute( primitiveSet, vx, nx, tx, i + 1, i, i + 2 );
+                    this.compute( primitive, vx, nx, tx, i + 1, i, i + 2 );
                 }
             }
         }
@@ -77,9 +77,9 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
         this._B = new osg.Float32Array( size );
         this._N = new osg.Float32Array( size );
 
-        geometry.getPrimitiveSetList().forEach( function ( primitiveSet ) {
+        geometry.getPrimitiveSetList().forEach( function ( primitive ) {
 
-            this.computePrimitiveSet( geometry, primitiveSet );
+            this.computePrimitiveSet( geometry, primitive );
 
         }, this );
 
@@ -126,11 +126,11 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
 
     },
 
-    compute: function ( primitiveSet, vx, nx, tx, ia, ib, ic ) {
+    compute: function ( primitive, vx, nx, tx, ia, ib, ic ) {
 
-        var i0 = primitiveSet.index( ia );
-        var i1 = primitiveSet.index( ib );
-        var i2 = primitiveSet.index( ic );
+        var i0 = primitive.index( ia );
+        var i1 = primitive.index( ib );
+        var i2 = primitive.index( ic );
 
         // TODO perf : cache xx.getElements() but more importantly
         // subarray call have very high overhead, it's super useful

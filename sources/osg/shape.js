@@ -2,7 +2,7 @@
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawElements = require( 'osg/DrawElements' );
 var Program = require( 'osg/Program' );
@@ -308,7 +308,7 @@ var createTexturedBoxGeometry = function ( cx, cy, cz,
     g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
     g.getAttributes().TexCoord0 = new BufferArray( BufferArray.ARRAY_BUFFER, uv, 2 );
 
-    var primitive = new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+    var primitive = new DrawElements( primitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
     g.getPrimitives().push( primitive );
     return g;
 };
@@ -333,7 +333,7 @@ var createTexturedFullScreenFakeQuadGeometry = ( function () {
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 2 );
     g.getAttributes().TexCoord0 = new BufferArray( BufferArray.ARRAY_BUFFER, uvs, 2 );
 
-    var primitive = new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+    var primitive = new DrawElements( primitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
     g.getPrimitives().push( primitive );
 
     return function () {
@@ -427,7 +427,7 @@ var createTexturedQuadGeometry = function ( cornerx, cornery, cornerz,
     g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
     g.getAttributes().TexCoord0 = new BufferArray( BufferArray.ARRAY_BUFFER, uvs, 2 );
 
-    var primitive = new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+    var primitive = new DrawElements( primitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
     g.getPrimitives().push( primitive );
     return g;
 };
@@ -496,7 +496,7 @@ var createAxisGeometry = function ( size ) {
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
     g.getAttributes().Color = new BufferArray( BufferArray.ARRAY_BUFFER, colors, 4 );
 
-    var primitive = new DrawArrays( PrimitiveSet.LINES, 0, 6 );
+    var primitive = new DrawArrays( primitiveSet.LINES, 0, 6 );
     g.getPrimitives().push( primitive );
     g.getOrCreateStateSet().setAttributeAndModes( createAxisGeometry.getShader() );
 
@@ -650,9 +650,9 @@ var createTexturedSphere = function ( radius, widthSegments, heightSegments, phi
     g.getAttributes().TexCoord0 = new BufferArray( 'ARRAY_BUFFER', fullUVList, 2 );
 
     if ( useDrawArrays )
-        g.getPrimitives().push( new DrawArrays( PrimitiveSet.TRIANGLES, 0, fullVerticesList.length / 3 ) );
+        g.getPrimitives().push( new DrawArrays( primitiveSet.TRIANGLES, 0, fullVerticesList.length / 3 ) );
     else
-        g.getPrimitives().push( new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) ) );
+        g.getPrimitives().push( new DrawElements( primitiveSet.TRIANGLES, new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) ) );
     return g;
 };
 
@@ -706,7 +706,7 @@ var createGridGeometry = function ( cx, cy, cz, wx, wy, wz, hx, hy, hz, res1, re
         vertices[ j + 5 ] = uz - sz * ( res2 - i - 1 );
     }
     g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
-    var primitive = new DrawArrays( PrimitiveSet.LINES, 0, ( res1 + res2 ) * 2 );
+    var primitive = new DrawArrays( primitiveSet.LINES, 0, ( res1 + res2 ) * 2 );
     g.getPrimitives().push( primitive );
     return g;
 };
@@ -758,7 +758,7 @@ var createBoundingBoxGeometry = function ( col ) {
 
         ] );
 
-    g.getPrimitives().push( new DrawElements( PrimitiveSet.LINES, new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) ) );
+    g.getPrimitives().push( new DrawElements( primitiveSet.LINES, new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) ) );
 
     return g;
 

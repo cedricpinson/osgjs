@@ -1,6 +1,6 @@
 'use strict';
 var vec3 = require( 'osg/glMatrix' ).vec3;
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
 
@@ -32,7 +32,7 @@ var PrimitiveFunctor = function ( geom, cb, vertices ) {
 var functorDrawElements = PrimitiveFunctor.functorDrawElements = [];
 var functorDrawArrays = PrimitiveFunctor.functorDrawArrays = [];
 
-functorDrawElements[ PrimitiveSet.POINTS ] = ( function () {
+functorDrawElements[ primitiveSet.POINTS ] = ( function () {
     var v = vec3.create();
     return function ( offset, count, indexes, cb, vertices ) {
 
@@ -47,7 +47,7 @@ functorDrawElements[ PrimitiveSet.POINTS ] = ( function () {
     };
 } )();
 
-functorDrawElements[ PrimitiveSet.LINES ] = ( function () {
+functorDrawElements[ primitiveSet.LINES ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     return function ( offset, count, indexes, cb, vertices ) {
@@ -67,7 +67,7 @@ functorDrawElements[ PrimitiveSet.LINES ] = ( function () {
     };
 } )();
 
-functorDrawElements[ PrimitiveSet.LINE_STRIP ] = ( function () {
+functorDrawElements[ primitiveSet.LINE_STRIP ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     return function ( offset, count, indexes, cb, vertices ) {
@@ -87,7 +87,7 @@ functorDrawElements[ PrimitiveSet.LINE_STRIP ] = ( function () {
     };
 } )();
 
-functorDrawElements[ PrimitiveSet.LINE_LOOP ] = ( function () {
+functorDrawElements[ primitiveSet.LINE_LOOP ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     return function ( offset, count, indexes, cb, vertices ) {
@@ -116,7 +116,7 @@ functorDrawElements[ PrimitiveSet.LINE_LOOP ] = ( function () {
     };
 } )();
 
-functorDrawElements[ PrimitiveSet.TRIANGLES ] = ( function () {
+functorDrawElements[ primitiveSet.TRIANGLES ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     var v3 = vec3.create();
@@ -141,7 +141,7 @@ functorDrawElements[ PrimitiveSet.TRIANGLES ] = ( function () {
     };
 } )();
 
-functorDrawElements[ PrimitiveSet.TRIANGLE_STRIP ] = ( function () {
+functorDrawElements[ primitiveSet.TRIANGLE_STRIP ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     var v3 = vec3.create();
@@ -169,7 +169,7 @@ functorDrawElements[ PrimitiveSet.TRIANGLE_STRIP ] = ( function () {
     };
 } )();
 
-functorDrawElements[ PrimitiveSet.TRIANGLE_FAN ] = ( function () {
+functorDrawElements[ primitiveSet.TRIANGLE_FAN ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     var v3 = vec3.create();
@@ -193,7 +193,7 @@ functorDrawElements[ PrimitiveSet.TRIANGLE_FAN ] = ( function () {
     };
 } )();
 
-functorDrawArrays[ PrimitiveSet.POINTS ] = ( function () {
+functorDrawArrays[ primitiveSet.POINTS ] = ( function () {
     var v = vec3.create();
     return function ( first, count, cb, vertices ) {
 
@@ -207,7 +207,7 @@ functorDrawArrays[ PrimitiveSet.POINTS ] = ( function () {
     };
 } )();
 
-functorDrawArrays[ PrimitiveSet.LINES ] = ( function () {
+functorDrawArrays[ primitiveSet.LINES ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     return function ( first, count, cb, vertices ) {
@@ -226,7 +226,7 @@ functorDrawArrays[ PrimitiveSet.LINES ] = ( function () {
     };
 } )();
 
-functorDrawArrays[ PrimitiveSet.LINE_STRIP ] = ( function () {
+functorDrawArrays[ primitiveSet.LINE_STRIP ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     return function ( first, count, cb, vertices ) {
@@ -245,7 +245,7 @@ functorDrawArrays[ PrimitiveSet.LINE_STRIP ] = ( function () {
     };
 } )();
 
-functorDrawArrays[ PrimitiveSet.LINE_LOOP ] = ( function () {
+functorDrawArrays[ primitiveSet.LINE_LOOP ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     return function ( first, count, cb, vertices ) {
@@ -274,7 +274,7 @@ functorDrawArrays[ PrimitiveSet.LINE_LOOP ] = ( function () {
     };
 } )();
 
-functorDrawArrays[ PrimitiveSet.TRIANGLES ] = ( function () {
+functorDrawArrays[ primitiveSet.TRIANGLES ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     var v3 = vec3.create();
@@ -298,7 +298,7 @@ functorDrawArrays[ PrimitiveSet.TRIANGLES ] = ( function () {
     };
 } )();
 
-functorDrawArrays[ PrimitiveSet.TRIANGLE_STRIP ] = ( function () {
+functorDrawArrays[ primitiveSet.TRIANGLE_STRIP ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     var v3 = vec3.create();
@@ -326,7 +326,7 @@ functorDrawArrays[ PrimitiveSet.TRIANGLE_STRIP ] = ( function () {
     };
 } )();
 
-functorDrawArrays[ PrimitiveSet.TRIANGLE_FAN ] = ( function () {
+functorDrawArrays[ primitiveSet.TRIANGLE_FAN ] = ( function () {
     var v1 = vec3.create();
     var v2 = vec3.create();
     var v3 = vec3.create();

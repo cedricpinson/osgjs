@@ -12,6 +12,7 @@ var quat = require( 'osg/glMatrix' ).quat;
 var CADManipulatorStandardMouseKeyboardController = require( 'osgGA/CADManipulatorStandardMouseKeyboardController' );
 var CADManipulatorHammerController = require( 'osgGA/CADManipulatorHammerController' );
 var DelayInterpolator = require( 'osgUtil/DelayInterpolator' );
+var intersectionEnums = require( 'osgUtil/intersectionEnums' );
 
 /**
  *  CADManipulator
@@ -32,7 +33,7 @@ var CADManipulator = function () {
     this._lineSegmentIntersector = new LineSegmentIntersector();
     this._polytopeIntersector = undefined;
     this._usePolytopeIntersector = false;
-    this._dimensionMask = ( 1 << 2 );
+    this._dimensionMask = intersectionEnums.ALL_PRIMITIVES;
     this.init();
 };
 
@@ -321,8 +322,8 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     getOrCreatePolytopeIntersector: function () {
         if ( this._polytopeIntersector === undefined ) {
             this._polytopeIntersector = new PolytopeIntersector();
-            this._polytopeIntersector.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE );
-            this._polytopeIntersector.setDimensionMask( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne );
+            this._polytopeIntersector.setIntersectionLimit( intersectionEnums.LIMIT_ONE_PER_DRAWABLE );
+            this._polytopeIntersector.setDimensionMask( intersectionEnums.POINT_PRIMITIVES | intersectionEnums.LINE_PRIMITIVES );
         }
         return this._polytopeIntersector;
     },
@@ -458,13 +459,13 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             this._pan.setHeight( height );
 
             var point, matrix;
-            if ( ( this._dimensionMask & ( 1 << 2 ) ) !== 0 ) {
+            if ( ( this._dimensionMask & intersectionEnums.TRIANGLE_PRIMITIVES ) !== 0 ) {
                 hits = viewer.computeIntersections( pos[ 0 ], pos[ 1 ] );
 
                 if ( hits.length > 0 ) {
-                    point = hits[ 0 ].point;
-                    hits[ 0 ].nodepath.shift();
-                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodepath );
+                    point = hits[ 0 ]._localIntersectionPoint;
+                    hits[ 0 ]._nodePath.shift();
+                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ]._nodePath );
                     vec3.transformMat4( pTrans, point, matrix );
                     this.setPivotPoint( pTrans );
                 }
@@ -482,9 +483,9 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                     return a._distance - b._distance;
                 } );
                 if ( hits.length > 0 ) {
-                    point = hits[ 0 ]._center;
-                    hits[ 0 ].nodePath.shift();
-                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodePath );
+                    point = hits[ 0 ]._localIntersectionPoint;
+                    hits[ 0 ]._nodePath.shift();
+                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ]._nodePath );
                     vec3.transformMat4( pTrans, point, matrix );
                     this.setPivotPoint( pTrans );
                 }
