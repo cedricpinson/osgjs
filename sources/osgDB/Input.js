@@ -11,7 +11,7 @@ var BufferArray = require( 'osg/BufferArray' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var DrawArrayLengths = require( 'osg/DrawArrayLengths' );
 var DrawElements = require( 'osg/DrawElements' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 
 
 var Input = function ( json, identifier ) {
@@ -538,9 +538,9 @@ Input.prototype = {
 
             mode = drawElementPrimitive.Mode;
             if ( !mode ) {
-                mode = PrimitiveSet.TRIANGLES;
+                mode = primitiveSet.TRIANGLES;
             } else {
-                mode = PrimitiveSet[ mode ];
+                mode = primitiveSet[ mode ];
             }
             obj = new DrawElements( mode );
 
@@ -568,7 +568,7 @@ Input.prototype = {
             mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
             first = drawArrayPrimitive.First !== undefined ? drawArrayPrimitive.First : drawArrayPrimitive.first;
             count = drawArrayPrimitive.Count !== undefined ? drawArrayPrimitive.Count : drawArrayPrimitive.count;
-            var drawArray = new DrawArrays( PrimitiveSet[ mode ], first, count );
+            var drawArray = new DrawArrays( primitiveSet[ mode ], first, count );
             defer.resolve( drawArray );
         }
 
@@ -586,7 +586,7 @@ Input.prototype = {
             mode = drawArrayLengthsPrimitive.Mode;
             first = drawArrayLengthsPrimitive.First;
             var array = drawArrayLengthsPrimitive.ArrayLengths;
-            var drawArrayLengths = new DrawArrayLengths( PrimitiveSet[ mode ], first, array );
+            var drawArrayLengths = new DrawArrayLengths( primitiveSet[ mode ], first, array );
             defer.resolve( drawArrayLengths );
         }
 

@@ -6,7 +6,7 @@ var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/shape' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 
@@ -54,7 +54,7 @@ module.exports = function () {
             indexes[ 2 ] = 3;
             indexes[ 3 ] = 2;
 
-            var primitive = new DrawElements( PrimitiveSet.TRIANGLE_STRIP, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+            var primitive = new DrawElements( primitiveSet.TRIANGLE_STRIP, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
             quad.getPrimitives()[ 0 ] = primitive;
             checkPrimitive( quad, 'TriangleStrip indexed' );
         } )();
@@ -69,7 +69,7 @@ module.exports = function () {
             indexes[ 2 ] = 2;
             indexes[ 3 ] = 3;
 
-            var primitive = new DrawElements( PrimitiveSet.TRIANGLE_FAN, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+            var primitive = new DrawElements( primitiveSet.TRIANGLE_FAN, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
             quad.getPrimitives()[ 0 ] = primitive;
             checkPrimitive( quad, 'TriangleFan indexed' );
         } )();
@@ -113,7 +113,7 @@ module.exports = function () {
             vertexes[ 17 ] = cornerz + wz + hz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLES, 0, 6 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLES, 0, 6 );
             quad.getPrimitives().push( primitive );
             checkPrimitive( quad, 'Triangles not indexed' );
         } )();
@@ -149,7 +149,7 @@ module.exports = function () {
             vertexes[ 11 ] = cornerz + wz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_STRIP, 0, 4 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLE_STRIP, 0, 4 );
             quad.getPrimitives().push( primitive );
             checkPrimitive( quad, 'TriangleStrip not indexed' );
         } )();
@@ -184,7 +184,7 @@ module.exports = function () {
             vertexes[ 11 ] = cornerz + wz + hz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_FAN, 0, 4 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLE_FAN, 0, 4 );
             quad.getPrimitives().push( primitive );
             checkPrimitive( quad, 'TriangleFan not indexed' );
         } )();

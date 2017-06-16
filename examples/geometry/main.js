@@ -50,7 +50,7 @@
 
             geom.setVertexAttribArray( 'Color', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, colors, 3 ) );
             geom.getPrimitiveSetList().length = 0;
-            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.PrimitiveSet.POINTS, 0, segment * segment * 4 ) );
+            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.primitiveSet.POINTS, 0, segment * segment * 4 ) );
             var mt = new osg.MatrixTransform();
             mt.addChild( geom );
             mt.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), osg.vec3.fromValues( 1.8, 0, 0.4 ) ) );
@@ -72,7 +72,7 @@
             geom.setVertexAttribArray( 'Normal', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, normals, 3 ) );
             geom.setVertexAttribArray( 'Color', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, colors, 3 ) );
 
-            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.PrimitiveSet.LINES, 0, 8 ) );
+            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.primitiveSet.LINES, 0, 8 ) );
             return geom;
 
         },
@@ -92,7 +92,7 @@
             geom.setVertexAttribArray( 'Vertex', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, vertices, 3 ) );
             geom.setVertexAttribArray( 'Normal', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, normals, 3 ) );
             geom.setVertexAttribArray( 'Color', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, colors, 3 ) );
-            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.PrimitiveSet.LINE_STRIP, 0, 5 ) );
+            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.primitiveSet.LINE_STRIP, 0, 5 ) );
             return geom;
 
         },
@@ -116,7 +116,7 @@
             geom.setVertexAttribArray( 'Vertex', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, vertices, 3 ) );
             geom.setVertexAttribArray( 'Normal', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, normals, 3 ) );
             geom.setVertexAttribArray( 'Color', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, colors, 3 ) );
-            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.PrimitiveSet.LINE_LOOP, 0, 6 ) );
+            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.primitiveSet.LINE_LOOP, 0, 6 ) );
             return geom;
 
         },
@@ -159,9 +159,9 @@
             geom.setVertexAttribArray( 'Normal', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, normals, 3 ) );
             geom.setVertexAttribArray( 'Color', new osg.BufferArray( osg.BufferArray.ARRAY_BUFFER, colors, 3 ) );
 
-            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.PrimitiveSet.TRIANGLES, 0, 6 ) );
-            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.PrimitiveSet.TRIANGLE_STRIP, 6, 6 ) );
-            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.PrimitiveSet.TRIANGLE_FAN, 12, 5 ) );
+            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.primitiveSet.TRIANGLES, 0, 6 ) );
+            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.primitiveSet.TRIANGLE_STRIP, 6, 6 ) );
+            geom.getPrimitiveSetList().push( new osg.DrawArrays( osg.primitiveSet.TRIANGLE_FAN, 12, 5 ) );
             return geom;
 
         },

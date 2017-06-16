@@ -4,7 +4,7 @@ var NodeVisitor = require( 'osg/NodeVisitor' );
 var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var StateSet = require( 'osg/StateSet' );
 var Uniform = require( 'osg/Uniform' );
 var Depth = require( 'osg/Depth' );
@@ -238,7 +238,7 @@ DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype
         source.getAttributes()[ vecName ] = this._createDoubledBufferArray( dispVec );
 
         // primitive
-        source.getPrimitives().push( new DrawArrays( PrimitiveSet.LINES, 0, nbVertices * 2 ) );
+        source.getPrimitives().push( new DrawArrays( primitiveSet.LINES, 0, nbVertices * 2 ) );
 
         if ( originMorph )
             this._addMorphTargets( originMorph, source, vecName );

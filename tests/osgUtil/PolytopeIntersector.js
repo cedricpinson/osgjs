@@ -11,7 +11,7 @@ var Geometry = require( 'osg/Geometry' );
 var BufferArray = require( 'osg/BufferArray' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var Shape = require( 'osg/shape' );
 var KdTreeBuilder = require( 'osg/KdTreeBuilder' );
 var intersectionEnums = require( 'osgUtil/intersectionEnums' );
@@ -91,7 +91,7 @@ module.exports = function () {
         camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
 
 
-        var scene = createLines( PrimitiveSet.LINES );
+        var scene = createLines( primitiveSet.LINES );
         camera.addChild( scene );
         var pi = new PolytopeIntersector();
 
@@ -125,7 +125,7 @@ module.exports = function () {
         camera.setProjectionMatrix( mat4.perspective( mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0 ) );
 
 
-        var scene = createLines( PrimitiveSet.LINE_STRIP );
+        var scene = createLines( primitiveSet.LINE_STRIP );
         camera.addChild( scene );
         var pi = new PolytopeIntersector();
 
@@ -276,8 +276,7 @@ module.exports = function () {
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
         g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
 
-        //var primitive = new DrawArrays( PrimitiveSet.POINTS , 0, vertexes.length/3 );
-        var primitive = new DrawElements( PrimitiveSet.POINTS, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+        var primitive = new DrawElements( primitiveSet.POINTS, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
         g.getPrimitives().push( primitive );
         return g;
     };
@@ -358,7 +357,7 @@ module.exports = function () {
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
         g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
 
-        var primitive = new DrawArrays( PrimitiveSet.TRIANGLES, 0, vertexes.length / 3 );
+        var primitive = new DrawArrays( primitiveSet.TRIANGLES, 0, vertexes.length / 3 );
         g.getPrimitives().push( primitive );
         return g;
     };

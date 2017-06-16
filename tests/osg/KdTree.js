@@ -5,11 +5,15 @@ var vec3 = require( 'osg/glMatrix' ).vec3;
 var Shape = require( 'osg/shape' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var BufferArray = require( 'osg/BufferArray' );
 var Geometry = require( 'osg/Geometry' );
 var KdTree = require( 'osg/KdTree' );
-
+var LineSegmentIntersectFunctor = require( 'osgUtil/LineSegmentIntersectFunctor' );
+var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
+var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
+var SphereIntersectFunctor = require( 'osgUtil/SphereIntersectFunctor' );
+var SphereIntersector = require( 'osgUtil/SphereIntersector' );
 
 module.exports = function () {
 
@@ -38,7 +42,7 @@ module.exports = function () {
             indexes[ 2 ] = 2;
             indexes[ 3 ] = 3;
 
-            var primitive = new DrawElements( PrimitiveSet.TRIANGLE_STRIP, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+            var primitive = new DrawElements( primitiveSet.TRIANGLE_STRIP, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
             quad.getPrimitives()[ 0 ] = primitive;
 
             return quad;
@@ -53,7 +57,7 @@ module.exports = function () {
             indexes[ 2 ] = 2;
             indexes[ 3 ] = 3;
 
-            var primitive = new DrawElements( PrimitiveSet.TRIANGLE_FAN, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+            var primitive = new DrawElements( primitiveSet.TRIANGLE_FAN, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
             quad.getPrimitives()[ 0 ] = primitive;
 
             return quad;
@@ -97,7 +101,7 @@ module.exports = function () {
             vertexes[ 17 ] = cornerz + wz + hz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLES, 0, 6 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLES, 0, 6 );
             quad.getPrimitives().push( primitive );
 
             return quad;
@@ -133,7 +137,7 @@ module.exports = function () {
             vertexes[ 11 ] = cornerz + wz + hz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_STRIP, 0, 4 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLE_STRIP, 0, 4 );
             quad.getPrimitives().push( primitive );
 
             return quad;
@@ -169,7 +173,7 @@ module.exports = function () {
             vertexes[ 11 ] = cornerz + wz + hz;
 
             quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_FAN, 0, 4 );
+            var primitive = new DrawArrays( primitiveSet.TRIANGLE_FAN, 0, 4 );
             quad.getPrimitives().push( primitive );
 
             return quad;
@@ -232,31 +236,55 @@ module.exports = function () {
         // FIXME: Need to reimplement this tests, as intersectRay and intersectSphere
         // does not exist anymore. 
 
-        // kdTree.intersectRay( start, end, hits, [] );
-        //console.log( hits )
 
+        var lsi = new LineSegmentIntersector()
+        var lsif = new LineSegmentIntersectFunctor();
+        var iv = new IntersectionVisitor();
+        iv.setIntersector( lsi );
+
+        var settings = {};
+        settings._lineSegIntersector = lsi;
+        settings._intersectionVisitor = iv;
+        settings._geometry = geomTotal;
+        settings._vertices = geomTotal.getVertexAttributeList();
+        settings._limitOneIntersection = false;
+        lsif.set( start, end, settings );
+
+        kdTree.intersectLineSegment( lsif, kdTree.getNodes()[ 0 ], start, end );
+        var hits = lsi.getIntersections();
         // test ray intersection
 
-        // assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
-        // var result = [ 0.4, 0.2, 0 ];
-        // var dir = vec3.sub( vec3.create(), end, start );
-        // var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, hits[ 0 ].ratio ) );
-        // assert.equalVector( found, result, 1e-4 );
+        assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+        var result = [ 0.4, 0.2, 0 ];
+        var dir = vec3.sub( vec3.create(), end, start );
+        var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, hits[ 0 ]._ratio ) );
+        assert.equalVector( found, result, 1e-4 );
+        lsi.reset();
+        var v1 = vec3.fromValues( 1.5, 0.2, -0.5 );
+        var v2 = vec3.fromValues( 1.5, 0.2, 0.5 );
+        lsif.set( v1, v2, settings );
+        kdTree.intersectLineSegment( lsif, kdTree.getNodes()[ 0 ], v1, v2 );
+        hits = lsi.getIntersections();
+        assert.isOk( hits.length === 0, ' Hits should be 0 ' + hits.length );
 
-        // hits.length = 0;
-        // //kdTree.intersectRay( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ], hits, [] );
-        // //assert.isOk( hits.length === 0, ' Hits should be 0 ' + hits.length );
+        // test sphere intersection
+        // sphere center in on vertex 1 (see ascii art on top of the file)
 
-        // // test sphere intersection
-        // // sphere center in on vertex 1 (see ascii art on top of the file)
+        var spi = new SphereIntersector();
+        var spif = new SphereIntersectFunctor();
+        settings._sphereIntersector = spi;
 
-        // hits.length = 0;
-        // kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 - 0.01, hits, [] );
-        // assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+        spif.set( vec3.fromValues( 0, 0, 0 ), Math.SQRT1_2 - 0.01, settings );
 
-        // hits.length = 0;
-        // kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 + 0.02, hits, [] );
-        // var nbTriangles = nbPrimitives * 2; // the geometries are quad only
-        // assert.isOk( hits.length === nbTriangles, ' Hits should be ' + nbTriangles + ' and result is ' + hits.length );
+        hits = spi.getIntersections();
+        kdTree.intersect( spif, kdTree.getNodes()[ 0 ] );
+        assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+
+        spi.reset();
+        spif.set( vec3.fromValues( 0, 0, 0 ), Math.SQRT1_2 + 0.02, settings );
+        kdTree.intersect( spif, kdTree.getNodes()[ 0 ] );
+        var nbTriangles = nbPrimitives * 2; // the geometries are quad only
+        hits = spi.getIntersections();
+        assert.isOk( hits.length === nbTriangles, ' Hits should be ' + nbTriangles + ' and result is ' + hits.length );
     } );
 };

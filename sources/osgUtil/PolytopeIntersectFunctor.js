@@ -34,9 +34,8 @@ PolytopeIntersectFunctor.prototype = {
         if ( this._settings._polytopeIntersector.getPolytope().containsBoundingBox( bbox ) ) {
             this._settings._polytopeIntersector.getPolytope().pushCurrentMask();
             return true;
-        } else {
-            return false;
         }
+        return false;
     },
 
     leave: function () {

@@ -15,7 +15,7 @@ var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
 var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
 var Viewport = require( 'osg/Viewport' );
@@ -953,7 +953,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
                 this._debugGeomSceneCast = Shape.createBoundingBoxGeometry();
 
-                this._debugGeomSceneCast.getPrimitives()[ 0 ].mode = PrimitiveSet.LINES;
+                this._debugGeomSceneCast.getPrimitives()[ 0 ].mode = primitiveSet.LINES;
 
 
                 this._debugNode = new MatrixTransform();
