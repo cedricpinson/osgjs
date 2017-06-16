@@ -4,7 +4,7 @@ var mockup = require( 'tests/mockup/mockup' );
 var ReaderParser = require( 'osgDB/readerParser' );
 var Texture = require( 'osg/Texture' );
 var Input = require( 'osgDB/Input' );
-var PrimitiveSet = require( 'osg/primitiveSet' );
+var primitiveSet = require( 'osg/primitiveSet' );
 
 
 module.exports = function () {
@@ -200,7 +200,7 @@ module.exports = function () {
             assert.isOk( result.getStateSet() !== undefined, 'check geometry StateSet' );
             assert.isOk( result.getStateSet().getUserData() !== undefined, 'check StateSet userdata' );
             assert.isOk( result.getPrimitiveSetList().length === 1, 'check primitives' );
-            assert.isOk( result.getPrimitiveSetList()[ 0 ].getMode() === PrimitiveSet.TRIANGLES, 'check triangles primitive' );
+            assert.isOk( result.getPrimitiveSetList()[ 0 ].getMode() === primitiveSet.TRIANGLES, 'check triangles primitive' );
             assert.isOk( result.getPrimitiveSetList()[ 0 ].getFirst() === 0, 'check triangles first index' );
             assert.isOk( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === 36, 'check triangles indices' );
             assert.isOk( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === result.getPrimitiveSetList()[ 0 ].getCount(), 'check triangles count' );
@@ -930,7 +930,7 @@ module.exports = function () {
             return result;
         } ).then( function ( geom ) {
             var result = geom.getPrimitiveSetList()[ 0 ];
-            assert.isOk( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArray triangles' );
+            assert.isOk( result.getMode() === primitiveSet.TRIANGLES, 'check DrawArray triangles' );
             assert.isOk( result.getCount() === 3540, 'check triangles count' );
             assert.isOk( result.getFirst() === 10, 'check triangles first' );
             done();
@@ -954,7 +954,7 @@ module.exports = function () {
         ( new Input() ).setJSON( tree2 ).readObject().then( function ( result ) {
             return result.getPrimitiveSetList()[ 0 ];
         } ).then( function ( result ) {
-            assert.isOk( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArray triangles' );
+            assert.isOk( result.getMode() === primitiveSet.TRIANGLES, 'check DrawArray triangles' );
             assert.isOk( result.getCount() === 0, 'check triangles count' );
             assert.isOk( result.getFirst() === 0, 'check triangles first' );
             done();
@@ -980,7 +980,7 @@ module.exports = function () {
         ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
             return result.getPrimitiveSetList()[ 0 ];
         } ).then( function ( result ) {
-            assert.isOk( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArrayLengths triangles' );
+            assert.isOk( result.getMode() === primitiveSet.TRIANGLES, 'check DrawArrayLengths triangles' );
             assert.isOk( result.getArrayLengths()[ 0 ] === 3, 'check array lenght' );
             assert.isOk( result.getFirst() === 10, 'check triangles first' );
             done();
