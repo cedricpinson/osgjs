@@ -633,7 +633,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     computeNearestIntersection: ( function () {
         var sortByRatio = function ( a, b ) {
-            return a.ratio - b.ratio;
+            return a._ratio - b._ratio;
         };
         var coord = vec2.create();
 

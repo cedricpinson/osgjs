@@ -29,7 +29,7 @@ module.exports = function () {
             geom.accept( iv );
             assert.isOk( lsi._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + lsi._intersections.length );
             var result = [ 0.4, 0.2, 0 ];
-            var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, lsi._intersections[ 0 ].ratio ) );
+            var found = vec3.add( vec3.create(), start, vec3.scale( vec3.create(), dir, lsi._intersections[ 0 ]._ratio ) );
             assert.equalVector( found, result, 1e-4 );
 
             var lsi2 = new LineSegmentIntersector();
