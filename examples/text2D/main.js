@@ -289,7 +289,7 @@
             var hits = this.viewer.computeIntersections( ev.clientX * ratioX, ( canvas.clientHeight - ev.clientY ) * ratioY );
 
             hits.sort( function ( a, b ) {
-                return a.ratio - b.ratio;
+                return a._ratio - b._ratio;
             } );
 
             if ( hits.length === 0 )
