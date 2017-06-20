@@ -464,24 +464,10 @@
         },
 
         createMetalRoughnessTextureFromColors: function ( metalColor, roughnessColor, srgb, textureOutput ) {
-            var colorInput = metalColor;
             var albedo = new osg.Uint8Array( 4 );
-
-            if ( typeof colorInput === 'number' ) {
-                colorInput = [ colorInput ];
-            }
-            var color = colorInput.slice( 0 );
-
-            if ( color.length === 3 )
-                color[ 1 ] = roughnessColor;
-
-            if ( color.length === 1 ) {
-                color.push( roughnessColor );
-                // 2nd and 3rd safely could be ignored
-                color.push( 0.0 );
-                color.push( 0.0 );
-            }
-
+            var color = new Float32Array( 4 );
+            color[ 1 ] = roughnessColor;
+            color[ 2 ] = metalColor;
             color.forEach( function ( value, index ) {
                 if ( srgb )
                     albedo[ index ] = Math.floor( 255 * linear2Srgb( value ) );
@@ -794,7 +780,7 @@
 
                         var shaderConfig = {
                             normalMap: true,
-                            noTangeant: false,
+                            noTangent: false,
                             specularGlossinessMap: specularWorkflow
                         };
 
@@ -859,7 +845,6 @@
             var albedo = this.getTexture0000();
 
             var specularTexture = this.updateRowModelsSpecularMetal();
-            //var specularMat = PredefinedMaterials[ this._config.material ];
 
             var group = new osg.MatrixTransform();
 
@@ -917,7 +902,6 @@
             for ( var i = 0; i < 2; i++ ) {
 
                 metal = i;
-                //metalTexture = this.createTextureFromColor( metal, false );
 
                 for ( var j = 0; j < this._config.nb; j++ ) {
                     roughness = j / ( this._config.nb - 1 );
@@ -1124,7 +1108,6 @@
             this._mainSceneNode = new osg.Node();
 
             var root = new osg.Node();
-            //root.addChild( osg.createAxisGeometry( 50 ) );
 
             var group = new osg.MatrixTransform();
             root.addChild( group );
@@ -1132,8 +1115,6 @@
             // add lod controller to debug
             this._lod = osg.Uniform.createFloat1( 0.0, 'uLod' );
             group.getOrCreateStateSet().addUniform( this._lod );
-            //var flipNormalY = osg.Uniform.createInt1( 0, 'uFlipNormalY' );
-            //group.getOrCreateStateSet().addUniform( flipNormalY );
 
             if ( !isMobileDevice() ) {
                 var integrateBRDFUniform = osg.Uniform.createInt1( this._integrateBRDFTextureUnit, 'uIntegrateBRDF' );
@@ -1149,7 +1130,6 @@
                 group.addChild( this.createSampleScene() );
 
                 this.updateEnvironment();
-                //group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
                 // y up
                 osg.mat4.fromRotation( group.getMatrix(), -Math.PI / 2, [ -1, 0, 0 ] );
 
@@ -1246,7 +1226,6 @@
 
         run: function ( canvas ) {
 
-            //osgGA.Manipulator.DEFAULT_SETTINGS = osgGA.Manipulator.DEFAULT_SETTINGS | osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
             var viewer = this._viewer = new osgViewer.Viewer( canvas, {
                 preserveDrawingBuffer: true,
                 premultipliedAlpha: false

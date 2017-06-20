@@ -295,11 +295,11 @@ ReaderWriterGLTF.prototype = {
 
             if ( ReaderWriterGLTF.TYPE_TABLE[ valueAccessor.type ] === 4 ) {
 
-                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.node, glTFSampler.output, null );
+                osgChannel = createQuatChannel( valueKeys, timeKeys, glTFChannel.target.node, glTFChannel.target.path, null );
 
             } else if ( ReaderWriterGLTF.TYPE_TABLE[ valueAccessor.type ] === 3 ) {
 
-                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.node, glTFSampler.output, null );
+                osgChannel = createVec3Channel( valueKeys, timeKeys, glTFChannel.target.node, glTFChannel.target.path, null );
 
             }
 
@@ -356,7 +356,7 @@ ReaderWriterGLTF.prototype = {
             animationManager.init( animations );
 
             self._basicAnimationManager = animationManager;
-
+            animationManager.playAnimation( animations[ 0 ].name );
         } );
 
     } ),
@@ -374,9 +374,9 @@ ReaderWriterGLTF.prototype = {
 
             // Creates the current bone
             // initializing it with initial pose
-            for ( var i = 0; i < skin.jointNames.length; ++i ) {
+            for ( var i = 0; i < skin.joints.length; ++i ) {
 
-                if ( skin.jointNames[ i ] === node.jointName ) break;
+                if ( skin.joints[ i ] === node.jointName ) break;
 
             }
 
@@ -396,8 +396,8 @@ ReaderWriterGLTF.prototype = {
         if ( this._skeletonToInfluenceMap[ rootBoneId ] )
             return;
         this._skeletonToInfluenceMap[ rootBoneId ] = {};
-        for ( var j = 0; j < skin.jointNames.length; j++ ) {
-            var jointName = skin.jointNames[ j ];
+        for ( var j = 0; j < skin.joints.length; j++ ) {
+            var jointName = skin.joints[ j ];
             this._skeletonToInfluenceMap[ rootBoneId ][ jointName ] = j;
         }
     },
@@ -414,9 +414,9 @@ ReaderWriterGLTF.prototype = {
 
             var skin = json.skins[ skinsKeys[ i ] ];
 
-            for ( var j = 0; j < skin.jointNames.length; ++j ) {
+            for ( var j = 0; j < skin.joints.length; ++j ) {
 
-                var jName = skin.jointNames[ j ];
+                var jName = skin.joints[ j ];
 
                 var nodesKeys = window.Object.keys( json.nodes );
                 for ( var k = 0; k < nodesKeys.length; ++k ) {
