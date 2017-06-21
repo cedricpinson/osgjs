@@ -21,6 +21,24 @@ var checkSetSupport = function () {
     }
 };
 
-module.exports = {
-    checkSetSupport: checkSetSupport
+checkSetSupport();
+
+var checkTypedArraySlice = function () {
+    if ( !Float32Array.prototype.slice ) {
+        var slicePolyfill = function ( start, end ) {
+            return new this.constructor( this.subarray( start, end ) );
+        };
+
+        Int8Array.prototype.slice = slicePolyfill;
+        Uint8Array.prototype.slice = slicePolyfill;
+        Uint8ClampedArray.prototype.slice = slicePolyfill;
+        Int16Array.prototype.slice = slicePolyfill;
+        Uint16Array.prototype.slice = slicePolyfill;
+        Int32Array.prototype.slice = slicePolyfill;
+        Uint32Array.prototype.slice = slicePolyfill;
+        Float32Array.prototype.slice = slicePolyfill;
+        Float64Array.prototype.slice = slicePolyfill;
+    }
 };
+
+checkTypedArraySlice();
