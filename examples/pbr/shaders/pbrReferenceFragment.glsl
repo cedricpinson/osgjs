@@ -181,7 +181,7 @@ void main(void) {
     #ifdef SPECULAR_GLOSSINESS
         specular = sRGBToLinear( texture2D( metallicRoughnessMap, vTexCoord0 ), DefaultGamma ).rgb;
     #else
-        float metallic = texture2D( metallicRoughnessMap, uv ).r;
+        float metallic = texture2D( metallicRoughnessMap, uv ).b;
         vec3 albedoReduced = albedo * (1.0 - metallic);
         specular = mix( dielectricColor, albedo, metallic);
         albedo = albedoReduced;
