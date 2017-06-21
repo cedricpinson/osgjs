@@ -3,6 +3,7 @@ var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var BoundingBox = require( 'osg/BoundingBox' );
 var PrimitiveIndexFunctor = require( 'osg/PrimitiveIndexFunctor' );
+var primitiveSet = require( 'osg/primitiveSet' );
 var notify = require( 'osg/notify' );
 
 // **** GENERAL INFO ON KDTREE ****
@@ -48,6 +49,37 @@ var KdNode = function ( first, second ) {
     this._nodeRayEnd = vec3.create();
 };
 
+var InfoCollector = function () {
+    this._numVertexIndices = 0;
+};
+
+InfoCollector.prototype = {
+
+    apply: function ( node ) {
+        if ( !node.getAttributes().Vertex ) {
+            return;
+        }
+        var self = this;
+        // The callback must be defined as a closure
+        /* jshint asi: true */
+        var cb = function () {
+            return {
+                // We need to count also the index spent in numVertices per primite
+                operatorPoint: function () {
+                    self._numVertexIndices += 2;
+                },
+                operatorLine: function () {
+                    self._numVertexIndices += 3;
+                },
+                operatorTriangle: function () {
+                    self._numVertexIndices += 4;
+                }
+            }
+        };
+        var pf = new PrimitiveIndexFunctor( node, cb );
+        pf.apply();
+    }
+};
 
 
 var PrimitiveIndicesCollector = function ( buildKdTree ) {
@@ -209,28 +241,44 @@ BuildKdTree.prototype = {
         this.computeDivisions( options );
         options._numVerticesProcessed += nbVertices;
 
-        // Here we can init the typed arrays
-        var estimatedSize = ( vertices.length / 3 ) * 2;
-        this._primitiveIndices = new Uint32Array( estimatedSize );
-        this._centers = new Float32Array( estimatedSize * 3 );
+        var totalLenArray = 0;
+        var geomPrimitives = geom.getPrimitiveSetList();
+        var nbPrimitives = geomPrimitives.length;
+
+        for ( var i = 0; i < nbPrimitives; i++ ) {
+            var prim = geomPrimitives[ i ];
+            var mode = prim.getMode();
+            if ( mode === primitiveSet.TRIANGLE_STRIP || mode === primitiveSet.TRIANGLE_FAN )
+                totalLenArray += Math.abs( ( prim.getCount() - 2 ) ) * 3;
+            else
+                totalLenArray += prim.getCount() * 3;
+        }
+
+        var infoCollector = new InfoCollector( this );
+        infoCollector.apply( geom );
+        var vertexIndicesSize = infoCollector._numVertexIndices;
+
+        this._primitiveIndices = new Uint32Array( totalLenArray / 3 );
+        this._centers = new Float32Array( totalLenArray );
 
         // init kdtree arrays
         // Check if we can use Uint16 later
-        this._kdTree.setPrimitiveIndices( new Uint32Array( estimatedSize ) );
-        var vertexIndicesArray = nbVertices > 65535 ? new Uint32Array( estimatedSize * 3 ) : new Uint16Array( estimatedSize * 3 );
+        this._kdTree.setPrimitiveIndices( new Uint32Array( totalLenArray ) );
+        var vertexIndicesArray = nbVertices > 65535 ? new Uint32Array( vertexIndicesSize ) : new Uint16Array( vertexIndicesSize );
         this._kdTree.setVertexIndices( vertexIndicesArray );
 
         var pic = new PrimitiveIndicesCollector( this );
         pic.apply( geom );
 
         // Adjust sizes
-        var kdPrimIndices = this._kdTree.getPrimitiveIndices().subarray( 0, this._kdTree.getNumPrimitiveIndices() );
+        var kdPrimIndices = this._kdTree.getPrimitiveIndices().slice( 0, this._kdTree.getNumPrimitiveIndices() );
         this._kdTree.setPrimitiveIndices( kdPrimIndices );
-        var kdVertexIndices = this._kdTree.getVertexIndices().subarray( 0, this._kdTree.getNumVertexIndices() );
+        var kdVertexIndices = this._kdTree.getVertexIndices().slice( 0, this._kdTree.getNumVertexIndices() );
         this._kdTree.setVertexIndices( kdVertexIndices );
 
-        this._primitiveIndices = this._primitiveIndices.subarray( 0, pic._numIndices );
-        this._centers = this._centers.subarray( 0, pic._numIndices * 3 );
+        this._primitiveIndices = this._primitiveIndices.slice( 0, pic._numIndices );
+        this._centers = this._centers.slice( 0, pic._numIndices * 3 );
+
         var node = new KdNode( -1, this._primitiveIndices.length );
         node._bb.copy( this._bb );
         var nodeNum = this._kdTree.addNode( node );
@@ -241,8 +289,8 @@ BuildKdTree.prototype = {
 
         var primitiveIndices = this._kdTree.getPrimitiveIndices();
 
-        var nbPrimitives = this._primitiveIndices.length;
-        for ( var i = 0; i < nbPrimitives; ++i ) {
+        nbPrimitives = this._primitiveIndices.length;
+        for ( i = 0; i < nbPrimitives; ++i ) {
             this._primitiveIndices[ i ] = primitiveIndices[ this._primitiveIndices[ i ] ];
         }
         this._kdTree.setPrimitiveIndices( this._primitiveIndices );

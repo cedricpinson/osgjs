@@ -171,8 +171,10 @@ PolytopeIntersectFunctor.prototype = {
 
     operatorPoint: function ( v ) {
         if ( this._settings._limitOneIntersection && this._hit ) return;
-        if ( ( this._settings._primitiveMask & intersectionEnums.POINT_PRIMITIVES ) === 0 ) return;
-        this._primitiveIndex++;
+        if ( ( this._settings._primitiveMask & intersectionEnums.POINT_PRIMITIVES ) === 0 ) {
+            this._primitiveIndex++;
+            return;
+        }
         var polytope = this._settings._polytopeIntersector.getPolytope();
         var planeList = polytope.getPlanes();
         var d;
@@ -184,6 +186,7 @@ PolytopeIntersectFunctor.prototype = {
                     d = Plane.distanceToPlane( planeList[ i ], v );
                     if ( d < 0.0 ) {
                         // point is outside the polytope
+                        this._primitiveIndex++;
                         return;
                     }
                 }
@@ -191,13 +194,16 @@ PolytopeIntersectFunctor.prototype = {
         }
         this._src[ 0 ] = v;
         this.addIntersection();
+        this._primitiveIndex++;
     },
 
 
     operatorLine: function ( v0, v1 ) {
         if ( this._settings._limitOneIntersection && this._hit ) return;
-        if ( ( this._settings._primitiveMask & intersectionEnums.LINE_PRIMITIVES ) === 0 ) return;
-        this._primitiveIndex++;
+        if ( ( this._settings._primitiveMask & intersectionEnums.LINE_PRIMITIVES ) === 0 ) {
+            this._primitiveIndex++;
+            return;
+        }
 
         this._src = [];
         this._src[ 0 ] = v0;
@@ -206,13 +212,15 @@ PolytopeIntersectFunctor.prototype = {
         if ( this.contains() ) {
             this.addIntersection();
         }
+        this._primitiveIndex++;
     },
 
     operatorTriangle: function ( v0, v1, v2 ) {
         if ( this._settings._limitOneIntersection && this._hit ) return;
-        if ( ( this._settings._primitiveMask & intersectionEnums.TRIANGLE_PRIMITIVES ) === 0 ) return;
-        this._primitiveIndex++;
-
+        if ( ( this._settings._primitiveMask & intersectionEnums.TRIANGLE_PRIMITIVES ) === 0 ) {
+            this._primitiveIndex++;
+            return;
+        }
         this._src = [];
         this._src[ 0 ] = v0;
         this._src[ 1 ] = v1;
@@ -221,6 +229,7 @@ PolytopeIntersectFunctor.prototype = {
         if ( this.contains() ) {
             this.addIntersection();
         }
+        this._primitiveIndex++;
     },
 
     intersectPoint: ( function () {
