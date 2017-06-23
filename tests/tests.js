@@ -1,3 +1,5 @@
+// We require core.js only for tests 
+require( 'core-js' );
 // add missing class for phantom js execution context
 if ( window.HTMLVideoElement === undefined ) {
     window.HTMLVideoElement = function () {};
