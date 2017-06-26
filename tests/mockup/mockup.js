@@ -316,7 +316,7 @@ var createAnimationUpdateCallback = function ( animations ) {
 var createCanvas = function ( noGL ) {
 
     // mockup for phantomjs or benchmarks
-    if ( noGL || navigator.userAgent.indexOf( 'PhantomJS' ) !== -1 ) {
+    if ( noGL || navigator.userAgent.indexOf( 'HeadlessChrome' ) !== -1 ) {
         return createFakeWebGLCanvas();
     }
 

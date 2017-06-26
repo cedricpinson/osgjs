@@ -4,7 +4,7 @@
     <title>Mocha</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="mocha.css" />
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
   </head>
   <body>
     <div id="mocha"></div>
@@ -12,7 +12,7 @@
     <script type='text/javascript' src='../examples/vendors/hammer.js'></script>
     <script type='text/javascript' src='../examples/vendors/leap.js'></script>
 
-    <script src="mocha.js"></script>
+    <script src="../../node_modules/mocha/mocha.js"></script>
     <script> mocha.setup('qunit'); </script>
     <script src="../builds/dist/tests.js"></script>
 
@@ -20,7 +20,7 @@
     <script type="text/javascript" charset="utf-8">
         // If tests run in a real browser
         // Can alternatively do a check on window.PHANTOMJS
-        if (navigator.userAgent.indexOf('PhantomJS') < 0) {
+        if (navigator.userAgent.indexOf('HeadlessChrome') < 0) {
             mocha.run();
         }
     </script>

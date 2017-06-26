@@ -501,7 +501,6 @@ module.exports = function ( grunt ) {
     }, gruntTasks ) );
 
     grunt.loadNpmTasks( 'grunt-documentation' );
-    grunt.loadNpmTasks( 'grunt-mocha' );
 
     grunt.loadNpmTasks( 'grunt-plato' );
 
