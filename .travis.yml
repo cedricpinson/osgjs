@@ -4,9 +4,10 @@ env:
    #   via the "travis encrypt" command using the project repo's public key
      - secure: "kEKxAxixWjqtwAgPfKQzABJ6wpnk+52l1gRMCp6H5OFbuQws+MrKAS4YO2CgGdfjufioQFIlExfoCbK4GD6CXp11HAO9p8YGgcJxT1cQ5TRXHbZhz96EayrXoKdUq4s+UCaZUbBQsSuMdpPFZojrk8TKj/mzv6B+dbFz4RJrG8o="
 language: node_js
+dist: trusty
 sudo: false
 node_js:
- - "5.10.1"
+ - "7"
 
 addons:
   coverity_scan:
@@ -16,7 +17,10 @@ addons:
     notification_email: trigrou@trigrou.com
     build_command: "--no-command --fs-capture-search ./sources/"
     branch_pattern: coverity_scan
+  chrome: stable
 
+before_install:
+  - export CHROME_BIN=/usr/bin/google-chrome
 
 install:
  - npm install
@@ -24,7 +28,7 @@ install:
  - npm install -g grunt
  - npm install -g grunt-cli
 
-script: if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then grunt check --verbose && grunt build  --verbose && grunt test --verbose ; fi
+script: if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then grunt check --verbose && grunt build  --verbose && npm test --verbose ; fi
 
 
 notifications:
