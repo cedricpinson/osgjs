@@ -9,7 +9,7 @@ var UpdateVisitor = function () {
     this._numUpdateCallback = 0;
 };
 
-UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( UpdateVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
     resetStats: function () {
         this._numUpdateCallback = 0;
@@ -47,6 +47,6 @@ UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         if ( node.getNumChildrenRequiringUpdateTraversal() > 0 )
             this.traverse( node );
     }
-} );
+} ), 'osg', 'NodeVisitor' );
 
 module.exports = UpdateVisitor;

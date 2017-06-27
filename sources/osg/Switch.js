@@ -14,7 +14,7 @@ var Switch = function () {
 };
 
 /** @lends Switch.prototype */
-Switch.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeNode( Switch, MACROUTILS.objectInherit( Node.prototype, {
 
     addChild: function ( node, value ) {
         Node.prototype.addChild.call( this, node );
@@ -86,5 +86,4 @@ Switch.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node
 
 } ), 'osg', 'Switch' );
 
-MACROUTILS.setTypeID( Switch );
 module.exports = Switch;

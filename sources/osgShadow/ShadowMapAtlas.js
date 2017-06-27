@@ -60,7 +60,7 @@ var ShadowMapAtlas = function ( settings ) {
 
 
 /** @lends ShadowMapAtlas.prototype */
-ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( ShadowTechnique.prototype, {
+MACROUTILS.createPrototypeObject( ShadowMapAtlas, MACROUTILS.objectInherit( ShadowTechnique.prototype, {
 
     getTexture: function () {
         return this._texture;
@@ -402,10 +402,8 @@ ShadowMapAtlas.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
             this._shadowMaps[ lightNum ].setDebug( enable );
         }
 
-    },
+    }
 
 } ), 'osgShadow', 'ShadowMapAtlas' );
-
-MACROUTILS.setTypeID( ShadowMapAtlas );
 
 module.exports = ShadowMapAtlas;

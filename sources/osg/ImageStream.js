@@ -12,7 +12,7 @@ var ImageStream = function ( video ) {
 ImageStream.PAUSE = 0;
 ImageStream.PLAYING = 1;
 
-ImageStream.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Image.prototype, {
+MACROUTILS.createPrototypeObject( ImageStream, MACROUTILS.objectInherit( Image.prototype, {
 
     isDirty: function () {
         return this._status === ImageStream.PLAYING; // video is dirty if playing
@@ -64,7 +64,5 @@ ImageStream.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
 
 } ), 'osg', 'ImageStream' );
-
-MACROUTILS.setTypeID( ImageStream );
 
 module.exports = ImageStream;

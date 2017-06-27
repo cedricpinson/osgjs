@@ -13,7 +13,7 @@ var Viewport = function ( x, y, w, h ) {
     this._height = h !== undefined ? h : 600;
 };
 
-Viewport.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( Viewport, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'Viewport',
 

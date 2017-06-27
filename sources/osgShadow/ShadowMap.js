@@ -33,7 +33,8 @@ var CameraCullCallback = function ( shadowTechnique ) {
     this._shadowTechnique = shadowTechnique;
 };
 
-CameraCullCallback.prototype = {
+MACROUTILS.createPrototypeObject( CameraCullCallback, {
+
     cull: function ( node, nv ) {
 
         this._shadowTechnique.getShadowedScene().nodeTraverse( nv );
@@ -51,7 +52,8 @@ CameraCullCallback.prototype = {
 
         return false;
     }
-};
+
+}, 'osgShadow', 'CameraCullCallback' );
 
 /**
  *  ShadowMap provides an implementation of shadow textures.
@@ -160,7 +162,7 @@ var ShadowMap = function ( settings, shadowTexture ) {
 
 
 /** @lends ShadowMap.prototype */
-ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( ShadowTechnique.prototype, {
+MACROUTILS.createPrototypeObject( ShadowMap, MACROUTILS.objectInherit( ShadowTechnique.prototype, {
 
     getDepthRange: function () {
         return this._depthRange;
@@ -979,7 +981,5 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 } ), 'osgShadow', 'ShadowMap' );
 
 ShadowMap.EPSILON = 5e-3;
-
-MACROUTILS.setTypeID( ShadowMap );
 
 module.exports = ShadowMap;

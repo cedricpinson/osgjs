@@ -124,7 +124,7 @@ var BasicAnimationManager = function () {
     this._seekTime = -1;
 };
 
-BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype, {
+MACROUTILS.createPrototypeObject( BasicAnimationManager, MACROUTILS.objectInherit( BaseObject.prototype, {
 
     init: function ( animations ) {
 
@@ -699,7 +699,7 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
         }
     }
 
-} );
+} ), 'osgAnimation', 'BasicAnimationManager' );
 
 BasicAnimationManager.TypeToSize = TypeToSize;
 

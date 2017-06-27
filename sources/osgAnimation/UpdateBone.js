@@ -15,7 +15,7 @@ var UpdateBone = function () {
 };
 
 /** @lends UpdateBone.prototype */
-UpdateBone.prototype = MACROUTILS.objectInherit( UpdateMatrixTransform.prototype, {
+MACROUTILS.createPrototypeObject( UpdateBone, MACROUTILS.objectInherit( UpdateMatrixTransform.prototype, {
 
     update: function ( node, nv ) {
 
@@ -42,6 +42,6 @@ UpdateBone.prototype = MACROUTILS.objectInherit( UpdateMatrixTransform.prototype
         return true;
     }
 
-} );
+} ), 'osgAnimation', 'UpdateBone' );
 
 module.exports = UpdateBone;

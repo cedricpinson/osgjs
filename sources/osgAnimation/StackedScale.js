@@ -13,7 +13,7 @@ var StackedScale = function ( name, scale ) {
 };
 
 
-StackedScale.prototype = MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( StackedScale, MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( scale ) {
         this.setScale( scale );
@@ -40,6 +40,6 @@ StackedScale.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
     }
 
-} );
+} ), 'osgAnimation', 'StackedScale' );
 
 module.exports = StackedScale;

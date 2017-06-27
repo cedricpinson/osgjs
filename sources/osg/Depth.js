@@ -38,7 +38,7 @@ Depth.NOTEQUAL = 0x0205;
 Depth.GEQUAL = 0x0206;
 Depth.ALWAYS = 0x0207;
 
-Depth.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( Depth, MACROUTILS.objectInherit( StateAttribute.prototype, {
     attributeType: 'Depth',
     cloneType: function () {
         return new Depth();

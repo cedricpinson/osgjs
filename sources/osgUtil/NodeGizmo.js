@@ -36,7 +36,7 @@ var LineCustomIntersector = function ( testPlane ) {
     this._inter = vec3.create(); // translate distance
     LineSegmentIntersector.call( this );
 };
-LineCustomIntersector.prototype = MACROUTILS.objectInherit( LineSegmentIntersector.prototype, {
+MACROUTILS.createPrototypeObject( LineCustomIntersector, MACROUTILS.objectInherit( LineSegmentIntersector.prototype, {
     setTestPlane: function ( testPlane ) {
         this._testPlane = testPlane; // intersection plane or line
     },
@@ -83,7 +83,7 @@ LineCustomIntersector.prototype = MACROUTILS.objectInherit( LineSegmentIntersect
     intersect: function () {
         return false;
     }
-} );
+} ), 'osgUtil', 'LineCustomIntersector' );
 
 // The MT node can be detected as such because they
 // have a '_nbAxis' property on them (x=0, y=1, z=2)
@@ -186,7 +186,7 @@ NodeGizmo.PICK_PLANE = NodeGizmo.PICK_PLANE_X | NodeGizmo.PICK_PLANE_Y | NodeGiz
 
 NodeGizmo.PICK_GIZMO = NodeGizmo.PICK_ARC | NodeGizmo.PICK_ARROW | NodeGizmo.PICK_PLANE;
 
-NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
+MACROUTILS.createPrototypeNode( NodeGizmo, MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     setRotateInLocal: function ( bool ) {
         this._rotateInLocal = bool;
@@ -1029,6 +1029,6 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         };
     } )()
 
-} );
+} ), 'osgUtil', 'NodeGizmo' );
 
 module.exports = NodeGizmo;

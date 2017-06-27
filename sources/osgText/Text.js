@@ -1,4 +1,5 @@
 'use strict';
+var CullVisitor = require( 'osg/CullVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var vec4 = require( 'osg/glMatrix' ).vec4;
@@ -88,7 +89,7 @@ Text.RIGHT_CENTER = 7;
 Text.RIGHT_BOTTOM = 8;
 
 /** @lends Text.prototype */
-Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTransform.prototype, {
+MACROUTILS.createPrototypeNode( Text, MACROUTILS.objectInherit( AutoTransform.prototype, {
 
     drawText: function () {
         if ( this._geometry !== undefined ) {
@@ -406,5 +407,8 @@ Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( AutoTr
         return v;
     }
 } ), 'osgText', 'Text' );
+
+// same code like Node
+CullVisitor.registerApplyFunction( Text.nodeTypeID, CullVisitor.getApplyFunction( AutoTransform.nodeTypeID ) );
 
 module.exports = Text;

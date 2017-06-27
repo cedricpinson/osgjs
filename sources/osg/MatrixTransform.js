@@ -15,7 +15,7 @@ var MatrixTransform = function () {
 };
 
 /** @lends MatrixTransform.prototype */
-MatrixTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Transform.prototype, {
+MACROUTILS.createPrototypeNode( MatrixTransform, MACROUTILS.objectInherit( Transform.prototype, {
 
     getMatrix: function () {
         return this.matrix;
@@ -51,6 +51,5 @@ MatrixTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInhe
         };
     } )()
 } ), 'osg', 'MatrixTransform' );
-MACROUTILS.setTypeID( MatrixTransform );
 
 module.exports = MatrixTransform;

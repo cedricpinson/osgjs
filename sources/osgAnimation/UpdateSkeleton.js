@@ -14,7 +14,7 @@ var ValidateSkeletonVisitor = function () {
     NodeVisitor.call( this );
 };
 
-ValidateSkeletonVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( ValidateSkeletonVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
     apply: function ( node ) {
         if ( node.getTypeID() !== Bone.getTypeID() ) {
             return;
@@ -39,7 +39,7 @@ ValidateSkeletonVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.protot
         this.traverse( node );
     }
 
-} );
+} ), 'osgAnimation', 'ValidateSkeletonVisitor' );
 
 var compareBone = function ( x, y ) {
     var a = x instanceof Bone ? 0 : 1;
@@ -56,7 +56,7 @@ var UpdateSkeleton = function () {
     this._needValidate = true;
 };
 
-UpdateSkeleton.prototype = MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( UpdateSkeleton, MACROUTILS.objectInherit( Object.prototype, {
     needToValidate: function () {
         return this._needValidate;
     },
@@ -79,6 +79,6 @@ UpdateSkeleton.prototype = MACROUTILS.objectInherit( Object.prototype, {
         }
         return true;
     }
-} );
+} ), 'osgAnimation', 'UpdateSkeleton' );
 
 module.exports = UpdateSkeleton;

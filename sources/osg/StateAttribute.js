@@ -7,7 +7,9 @@ var StateAttribute = function () {
     Object.call( this );
 };
 
-StateAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeStateAttribute( StateAttribute, MACROUTILS.objectInherit( Object.prototype, {
+
+    _attributeTypeIndex: undefined,
 
     getType: function () {
         return this.attributeType;
@@ -29,7 +31,7 @@ StateAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     // if it impact the rendering.
     // check other attributes for examples
     getHash: function () {
-        return this.getTypeMember();
+        return this.getType();
     }
 
 } ), 'osg', 'StateAttribute' );

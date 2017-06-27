@@ -7,15 +7,14 @@ var Projection = function () {
     Node.call( this );
     this.projection = mat4.create();
 };
-Projection.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
+MACROUTILS.createPrototypeNode( Projection, MACROUTILS.objectInherit( Node.prototype, {
     getProjectionMatrix: function () {
         return this.projection;
     },
     setProjectionMatrix: function ( m ) {
         this.projection = m;
     }
-} );
-
-MACROUTILS.setTypeID( Projection );
+} ), 'osg', 'Projection' );
 
 module.exports = Projection;

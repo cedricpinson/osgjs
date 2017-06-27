@@ -7,7 +7,7 @@ var NodeTextures = function () {
     Node.call( this );
 };
 
-NodeTextures.prototype = MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject( NodeTextures, MACROUTILS.objectInherit( Node.prototype, {
 
     type: 'TextureAbstractNode',
 
@@ -33,7 +33,7 @@ NodeTextures.prototype = MACROUTILS.objectInherit( Node.prototype, {
         return '#pragma include "textures.glsl"';
     }
 
-} );
+} ), 'osgShader', 'NodeTextures' );
 
 
 
@@ -41,12 +41,12 @@ var TextureRGB = function () {
     NodeTextures.call( this );
 };
 
-TextureRGB.prototype = MACROUTILS.objectInherit( NodeTextures.prototype, {
+MACROUTILS.createPrototypeObject( TextureRGB, MACROUTILS.objectInherit( NodeTextures.prototype, {
 
     type: 'TextureRGB',
     functionName: 'textureRGB'
 
-} );
+} ), 'osgShader', 'TextureRGB' );
 
 
 
@@ -54,24 +54,24 @@ var TextureRGBA = function () {
     TextureRGB.call( this );
 };
 
-TextureRGBA.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
+MACROUTILS.createPrototypeObject( TextureRGBA, MACROUTILS.objectInherit( TextureRGB.prototype, {
 
     type: 'TextureRGBA',
     functionName: 'textureRGBA'
 
-} );
+} ), 'osgShader', 'TextureRGBA' );
 
 
 var TextureAlpha = function () {
     TextureRGB.call( this );
 };
 
-TextureAlpha.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
+MACROUTILS.createPrototypeObject( TextureAlpha, MACROUTILS.objectInherit( TextureRGB.prototype, {
 
     type: 'TextureAlpha',
     functionName: 'textureAlpha'
 
-} );
+} ), 'osgShader', 'TextureAlpha' );
 
 
 
@@ -79,12 +79,12 @@ var TextureIntensity = function () {
     TextureRGB.call( this );
 };
 
-TextureIntensity.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
+MACROUTILS.createPrototypeObject( TextureIntensity, MACROUTILS.objectInherit( TextureRGB.prototype, {
 
     type: 'TextureIntensity',
     functionName: 'textureIntensity'
 
-} );
+} ), 'osgShader', 'TextureIntensity' );
 
 module.exports = {
     NodeTextures: NodeTextures,

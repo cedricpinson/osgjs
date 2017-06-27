@@ -41,7 +41,7 @@ var AutoTransform = function () {
 };
 
 /** @lends Autotransform.prototype */
-AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Transform.prototype, {
+MACROUTILS.createPrototypeNode( AutoTransform, MACROUTILS.objectInherit( Transform.prototype, {
 
     getMatrix: function () {
         return this._matrix;
@@ -327,6 +327,5 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
 
 } ), 'osg', 'AutoTransform' );
-MACROUTILS.setTypeID( AutoTransform );
 
 module.exports = AutoTransform;

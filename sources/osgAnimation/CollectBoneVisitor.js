@@ -10,7 +10,7 @@ var CollectBoneVisitor = function () {
     this._boneMap = {};
 };
 
-CollectBoneVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( CollectBoneVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
     apply: function ( node ) {
 
@@ -32,6 +32,6 @@ CollectBoneVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, 
         return this._boneMap;
     }
 
-} );
+} ), 'osgAnimation', 'CollectBoneVisitor' );
 
 module.exports = CollectBoneVisitor;

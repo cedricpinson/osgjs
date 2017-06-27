@@ -9,7 +9,7 @@ var LineWidth = function ( lineWidth ) {
         this.lineWidth = lineWidth;
     }
 };
-LineWidth.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( LineWidth, MACROUTILS.objectInherit( StateAttribute.prototype, {
     attributeType: 'LineWidth',
     cloneType: function () {
         return new LineWidth();

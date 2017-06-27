@@ -16,7 +16,7 @@ var FindNearestParentSkeleton = function () {
     this._pathToRoot = undefined;
 };
 
-FindNearestParentSkeleton.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( FindNearestParentSkeleton, MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
     apply: function ( node ) {
 
@@ -30,6 +30,6 @@ FindNearestParentSkeleton.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
 
         this.traverse( node );
     }
-} );
+} ), 'osgAnimation', 'FindNearestParentSkeleton' );
 
 module.exports = FindNearestParentSkeleton;

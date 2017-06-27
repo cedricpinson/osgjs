@@ -54,7 +54,7 @@ BlendFunc.BLEND_COLOR = 0x8005;
 
 
 /** @lends BlendFunc.prototype */
-BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( BlendFunc, MACROUTILS.objectInherit( StateAttribute.prototype, {
     /**
   StateAttribute type of BlendFunc
   @type String

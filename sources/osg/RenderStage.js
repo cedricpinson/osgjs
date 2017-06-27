@@ -29,11 +29,7 @@ var RenderStage = function () {
 
 };
 
-RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( RenderBin.prototype, {
-
-    // temporary, Utils.createPrototypeClass will solve this
-    constructor: RenderStage,
-
+MACROUTILS.createPrototypeObject( RenderStage, MACROUTILS.objectInherit( RenderBin.prototype, {
 
     init: function () {
 

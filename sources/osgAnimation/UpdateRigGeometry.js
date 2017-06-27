@@ -11,7 +11,7 @@ var UpdateRigGeometry = function () {
     ObjectBase.call( this );
 };
 
-UpdateRigGeometry.prototype = MACROUTILS.objectInherit( ObjectBase.prototype, {
+MACROUTILS.createPrototypeObject( UpdateRigGeometry, MACROUTILS.objectInherit( ObjectBase.prototype, {
 
     init: function ( geom ) {
 
@@ -48,6 +48,6 @@ UpdateRigGeometry.prototype = MACROUTILS.objectInherit( ObjectBase.prototype, {
         return true;
     }
 
-} );
+} ), 'osgAnimation', 'UpdateRigGeometry' );
 
 module.exports = UpdateRigGeometry;

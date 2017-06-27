@@ -93,8 +93,7 @@ BufferArray.flushAllDeletedGLBufferArrays = function ( gl ) {
     }
 };
 
-/** @lends BufferArray.prototype */
-BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
+MACROUTILS.createPrototypeObject( BufferArray, MACROUTILS.objectInherit( GLObject.prototype, {
     getInstanceID: function () {
         return this._instanceID;
     },
@@ -168,6 +167,6 @@ BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         return this._type;
     }
 
-} );
+} ), 'osg', 'BufferArray' );
 
 module.exports = BufferArray;

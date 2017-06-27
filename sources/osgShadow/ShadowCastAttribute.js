@@ -9,7 +9,8 @@ var ShadowCastAttribute = function ( disable, shadowReceiveAttribute ) {
     this._enable = !disable;
     this._shadowReceiveAttribute = shadowReceiveAttribute;
 };
-ShadowCastAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+
+MACROUTILS.createPrototypeStateAttribute( ShadowCastAttribute, MACROUTILS.objectInherit( StateAttribute.prototype, {
     attributeType: 'ShadowCast',
     cloneType: function () {
         return new ShadowCastAttribute( true );
@@ -25,8 +26,11 @@ ShadowCastAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.object
         if ( !this._shadowReceiveAttribute ) return undefined; // test here because of cloneType
         return this._shadowReceiveAttribute.getDefines();
     },
-    getHash: function () {
+    _computeHash: function () {
         return 'ShadowCast' + this._enable + this._shadowReceiveAttribute.getPrecision();
+    },
+    getHash: function () {
+        return this._computeHash();
     },
     // need a isEnabled to let the ShaderGenerator to filter
     // StateAttribute from the shader compilation
@@ -34,7 +38,5 @@ ShadowCastAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.object
         return this._enable;
     }
 } ), 'osgShadow', 'ShadowCastAttribute' );
-
-MACROUTILS.setTypeID( ShadowCastAttribute );
 
 module.exports = ShadowCastAttribute;

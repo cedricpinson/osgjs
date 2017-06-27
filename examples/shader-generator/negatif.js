@@ -11,7 +11,8 @@
         this._attributeEnable = false;
     };
 
-    NegatifAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( osg.StateAttribute.prototype, {
+    osg.createPrototypeStateAttribute( NegatifAttribute, osg.objectInherit( osg.StateAttribute.prototype, {
+
         attributeType: 'Negatif',
 
         cloneType: function () {

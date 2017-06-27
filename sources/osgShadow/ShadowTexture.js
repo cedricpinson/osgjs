@@ -28,7 +28,7 @@ var ShadowTexture = function () {
 
 ShadowTexture.uniforms = {};
 /** @lends Texture.prototype */
-ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Texture.prototype, {
+MACROUTILS.createPrototypeStateAttribute( ShadowTexture, MACROUTILS.objectInherit( Texture.prototype, {
 
     cloneType: function () {
         return new ShadowTexture();
@@ -120,11 +120,13 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
     },
 
     getHash: function () {
+        return this._computeHash();
+    },
+
+    _computeHash: function () {
         return this.getTypeMember() + '_' + this._lightNumber + '_' + this._type;
     }
 
 } ), 'osgShadow', 'ShadowTexture' );
-
-MACROUTILS.setTypeID( ShadowTexture );
 
 module.exports = ShadowTexture;

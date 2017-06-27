@@ -45,7 +45,7 @@ var lowerOrEqual = function ( val, limit ) {
 };
 
 /** @lends OrbitManipulator.prototype */
-OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
+MACROUTILS.createPrototypeObject( OrbitManipulator, MACROUTILS.objectInherit( Manipulator.prototype, {
     init: function () {
         this._distance = 25.0;
         this._target = vec3.create();
@@ -383,7 +383,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         // this._vrMatrix[ 13 ] = pos[ 1 ];
         // this._vrMatrix[ 14 ] = pos[ 2 ];
     }
-} );
+} ), 'osgGA', 'OrbitManipulator' );
 
 OrbitManipulator.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
 OrbitManipulator.GamePad = OrbitManipulatorGamePadController;

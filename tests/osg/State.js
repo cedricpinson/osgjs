@@ -1,5 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
+var Utils = require( 'osg/Utils' );
 var State = require( 'osg/State' );
 var StateSet = require( 'osg/StateSet' );
 var Material = require( 'osg/Material' );
@@ -19,14 +20,16 @@ module.exports = function () {
             var stateSet0 = new StateSet();
             var stateSet1 = new StateSet();
             var stateSet2 = new StateSet();
-            stateSet0.setAttributeAndModes( new Material() );
+
+            var material = new Material();
+            stateSet0.setAttributeAndModes( material );
             stateSet1.setAttributeAndModes( new Material(), StateAttribute.OVERRIDE );
             stateSet2.setAttributeAndModes( new Material(), StateAttribute.OFF );
 
             state.pushStateSet( stateSet0 );
             state.pushStateSet( stateSet1 );
             state.pushStateSet( stateSet2 );
-            var materialStack = state.attributeMap.Material;
+            var materialStack = state._attributeArray[ Utils.getOrCreateStateAttributeTypeMemberIndex( material ) ];
             assert.isOk( materialStack[ materialStack.length - 1 ] === materialStack[ materialStack.length - 2 ], 'check Override in state' );
         } )();
     } );
@@ -92,8 +95,9 @@ module.exports = function () {
             state.applyStateSet( stateSet2 );
 
             assert.equal( state.getStateSetStackSize(), 1, 'check stateSet stack length' );
-            assert.notEqual( state.getLastProgramApplied(), undefined, 'check last program applied' );
-            assert.equal( state.attributeMap.Program.values().length, 0, 'check program stack length' );
+            var program = state.getLastProgramApplied();
+            assert.notEqual( program, undefined, 'check last program applied' );
+            assert.equal( state._programAttribute.values.length, 0, 'check program stack length' );
 
             // check that texture 0 is applied only once
             assert.equal( textureBindCall.get( 1 ), 1, 'check that texture 0 is applied only once' );

@@ -11,7 +11,7 @@ var ColorMask = function ( red, green, blue, alpha ) {
     this.setMask( red, green, blue, alpha );
 };
 
-ColorMask.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute( ColorMask, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'ColorMask',
 

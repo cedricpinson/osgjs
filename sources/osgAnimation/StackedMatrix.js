@@ -11,7 +11,7 @@ var StackedMatrix = function ( name, matrix ) {
     if ( name ) this.setName( name );
 };
 
-StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( StackedMatrix, MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( matrix ) {
         this.setMatrix( matrix );
@@ -38,6 +38,6 @@ StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
         mat4.mul( m, m, this._target.value );
     }
 
-} );
+} ), 'osgAnimation', 'StackedMatrix' );
 
 module.exports = StackedMatrix;

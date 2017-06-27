@@ -64,6 +64,7 @@ var CanvasStats = function ( opts ) {
         pushstateset: {
             caption: 'num pushStateSet'
         },
+
         updatecallback: {
             caption: 'num updateCallback'
         },
@@ -101,7 +102,7 @@ var CanvasStats = function ( opts ) {
         values: [ 'frame', 'update', 'cull', 'render', 'glframe' ]
     }, {
         caption: 'Scene Graph',
-        values: [ 'pushstateset', 'updatecallback' ]
+        values: [ 'pushstateset', 'updatecallback', 'state.apply' ]
     }, {
         caption: 'Cull',
         values: [ 'cullnode', 'cullmatrixtransform', 'cullgeometry', 'cullcamera', 'culllighsource', 'cullprojection' ]

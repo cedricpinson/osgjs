@@ -21,7 +21,7 @@ var Bone = function ( name ) {
     this._boneBoundingBox = new BoundingBox();
 };
 
-Bone.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
+MACROUTILS.createPrototypeNode( Bone, MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
     // consistent color depending of id
     // _rand: function ( id ) {
@@ -79,6 +79,5 @@ Bone.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Matrix
         this.addUpdateCallback( new UpdateBone( ( name !== undefined ) ? name : this.getName() ) );
     }
 } ), 'osgAnimation', 'Bone' );
-MACROUTILS.setTypeID( Bone );
 
 module.exports = Bone;

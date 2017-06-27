@@ -125,13 +125,6 @@ Utils.objectMix = function ( obj, properties, test ) {
 
 Utils.objectType = {};
 Utils.objectType.type = 0;
-Utils.objectType.generate = function ( arg ) {
-    var t = Utils.objectType.type;
-    Utils.objectType[ t ] = arg;
-    Utils.objectType[ arg ] = t;
-    Utils.objectType.type += 1;
-    return t;
-};
 
 Utils.objectLibraryClass = function ( object, libName, className ) {
     object.className = function () {
@@ -150,7 +143,7 @@ Utils.objectLibraryClass = function ( object, libName, className ) {
 
 Utils.setTypeID = function ( classObject ) {
     var className = classObject.prototype.libraryClassName();
-    var typeID = Utils.objectType.generate( className );
+    var typeID = Utils.generateId( Utils.objectType, className );
     var getTypeID = function () {
         return typeID;
     };
@@ -158,14 +151,150 @@ Utils.setTypeID = function ( classObject ) {
     classObject.getTypeID = classObject.prototype.getTypeID = getTypeID;
 };
 
-Utils.createPrototypeClass = function ( Constructor, prototype, libraryName, className ) {
+Utils.createPrototypeObject = function ( Constructor, prototype, libraryName, className ) {
+
+    // we need to create an instance of {} if prototype is already used in an object
+    // else we will override typeID ClassName...
+    if ( prototype.hasOwnProperty( 'getTypeID' ) ) {
+        prototype = Utils.objectInherit( prototype, {} );
+    }
 
     Constructor.prototype = prototype;
     prototype.constructor = Constructor;
 
+    // if the user dont provide library name or class name this class will not have typeID
+    // and will inherit the typeID from it's parent class if it has one
+    // so all call to getTypeID will be affected, it's mostly not a probablem for internal class
+    // but for Node and StateAttribute you have to be aware
+    if ( !libraryName || !className ) return;
+
     Utils.objectLibraryClass( prototype, libraryName, className );
     Utils.setTypeID( Constructor );
 };
+
+
+// ============== Node ID =================================
+Utils.generateId = function ( typeMap, className ) {
+
+    if ( typeMap[ className ] !== undefined ) {
+        Notify.error( className + ' is already defined, change class name or library name' );
+        return -1;
+    }
+
+    var index = typeMap.type;
+    typeMap[ index ] = className;
+    typeMap[ className ] = index;
+    typeMap.type += 1;
+    return index;
+};
+
+Utils.objectNodeType = {};
+Utils.objectNodeType.type = 0;
+
+
+Utils.setNodeTypeID = function ( classObject ) {
+    var className = classObject.prototype.libraryClassName();
+    var typeID = Utils.generateId( Utils.objectNodeType, className );
+    var getTypeID = function () {
+        return typeID;
+    };
+    classObject.nodeTypeID = classObject.prototype.nodeTypeID = typeID;
+    classObject.getNodeTypeID = classObject.prototype.getNodeTypeID = getTypeID;
+};
+
+Utils.createPrototypeNode = function ( Constructor, prototype, libraryName, className ) {
+    var cullVisitorHelper = require( 'osg/cullVisitorHelper' );
+    var parentNodeTypeID = prototype.nodeTypeID;
+    Utils.createPrototypeObject( Constructor, prototype, libraryName, className );
+
+    // check the comment in function in Utils.createPrototypeObject
+    if ( !libraryName || !className ) return;
+
+    Utils.setNodeTypeID( Constructor );
+    var nodeTypeId = Constructor.nodeTypeID;
+    cullVisitorHelper.registerApplyFunction( nodeTypeId, cullVisitorHelper.getApplyFunction( parentNodeTypeID ) );
+};
+
+// ===============================================
+
+
+var typeMemberIndex = 0;
+var textureTypeMemberIndex = 0;
+var stateAttributeTypeMember = {};
+var textureStateAttributeTypeMember = {};
+var attributeTypeIndex = 0;
+var stateAttributeType = {};
+
+Utils.getStateAttributeTypeNameToTypeId = function () {
+    return stateAttributeType;
+};
+
+Utils.createPrototypeStateAttribute = function ( Constructor, prototype, libraryName, className ) {
+    Utils.createPrototypeObject( Constructor, prototype, libraryName, className );
+    var attributeId = Utils.getOrCreateStateAttributeTypeId( Constructor );
+    Constructor.prototype.attributeTypeId = attributeId;
+};
+
+
+Utils.getMaxStateAttributeTypeID = function () {
+    return attributeTypeIndex;
+};
+
+Utils.getOrCreateStateAttributeTypeId = function ( Constructor ) {
+    var attributeTypeName = Constructor.prototype.getType();
+
+    if ( stateAttributeType[ attributeTypeName ] ) return stateAttributeType[ attributeTypeName ];
+
+    var typeId = attributeTypeIndex++;
+    stateAttributeType[ attributeTypeName ] = typeId;
+    return typeId;
+};
+
+Utils.getOrCreateStateAttributeTypeMemberIndex = function ( attribute ) {
+
+    if ( attribute._attributeTypeIndex !== undefined ) return attribute._attributeTypeIndex;
+    var typeMember = attribute.getTypeMember();
+    attribute._attributeTypeIndex = Utils.getOrCreateStateAttributeTypeMemberIndexFromName( typeMember );
+    return attribute._attributeTypeIndex;
+};
+
+Utils.getOrCreateStateAttributeTypeMemberIndexFromName = function ( typeMemberName ) {
+
+    var type = stateAttributeTypeMember[ typeMemberName ];
+    if ( type !== undefined ) return type;
+
+    type = typeMemberIndex++;
+    stateAttributeTypeMember[ typeMemberName ] = type;
+    return type;
+};
+
+Utils.getOrCreateTextureStateAttributeTypeMemberIndex = function ( attribute ) {
+
+    if ( attribute._attributeTypeIndex !== undefined ) return attribute._attributeTypeIndex;
+    var typeMember = attribute.getTypeMember();
+    attribute._attributeTypeIndex = Utils.getOrCreateTextureStateAttributeTypeMemberIndexFromName( typeMember );
+    return attribute._attributeTypeIndex;
+};
+
+Utils.getOrCreateTextureStateAttributeTypeMemberIndexFromName = function ( typeMemberName ) {
+
+    var type = textureStateAttributeTypeMember[ typeMemberName ];
+    if ( type !== undefined ) return type;
+
+    type = textureTypeMemberIndex++;
+    textureStateAttributeTypeMember[ typeMemberName ] = type;
+    return type;
+};
+
+
+Utils.getIdFromTypeMember = function ( typeMember ) {
+    return stateAttributeTypeMember[ typeMember ];
+};
+
+Utils.getTextureIdFromTypeMember = function ( typeMember ) {
+    return textureStateAttributeTypeMember[ typeMember ];
+};
+
 
 Utils.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
 Utils.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;

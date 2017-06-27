@@ -17,7 +17,7 @@ var TangentSpaceGenerator = function () {
     this._texCoordUnit = 0;
 };
 
-TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( TangentSpaceGenerator, MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
     apply: function ( node ) {
 
@@ -267,6 +267,6 @@ TangentSpaceGenerator.prototype = MACROUTILS.objectInherit( NodeVisitor.prototyp
         vec3.add( Ndst, N3, Ndst );
     }
 
-} );
+} ), 'osgUtil', 'TangentSpaceGenerator' );
 
 module.exports = TangentSpaceGenerator;

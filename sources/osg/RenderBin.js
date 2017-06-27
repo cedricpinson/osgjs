@@ -55,7 +55,7 @@ var sortBinNumberFunction = function ( a, b ) {
 };
 
 
-RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( RenderBin, MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( sortMode ) {
 

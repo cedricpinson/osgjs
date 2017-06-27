@@ -11,7 +11,8 @@ var CollectAnimationUpdateCallbackVisitor = function () {
 };
 
 
-CollectAnimationUpdateCallbackVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( CollectAnimationUpdateCallbackVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
+
     getAnimationUpdateCallbackMap: function () {
         return this._animationUpdateCallback;
     },
@@ -30,6 +31,6 @@ CollectAnimationUpdateCallbackVisitor.prototype = MACROUTILS.objectInherit( Node
         this.traverse( node );
     }
 
-} );
+} ), 'osgAnimation', 'CollectAnimationUpdateCallbackVisitor' );
 
 module.exports = CollectAnimationUpdateCallbackVisitor;

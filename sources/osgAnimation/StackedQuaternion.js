@@ -13,7 +13,7 @@ var StackedQuaternion = function ( name, q ) {
     if ( name ) this.setName( name );
 };
 
-StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject( StackedQuaternion, MACROUTILS.objectInherit( Object.prototype, {
 
     init: function ( q ) {
         this.setQuaternion( q );
@@ -42,6 +42,6 @@ StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
         };
     } )()
 
-} );
+} ), 'osgAnimation', 'StackedQuaternion' );
 
 module.exports = StackedQuaternion;

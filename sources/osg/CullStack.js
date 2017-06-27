@@ -43,7 +43,7 @@ var CullStack = function () {
 
 };
 
-CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
+MACROUTILS.createPrototypeObject( CullStack, MACROUTILS.objectInherit( CullSettings.prototype, {
 
     _getReservedCullingSet: function () {
         var m = this._reserveCullingSetStack[ this._reserveCullingSetStack.current++ ];
@@ -383,6 +383,6 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
     }
 
 
-} );
+} ), 'osg', 'CullStack' );
 
 module.exports = CullStack;

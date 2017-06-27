@@ -19,7 +19,7 @@ var ComputeBoundsVisitor = function ( traversalMode ) {
     this._bb = new BoundingBox();
 };
 
-ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( NodeVisitor.prototype, {
+MACROUTILS.createPrototypeObject( ComputeBoundsVisitor, MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
     reset: function () {
         this._reservedMatrixStack.reset();

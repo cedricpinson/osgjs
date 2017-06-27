@@ -7,7 +7,17 @@ var CompilerShadowCast = function () {
     Compiler.apply( this, arguments );
 };
 
-CompilerShadowCast.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
+var config = Compiler.cloneStateAttributeConfig( Compiler );
+config.attribute = [
+    'ShadowCast',
+    'Morph',
+    'Skinning',
+    'PointSize'
+];
+
+Compiler.setStateAttributeConfig( CompilerShadowCast, config );
+
+MACROUTILS.createPrototypeObject( CompilerShadowCast, MACROUTILS.objectInherit( Compiler.prototype, {
     getCompilerName: function () {
         return 'ShadowCast';
     },
@@ -59,6 +69,6 @@ CompilerShadowCast.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
         return [ this.createShadowCastDepth( frag ) ];
     }
 
-} );
+} ), 'osgShader', 'CompilerShadowCast' );
 
 module.exports = CompilerShadowCast;
