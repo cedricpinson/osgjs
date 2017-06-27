@@ -276,8 +276,8 @@ module.exports = function () {
 
         spif.set( vec3.fromValues( 0, 0, 0 ), Math.SQRT1_2 - 0.01, settings );
 
-        hits = spi.getIntersections();
         kdTree.intersect( spif, kdTree.getNodes()[ 0 ] );
+        hits = spi.getIntersections();
         assert.isOk( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
 
         spi.reset();

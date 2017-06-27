@@ -1,11 +1,11 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
+var mat4 = require( 'osg/glMatrix' ).mat4;
 var LineSegmentIntersectFunctor = require( 'osgUtil/LineSegmentIntersectFunctor' );
 
 // implicitly match with TriangleLineSegment intersection
-var SphereIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
-    this._intersectionPoints = [];
+var SphereIntersection = function ( i1, i2, i3, r1, r2, r3 ) {
     this._primitiveIndex = undefined;
     this._ratio = 0;
     this._maxDistance = 0;
@@ -262,7 +262,7 @@ SphereIntersectFunctor.prototype = MACROUTILS.objectInherit( LineSegmentIntersec
 
             var intersection = new SphereIntersection( i1, i2, i3, 1 - s - t, s, t );
             intersection._ratio = Math.sqrt( sqrDistance );
-            intersection._matrix = this._settings._intersectionVisitor.getModelMatrix();
+            intersection._matrix = mat4.clone( this._settings._intersectionVisitor.getModelMatrix() );
             intersection._nodePath = this._settings._intersectionVisitor.getNodePath().slice();
             intersection._drawable = this._settings._drawable;
             intersection._primitiveIndex = this._primitiveIndex;

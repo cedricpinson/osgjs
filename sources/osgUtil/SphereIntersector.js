@@ -104,7 +104,14 @@ SphereIntersector.prototype = {
         return function ( matrix ) {
             mat4.invert( matrix, matrix );
             vec3.transformMat4( this._iCenter, this._center, matrix );
-            this._iRadius = this._radius * mat4.getScale( tmp, matrix )[ 0 ];
+            // Only handling analitically uniform scales. 
+            // For non uniform we use an approximation to avoid complexity
+            mat4.getScale( tmp, matrix );
+            var x = tmp[ 0 ];
+            var y = tmp[ 1 ];
+            var z = tmp[ 2 ];
+            var maxScale = x > y ? x > z ? x : z : y > z ? y : z;
+            this._iRadius = this._radius * maxScale;
         };
     } )()
 };
