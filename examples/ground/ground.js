@@ -4,7 +4,7 @@
     var OSG = window.OSG;
     var osg = OSG.osg;
 
-    function getShader() {
+    function getShader () {
         var vertexshader = [
             '',
             '#ifdef GL_ES',

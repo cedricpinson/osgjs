@@ -10,7 +10,6 @@
     var viewer;
     var Object = window.Object;
     var culled = 0;
-    var config;
 
     // Callback getting the Total, only on model root node for main render
     var CountCallback = function ( options, config ) {
@@ -19,7 +18,7 @@
     };
     CountCallback.prototype = {
 
-        update: function ( /*node, nv*/) {
+        update: function ( /*node, nv*/ ) {
             // update
             this._config.culled = culled + '';
             culled = 0;
@@ -87,8 +86,6 @@
             far: '0',
             culled: '0'
         };
-        config = this._config;
-
 
         // default & change debug
         var queryDict = {};

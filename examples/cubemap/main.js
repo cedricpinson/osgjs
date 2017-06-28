@@ -9,7 +9,7 @@
     var osgDB = OSG.osgDB;
 
 
-    function getShader() {
+    function getShader () {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -70,7 +70,7 @@
     }
 
 
-    function getShaderBackground() {
+    function getShaderBackground () {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -125,7 +125,7 @@
         return node;
     };
 
-    function getCubeMap( size, scene ) {
+    function getCubeMap ( size, scene ) {
         // create the environment sphere
         var geom = osg.createTexturedBoxGeometry( 0, 0, 0,
             size, size, size );
@@ -159,7 +159,7 @@
         // the update callback get exactly the same view of the camera
         // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
         var UpdateCallback = function () {
-            this.update = function ( /*node, nv*/) {
+            this.update = function ( /*node, nv*/ ) {
                 var rootCam = Viewer.getCamera();
                 var info = {};
                 osg.mat4.getPerspective( info, rootCam.getProjectionMatrix() );
@@ -180,7 +180,7 @@
         return geom;
     }
 
-    function createScene() {
+    function createScene () {
         var group = new osg.Node();
 
         var size = 250;

@@ -5,7 +5,7 @@ var osg = OSG.osg;
 var osgViewer = OSG.osgViewer;
 
 
-function getShader() {
+function getShader () {
     var vertexshader = [
         '',
         'precision highp float;',
@@ -71,7 +71,7 @@ function getShader() {
     return program;
 }
 
-function getShaderVariant2() {
+function getShaderVariant2 () {
     var vertexshader = [
         '',
         'attribute vec3 Vertex;',
@@ -135,7 +135,7 @@ function getShaderVariant2() {
     return program;
 }
 
-function createScene() {
+function createScene () {
 
     var root = new osg.Node();
 

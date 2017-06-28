@@ -61,9 +61,9 @@ MACROUTILS.createPrototypeObject( ShadowTechnique, MACROUTILS.objectInherit( Obj
 
 
     // update the technic
-    updateShadowTechnique: function ( /*nodeVisitor*/) {},
+    updateShadowTechnique: function ( /*nodeVisitor*/ ) {},
 
-    cullShadowCasting: function ( /*cullVisitor*/) {},
+    cullShadowCasting: function ( /*cullVisitor*/ ) {},
 
     cleanSceneGraph: function () {
         // well shouldn't be called

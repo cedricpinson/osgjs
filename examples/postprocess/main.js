@@ -6,7 +6,7 @@
     var osgViewer = OSG.osgViewer;
     var Object = window.Object;
 
-    function commonScene( rttSize ) {
+    function commonScene ( rttSize ) {
 
         var model = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
 
@@ -56,7 +56,7 @@
         return [ root, sceneTexture ];
     }
 
-    function getTextureShader() {
+    function getTextureShader () {
 
         var vertexshader = [
             '',
@@ -98,7 +98,7 @@
         return program;
     }
 
-    function createScene( width, height, gui ) {
+    function createScene ( width, height, gui ) {
 
         var rttSize = [ 2048, 2048 ];
 
@@ -151,7 +151,7 @@
 
         var setComposer;
 
-        function addSceneController() {
+        function addSceneController () {
             gui.add( globalGui, 'filter', Object.keys( effects ) ).onChange( function ( value ) {
                 setComposer( value );
             } );
@@ -164,7 +164,7 @@
         var cachedComposers = [];
         cachedComposers[ postScenes[ 0 ].name ] = currentComposer;
 
-        setComposer = function setComposer( effectName ) {
+        setComposer = function setComposer ( effectName ) {
 
             // Put the composer in cache at first utilisation
             if ( cachedComposers[ effectName ] === undefined ) {

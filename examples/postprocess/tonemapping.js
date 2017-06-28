@@ -202,7 +202,7 @@
             }
         );
 
-        function setSceneTexture( sceneFile ) {
+        function setSceneTexture ( sceneFile ) {
 
             // On met en cache lors du premier chargement
             if ( cachedScenes[ sceneFile ] === undefined ) {
@@ -312,7 +312,7 @@
         return effect;
     };
 
-    function decodeHDRHeader( buf ) {
+    function decodeHDRHeader ( buf ) {
         var info = {
             exposure: 1.0
         };
@@ -369,7 +369,7 @@
         return info;
     }
 
-    function readImageURL( url ) {
+    function readImageURL ( url ) {
         var ext = url.split( '.' ).pop();
         if ( ext === 'hdr' )
             return osg.readHDRImage( url );

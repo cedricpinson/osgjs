@@ -416,7 +416,7 @@ MACROUTILS.createPrototypeNode( Node, MACROUTILS.objectInherit( Object.prototype
         var collected = new CollectParentPaths();
         collected.setNodeMaskOverride( ~0x0 ); // traverse everything
 
-        return function computeLocalToWorldList( halt, matrixCreate ) {
+        return function computeLocalToWorldList ( halt, matrixCreate ) {
             collected.reset();
             collected.halt = halt;
 

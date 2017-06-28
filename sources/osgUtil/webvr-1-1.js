@@ -36,7 +36,7 @@ if ( 'getVRDisplays' in navigator ) {
             var defaultOrientation = new Float32Array( [ 0, 0, 0, 1 ] );
             var defaultPosition = new Float32Array( [ 0, 0, 0 ] );
 
-            function updateEyeMatrices( projection, view, pose, parameters, vrDisplay ) {
+            function updateEyeMatrices ( projection, view, pose, parameters, vrDisplay ) {
                 mat4.perspectiveFromFieldOfView( projection, parameters.fieldOfView, vrDisplay.depthNear, vrDisplay.depthFar );
 
                 var orientation = pose.orientation;

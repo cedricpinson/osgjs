@@ -19,7 +19,7 @@ GamePad.prototype = {
         return this._enable;
     },
 
-    init: function ( /*args*/) {},
+    init: function ( /*args*/ ) {},
 
     isValid: function () {
         if ( !this._enable )

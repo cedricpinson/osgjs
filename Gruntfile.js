@@ -1,5 +1,4 @@
 'use strict';
-/* global process */
 
 var fs = require( 'fs' );
 var path = require( 'path' );
@@ -9,7 +8,7 @@ var webpackConfig = require( './webpack.config.js' );
 var extend = require( 'extend' );
 var glob = require( 'glob' );
 
-var jshintrc = JSON.parse( fs.readFileSync( './.jshintrc' ).toString() );
+// var jshintrc = JSON.parse( fs.readFileSync( './.jshintrc' ).toString() );
 
 
 // Base paths used by the tasks.
@@ -65,12 +64,14 @@ var gruntTasks = {};
 //
 ( function () {
 
-    //lint
-    gruntTasks.jshint = {
-        options: jshintrc
-    };
+    var configFilename = './.eslintrc.json';
 
-    gruntTasks.eslint = {};
+    // to finish https://github.com/sketchfab/showwebgl/blob/f5028b774ab47c976461807eab522b302edc1e2b/Gruntfile.js
+    gruntTasks.eslint = {
+        options: {
+            configFile: configFilename
+        }
+    };
 
     //build/bundle
     gruntTasks.copy = {
@@ -170,40 +171,38 @@ var gruntTasks = {};
 } )();
 
 
-// ## JSHint
+// ## ESLint
 //
 // Will check the Gruntfile and every "*.js" file in the "statics/sources/" folder.
 //
 ( function () {
 
-    gruntTasks.jshint.self = {
+    gruntTasks.eslint.self = {
         options: {
             node: true
         },
         src: [ 'Gruntfile.js' ]
     };
 
-    gruntTasks.jshint.sources = {
+    gruntTasks.eslint.sources = {
         options: {
-            globals: {
-                define: true,
-                require: true
-            }
+            browser: true
         },
         src: srcFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1 && pathName.indexOf( 'glMatrix' ) === -1 ;
+            return pathName.indexOf( 'vendors' ) === -1 &&
+                pathName.indexOf( 'glMatrix' ) === -1 &&
+                pathName.indexOf( 'webgl-debug.js' ) === -1 &&
+                pathName.indexOf( 'webgl-utils.js' ) === -1;
 
         } ).map( function ( pathname ) {
             return path.join( SOURCE_PATH, pathname );
         } )
+
     };
 
-    gruntTasks.jshint.examples = {
+    gruntTasks.eslint.examples = {
         options: {
-            globals: {
-                define: true,
-                require: true
-            }
+            browser: true
         },
         src: exampleFiles.filter( function ( pathName ) {
             return pathName.indexOf( 'vendors' ) === -1;
@@ -211,78 +210,36 @@ var gruntTasks = {};
         } ).map( function ( pathname ) {
             return path.join( EXAMPLE_PATH, pathname );
         } )
+
     };
 
-    gruntTasks.jshint.tests = {
+    gruntTasks.eslint.tests = {
         options: {
-            globals: {
-                define: true,
-                require: true
-            }
+            browser: true
         },
         src: testsFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1 &&
-                pathName.indexOf( 'glMatrix' ) === -1 &&
+            return pathName.indexOf( 'glMatrix' ) === -1 &&
                 pathName.indexOf( 'mocha.js' ) === -1;
         } ).map( function ( pathname ) {
-            return path.join( SOURCE_PATH, pathname );
+            return path.join( TEST_PATH, pathname );
         } )
+
     };
 
-    // add another output from envvar to have better error tracking in emacs
-    if ( process.env.GRUNT_EMACS_REPORTER !== undefined ) {
-        gruntTasks.jshint.sources.options.reporter = process.env.GRUNT_EMACS_REPORTER;
-    }
-
-} )();
-
-
-// ## ESLint
-//
-// Will check the Gruntfile and every "*.js" file in the "statics/sources/" folder.
-//
-( function () {
-
-    gruntTasks.eslint = {
+    gruntTasks.eslint.fix = {
         options: {
-            configFile: '.eslintrc'
-                //, rulePaths: [ 'node_modules' ]
+            fix: true,
+            browser: true
         },
-        target: srcFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1 &&
-                pathName.indexOf( 'webgl-debug.js' ) === -1 &&
-                pathName.indexOf( 'webgl-utils.js' ) === -1;
-        } ).map( function ( pathname ) {
-            return path.join( SOURCE_PATH, pathname );
-        } )
+        src: []
     };
 
+    [ 'tests', 'examples', 'sources', 'self' ].forEach( function ( target ) {
+        gruntTasks.eslint.fix.src = gruntTasks.eslint.fix.src.concat( gruntTasks.eslint[ target ].src );
+    } );
 
 } )();
 
-
-( function () {
-
-    var jsFiles = [ 'index.html', 'sources/**/*.js', 'examples/**/*.js', 'tutorials/**/*.js', 'tests/**/*.js', '!examples/vendors/*.js', '!tests/vendors/**/*.js', '!tests/mocha.js' ];
-
-    gruntTasks.jsbeautifier = {
-        default: {
-            src: jsFiles,
-            options: {
-                config: './.jsbeautifyrc'
-            }
-        },
-
-        check: {
-            src: jsFiles,
-            // config: './.jsbeautifyrc',
-            options: {
-                mode: 'VERIFY_ONLY',
-                config: './.jsbeautifyrc'
-            }
-        }
-    };
-} )();
 
 // ## Clean
 //
@@ -434,18 +391,18 @@ var gruntTasks = {};
     };
 } )();
 
-/*jshint camelcase:false */
+/* eslint-disable camelcase */
 ( function () {
     gruntTasks.update_submodules = {
         default: {
             options: {
-                    // default command line parameters will be used: --init --recursive
-                }
+                // default command line parameters will be used: --init --recursive
             }
-        };
+        }
+    };
 } )();
 
-/*jshint camelcase:true */
+/* eslint-enable camelcase */
 
 
 ( function () {
@@ -493,7 +450,7 @@ var gruntTasks = {};
 
 module.exports = function ( grunt ) {
 
-    var distFullPath = path.normalize( path.join( __dirname, DIST_PATH ) );
+    var distFullPath = path.normalize( path.join( __dirname, DIST_PATH ) ); // eslint-disable-line no-undef
     grunt.file.mkdir( distFullPath );
 
     grunt.initConfig( extend( {
@@ -511,7 +468,6 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-update-submodules' );
 
     grunt.loadNpmTasks( 'grunt-eslint' );
-    grunt.loadNpmTasks( 'grunt-contrib-jshint' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
 
@@ -522,9 +478,9 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-webpack' );
 
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources', 'jshint:examples', 'jshint:tests' ] );
-    grunt.registerTask( 'lint', [ 'eslint' ] );
-    grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
+    grunt.registerTask( 'check', [ 'eslint:self', 'eslint:sources', 'eslint:examples', 'eslint:tests' ] );
+
+    grunt.registerTask( 'beautify', [ 'eslint:fix' ] );
 
     grunt.registerTask( 'sync', [ 'update_submodules:default' ] );
 

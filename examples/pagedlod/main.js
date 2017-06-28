@@ -109,7 +109,7 @@
             var node = osg.createTexturedQuadGeometry( minExtent[ 0 ], minExtent[ 1 ], 0, maxExtent[ 0 ] - minExtent[ 0 ], 0, 0, 0, maxExtent[ 1 ] - minExtent[ 1 ], 0 );
             // Init create function
             var that = this;
-            var create = function createPagedLODGroup( parent ) {
+            var create = function createPagedLODGroup ( parent ) {
                 var group = new osg.Node();
 
                 for ( var i = 0; i < 4; i++ ) {

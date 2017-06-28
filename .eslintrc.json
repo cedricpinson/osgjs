@@ -1,0 +1,66 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 5,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "classes": false,
+            "jsx": false,
+            "modules": true,
+            "objectLiteralShorthandMethods": false,
+            "destructuring": false
+        }
+    },
+    "env": {
+        "browser": true,
+        "node": false,
+        "es6": true,
+        "mocha": true
+    },
+    "globals": {
+        "describe": false,
+        "it": false,
+        "define": false,
+        "require": false,
+        "ok": false,
+        "module": false,
+        "expect": false,
+        "test": false,
+        "asyncTest": false,
+        "equal": false,
+        "notEqual": false,
+        "strictEqual": false,
+        "notStrictEqual": false,
+        "start": false,
+        "deepEqual": false,
+        "Uint8Array": false,
+        "Uint16Array": false,
+        "Uint32Array": false,
+        "Float32Array": false,
+        "ArrayBuffer": false
+    },
+    "rules": {
+        "quotes": [ 2, "single" ],
+        "brace-style": [ "error", "1tbs", { "allowSingleLine": true } ],
+        "linebreak-style": ["error", "unix"],
+        "object-property-newline": ["error", { "allowMultiplePropertiesPerLine": true }],
+        "space-before-blocks": [ "error", "always" ],
+        "space-before-function-paren": ["error", "always"],
+        "keyword-spacing": [ "error", { "before": true, "after": true } ],
+        "indent": [ "error", 4 ],
+        "no-bitwise": 0,
+        "camelcase": 2,
+        "eqeqeq": ["error", "always", {"null": "ignore"}],
+        "space-in-parens": [ "error", "always" ],
+        "wrap-iife": [ 2, "any" ],
+        "no-use-before-define": [ 2, { "functions": false } ],
+        "eol-last": 2,
+        "new-cap": 0,
+        "no-caller": 2,
+        "no-undef": 2,
+        "no-unused-vars": 2,
+        "no-multi-str": 0,
+        "object-shorthand": [ "error", "never" ],
+        "comma-style": [ 2, "last" ],
+        "dot-notation": 0
+    }
+}

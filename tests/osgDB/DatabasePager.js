@@ -48,7 +48,7 @@ module.exports = function () {
 
     test( 'DatabasePager.requestNodeFile', function ( done ) {
         dbpager.reset();
-        var fn = function createNode( /*parent*/) {
+        var fn = function createNode ( /*parent*/ ) {
             var n = new Node();
             return n;
         };
@@ -67,7 +67,7 @@ module.exports = function () {
 
     test( 'DatabasePager.addLoadedDataToSceneGraph', function ( done ) {
         dbpager.reset();
-        var fn = function createNode( /*parent*/) {
+        var fn = function createNode ( /*parent*/ ) {
             var n = new PagedLOD();
             return n;
         };
@@ -89,7 +89,7 @@ module.exports = function () {
     test( 'DatabasePager.removeExpiredChildren', function ( done ) {
         dbpager.reset();
         dbpager.setTargetMaximumNumberOfPageLOD( 1 );
-        var fn = function createNode( /*parent*/) {
+        var fn = function createNode ( /*parent*/ ) {
             var n = new PagedLOD();
             return n;
         };

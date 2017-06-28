@@ -6,11 +6,11 @@
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
 
-    function colorFloatTo255( color ) {
+    function colorFloatTo255 ( color ) {
         return [ color[ 0 ] * 255.0, color[ 1 ] * 255.0, color[ 2 ] * 255.0 ];
     }
 
-    function color255ToFloat( color ) {
+    function color255ToFloat ( color ) {
         return [ color[ 0 ] / 255.0, color[ 1 ] / 255.0, color[ 2 ] / 255.0 ];
     }
 

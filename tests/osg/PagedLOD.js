@@ -1,6 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
-var mockup = require( 'tests/mockup/mockup' );
+require( 'tests/mockup/mockup' );
 var Node = require( 'osg/Node' );
 var Lod = require( 'osg/Lod' );
 var PagedLOD = require( 'osg/PagedLOD' );

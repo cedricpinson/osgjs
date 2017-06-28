@@ -85,7 +85,7 @@ Manipulator.prototype = {
         return dist;
     },
     // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
-    update: function ( /*nv*/) {},
+    update: function ( /*nv*/ ) {},
 
     getInverseMatrix: function () {
         return this._inverseMatrix;

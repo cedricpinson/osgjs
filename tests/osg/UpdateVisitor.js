@@ -25,7 +25,7 @@ module.exports = function () {
         var stateSetUpdateCallbackCalled = 0;
 
         var StateSetUpdateCallback = function () {
-            this.update = function ( /*stateset, nv */) {
+            this.update = function ( /*stateset, nv */ ) {
                 stateSetUpdateCallbackCalled += 1;
             };
         };
@@ -42,7 +42,7 @@ module.exports = function () {
 
         var Fb = function () {};
         Fb.prototype = {
-            update: function ( /*node, nv */) {
+            update: function ( /*node, nv */ ) {
                 callb = 1;
                 return false;
             }
@@ -50,7 +50,7 @@ module.exports = function () {
 
         var Fc = function () {};
         Fc.prototype = {
-            update: function ( /*node, nv */) {
+            update: function ( /*node, nv */ ) {
                 callc = 1;
                 return true;
             }

@@ -331,7 +331,7 @@ Compiler.prototype = MACROUTILS.extend( {}, CompilerVertex, CompilerFragment, {
         return shader;
     },
 
-    getNode: function ( /*name, arg1, etc*/) {
+    getNode: function ( /*name, arg1, etc*/ ) {
         var n = factory.getNode.apply( factory, arguments );
         var cacheID = n.getID();
         this._activeNodeList[ cacheID ] = n;

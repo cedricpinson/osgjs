@@ -254,11 +254,11 @@ Input.prototype = {
 
         var ungzipFile = function ( arrayBuffer ) {
 
-            function pad( n ) {
+            function pad ( n ) {
                 return n.length < 2 ? '0' + n : n;
             }
 
-            function uintToString( uintArray ) {
+            function uintToString ( uintArray ) {
                 var str = '';
                 for ( var i = 0, len = uintArray.length; i < len; ++i ) {
                     str += ( '%' + pad( uintArray[ i ].toString( 16 ) ) );

@@ -14,11 +14,11 @@
 
         // Discrete Laplace convolution kernels from
         // http://en.wikipedia.org/wiki/Laplace_filter#Implementation_in_Image_Processing
-        function laplace( x ) {
+        function laplace ( x ) {
             return [ 0, -x, 0, -x, x * 4, -x, 0, -x, 0 ];
         }
 
-        function laplaceDiagonal( x ) {
+        function laplaceDiagonal ( x ) {
             return [ -0.5 * x, -x, -0.5 * x, -x, x * 6, -x, -0.5 * x, -x, -0.5 * x ];
         }
 
@@ -30,7 +30,7 @@
         var useDiagonal = false;
         var factor = 0;
 
-        function updateKernel() {
+        function updateKernel () {
 
             if ( useDiagonal )
                 kernel.setMatrix3( laplaceDiagonal( factor ) );

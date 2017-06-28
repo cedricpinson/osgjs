@@ -167,13 +167,13 @@
 
         },
 
-        touch: function ( /*e*/) {
+        touch: function ( /*e*/ ) {
             // assume the first touch in the 1/4 of the top canvas is a google cardboard touch
             console.log( 'cardboard touch' );
             this._manipulator.getForwardInterpolator().setTarget( 1 );
         },
 
-        unTouch: function ( /*e*/) {
+        unTouch: function ( /*e*/ ) {
             console.log( 'cardboard unTouch' );
             this._manipulator.getForwardInterpolator().setTarget( 0 );
         },

@@ -1,6 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
-var mockup = require( 'tests/mockup/mockup' );
+require( 'tests/mockup/mockup' );
 var FirstPersonManipulator = require( 'osgGA/FirstPersonManipulator' );
 var Camera = require( 'osg/Camera' );
 var vec3 = require( 'osg/glMatrix' ).vec3;

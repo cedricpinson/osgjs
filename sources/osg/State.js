@@ -14,20 +14,20 @@ var WebGLCaps = require( 'osg/WebGLCaps' );
 
 var checkUniformCache = [
     undefined,
-    function uniformCheck1( uniformArray, cacheArray ) {
+    function uniformCheck1 ( uniformArray, cacheArray ) {
         if ( uniformArray[ 0 ] === cacheArray[ 0 ] ) return true;
         cacheArray[ 0 ] = uniformArray[ 0 ];
         return false;
     },
 
-    function uniformCheck2( uniformArray, cacheArray ) {
+    function uniformCheck2 ( uniformArray, cacheArray ) {
         if ( uniformArray[ 0 ] === cacheArray[ 0 ] && uniformArray[ 1 ] === cacheArray[ 1 ] ) return true;
         cacheArray[ 0 ] = uniformArray[ 0 ];
         cacheArray[ 1 ] = uniformArray[ 1 ];
         return false;
     },
 
-    function uniformCheck3( uniformArray, cacheArray ) {
+    function uniformCheck3 ( uniformArray, cacheArray ) {
         if ( uniformArray[ 0 ] === cacheArray[ 0 ] && uniformArray[ 1 ] === cacheArray[ 1 ] && uniformArray[ 2 ] === cacheArray[ 2 ] ) return true;
         cacheArray[ 0 ] = uniformArray[ 0 ];
         cacheArray[ 1 ] = uniformArray[ 1 ];
@@ -35,7 +35,7 @@ var checkUniformCache = [
         return false;
     },
 
-    function uniformCheck4( uniformArray, cacheArray ) {
+    function uniformCheck4 ( uniformArray, cacheArray ) {
         if ( uniformArray[ 0 ] === cacheArray[ 0 ] && uniformArray[ 1 ] === cacheArray[ 1 ] && uniformArray[ 2 ] === cacheArray[ 2 ] && uniformArray[ 3 ] === cacheArray[ 3 ] ) return true;
         cacheArray[ 0 ] = uniformArray[ 0 ];
         cacheArray[ 1 ] = uniformArray[ 1 ];
@@ -274,7 +274,7 @@ MACROUTILS.createPrototypeObject( State, MACROUTILS.objectInherit( Object.protot
 
         var normal = mat3.create();
 
-        return function StateApplyModelViewMatrix( matrix, matrixModel ) {
+        return function StateApplyModelViewMatrix ( matrix, matrixModel ) {
 
             if ( this._lastAppliedModelViewMatrix === matrix ) return false;
 

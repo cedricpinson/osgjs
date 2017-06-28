@@ -1,5 +1,5 @@
 /* exported files */
-var files = {
+var files = { // eslint-disable-line
 
     Examples: [
         'animation',

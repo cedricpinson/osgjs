@@ -100,7 +100,7 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
             manipulator.getZoomInterpolator().set( 0.0 );
         }
     },
-    mouseup: function ( /*ev */) {
+    mouseup: function ( /*ev */ ) {
         this.releaseButton();
         this.setMode( undefined );
     },

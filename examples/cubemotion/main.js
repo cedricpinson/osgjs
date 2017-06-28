@@ -161,7 +161,7 @@
         return group;
     };
 
-    function createScene() {
+    function createScene () {
 
         var root = new osg.Node();
 

@@ -3,7 +3,7 @@
 'use strict';
 var now = ( function () {
 
-    var w = window || global;
+    var w = window || global; // eslint-disable-line
 
     // if no window.performance
     if ( w.performance === undefined ) {

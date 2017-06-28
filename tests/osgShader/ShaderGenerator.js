@@ -58,7 +58,7 @@ module.exports = function () {
 
             var stateSet = new StateSet();
 
-            function getShader() {
+            function getShader () {
                 var vertexshader = [
                     '',
                     'attribute vec3 Vertex;',

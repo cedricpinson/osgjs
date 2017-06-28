@@ -29,11 +29,11 @@ NodeVisitor.UPDATE_VISITOR = 1;
 NodeVisitor.CULL_VISITOR = 2;
 
 // =================== Traversal functions ===============
-var traverseParents = function traverseParents( node ) {
+var traverseParents = function traverseParents ( node ) {
     node.ascend( this );
 };
 
-var traverseChildren = function traverseAllChildren( node ) {
+var traverseChildren = function traverseAllChildren ( node ) {
     node.traverse( this );
 };
 

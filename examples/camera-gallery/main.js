@@ -87,7 +87,7 @@
     var main = function () {
 
 
-        function createScene() {
+        function createScene () {
             var group = new osg.Node();
 
             var size = 50;

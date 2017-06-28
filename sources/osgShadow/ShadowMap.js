@@ -438,7 +438,7 @@ MACROUTILS.createPrototypeObject( ShadowMap, MACROUTILS.objectInherit( ShadowTec
         }
     },
 
-    updateShadowTechnic: function ( /*nv*/) {
+    updateShadowTechnic: function ( /*nv*/ ) {
         Notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
         this.updateShadowTechnique();
     },
@@ -714,7 +714,7 @@ MACROUTILS.createPrototypeObject( ShadowMap, MACROUTILS.objectInherit( ShadowTec
         var positionedAttribute = cullVisitor.getCurrentRenderBin().getPositionedAttribute();
 
         var lightMatrix;
-        positionedAttribute = positionedAttribute.find( function ( element ) {
+        positionedAttribute.find( function ( element ) {
             if ( element.length > 0 && element[ 1 ] === light ) {
                 lightMatrix = element[ 0 ];
                 return true;

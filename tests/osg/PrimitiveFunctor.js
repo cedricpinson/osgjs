@@ -1,7 +1,7 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var MACROUTILS = require( 'osg/Utils' );
-var mockup = require( 'tests/mockup/mockup' );
+require( 'tests/mockup/mockup' );
 var PrimitiveFunctor = require( 'osg/PrimitiveFunctor' );
 var primitiveSet = require( 'osg/primitiveSet' );
 var DrawElements = require( 'osg/DrawElements' );
@@ -12,6 +12,52 @@ var vec3 = require( 'osg/glMatrix' ).vec3;
 
 
 module.exports = function () {
+
+    var createGeometry = function ( primitiveType, arraysOrElements ) {
+        var g = new Geometry();
+        var vertexes = new MACROUTILS.Float32Array( 9 );
+        vertexes[ 0 ] = 0;
+        vertexes[ 1 ] = 0;
+        vertexes[ 2 ] = 0;
+
+        vertexes[ 3 ] = 2.0;
+        vertexes[ 4 ] = 2.0;
+        vertexes[ 5 ] = 0.0;
+
+        vertexes[ 6 ] = -2.0;
+        vertexes[ 7 ] = 2.0;
+        vertexes[ 8 ] = 0.0;
+
+        var normal = new MACROUTILS.Float32Array( 9 );
+        normal[ 0 ] = 0;
+        normal[ 1 ] = 0;
+        normal[ 2 ] = 1;
+
+        normal[ 3 ] = 0;
+        normal[ 4 ] = 0;
+        normal[ 5 ] = 1;
+
+        normal[ 6 ] = 0;
+        normal[ 7 ] = 0;
+        normal[ 8 ] = 1;
+
+        var indexes = new MACROUTILS.Uint16Array( 3 );
+        indexes[ 0 ] = 2;
+        indexes[ 1 ] = 0;
+        indexes[ 2 ] = 1;
+
+
+        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
+        var primitive;
+        if ( arraysOrElements === 0 ) {
+            primitive = new DrawArrays( primitiveType, 0, vertexes.length / 3 );
+        } else {
+            primitive = new DrawElements( primitiveType, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+        }
+        g.getPrimitives().push( primitive );
+        return g;
+    };
 
     test( 'PrimitiveFunctor Points', function () {
         // Test DrawArrays
@@ -174,53 +220,5 @@ module.exports = function () {
         assert.equalVector( vectors[ 1 ], [ 0, 0, 0 ] );
         assert.equalVector( vectors[ 2 ], [ 2.0, 2.0, 0 ] );
     } );
-
-
-    var createGeometry = function ( primitiveType, arraysOrElements ) {
-        var g = new Geometry();
-        var vertexes = new MACROUTILS.Float32Array( 9 );
-        vertexes[ 0 ] = 0;
-        vertexes[ 1 ] = 0;
-        vertexes[ 2 ] = 0;
-
-        vertexes[ 3 ] = 2.0;
-        vertexes[ 4 ] = 2.0;
-        vertexes[ 5 ] = 0.0;
-
-        vertexes[ 6 ] = -2.0;
-        vertexes[ 7 ] = 2.0;
-        vertexes[ 8 ] = 0.0;
-
-        var normal = new MACROUTILS.Float32Array( 9 );
-        normal[ 0 ] = 0;
-        normal[ 1 ] = 0;
-        normal[ 2 ] = 1;
-
-        normal[ 3 ] = 0;
-        normal[ 4 ] = 0;
-        normal[ 5 ] = 1;
-
-        normal[ 6 ] = 0;
-        normal[ 7 ] = 0;
-        normal[ 8 ] = 1;
-
-        var indexes = new MACROUTILS.Uint16Array( 3 );
-        indexes[ 0 ] = 2;
-        indexes[ 1 ] = 0;
-        indexes[ 2 ] = 1;
-
-
-        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
-        var primitive;
-        if ( arraysOrElements === 0 ) // Arrays
-        {
-            primitive = new DrawArrays( primitiveType, 0, vertexes.length / 3 );
-        } else {
-            primitive = new DrawElements( primitiveType, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
-        }
-        g.getPrimitives().push( primitive );
-        return g;
-    };
 
 };

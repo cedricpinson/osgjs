@@ -341,7 +341,7 @@
             }
         } );
 
-        var load = function ( /*value*/) {
+        var load = function ( /*value*/ ) {
             root.removeChildren();
             createScene( viewer, root, window.models[ controller.models ], config, controller );
         };
