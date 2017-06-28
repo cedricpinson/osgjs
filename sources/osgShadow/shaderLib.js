@@ -1,18 +1,14 @@
 'use strict';
-var shadowsCastFrag = require('osgShadow/shaders/shadowsCastFrag.glsl');
-var shadowsReceive = require('osgShadow/shaders/shadowsReceive.glsl');
-var shadowsReceiveMain = require('osgShadow/shaders/shadowsReceiveMain.glsl');
+var shadowCast = require('osgShadow/shaders/shadowCast.glsl');
+var shadowReceive = require('osgShadow/shaders/shadowReceive.glsl');
 var shadowLinearSoft = require('osgShadow/shaders/shadowLinearSoft.glsl');
-var pcf = require('osgShadow/shaders/pcf.glsl');
+var floatFromTex = require('osgShadow/shaders/floatFromTex.glsl');
 var tapPCF = require('osgShadow/shaders/tapPCF.glsl');
-var hash = require('osgShadow/shaders/hash.glsl');
 
 module.exports = {
-    'shadowsCastFrag.glsl': shadowsCastFrag,
-    'shadowsReceive.glsl': shadowsReceive,
-    'shadowsReceiveMain.glsl': shadowsReceiveMain,
+    'shadowCast.glsl': shadowCast,
+    'shadowReceive.glsl': shadowReceive,
     'shadowLinearSoft.glsl': shadowLinearSoft,
-    'pcf.glsl': pcf,
-    'tapPCF.glsl': tapPCF,
-    'hash.glsl': hash
+    'floatFromTex.glsl': floatFromTex,
+    'tapPCF.glsl': tapPCF
 };

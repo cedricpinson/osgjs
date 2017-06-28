@@ -2,9 +2,6 @@
 var Notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var Node = require('osgShader/node/Node');
-var utils = require('osgShader/utils');
-
-var sprintf = utils.sprintf;
 
 // Abstract class
 // base operator contains helper for the constructor
@@ -190,6 +187,63 @@ MACROUTILS.createPrototypeObject(
     'MatrixMultPosition'
 );
 
+var Blend = function() {
+    BaseOperator.apply(this);
+    this._mode = 'MIX';
+};
+MACROUTILS.createPrototypeObject(
+    Blend,
+    MACROUTILS.objectInherit(BaseOperator.prototype, {
+        type: 'Blend',
+        mode: function(mode) {
+            this._mode = mode;
+            return this;
+        },
+        computeShader: function() {
+            return this[this._mode === undefined ? 'MIX' : this._mode]();
+        },
+        ADD: function() {
+            return (
+                this._outputs.getVariable() +
+                ' = ' +
+                this._inputs[0].getVariable() +
+                ' + (' +
+                this._inputs[1].getVariable() +
+                ' * ' +
+                this._inputs[2].getVariable() +
+                ');'
+            );
+        },
+        MIX: function() {
+            // result = val0*(1.0-t) + t*val1
+            return (
+                this._outputs.getVariable() +
+                ' = mix(' +
+                this._inputs[0].getVariable() +
+                ', ' +
+                this._inputs[1].getVariable() +
+                ', ' +
+                this._inputs[2].getVariable() +
+                ');'
+            );
+        },
+        MULTIPLY: function() {
+            return (
+                this._outputs.getVariable() +
+                ' = ' +
+                this._inputs[0].getVariable() +
+                ' * mix( ' +
+                this._inputs[0].getType() +
+                '(1.0), ' +
+                this._inputs[1].getVariable() +
+                ', ' +
+                this._inputs[2].getVariable() +
+                ');'
+            );
+        }
+    })
+);
+
 // For all you custom needs.
 //
 // call Code() with variable input/output replace
@@ -244,70 +298,13 @@ MACROUTILS.createPrototypeObject(
     'InlineCode'
 );
 
-// glsl code  output = vec4( color.rgb, alpha )
-var SetAlpha = function() {
-    BaseOperator.call(this);
-};
-
-MACROUTILS.createPrototypeObject(
-    SetAlpha,
-    MACROUTILS.objectInherit(BaseOperator.prototype, {
-        type: 'SetAlpha',
-        validInputs: ['color', 'alpha'],
-        validOuputs: ['color'],
-        computeShader: function() {
-            var alpha = this._inputs.alpha;
-            return sprintf('%s = vec4( %s.rgb, %s );', [
-                this._outputs.color.getVariable(),
-                this._inputs.color.getVariable(),
-                alpha.getType() !== 'float' ? alpha.getVariable() + '.a' : alpha.getVariable()
-            ]);
-        }
-    }),
-    'osgShader',
-    'SetAlpha'
-);
-
-// alpha is optional, if not provided the following operation is generated:
-// glsl code output.rgb = color.rgb * color.a;
-var PreMultAlpha = function() {
-    BaseOperator.call(this);
-};
-
-MACROUTILS.createPrototypeObject(
-    PreMultAlpha,
-    MACROUTILS.objectInherit(BaseOperator.prototype, {
-        type: 'PreMultAlpha',
-        validInputs: ['color' /*,'alpha'*/],
-        validOuputs: ['color'],
-
-        computeShader: function() {
-            var variable =
-                this._inputs.alpha !== undefined ? this._inputs.alpha : this._inputs.color;
-
-            var srcAlpha;
-            if (variable.getType() !== 'float') srcAlpha = variable.getVariable() + '.a';
-            else srcAlpha = variable.getVariable();
-
-            return sprintf('%s.rgb = %s.rgb * %s;', [
-                this._outputs.color.getVariable(),
-                this._inputs.color.getVariable(),
-                srcAlpha
-            ]);
-        }
-    }),
-    'osgShader',
-    'PreMultAlpha'
-);
-
 module.exports = {
     BaseOperator: BaseOperator,
     Mult: Mult,
     MatrixMultPosition: MatrixMultPosition,
     MatrixMultDirection: MatrixMultDirection,
     Add: Add,
+    Blend: Blend,
     InlineCode: InlineCode,
-    SetAlpha: SetAlpha,
-    SetFromNode: SetFromNode,
-    PreMultAlpha: PreMultAlpha
+    SetFromNode: SetFromNode
 };

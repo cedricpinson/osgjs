@@ -10,6 +10,7 @@ vec3 getScale( const in mat4 matrix ) {
       return scale;
 }
 
+#pragma DECLARE_FUNCTION
 vec4 billboard( const in vec3 vertex, const in mat4 modelViewMatrix, const in mat4 projectionMatrix ) {
       vec3 scale = getScale( modelViewMatrix );
       return projectionMatrix * ( vec4( scale.x* vertex.x , scale.y * vertex.y, scale.z * vertex.z, 1.0 ) + vec4( modelViewMatrix[ 3 ].xyz, 0.0 ) );

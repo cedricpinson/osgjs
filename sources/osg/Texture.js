@@ -521,7 +521,9 @@ MACROUTILS.createPrototypeStateAttribute(
                     img instanceof window.Image ||
                     img instanceof HTMLCanvasElement ||
                     img instanceof ImageBitmap ||
-                    img instanceof Uint8Array
+                    img instanceof Uint8Array ||
+                    img instanceof Uint16Array ||
+                    img instanceof Float32Array
                 ) {
                     image = new Image(img);
                 }
