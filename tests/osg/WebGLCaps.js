@@ -12,7 +12,7 @@ module.exports = function () {
         var gl = canvas.getContext();
         var webglCaps = WebGLCaps.instance( gl );
 
-        webglCaps.getWebGLExtensions().OES_texture_float = true;
+        webglCaps.getWebGLExtensions().OES_texture_float = true; // eslint-disable-line
         webglCaps._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
 
         var hFloat = webglCaps.hasFloatRTT( gl );

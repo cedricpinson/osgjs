@@ -699,7 +699,7 @@ var geometryApply = ( function () {
 
     var tempVec = vec3.create();
     var loggedOnce = false;
-    return function geometryApply( node ) {
+    return function geometryApply ( node ) {
 
         this._numGeometry++;
 

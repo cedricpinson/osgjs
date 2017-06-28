@@ -65,11 +65,10 @@ EllipsoidModel.prototype = {
     },
     computeLocalUpVector: function ( X, Y, Z ) {
         // Note latitude is angle between normal to ellipsoid surface and XY-plane
-        var latitude, longitude, altitude;
+        var latitude, longitude;
         var coord = this.convertXYZToLatLongHeight( X, Y, Z, vec3.create() );
         latitude = coord[ 0 ];
         longitude = coord[ 1 ];
-        altitude = coord[ 2 ];
 
         // Compute up vector
         return [ Math.cos( longitude ) * Math.cos( latitude ),

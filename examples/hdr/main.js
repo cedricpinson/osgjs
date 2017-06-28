@@ -8,7 +8,7 @@
     var osgViewer = OSG.osgViewer;
     var Viewer;
 
-    function decodeHDRHeader( buf ) {
+    function decodeHDRHeader ( buf ) {
         var info = {
             exposure: 1.0
         };
@@ -85,7 +85,7 @@
         xhr.responseType = 'arraybuffer';
 
         var defer = P.defer();
-        xhr.onload = function ( /*ev*/) {
+        xhr.onload = function ( /*ev*/ ) {
             if ( xhr.response ) {
                 var bytes = new Uint8Array( xhr.response );
 
@@ -193,7 +193,7 @@
         document.getElementById( 'loading' ).style.display = 'Block';
     };
 
-    function getShaderBackground() {
+    function getShaderBackground () {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -260,7 +260,7 @@
         return program;
     }
 
-    function getShader() {
+    function getShader () {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -357,7 +357,7 @@
         return program;
     }
 
-    function getEnvSphere( size, scene ) {
+    function getEnvSphere ( size, scene ) {
         // create the environment sphere
         //var geom = osg.createTexturedSphere(size, 32, 32);
         var geom = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
@@ -389,7 +389,7 @@
         // the update callback get exactly the same view of the camera
         // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
         var UpdateCallback = function () {
-            this.update = function ( /*node, nv*/) {
+            this.update = function ( /*node, nv*/ ) {
                 var rootCam = Viewer.getCamera();
 
                 //rootCam.
@@ -422,7 +422,7 @@
         return root;
     };
 
-    function readImageURL( url ) {
+    function readImageURL ( url ) {
         var ext = url.split( '.' ).pop();
         if ( ext === 'hdr' )
             return osg.readHDRImage( url );
@@ -433,7 +433,7 @@
     // change the environment maps (reflective included)
     // Images are 8-bit RGBE encoded based on the radiance file format
     // The example supports radiance .hdr files, but uses .png which contains the exact same information for better size and speed.
-    function setEnvironment( name, background, ground ) {
+    function setEnvironment ( name, background, ground ) {
         var textures = {
             'Alexs_Apartment': [ 'Alexs_Apt_2k.png', 'Alexs_Apt_Env.png' ],
             'Arches_E_PineTree': [ 'Arches_E_PineTree_3k.png', 'Arches_E_PineTree_Env.png' ],
@@ -477,7 +477,7 @@
         } );
     }
 
-    function createScene() {
+    function createScene () {
         var group = new osg.Node();
 
         // HDR parameters uniform

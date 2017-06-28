@@ -23,8 +23,7 @@ HammerController.prototype = {
 
     init: function ( options ) {
 
-        /*jshint camelcase: false */
-
+        /* eslint-disable camelcase */
         var deviceOptions = {
             prevent_default: true,
             drag_max_touches: 2,
@@ -36,7 +35,7 @@ HammerController.prototype = {
             swipe: false,
             tap: false
         };
-        /*jshint camelcase: true */
+        /* eslint-enable camelcase */
 
         this._eventNode = options.eventNode;
 

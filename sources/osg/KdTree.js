@@ -285,7 +285,7 @@ BuildKdTree.prototype = {
 
         var bb = new BoundingBox();
         bb.copy( this._bb );
-        nodeNum = this.divide( options, bb, nodeNum, 0 );
+        this.divide( options, bb, nodeNum, 0 );
 
         var primitiveIndices = this._kdTree.getPrimitiveIndices();
 

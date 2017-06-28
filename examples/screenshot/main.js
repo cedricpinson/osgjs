@@ -45,7 +45,7 @@ SimpleUpdateCallback.prototype = {
 };
 
 
-function createScene() {
+function createScene () {
 
     var root = new osg.Node();
     var cube = new osg.MatrixTransform();
@@ -193,10 +193,10 @@ var main = function () {
 
         window.setInterval( function () {
 
-                takeShot = !takeShot;
+            takeShot = !takeShot;
 
-            },
-            1000 );
+        },
+        1000 );
 
         viewer.run();
 

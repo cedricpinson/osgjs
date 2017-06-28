@@ -4,7 +4,7 @@ var OSG = window.OSG;
 var osg = OSG.osg;
 var osgViewer = OSG.osgViewer;
 
-function getShader() {
+function getShader () {
     var vertexshader = [
         '',
         '#ifdef GL_ES',
@@ -43,7 +43,7 @@ function getShader() {
     return program;
 }
 
-function createScene() {
+function createScene () {
 
     var root = new osg.Node();
 

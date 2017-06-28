@@ -11,7 +11,7 @@
         This filter simulate a property of lenses which tends to make
         highly lit areas bleed along its normal borders
     */
-    window.getPostSceneBlur = function ( /* sceneTexture*/) {
+    window.getPostSceneBlur = function ( /* sceneTexture*/ ) {
         var cachedScenes = {};
         var inputTex, hBlur, vBlur;
 

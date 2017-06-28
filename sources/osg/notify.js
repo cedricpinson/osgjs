@@ -16,7 +16,7 @@ Notify.console = window.console;
  * @param { str } actual log text
  * @param { fold  } sometimes you want to hide looooong text
  */
-function logSub( level, str ) {
+function logSub ( level, str ) {
 
     if ( !Notify.console ) return;
 
@@ -25,7 +25,7 @@ function logSub( level, str ) {
 
 }
 
-function logSubFold( level, title, str ) {
+function logSubFold ( level, title, str ) {
 
     if ( !Notify.console ) return;
 
@@ -37,7 +37,7 @@ function logSubFold( level, title, str ) {
 
 }
 
-function unFlattenMatrix( m, rowMajor ) {
+function unFlattenMatrix ( m, rowMajor ) {
     if ( rowMajor ) {
         return [ m.slice( 0, 4 ), m.slice( 4, 8 ), m.slice( 8, 12 ), m.slice( 12, 16 ) ];
     }
@@ -50,12 +50,12 @@ function unFlattenMatrix( m, rowMajor ) {
     ];
 }
 
-function logMatrix( m, rowMajor ) {
+function logMatrix ( m, rowMajor ) {
     if ( Notify.console.table )
         logSub( 'table', unFlattenMatrix( m, rowMajor ) );
 }
 
-function logMatrixFold( title, m, rowMajor ) {
+function logMatrixFold ( title, m, rowMajor ) {
     if ( Notify.console.table )
         logSubFold( 'table', title, unFlattenMatrix( m, rowMajor ) );
 }

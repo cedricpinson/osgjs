@@ -36,7 +36,7 @@ SimpleUpdateCallback.prototype = {
     }
 };
 
-function createScene() {
+function createScene () {
     var root = new osg.Node();
     var cube = new osg.MatrixTransform();
 

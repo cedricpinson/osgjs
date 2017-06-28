@@ -103,7 +103,7 @@ Utils.extend = function () {
 };
 
 Utils.objectInherit = function ( base /*, extras*/ ) {
-    function F() {}
+    function F () {}
     F.prototype = base;
     var obj = new F();
 

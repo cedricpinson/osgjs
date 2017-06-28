@@ -25,7 +25,7 @@ window.addEventListener( 'deviceorientation', onDeviceOrientationChangeEvent, fa
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
 // device orientation to 3x3 matrix
-function getBaseRotationMatrix( alpha, beta, gamma ) {
+function getBaseRotationMatrix ( alpha, beta, gamma ) {
     var _x = beta ? beta * degtorad : 0; // beta value
     var _y = gamma ? gamma * degtorad : 0; // gamma value
     var _z = alpha ? alpha * degtorad : 0; // alpha value
@@ -61,7 +61,7 @@ function getBaseRotationMatrix( alpha, beta, gamma ) {
 }
 
 //screen orientation to 3x3 matrix
-function getScreenTransformationMatrix( screenOrientation ) {
+function getScreenTransformationMatrix ( screenOrientation ) {
     var orientationAngle = screenOrientation ? screenOrientation * degtorad : 0;
 
     var cA = Math.cos( orientationAngle );
@@ -76,7 +76,7 @@ function getScreenTransformationMatrix( screenOrientation ) {
     return rS;
 }
 // rotate 90 on X
-function getWorldTransformationMatrix( angleDeg, axis ) {
+function getWorldTransformationMatrix ( angleDeg, axis ) {
     var x = angleDeg * degtorad;
 
     var cA = Math.cos( x );
@@ -105,7 +105,7 @@ function getWorldTransformationMatrix( angleDeg, axis ) {
     return r;
 }
 
-function matrixMultiply( a, b ) {
+function matrixMultiply ( a, b ) {
     var final = [];
 
     final[ 0 ] = a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 3 ] + a[ 2 ] * b[ 6 ];
@@ -123,7 +123,7 @@ function matrixMultiply( a, b ) {
     return final;
 }
 
-function computeMatrix() {
+function computeMatrix () {
 
 
     orientationInfo.screenOrientation = window.orientation || 0;
@@ -174,7 +174,7 @@ var main = function () {
         _inv: [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ],
         _deviceMatrix: new Float32Array( 16 ),
         _inverseDeviceMatrix: new Float32Array( 16 ),
-        cameraUpdate: function ( /*currentTime, node, nv*/) {
+        cameraUpdate: function ( /*currentTime, node, nv*/ ) {
             if ( orientationInfo.deviceOrientation ) {
                 this._deviceMatrix = computeMatrix();
                 var m = this._deviceMatrix;

@@ -46,7 +46,7 @@ module.exports = function () {
 
         var fb = function () {};
         fb.prototype = {
-            cull: function ( /*node, nv*/) {
+            cull: function ( /*node, nv*/ ) {
                 callb = 1;
                 return false;
             }
@@ -54,7 +54,7 @@ module.exports = function () {
 
         var fc = function () {};
         fc.prototype = {
-            cull: function ( /*node, nv*/) {
+            cull: function ( /*node, nv*/ ) {
                 callc = 1;
                 return true;
             }

@@ -34,7 +34,7 @@ Uniform.prototype = {
     },
 
 
-    apply: function UniformApply( gl, location ) {
+    apply: function UniformApply ( gl, location ) {
         if ( !this._cache )
             this._cache = gl[ this._glCall ];
 

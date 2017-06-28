@@ -35,7 +35,7 @@
             return this._attributeEnable;
         },
 
-        apply: function ( /*state*/) {
+        apply: function ( /*state*/ ) {
             var uniforms = this.getOrCreateUniforms();
             var value = this._attributeEnable ? 1 : 0;
             uniforms.enable.setFloat( value );

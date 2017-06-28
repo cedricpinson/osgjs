@@ -12,11 +12,134 @@ var BufferArray = require( 'osg/BufferArray' );
 var DrawElements = require( 'osg/DrawElements' );
 var DrawArrays = require( 'osg/DrawArrays' );
 var primitiveSet = require( 'osg/primitiveSet' );
-var Shape = require( 'osg/shape' );
 var KdTreeBuilder = require( 'osg/KdTreeBuilder' );
 var intersectionEnums = require( 'osgUtil/intersectionEnums' );
 
 module.exports = function () {
+    var createLines = function ( lineType ) {
+        var g = new Geometry();
+        var vertexes = new MACROUTILS.Float32Array( 12 );
+        vertexes[ 0 ] = -2.0;
+        vertexes[ 1 ] = 2.0;
+        vertexes[ 2 ] = 0.0;
+
+        vertexes[ 3 ] = 0.0;
+        vertexes[ 4 ] = 0.0;
+        vertexes[ 5 ] = 0.0;
+
+        vertexes[ 6 ] = 2.0;
+        vertexes[ 7 ] = 2.0;
+        vertexes[ 8 ] = 0.0;
+
+        vertexes[ 9 ] = 4.0;
+        vertexes[ 10 ] = 0.0;
+        vertexes[ 11 ] = 0.0;
+
+        var normal = new MACROUTILS.Float32Array( 12 );
+        normal[ 0 ] = 0;
+        normal[ 1 ] = 0;
+        normal[ 2 ] = 1;
+
+        normal[ 3 ] = 0;
+        normal[ 4 ] = 0;
+        normal[ 5 ] = 1;
+
+        normal[ 6 ] = 0;
+        normal[ 7 ] = 0;
+        normal[ 8 ] = 1;
+
+        normal[ 9 ] = 0;
+        normal[ 10 ] = 0;
+        normal[ 11 ] = 1;
+
+        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
+
+        var primitive = new DrawArrays( lineType, 0, vertexes.length / 3 );
+        g.getPrimitives().push( primitive );
+        return g;
+    };
+
+    var createTriangle = function () {
+        var g = new Geometry();
+        var vertexes = new MACROUTILS.Float32Array( 9 );
+        vertexes[ 0 ] = -2.0;
+        vertexes[ 1 ] = 2.0;
+        vertexes[ 2 ] = 0.0;
+
+        vertexes[ 3 ] = 0.0;
+        vertexes[ 4 ] = 0.0;
+        vertexes[ 5 ] = 0.0;
+
+        vertexes[ 6 ] = 2.0;
+        vertexes[ 7 ] = 2.0;
+        vertexes[ 8 ] = 0.0;
+
+
+        var normal = new MACROUTILS.Float32Array( 9 );
+        normal[ 0 ] = 0;
+        normal[ 1 ] = 0;
+        normal[ 2 ] = 1;
+
+        normal[ 3 ] = 0;
+        normal[ 4 ] = 0;
+        normal[ 5 ] = 1;
+
+        normal[ 6 ] = 0;
+        normal[ 7 ] = 0;
+        normal[ 8 ] = 1;
+
+        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
+
+        var primitive = new DrawArrays( primitiveSet.TRIANGLES, 0, vertexes.length / 3 );
+        g.getPrimitives().push( primitive );
+        return g;
+    };
+
+    var createPoints = function () {
+
+        var g = new Geometry();
+
+        var vertexes = new MACROUTILS.Float32Array( 9 );
+        vertexes[ 0 ] = 0;
+        vertexes[ 1 ] = 0;
+        vertexes[ 2 ] = 0;
+
+        vertexes[ 3 ] = 0.2;
+        vertexes[ 4 ] = 0.2;
+        vertexes[ 5 ] = 0.0;
+
+        vertexes[ 6 ] = -0.2;
+        vertexes[ 7 ] = 0.2;
+        vertexes[ 8 ] = 0.0;
+
+        var normal = new MACROUTILS.Float32Array( 9 );
+        normal[ 0 ] = 0;
+        normal[ 1 ] = 0;
+        normal[ 2 ] = 1;
+
+        normal[ 3 ] = 0;
+        normal[ 4 ] = 0;
+        normal[ 5 ] = 1;
+
+        normal[ 6 ] = 0;
+        normal[ 7 ] = 0;
+        normal[ 8 ] = 1;
+
+        var indexes = new MACROUTILS.Uint16Array( 3 );
+        indexes[ 0 ] = 2;
+        indexes[ 1 ] = 0;
+        indexes[ 2 ] = 1;
+
+
+        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
+
+        var primitive = new DrawElements( primitiveSet.POINTS, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+        g.getPrimitives().push( primitive );
+        return g;
+    };
 
     test( 'PolytopeIntersector intersectPoints', function () {
 
@@ -237,129 +360,6 @@ module.exports = function () {
     } );
 
 
-    var createPoints = function () {
 
-        var g = new Geometry();
-
-        var vertexes = new MACROUTILS.Float32Array( 9 );
-        vertexes[ 0 ] = 0;
-        vertexes[ 1 ] = 0;
-        vertexes[ 2 ] = 0;
-
-        vertexes[ 3 ] = 0.2;
-        vertexes[ 4 ] = 0.2;
-        vertexes[ 5 ] = 0.0;
-
-        vertexes[ 6 ] = -0.2;
-        vertexes[ 7 ] = 0.2;
-        vertexes[ 8 ] = 0.0;
-
-        var normal = new MACROUTILS.Float32Array( 9 );
-        normal[ 0 ] = 0;
-        normal[ 1 ] = 0;
-        normal[ 2 ] = 1;
-
-        normal[ 3 ] = 0;
-        normal[ 4 ] = 0;
-        normal[ 5 ] = 1;
-
-        normal[ 6 ] = 0;
-        normal[ 7 ] = 0;
-        normal[ 8 ] = 1;
-
-        var indexes = new MACROUTILS.Uint16Array( 3 );
-        indexes[ 0 ] = 2;
-        indexes[ 1 ] = 0;
-        indexes[ 2 ] = 1;
-
-
-        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
-
-        var primitive = new DrawElements( primitiveSet.POINTS, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
-        g.getPrimitives().push( primitive );
-        return g;
-    };
-
-    var createLines = function ( lineType ) {
-        var g = new Geometry();
-        var vertexes = new MACROUTILS.Float32Array( 12 );
-        vertexes[ 0 ] = -2.0;
-        vertexes[ 1 ] = 2.0;
-        vertexes[ 2 ] = 0.0;
-
-        vertexes[ 3 ] = 0.0;
-        vertexes[ 4 ] = 0.0;
-        vertexes[ 5 ] = 0.0;
-
-        vertexes[ 6 ] = 2.0;
-        vertexes[ 7 ] = 2.0;
-        vertexes[ 8 ] = 0.0;
-
-        vertexes[ 9 ] = 4.0;
-        vertexes[ 10 ] = 0.0;
-        vertexes[ 11 ] = 0.0;
-
-        var normal = new MACROUTILS.Float32Array( 12 );
-        normal[ 0 ] = 0;
-        normal[ 1 ] = 0;
-        normal[ 2 ] = 1;
-
-        normal[ 3 ] = 0;
-        normal[ 4 ] = 0;
-        normal[ 5 ] = 1;
-
-        normal[ 6 ] = 0;
-        normal[ 7 ] = 0;
-        normal[ 8 ] = 1;
-
-        normal[ 9 ] = 0;
-        normal[ 10 ] = 0;
-        normal[ 11 ] = 1;
-
-        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
-
-        var primitive = new DrawArrays( lineType, 0, vertexes.length / 3 );
-        g.getPrimitives().push( primitive );
-        return g;
-    };
-
-    var createTriangle = function () {
-        var g = new Geometry();
-        var vertexes = new MACROUTILS.Float32Array( 9 );
-        vertexes[ 0 ] = -2.0;
-        vertexes[ 1 ] = 2.0;
-        vertexes[ 2 ] = 0.0;
-
-        vertexes[ 3 ] = 0.0;
-        vertexes[ 4 ] = 0.0;
-        vertexes[ 5 ] = 0.0;
-
-        vertexes[ 6 ] = 2.0;
-        vertexes[ 7 ] = 2.0;
-        vertexes[ 8 ] = 0.0;
-
-
-        var normal = new MACROUTILS.Float32Array( 9 );
-        normal[ 0 ] = 0;
-        normal[ 1 ] = 0;
-        normal[ 2 ] = 1;
-
-        normal[ 3 ] = 0;
-        normal[ 4 ] = 0;
-        normal[ 5 ] = 1;
-
-        normal[ 6 ] = 0;
-        normal[ 7 ] = 0;
-        normal[ 8 ] = 1;
-
-        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
-        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
-
-        var primitive = new DrawArrays( primitiveSet.TRIANGLES, 0, vertexes.length / 3 );
-        g.getPrimitives().push( primitive );
-        return g;
-    };
 
 };

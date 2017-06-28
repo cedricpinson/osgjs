@@ -14,9 +14,9 @@ module.exports = function () {
         var input = new Input();
         var textureFromURL = new Texture();
         input.readImageURL( '"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="' ).
-        then( function ( image ) {
-            textureFromURL.setImage( image );
-        } );
+            then( function ( image ) {
+                textureFromURL.setImage( image );
+            } );
         assert.isOk( textureFromURL !== undefined, 'Check textureFromURL' );
 
         var ready;

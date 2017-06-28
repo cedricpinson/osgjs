@@ -1,6 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
-var mockup = require( 'tests/mockup/mockup' );
+require( 'tests/mockup/mockup' );
 var quat = require( 'osg/glMatrix' ).quat;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var mat4 = require( 'osg/glMatrix' ).mat4;

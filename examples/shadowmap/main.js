@@ -535,37 +535,37 @@
             if ( this._previousLightType !== this._config.lightType ) {
                 switch ( this._config.lightType ) {
                 case 'Spot':
-                    {
-                        this._config.fov = this._previousSpotFov;
-                        l = this._lights.length;
-                        while ( l-- ) {
-                            this._lights[ l ].setLightAsSpot();
-                        }
-
-
-                        break;
+                {
+                    this._config.fov = this._previousSpotFov;
+                    l = this._lights.length;
+                    while ( l-- ) {
+                        this._lights[ l ].setLightAsSpot();
                     }
+
+
+                    break;
+                }
                 case 'Point':
-                    {
+                {
 
-                        if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config.fov;
-                        this._config.fov = 180;
-                        l = this._lights.length;
-                        while ( l-- ) {
-                            this._lights[ l ].setLightAsPoint();
-                        }
-                        break;
+                    if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config.fov;
+                    this._config.fov = 180;
+                    l = this._lights.length;
+                    while ( l-- ) {
+                        this._lights[ l ].setLightAsPoint();
                     }
+                    break;
+                }
                 case 'Directional':
-                    {
-                        if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config.fov;
-                        this._config.fov = 180;
-                        l = this._lights.length;
-                        while ( l-- ) {
-                            this._lights[ l ].setLightAsDirection();
-                        }
-                        break;
+                {
+                    if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config.fov;
+                    this._config.fov = 180;
+                    l = this._lights.length;
+                    while ( l-- ) {
+                        this._lights[ l ].setLightAsDirection();
                     }
+                    break;
+                }
                 }
                 this._previousLightType = this._config.lightType;
             }

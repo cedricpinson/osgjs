@@ -5,7 +5,7 @@
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
 
-    function getShader() {
+    function getShader () {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -49,7 +49,7 @@
     }
 
 
-    function createScene() {
+    function createScene () {
         var group = new osg.Node();
 
         var size = 500;

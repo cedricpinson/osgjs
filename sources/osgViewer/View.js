@@ -314,15 +314,16 @@ View.prototype = {
     },
 
     // In OSG this call is done in SceneView
-    flushDeletedGLObjects: function ( /*currentTime,*/ availableTime ) {
+    flushDeletedGLObjects: function ( availableTimeBudget ) {
         // Flush all deleted OpenGL objects within the specified availableTime
         var gl = this.getGraphicContext();
+        var availableTime = availableTimeBudget;
         availableTime = BufferArray.flushDeletedGLBufferArrays( gl, availableTime );
         availableTime = Texture.getTextureManager( gl ).flushDeletedTextureObjects( gl, availableTime );
         availableTime = Program.flushDeletedGLPrograms( gl, availableTime );
         availableTime = Shader.flushDeletedGLShaders( gl, availableTime );
         availableTime = FrameBufferObject.flushDeletedGLFrameBuffers( gl, availableTime );
-        availableTime = FrameBufferObject.flushDeletedGLRenderBuffers( gl, availableTime );
+        FrameBufferObject.flushDeletedGLRenderBuffers( gl, availableTime );
     },
 
     flushAllDeletedGLObjects: function () {

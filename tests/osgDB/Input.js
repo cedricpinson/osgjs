@@ -31,7 +31,7 @@ module.exports = function () {
         };
         input.readImageURL( ImageTest, {
             readImageURL: readImageURLReplacement
-        } ).then( function ( /*image*/) {
+        } ).then( function ( /*image*/ ) {
             assert.equal( called, true, 'check image src' );
             done();
         } ).catch( function ( error ) {
@@ -95,7 +95,7 @@ module.exports = function () {
             'UniqueID': 10
         };
         var input = new Input( ba );
-        input.readBufferArray().then( function ( /*value*/) {
+        input.readBufferArray().then( function ( /*value*/ ) {
             return input.setJSON( {
                 'UniqueID': 10
             } ).readBufferArray();
@@ -108,14 +108,14 @@ module.exports = function () {
 
     test( 'Input.readBinaryArrayURL with replacement option', function ( done ) {
         var calledBinaryArray = false;
-        var readBinaryArrayURL = function ( /*url, options*/) {
+        var readBinaryArrayURL = function ( /*url, options*/ ) {
             calledBinaryArray = true;
             return P.resolve();
         };
         var input = new Input();
         input.readBinaryArrayURL( 'toto', {
             readBinaryArrayURL: readBinaryArrayURL
-        } ).then( function ( /*value*/) {
+        } ).then( function ( /*value*/ ) {
             assert.isOk( calledBinaryArray, true, 'readBinaryArray replacement has been called' );
             done();
         } );
@@ -124,14 +124,14 @@ module.exports = function () {
 
     test( 'Input.readNodeURL with replacement option', function ( done ) {
         var calledNodeURL = false;
-        var readNodeURL = function ( /*url, options*/) {
+        var readNodeURL = function ( /*url, options*/ ) {
             calledNodeURL = true;
             return P.resolve();
         };
         var input = new Input();
         input.readNodeURL( 'toto', {
             readNodeURL: readNodeURL
-        } ).then( function ( /*value*/) {
+        } ).then( function ( /*value*/ ) {
             assert.isOk( calledNodeURL, true, 'readNodeURL replacement has been called' );
             done();
         } );
@@ -203,7 +203,7 @@ module.exports = function () {
                 'mode': 'TRIANGLES'
             }
         } );
-        input.readPrimitiveSet().then( function ( /*value */) {
+        input.readPrimitiveSet().then( function ( /*value */ ) {
             return input.setJSON( {
                 'DrawArrays': {
                     'UniqueID': 10
@@ -267,7 +267,7 @@ module.exports = function () {
             };
             var input = new Input( ba );
             input.setProgressXHRCallback( progress );
-            return input.readBufferArray().then( function ( /*buffer*/) {
+            return input.readBufferArray().then( function ( /*buffer*/ ) {
 
                 assert.isOk( calledProgress === true, 'readBufferArray check progress callback' );
                 return P.resolve();

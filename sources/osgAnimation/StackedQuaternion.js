@@ -35,7 +35,7 @@ MACROUTILS.createPrototypeObject( StackedQuaternion, MACROUTILS.objectInherit( O
     applyToMatrix: ( function () {
         var matrixTmp = mat4.create();
 
-        return function applyToMatrix( m ) {
+        return function applyToMatrix ( m ) {
             var mtmp = matrixTmp;
             mat4.fromQuat( mtmp, this._target.value );
             mat4.mul( m, m, mtmp );

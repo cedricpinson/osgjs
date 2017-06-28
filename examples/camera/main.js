@@ -6,7 +6,7 @@
     var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
 
-    function createScene() {
+    function createScene () {
 
         var canvas = document.getElementById( 'View' );
 

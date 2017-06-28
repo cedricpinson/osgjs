@@ -1,15 +1,21 @@
 {
   "devDependencies": {
     "chai": "^3.5.0",
+    "eslint": "^4.1.1",
+    "eslint-config-google": "^0.8.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.6.0",
+    "eslint-plugin-node": "^5.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
     "grunt-contrib-connect": "~0.9",
     "grunt-documentation": "*",
-    "grunt-jsbeautifier": "^0.2.10",
     "grunt-mocha": "^1.0.2",
-    "grunt-release": "^0.10.0",
-    "mocha": "^2.5.3",
-    "webpack-strip-block": "0.0.1",
     "grunt-plato": "~0.2.1",
-    "grunt-update-submodules": "^0.4.1"
+    "grunt-release": "^0.10.0",
+    "grunt-update-submodules": "^0.4.1",
+    "mocha": "^2.5.3",
+    "webpack-strip-block": "0.0.1"
   },
   "peerDependencies": {
     "grunt": ">=0.4.0"
@@ -31,14 +37,13 @@
     "grunt-eslint": "*",
     "grunt-copy-to": "0.0.12",
     "grunt-contrib-uglify": "*",
-    "grunt-contrib-jshint": "*",
     "grunt-contrib-copy": "*",
     "grunt-contrib-clean": "*",
     "grunt": "> 1.0.0",
     "glob": "*",
     "extend": "*",
     "eslint-plugin-private-variables": "*",
-    "eslint": "*"
+    "eslint": ">=4.1.1"
   },
   "contributors": [
     "Paul Cheyrou-Lagrèze <tuan.kuranes@gmail.com>",
