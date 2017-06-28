@@ -58,7 +58,7 @@ module.exports = function () {
         assert.isOk( !lsi.intersects( bs ), 'hit failed' );
     } );
 
-    test( 'LineSegmentIntersector without 2 branches', function () {
+    test( 'LineSegmentIntersector with 2 branches', function () {
 
         // right branch should be picked
         // left branch shouldn't be picked
