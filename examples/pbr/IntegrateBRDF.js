@@ -27,46 +27,46 @@ window.IntegrateBRDFMap = ( function () {
         },
 
         loadPacked: function () {
-            var defer = P.defer();
+            return new P( function ( resolve ) {
 
-            var size = this._size;
+                var size = this._size;
 
-            var readInputArray = function ( inputArray ) {
+                var readInputArray = function ( inputArray ) {
 
-                var data = inputArray;
-                if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
+                    var data = inputArray;
+                    if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
 
-                var byteSize = size * size * 4;
+                    var byteSize = size * size * 4;
 
-                var imageData = new Uint8Array( data, 0, byteSize );
-                var image = new osg.Image();
-                image.setImage( imageData );
+                    var imageData = new Uint8Array( data, 0, byteSize );
+                    var image = new osg.Image();
+                    image.setImage( imageData );
 
-                image.setWidth( size );
-                image.setHeight( size );
+                    image.setWidth( size );
+                    image.setHeight( size );
 
-                this._texture = this.createTexture( image );
-                this._texture.setFlipY( false );
+                    this._texture = this.createTexture( image );
+                    this._texture.setFlipY( false );
 
-                defer.resolve( this._texture );
+                    resolve( this._texture );
 
-            }.bind( this );
+                }.bind( this );
 
 
-            if ( this._data ) {
+                if ( this._data ) {
 
-                readInputArray( this._data );
+                    readInputArray( this._data );
 
-            } else {
+                } else {
 
-                var input = new osgDB.Input();
-                input.requestFile( this._file, {
-                    responseType: 'arraybuffer'
-                } ).then( readInputArray );
+                    var input = new osgDB.Input();
+                    input.requestFile( this._file, {
+                        responseType: 'arraybuffer'
+                    } ).then( readInputArray );
 
-            }
+                }
 
-            return defer.promise;
+            } );
 
         }
 

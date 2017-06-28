@@ -67,56 +67,56 @@ window.EnvironmentPanorama = ( function () {
         },
 
         loadPacked: function ( type ) {
-            var defer = P.defer();
+            return new P( function ( resolve ) {
 
-            var readInputArray = function ( inputArray ) {
+                var readInputArray = function ( inputArray ) {
 
-                var data = inputArray;
-                if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
+                    var data = inputArray;
+                    if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
 
-                var size = this._size;
+                    var size = this._size;
 
-                var imageData, deinterleave;
-                if ( type === 'FLOAT' ) {
-                    imageData = new Float32Array( data );
-                    deinterleave = new Float32Array( data.byteLength / 4 );
-                    this.deinterleaveImage3( size, imageData, deinterleave );
+                    var imageData, deinterleave;
+                    if ( type === 'FLOAT' ) {
+                        imageData = new Float32Array( data );
+                        deinterleave = new Float32Array( data.byteLength / 4 );
+                        this.deinterleaveImage3( size, imageData, deinterleave );
+                    } else {
+                        imageData = new Uint8Array( data );
+                        deinterleave = new Uint8Array( data.byteLength );
+                        this.deinterleaveImage4( size, imageData, deinterleave );
+                    }
+                    imageData = deinterleave;
+
+                    var image = new osg.Image();
+                    image.setImage( imageData );
+                    image.setWidth( size );
+                    image.setHeight( size );
+
+                    if ( type === 'FLOAT' )
+                        this.createFloatPacked( image );
+                    else
+                        this.createRGBA8Packed( image );
+
+                    resolve();
+
+                }.bind( this );
+
+
+                if ( this._data ) {
+
+                    readInputArray( this._data );
+
                 } else {
-                    imageData = new Uint8Array( data );
-                    deinterleave = new Uint8Array( data.byteLength );
-                    this.deinterleaveImage4( size, imageData, deinterleave );
+
+                    var input = new osgDB.Input();
+                    input.requestFile( this._file, {
+                        responseType: 'arraybuffer'
+                    } ).then( readInputArray );
+
                 }
-                imageData = deinterleave;
 
-                var image = new osg.Image();
-                image.setImage( imageData );
-                image.setWidth( size );
-                image.setHeight( size );
-
-                if ( type === 'FLOAT' )
-                    this.createFloatPacked( image );
-                else
-                    this.createRGBA8Packed( image );
-
-                defer.resolve();
-
-            }.bind( this );
-
-
-            if ( this._data ) {
-
-                readInputArray( this._data );
-
-            } else {
-
-                var input = new osgDB.Input();
-                input.requestFile( this._file, {
-                    responseType: 'arraybuffer'
-                } ).then( readInputArray );
-
-            }
-
-            return defer.promise;
+            } );
         },
 
         createFloatPacked: function ( image ) {

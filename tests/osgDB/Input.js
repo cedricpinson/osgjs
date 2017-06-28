@@ -203,7 +203,7 @@ module.exports = function () {
                 'mode': 'TRIANGLES'
             }
         } );
-        input.readPrimitiveSet().then( function ( /*value */) {
+        input.readPrimitiveSet().then( function ( /* value */) {
             return input.setJSON( {
                 'DrawArrays': {
                     'UniqueID': 10

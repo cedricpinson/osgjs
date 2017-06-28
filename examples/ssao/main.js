@@ -205,46 +205,46 @@
 
         readShaders: function () {
 
-            var defer = P.defer();
-            var self = this;
+            return new P( function ( resolve ) {
+                var self = this;
 
-            var shaderNames = [
-                'depthVertex.glsl',
-                'depthFragment.glsl',
-                'downsampleFragment.glsl',
-                'ssaoFragment.glsl',
-                'blurFragment.glsl',
-            ];
+                var shaderNames = [
+                    'depthVertex.glsl',
+                    'depthFragment.glsl',
+                    'downsampleFragment.glsl',
+                    'ssaoFragment.glsl',
+                    'blurFragment.glsl',
+                ];
 
-            var shaders = shaderNames.map( function ( arg ) {
-                return 'shaders/' + arg;
-            }.bind( this ) );
+                var shaders = shaderNames.map( function ( arg ) {
+                    return 'shaders/' + arg;
+                }.bind( this ) );
 
-            var promises = [];
-            shaders.forEach( function ( shader ) {
-                promises.push( P.resolve( $.get( shader ) ) );
-            } );
-
-            P.all( promises ).then( function ( args ) {
-
-                var shaderNameContent = {};
-                shaderNames.forEach( function ( name, idx ) {
-                    shaderNameContent[ name ] = args[ idx ];
+                var promises = [];
+                shaders.forEach( function ( shader ) {
+                    promises.push( P.resolve( $.get( shader ) ) );
                 } );
-                shaderProcessor.addShaders( shaderNameContent );
 
-                var vertexshader = shaderProcessor.getShader( 'depthVertex.glsl' );
-                var fragmentshader = shaderProcessor.getShader( 'depthFragment.glsl' );
+                P.all( promises ).then( function ( args ) {
 
-                self._depthShader = new osg.Program(
-                    new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-                    new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+                    var shaderNameContent = {};
+                    shaderNames.forEach( function ( name, idx ) {
+                        shaderNameContent[ name ] = args[ idx ];
+                    } );
+                    shaderProcessor.addShaders( shaderNameContent );
 
-                defer.resolve();
+                    var vertexshader = shaderProcessor.getShader( 'depthVertex.glsl' );
+                    var fragmentshader = shaderProcessor.getShader( 'depthFragment.glsl' );
+
+                    self._depthShader = new osg.Program(
+                        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+                        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+
+                    resolve();
+
+                } );
 
             } );
-
-            return defer.promise;
         },
 
         createTexture: function ( name, filter, type, size ) {

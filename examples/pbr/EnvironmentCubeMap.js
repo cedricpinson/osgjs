@@ -94,82 +94,80 @@ window.EnvironmentCubeMap = ( function () {
             var type = type0;
             if ( type === undefined ) type = 'FLOAT';
 
-            var defer = P.defer();
+            return new P( function ( resolve ) {
 
-            var readInputArray = function ( inputArray ) {
+                var readInputArray = function ( inputArray ) {
 
-                var data = inputArray;
-                if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
+                    var data = inputArray;
+                    if ( osgDB.isGunzipBuffer( data ) ) data = osgDB.gunzip( data );
 
-                var maxLevel = Math.log( this._size ) / Math.LN2;
-                var offset = 0;
-                var images = {};
-                for ( var i = 0; i <= maxLevel; i++ ) {
-                    var size = Math.pow( 2, maxLevel - i );
-                    var byteSize;
-                    if ( offset >= data.byteLength )
-                        break;
-                    for ( var face = 0; face < 6; face++ ) {
+                    var maxLevel = Math.log( this._size ) / Math.LN2;
+                    var offset = 0;
+                    var images = {};
+                    for ( var i = 0; i <= maxLevel; i++ ) {
+                        var size = Math.pow( 2, maxLevel - i );
+                        var byteSize;
+                        if ( offset >= data.byteLength )
+                            break;
+                        for ( var face = 0; face < 6; face++ ) {
 
-                        // add entry if does not exist
-                        if ( !images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ] )
-                            images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ] = [];
+                            // add entry if does not exist
+                            if ( !images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ] )
+                                images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ] = [];
 
-                        var imageData;
-                        var deinterleave;
-                        if ( type === 'FLOAT' ) {
-                            byteSize = size * size * 4 * 3;
-                            imageData = new Float32Array( data, offset, byteSize / 4 );
-                            deinterleave = new Float32Array( byteSize / 4 );
-                            this.deinterleaveImage3( size, imageData, deinterleave );
-                            //deinterleave = imageData;
-                        } else {
-                            byteSize = size * size * 4;
-                            imageData = new Uint8Array( data, offset, byteSize );
-                            deinterleave = new Uint8Array( byteSize );
-                            this.deinterleaveImage4( size, imageData, deinterleave );
-                            //deinterleave = imageData;
+                            var imageData;
+                            var deinterleave;
+                            if ( type === 'FLOAT' ) {
+                                byteSize = size * size * 4 * 3;
+                                imageData = new Float32Array( data, offset, byteSize / 4 );
+                                deinterleave = new Float32Array( byteSize / 4 );
+                                this.deinterleaveImage3( size, imageData, deinterleave );
+                                //deinterleave = imageData;
+                            } else {
+                                byteSize = size * size * 4;
+                                imageData = new Uint8Array( data, offset, byteSize );
+                                deinterleave = new Uint8Array( byteSize );
+                                this.deinterleaveImage4( size, imageData, deinterleave );
+                                //deinterleave = imageData;
+                            }
+                            imageData = deinterleave;
+
+                            var image = new osg.Image();
+                            image.setImage( imageData );
+
+                            image.setWidth( size );
+                            image.setHeight( size );
+                            images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ].push( image );
+                            offset += byteSize;
                         }
-                        imageData = deinterleave;
-
-                        var image = new osg.Image();
-                        image.setImage( imageData );
-
-                        image.setWidth( size );
-                        image.setHeight( size );
-                        images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ].push( image );
-                        offset += byteSize;
                     }
+
+                    this._packedImages = images;
+
+                    if ( type === 'FLOAT' )
+                        this.createFloatPacked();
+                    else
+                        this.createRGBA8Packed();
+
+
+                    resolve();
+
+                }.bind( this );
+
+
+                if ( this._data ) {
+
+                    readInputArray( this._data );
+
+                } else {
+
+                    var input = new osgDB.Input();
+                    input.requestFile( this._file, {
+                        responseType: 'arraybuffer'
+                    } ).then( readInputArray );
+
                 }
-
-                this._packedImages = images;
-
-                if ( type === 'FLOAT' )
-                    this.createFloatPacked();
-                else
-                    this.createRGBA8Packed();
-
-
-                defer.resolve();
-
-            }.bind( this );
-
-
-            if ( this._data ) {
-
-                readInputArray( this._data );
-
-            } else {
-
-                var input = new osgDB.Input();
-                input.requestFile( this._file, {
-                    responseType: 'arraybuffer'
-                } ).then( readInputArray );
-
-            }
-
-            return defer.promise;
-
+            } );
         },
 
         getTexture: function () {
