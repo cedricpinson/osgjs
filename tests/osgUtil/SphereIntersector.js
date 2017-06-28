@@ -1,6 +1,6 @@
 'use strict';
 var assert = require( 'chai' ).assert;
-var mockup = require( 'tests/mockup/mockup' );
+require( 'tests/mockup/mockup' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var SphereIntersector = require( 'osgUtil/SphereIntersector' );
 var KdTreeBuilder = require( 'osg/KdTreeBuilder' );
@@ -11,8 +11,6 @@ var mat4 = require( 'osg/glMatrix' ).mat4;
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Shape = require( 'osg/shape' );
-var View = require( 'osgViewer/View' );
-var ReaderParser = require( 'osgDB/readerParser' );
 
 
 module.exports = function () {

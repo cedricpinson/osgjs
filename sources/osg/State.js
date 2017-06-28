@@ -1259,9 +1259,9 @@ MACROUTILS.createPrototypeObject( State, MACROUTILS.objectInherit( Object.protot
 
     _cacheUniformsForGeneratedProgram: function ( program ) {
 
-        var foreignUniforms = this._computeForeignUniforms( program.getUniformsCache(), program.getActiveUniforms() );
+        var programUniformsCache = program.getUniformsCache();
+        var foreignUniforms = this._computeForeignUniforms( programUniformsCache, program.getActiveUniforms() );
         program.setForeignUniforms( foreignUniforms );
-
 
         // remove uniforms listed by attributes (getActiveUniforms) but not required by the program
         this._removeUniformsNotRequiredByProgram( program.getActiveUniforms(), program.getUniformsCache() );
@@ -1341,10 +1341,31 @@ MACROUTILS.createPrototypeObject( State, MACROUTILS.objectInherit( Object.protot
     // when we apply the shader for the first time, we want to compute the active uniforms for this shader and the list of uniforms not extracted from attributes called foreignUniforms
     _applyGeneratedProgramUniforms: function ( program, stateset ) {
 
+        var uniformMapStack = this._uniforms;
+        var uniform, uniformName, uniformStack, i;
+
         var foreignUniformKeys = program.getForeignUniforms();
         if ( !foreignUniformKeys ) {
             this._cacheUniformsForGeneratedProgram( program );
             foreignUniformKeys = program.getForeignUniforms();
+
+            // be sure to create a stack for foreign uniform for this program
+            // it's needed to do it here because of the cache of uniform
+            if ( stateset ) {
+                var stateSetUniforms = stateset.uniforms;
+                for ( i = 0; i < foreignUniformKeys.length; i++ ) {
+                    uniformName = foreignUniformKeys[i];
+
+                    // already exist
+                    if ( uniformMapStack[ uniformName ] ) continue;
+
+                    // does not exist check to initialize with stateSet uniforms
+                    if ( !stateSetUniforms[ uniformName ] ) continue;
+
+                    uniform = stateSetUniforms[ uniformName ].getUniform();
+                    this._createAttributeStack( uniformMapStack, uniformName, uniform );
+                }
+            }
 
             this._initUniformCache( program );
         }
@@ -1357,27 +1378,29 @@ MACROUTILS.createPrototypeObject( State, MACROUTILS.objectInherit( Object.protot
 
         // apply active uniforms
         // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
-        var l, uniform, keyUniform;
-        var i = 0;
+        var l, keyUniform;
+        i = 0;
         for ( keyUniform in activeUniformMap ) {
             uniform = activeUniformMap[ keyUniform ];
             this._checkCacheAndApplyUniform( uniform, cacheUniformsActive, i, programUniformMap, keyUniform );
             i++; // TODO not good, for in ordered consistency, etc...
         }
 
-        var uniformMapStack = this._uniforms;
 
         // apply now foreign uniforms, it's uniforms needed by the program but not contains in attributes used to generate this program
         for ( i = 0, l = foreignUniformKeys.length; i < l; i++ ) {
-            var uniformName = foreignUniformKeys[ i ];
+            uniformName = foreignUniformKeys[ i ];
 
-            var uniformStack = uniformMapStack[ uniformName ];
+            uniformStack = uniformMapStack[ uniformName ];
             var hasStateSetUniformPair = stateset && stateset.uniforms[ uniformName ];
 
             if ( !hasStateSetUniformPair && !uniformStack ) continue;
 
             if ( !uniformStack ) {
-
+                // this code path should not be reached anymore, because the cache of foreign uniforms
+                // check and create uniformStack exist. So we we dont have a stateSet uniform and no uniformStack
+                // then we can't be here
+                // dead code to remove
                 Notify.error( 'Uniform name not in the scene hierarchy! : ' + uniformName );
                 uniform = stateset.uniforms[ uniformName ].getUniform();
                 this._createAttributeStack( uniformMapStack, uniformName, uniform );
