@@ -54,6 +54,11 @@
             var mt = new osg.MatrixTransform();
             mt.addChild( geom );
             mt.setMatrix( osg.mat4.fromTranslation( osg.mat4.create(), osg.vec3.fromValues( 1.8, 0, 0.4 ) ) );
+            var pointSize = new osg.PointSizeAttribute();
+
+            pointSize.setPointSize( 16 );
+            pointSize.setCircleShape( true );
+            geom.getOrCreateStateSet().setAttributeAndModes( pointSize );
 
             return mt;
 
