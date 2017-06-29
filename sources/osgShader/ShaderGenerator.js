@@ -43,13 +43,6 @@ ShaderGenerator.prototype = {
     // filter input types and write the result in the outputs array
     filterAttributeTypes: function ( attribute ) {
 
-        // TODO: use same mechanism as acceptAttributesTypes ?
-        // with a default set in a var and use overwrittable Set
-        // when inheriting the class
-        // Faster && Flexiblier
-        var libName = attribute.libraryName();
-        if ( !this._ShaderCompiler.stateAttributeConfig.namespace[ libName ] ) return true;
-
         // works for attribute that contains isEnabled
         // Light, Shadow. It let us to filter them to build a shader if not enabled
         if ( attribute.isEnabled && !attribute.isEnabled() ) return true;
@@ -57,7 +50,7 @@ ShaderGenerator.prototype = {
         return false;
     },
 
-    // get actives attribute that comes from state
+    // get actives attribute that comes from state listed by compiler cache type
     getActiveAttributeList: function ( state, list ) {
 
         var hash = '';
@@ -81,7 +74,7 @@ ShaderGenerator.prototype = {
     },
 
 
-    // get actives attribute that comes from state
+    // create a hash from actives attribute listed by compiler cache type
     getActiveAttributeListCache: function ( state ) {
 
         var hash = '';
@@ -102,7 +95,7 @@ ShaderGenerator.prototype = {
     },
 
 
-    // get actives texture attribute that comes from state
+    // create a hash from actives texture attribute listed by compiler cache type
     getActiveTextureAttributeListCache: function ( state ) {
 
         var hash = '';
