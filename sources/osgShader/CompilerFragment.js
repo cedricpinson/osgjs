@@ -94,6 +94,8 @@ var CompilerFragment = {
 
         var fragColor = this.getNode( 'glFragColor' );
 
+        this.applyPointSizeCircle( fragColor );
+
         // todo add gamma corrected color, but it would also mean to handle correctly srgb texture
         // so it should be done at the same time. see osg.Tetxure to implement srgb
         this.getNode( 'SetAlpha' ).inputs( {

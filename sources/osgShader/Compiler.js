@@ -78,6 +78,7 @@ Compiler.setStateAttributeConfig( Compiler, {
         'Light6',
         'Light7',
         'Material',
+        'PointSize',
         'Billboard',
         'Morph',
         'Skinning'
