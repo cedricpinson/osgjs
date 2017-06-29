@@ -1,4 +1,5 @@
 'use strict';
+var notify = require( 'osg/notify' );
 var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var ShadowCastShaderGenerator = require( 'osgShadow/ShadowCastShaderGenerator' );
 var DisplayNormalVisitor = require( 'osgUtil/DisplayNormalVisitor' );
@@ -24,7 +25,14 @@ ShaderGeneratorProxy.prototype = {
 
         if ( !name ) return this._generators.default;
 
-        return this._generators[ name ];
+        var shaderGenerator = this._generators[ name ];
+
+        if ( !shaderGenerator ) {
+            notify.error( 'ShaderGenerator ' + name + ' does not exist in ShaderGeneratorProxy' );
+            return this._generators.default;
+        }
+
+        return shaderGenerator;
     },
 
     // user-space facility to provide its own

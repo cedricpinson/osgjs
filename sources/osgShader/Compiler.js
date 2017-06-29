@@ -60,7 +60,6 @@ Compiler.setStateAttributeConfig = function ( compilerClass, config ) {
 
     compilerClass.validAttributeTypeMember = config.attribute;
     compilerClass.validTextureAttributeTypeMember = config.textureAttribute;
-    compilerClass.supportLibraryName = config.namespace;
 };
 
 Compiler.setStateAttributeConfig( Compiler, {
@@ -85,12 +84,7 @@ Compiler.setStateAttributeConfig( Compiler, {
     ],
     textureAttribute: [
         'Texture'
-    ],
-    namespace: {
-        osg: true,
-        osgAnimation: true,
-        osgShadow: true
-    }
+    ]
 } );
 
 
