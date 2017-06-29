@@ -4,13 +4,13 @@
 
 // IE11 does not support Set with constructing arguments. May 2017.
 var checkSetSupport = function () {
-    var set = new window.Set( [ 'test' ] );
-    var hasConstructorParameterSupport = set.has( 'test' );
+    var setTest = new window.Set( [ 'test' ] );
+    var hasConstructorParameterSupport = setTest.has( 'test' );
 
     if ( !hasConstructorParameterSupport ) {
-        var nativeSet = window.Set;
+        var nativeSetConstructor = window.Set;
         window.Set = function ( init ) {
-            var set = new nativeSet();
+            var set = new nativeSetConstructor();
             if ( init ) {
                 for ( var i = 0; i < init.length; ++i ) {
                     set.add( init[ i ] );

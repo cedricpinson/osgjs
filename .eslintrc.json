@@ -61,6 +61,7 @@
         "no-multi-str": 0,
         "object-shorthand": [ "error", "never" ],
         "comma-style": [ 2, "last" ],
-        "dot-notation": 0
+        "dot-notation": 0,
+        "no-shadow": [ "error" ]
     }
 }

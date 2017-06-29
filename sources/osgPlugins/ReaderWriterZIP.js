@@ -46,8 +46,8 @@ ReaderWriterZIP.prototype = {
             responseType: 'blob'
         } );
 
-        filePromise.then( function ( file ) {
-            self.readZipFile( file ).then( function () {
+        filePromise.then( function ( zfile ) {
+            self.readZipFile( zfile ).then( function () {
                 // At this point we have the main file name and a Map containing all the resources
                 defer.resolve( ReaderParser.readNodeURL( self._fileName, {
                     filesMap: self._filesMap

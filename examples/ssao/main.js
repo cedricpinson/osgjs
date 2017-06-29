@@ -137,8 +137,8 @@
 
                 update: function ( node ) {
 
-                    var mt = node.getMatrix();
-                    osg.mat4.rotate( mt, mt, 0.001, [ 1.0, 0, 0 ] );
+                    var matrix = node.getMatrix();
+                    osg.mat4.rotate( matrix, matrix, 0.001, [ 1.0, 0, 0 ] );
 
                 }
 

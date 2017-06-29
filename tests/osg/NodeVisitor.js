@@ -59,14 +59,14 @@ module.exports = function () {
                 }
             } );
 
-            var root = new Node();
-            root.setName( 'root' );
+            var rootNode = new Node();
+            rootNode.setName( 'root' );
             var child0 = new Node();
             var child1 = new Node();
             var child2 = new Node();
 
-            root.addChild( child0 );
-            root.addChild( child1 );
+            rootNode.addChild( child0 );
+            rootNode.addChild( child1 );
             child1.addChild( child2 );
 
             var visit = new GetRootItem();

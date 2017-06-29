@@ -62,13 +62,16 @@ function logMatrixFold ( title, m, rowMajor ) {
 
 var levelEntries = [ 'log', 'info', 'warn', 'error', 'debug' ];
 var loggers = {};
-for ( var i = 0; i < levelEntries.length; ++i ) {
-    var level = levelEntries[ i ];
-    loggers[ level ] = logSub.bind( Notify, level );
-    loggers[ level + 'Fold' ] = logSubFold.bind( Notify, level );
-    loggers[ level + 'Matrix' ] = logMatrix.bind( Notify );
-    loggers[ level + 'MatrixFold' ] = logMatrixFold.bind( Notify );
-}
+
+( function () {
+    for ( var i = 0; i < levelEntries.length; ++i ) {
+        var level = levelEntries[ i ];
+        loggers[ level ] = logSub.bind( Notify, level );
+        loggers[ level + 'Fold' ] = logSubFold.bind( Notify, level );
+        loggers[ level + 'Matrix' ] = logMatrix.bind( Notify );
+        loggers[ level + 'MatrixFold' ] = logMatrixFold.bind( Notify );
+    }
+} )();
 
 var assert = function ( test, str ) {
     if ( this.console !== undefined && !test ) {

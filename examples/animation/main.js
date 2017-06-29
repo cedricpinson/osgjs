@@ -117,10 +117,10 @@
         var request = osgDB.readNodeURL( '../media/models/animation/' + url );
         root.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
 
-        var i = 0;
-        var l = 0;
-
         request.then( function ( node ) {
+            var i = 0;
+            var l = 0;
+
             root.addChild( node );
 
             var bfinder = new FindBoneVisitor();
@@ -144,8 +144,8 @@
 
             window.listBones = function () {
                 for ( i = 0, l = bones.length; i < l; i++ ) {
-                    var bone = bones[ i ];
-                    console.log( bone.getName(), bone.getMatrix() );
+                    var b = bones[ i ];
+                    console.log( b.getName(), b.getMatrix() );
                 }
 
             };
@@ -178,7 +178,7 @@
 
                         var animationList = animationManager._activeAnimationList;
                         var hash = '#PlayingAnimations:';
-                        for ( var i = 0, l = animationList.length; i < l; i++ ) hash += animationList[ i ].name + ';';
+                        for ( i = 0, l = animationList.length; i < l; i++ ) hash += animationList[ i ].name + ';';
                         window.location.hash = hash;
                     };
                     controller.pause = function () {

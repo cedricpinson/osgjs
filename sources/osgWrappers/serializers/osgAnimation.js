@@ -170,7 +170,8 @@ osgAnimationWrapper.FloatCubicBezierChannel = function ( input, channel ) {
 
     var arrayPromise = [];
     var keyFrames = window.Object.keys( jsonObj.KeyFrames );
-    for ( var i = 0; i < keyFrames.length; i++ )
+    var i;
+    for ( i = 0; i < keyFrames.length; i++ )
         arrayPromise.push( input.setJSON( jsonObj.KeyFrames[ keyFrames[ i ] ] ).readBufferArray() );
 
     return P.all( arrayPromise ).then( function ( pArray ) {
@@ -183,7 +184,7 @@ osgAnimationWrapper.FloatCubicBezierChannel = function ( input, channel ) {
         var keys = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) * 3 ), 0, size * 3 );
         var times = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
 
-        for ( var i = 0; i < size; i++ ) {
+        for ( i = 0; i < size; i++ ) {
             var id = i * 3;
 
             times[ i ] = time[ i ];
@@ -206,7 +207,8 @@ osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
 
     //Reads all keyframes
     var keyFrames = window.Object.keys( jsonObj.KeyFrames );
-    for ( var i = 0; i < keyFrames.length; i++ ) {
+    var i;
+    for ( i = 0; i < keyFrames.length; i++ ) {
         var key = keyFrames[ i ];
         var jsonAttribute = jsonObj.KeyFrames[ key ];
         if ( key !== 'Time' ) {
@@ -233,7 +235,7 @@ osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
         var keys = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) * 9 ), 0, size * 9 );
         var times = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
 
-        for ( var i = 0; i < size; i++ ) {
+        for ( i = 0; i < size; i++ ) {
             var id = i * 9;
 
             times[ i ] = time[ i ];
@@ -287,7 +289,8 @@ osgAnimationWrapper.UpdateMatrixTransform = function ( input, umt ) {
     osgWrapper.Object( input, umt );
 
     var promiseArray = [];
-    for ( var i = 0, l = jsonObj.StackedTransforms.length; i < l; i++ ) {
+    var i, l;
+    for ( i = 0, l = jsonObj.StackedTransforms.length; i < l; i++ ) {
         promiseArray.push( input.setJSON( jsonObj.StackedTransforms[ i ] ).readObject() );
     }
 
@@ -295,7 +298,7 @@ osgAnimationWrapper.UpdateMatrixTransform = function ( input, umt ) {
     // compute the default value data
     return P.all( promiseArray ).then( function ( array ) {
         var stack = umt.getStackedTransforms();
-        for ( var i = 0, l = array.length; i < l; i++ ) stack.push( array[ i ] );
+        for ( i = 0, l = array.length; i < l; i++ ) stack.push( array[ i ] );
         umt.computeChannels();
         return umt;
     } );

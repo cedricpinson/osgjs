@@ -53,9 +53,9 @@ module.exports = function () {
         input.readImageURL( 'error-404', {
             imageCrossOrigin: 'Anonymous',
             imageLoadingUsePromise: true
-        } ).then( function ( image ) {
-            assert.isOk( image instanceof Image, 'with promise : returned image' );
-            assert.isOk( image.getImage().src.substr( -9 ) !== url, 'with promise : used fallback image' );
+        } ).then( function ( img ) {
+            assert.isOk( img instanceof Image, 'with promise : returned image' );
+            assert.isOk( img.getImage().src.substr( -9 ) !== url, 'with promise : used fallback image' );
 
             done();
         } ).catch( function ( error ) {

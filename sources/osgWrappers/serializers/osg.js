@@ -55,8 +55,8 @@ osgWrapper.Node = function ( input, node ) {
             // All the results from P.all are on the argument as an array
             // Now insert children in the right order
             var len = queueNodes.length;
-            for ( var i = 0; i < len; i++ )
-                node.addChild( queueNodes[ i ] );
+            for ( var n = 0; n < len; n++ )
+                node.addChild( queueNodes[ n ] );
             return node;
         } );
     } );
