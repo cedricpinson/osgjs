@@ -705,8 +705,8 @@ ReaderWriterGLTF.prototype = {
         var primitives = mesh.primitives;
 
         var promisesArray = [];
-
-        for ( var i = 0; i < primitives.length; ++i ) {
+        var i;
+        for ( i = 0; i < primitives.length; ++i ) {
 
             var primitive = primitives[ i ];
             var promiseGeom = this.createGeometry( primitive, skeletonJointId );
@@ -717,7 +717,7 @@ ReaderWriterGLTF.prototype = {
 
         return P.all( promisesArray ).then( function ( geoms ) {
 
-            for ( var i = 0; i < geoms.length; ++i )
+            for ( i = 0; i < geoms.length; ++i )
                 resultMeshNode.addChild( geoms[ i ] );
 
             return geoms;
@@ -803,8 +803,8 @@ ReaderWriterGLTF.prototype = {
         this._localPath = ( index === -1 ) ? '' : url.substr( 0, index + 1 );
         // Else it is a usual XHR request
         var filePromise = requestFile( url );
-        filePromise.then( function ( glTFFile ) {
-            defer.resolve( self.readJSON( glTFFile ) );
+        filePromise.then( function ( file ) {
+            defer.resolve( self.readJSON( file ) );
         } );
         return defer.promise;
     },

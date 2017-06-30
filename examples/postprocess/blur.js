@@ -23,10 +23,10 @@
         var getSceneTexture;
         var imagesLoaded = false;
 
-        P.all( images ).then( function ( images ) {
-            getSceneTexture( 'Budapest.jpg', images[ 0 ] );
-            getSceneTexture( 'Beaumaris.jpg', images[ 1 ] );
-            getSceneTexture( 'Seattle.jpg', images[ 2 ] );
+        P.all( images ).then( function ( imgs ) {
+            getSceneTexture( 'Budapest.jpg', imgs[ 0 ] );
+            getSceneTexture( 'Beaumaris.jpg', imgs[ 1 ] );
+            getSceneTexture( 'Seattle.jpg', imgs[ 2 ] );
             imagesLoaded = true;
         } );
 

@@ -67,14 +67,14 @@ module.exports = function () {
 
 
         m = mat4.fromValues( -0.00003499092, 0.0, 0.0, 0.0, 0.0, 0.0000349909, 0.0, 0.0, 0.0, 0.0, 1.816363636, -9.989999999, 0.013996370, -0.010497277, -1.799999999, 9.9999999 );
-        var preMultvec3 = function ( s, vec, result ) {
+        var preMultvec3 = function ( s, v, result ) {
             if ( result === undefined ) {
                 result = mat4.create();
             }
-            var d = 1.0 / ( s[ 3 ] * vec[ 0 ] + s[ 7 ] * vec[ 1 ] + s[ 11 ] * vec[ 2 ] + s[ 15 ] );
-            result[ 0 ] = ( s[ 0 ] * vec[ 0 ] + s[ 4 ] * vec[ 1 ] + s[ 8 ] * vec[ 2 ] + s[ 12 ] ) * d;
-            result[ 1 ] = ( s[ 1 ] * vec[ 0 ] + s[ 5 ] * vec[ 1 ] + s[ 9 ] * vec[ 2 ] + s[ 13 ] ) * d;
-            result[ 2 ] = ( s[ 2 ] * vec[ 0 ] + s[ 6 ] * vec[ 1 ] + s[ 10 ] * vec[ 2 ] + s[ 14 ] ) * d;
+            var d = 1.0 / ( s[ 3 ] * v[ 0 ] + s[ 7 ] * v[ 1 ] + s[ 11 ] * v[ 2 ] + s[ 15 ] );
+            result[ 0 ] = ( s[ 0 ] * v[ 0 ] + s[ 4 ] * v[ 1 ] + s[ 8 ] * v[ 2 ] + s[ 12 ] ) * d;
+            result[ 1 ] = ( s[ 1 ] * v[ 0 ] + s[ 5 ] * v[ 1 ] + s[ 9 ] * v[ 2 ] + s[ 13 ] ) * d;
+            result[ 2 ] = ( s[ 2 ] * v[ 0 ] + s[ 6 ] * v[ 1 ] + s[ 10 ] * v[ 2 ] + s[ 14 ] ) * d;
             return result;
         };
         var r0 = preMultvec3( m, vec3.fromValues( 400, 300, 1.0 ) );

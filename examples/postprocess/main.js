@@ -164,7 +164,7 @@
         var cachedComposers = [];
         cachedComposers[ postScenes[ 0 ].name ] = currentComposer;
 
-        setComposer = function setComposer ( effectName ) {
+        setComposer = function ( effectName ) {
 
             // Put the composer in cache at first utilisation
             if ( cachedComposers[ effectName ] === undefined ) {

@@ -145,9 +145,9 @@
             return root;
         },
         changeTexts: function ( text ) {
-            var TextVisitor = function ( text ) {
+            var TextVisitor = function ( str ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._text = text;
+                this._text = str;
             };
             TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 apply: function ( node ) {
@@ -162,9 +162,9 @@
         },
 
         changeFontresolution: function ( value ) {
-            var TextVisitor = function ( value ) {
+            var TextVisitor = function ( val ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._fontResolution = value;
+                this._fontResolution = val;
             };
             TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 apply: function ( node ) {
@@ -179,9 +179,9 @@
         },
 
         changeCharacterSize: function ( value ) {
-            var TextVisitor = function ( value ) {
+            var TextVisitor = function ( val ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._characterSize = value;
+                this._characterSize = val;
             };
             TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 apply: function ( node ) {
@@ -196,9 +196,9 @@
         },
 
         changeFontFamily: function ( value ) {
-            var TextVisitor = function ( value ) {
+            var TextVisitor = function ( val ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._fontFamily = value;
+                this._fontFamily = val;
             };
             TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 apply: function ( node ) {
@@ -212,9 +212,9 @@
             this._scene.accept( tv );
         },
         changeRotateToScreen: function ( value ) {
-            var TextVisitor = function ( value ) {
+            var TextVisitor = function ( val ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._rotateToScreen = value;
+                this._rotateToScreen = val;
             };
             TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 apply: function ( node ) {
@@ -229,9 +229,9 @@
         },
 
         changeLayout: function ( value ) {
-            var TextVisitor = function ( value ) {
+            var TextVisitor = function ( val ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                if ( value === 'LEFT_TO_RIGHT' )
+                if ( val === 'LEFT_TO_RIGHT' )
                     this._layout = osgText.Text.LEFT_TO_RIGHT;
                 else
                     this._layout = osgText.Text.RIGHT_TO_LEFT;
@@ -249,9 +249,9 @@
         },
 
         changeAlignment: function ( value ) {
-            var TextVisitor = function ( value ) {
+            var TextVisitor = function ( val ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._alignment = parseInt( value );
+                this._alignment = parseInt( val );
             };
             TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 apply: function ( node ) {
@@ -266,9 +266,9 @@
         },
 
         changeCharacterSizeMode: function ( value ) {
-            var TextVisitor = function ( value ) {
+            var TextVisitor = function ( val ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._characterSizeMode = parseInt( value );
+                this._characterSizeMode = parseInt( val );
             };
             TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 apply: function ( node ) {

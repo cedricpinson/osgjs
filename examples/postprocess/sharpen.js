@@ -100,13 +100,13 @@
                 var folder = mainGui.addFolder( this.name );
                 folder.open();
 
-                var kernel = {
+                var kernelConfig = {
                     kernel: 0,
                     'sample diagonal': false
                 };
 
-                var kernelCtrl = folder.add( kernel, 'kernel', 0, 5.0 );
-                var diagonalCtrl = folder.add( kernel, 'sample diagonal' );
+                var kernelCtrl = folder.add( kernelConfig, 'kernel', 0, 5.0 );
+                var diagonalCtrl = folder.add( kernelConfig, 'sample diagonal' );
 
                 kernelCtrl.onChange( function ( value ) {
                     factor = value;

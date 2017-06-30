@@ -116,8 +116,8 @@
             } );
 
             // generate array of promise
-            var images = paths.map( function ( path ) {
-                return osgDB.readImageURL( path );
+            var images = paths.map( function ( pathname ) {
+                return osgDB.readImageURL( pathname );
             } );
 
 

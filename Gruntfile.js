@@ -471,8 +471,6 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
 
-    grunt.loadNpmTasks( 'grunt-jsbeautifier' );
-
     grunt.loadNpmTasks( 'grunt-copy-to' );
     grunt.loadNpmTasks( 'grunt-shell' );
     grunt.loadNpmTasks( 'grunt-webpack' );

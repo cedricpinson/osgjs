@@ -305,8 +305,8 @@ Input.prototype = {
             } );
             fileGzipPromise.then( function ( file ) {
 
-                var str = ungzipFile( file );
-                data = JSON.parse( str );
+                var strUnzip = ungzipFile( file );
+                data = JSON.parse( strUnzip );
                 readSceneGraph( data );
 
             } ).catch( function ( status ) {
@@ -334,13 +334,13 @@ Input.prototype = {
 
         // check magic number 1f8b
         if ( typedArray[ 0 ] === 0x1f && typedArray[ 1 ] === 0x8b ) {
-            var zlib = require( 'zlib' );
+            var _zlib = require( 'zlib' );
 
-            if ( !zlib ) {
+            if ( !_zlib ) {
                 Notify.error( 'osg failed to use a gunzip.min.js to uncompress a gz file.\n You can add this vendors to enable this feature or adds the good header in your gzip file served by your server' );
             }
 
-            var zdec = new zlib.Gunzip( typedArray );
+            var zdec = new _zlib.Gunzip( typedArray );
             var result = zdec.decompress();
             return result.buffer;
         }

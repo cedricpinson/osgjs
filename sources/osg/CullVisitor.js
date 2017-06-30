@@ -695,55 +695,54 @@ var lightSourceApply = function ( node ) {
     if ( stateset ) this.popStateSet();
 };
 
-var geometryApply = ( function () {
 
-    var tempVec = vec3.create();
-    var loggedOnce = false;
-    return function geometryApply ( node ) {
+var tempVec = vec3.create();
+var loggedOnce = false;
+var geometryApply = function ( node ) {
 
-        this._numGeometry++;
+    this._numGeometry++;
 
-        var modelview = this.getCurrentModelViewMatrix();
-        var bb = node.getBoundingBox();
-        if ( this._computeNearFar && bb.valid() ) {
-            if ( !this.updateCalculatedNearFar( modelview, node ) ) {
-                return;
-            }
-        }
-
-        // using modelview is not a pb because geometry
-        // is a leaf node, else traversing the graph would be an
-        // issue because we use modelview after
-        var ccb = node.getCullCallback();
-        if ( ccb && !ccb.cull( node, this ) )
+    var modelview = this.getCurrentModelViewMatrix();
+    var bb = node.getBoundingBox();
+    if ( this._computeNearFar && bb.valid() ) {
+        if ( !this.updateCalculatedNearFar( modelview, node ) ) {
             return;
-
-        var stateset = node.getStateSet();
-        if ( stateset ) this.pushStateSet( stateset );
-
-        this.postPushGeometry( this, node );
-
-        var depth = 0;
-        if ( bb.valid() ) {
-            depth = this.distance( bb.center( tempVec ), modelview );
         }
-        if ( osgMath.isNaN( depth ) ) {
+    }
 
-            if ( !loggedOnce ) {
-                Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec );
-                loggedOnce = true;
-            }
+    // using modelview is not a pb because geometry
+    // is a leaf node, else traversing the graph would be an
+    // issue because we use modelview after
+    var ccb = node.getCullCallback();
+    if ( ccb && !ccb.cull( node, this ) )
+        return;
 
-        } else {
+    var stateset = node.getStateSet();
+    if ( stateset ) this.pushStateSet( stateset );
 
-            this.pushLeaf( node, depth );
+    this.postPushGeometry( this, node );
 
+    var depth = 0;
+    if ( bb.valid() ) {
+        depth = this.distance( bb.center( tempVec ), modelview );
+    }
+    if ( osgMath.isNaN( depth ) ) {
+
+        if ( !loggedOnce ) {
+            Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec );
+            loggedOnce = true;
         }
 
-        this.prePopGeometry( this, node );
-        if ( stateset ) this.popStateSet();
-    };
-} )();
+    } else {
+
+        this.pushLeaf( node, depth );
+
+    }
+
+    this.prePopGeometry( this, node );
+    if ( stateset ) this.popStateSet();
+};
+
 
 
 cullVisitorHelper.registerApplyFunction( Node.nodeTypeID, nodeApply );

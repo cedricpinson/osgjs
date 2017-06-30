@@ -115,13 +115,12 @@
                 for ( var i = 0; i < 4; i++ ) {
                     var designation = that.subTileLevelRowCol( i, parent.level, parent.x, parent.y );
                     var tileGeometry = that.levelRowColToXYWidthHeight( 0, designation.sLevel, designation.sRow, designation.sCol );
-                    // console.log('L =', designation.sLevel,' Row =', designation.sRow ,' Col =', designation.sCol);
-                    // console.log ('tileGeometry =', tileGeometry.x , tileGeometry.y, tileGeometry.width, tileGeometry.height);
-                    var node = that.createTileForGeometry( i, tileGeometry.x, tileGeometry.y, tileGeometry.width, tileGeometry.height );
+
+                    var nodeTile = that.createTileForGeometry( i, tileGeometry.x, tileGeometry.y, tileGeometry.width, tileGeometry.height );
 
                     var plod = new osg.PagedLOD();
                     plod.setRangeMode( osg.PagedLOD.PIXEL_SIZE_ON_SCREEN );
-                    plod.addChild( node, 0, 100000 );
+                    plod.addChild( nodeTile, 0, 100000 );
                     plod.setFunction( 1, create );
                     plod.setRange( 1, 100000, Number.MAX_VALUE );
                     plod.level = designation.sLevel;
