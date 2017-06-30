@@ -218,8 +218,7 @@ var gruntTasks = {};
             browser: true
         },
         src: testsFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'glMatrix' ) === -1 &&
-                pathName.indexOf( 'mocha.js' ) === -1;
+            return pathName.indexOf( 'glMatrix' ) === -1;
         } ).map( function ( pathname ) {
             return path.join( TEST_PATH, pathname );
         } )
@@ -253,32 +252,16 @@ var gruntTasks = {};
 } )();
 
 ( function () {
-    gruntTasks.mocha = {
+    gruntTasks.execute = {
         test: {
-            options: {
-                urls: [ 'http://localhost:9001/tests/index.html' ],
-                mocha: {
-                    ui: 'qunit'
-                },
-                reporter: 'Spec',
-                timeout: 10000,
-                log: true
-            }
+            src: [ 'tests/runTests.js' ]
         },
         bench: {
-            options: {
-                urls: [ 'http://localhost:9001/benchmarks/index.html' ],
-                mocha: {
-                    ui: 'qunit'
-                },
-                reporter: 'list'
-            }
+            src: [ 'benchmarks/runBenchmarks.js' ]
         }
-
     };
 
 } )();
-
 
 // ## Documentation
 //
@@ -458,7 +441,6 @@ module.exports = function ( grunt ) {
     }, gruntTasks ) );
 
     grunt.loadNpmTasks( 'grunt-documentation' );
-    grunt.loadNpmTasks( 'grunt-mocha' );
 
     grunt.loadNpmTasks( 'grunt-plato' );
 
@@ -475,6 +457,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-shell' );
     grunt.loadNpmTasks( 'grunt-webpack' );
 
+    grunt.loadNpmTasks( 'grunt-execute' );
+
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
     grunt.registerTask( 'check', [ 'eslint:self', 'eslint:sources', 'eslint:examples', 'eslint:tests' ] );
 
@@ -482,8 +466,8 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'sync', [ 'update_submodules:default' ] );
 
-    grunt.registerTask( 'test', [ 'connect:server', 'mocha:test' ] );
-    grunt.registerTask( 'benchmarks', [ 'connect:server', 'mocha:bench' ] );
+    grunt.registerTask( 'test', [ 'execute:test' ] );
+    grunt.registerTask( 'benchmarks', [ 'execute:bench' ] );
 
     grunt.registerTask( 'docs', [ 'plato', 'documentation:default' ] );
 

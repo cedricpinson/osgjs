@@ -18,7 +18,6 @@ module.exports = function () {
                 textureFromURL.setImage( image );
             } );
         assert.isOk( textureFromURL !== undefined, 'Check textureFromURL' );
-
         var ready;
         var loadingComplete = function () {
             loadingComplete.nbLoad--;
@@ -30,11 +29,11 @@ module.exports = function () {
         loadingComplete.addRessource = function () {
             loadingComplete.nbLoad++;
         };
-
+        var image;
         var loadTexture = function ( name, format ) {
             loadingComplete.addRessource();
             var texture = new Texture();
-            var image = new Image();
+            image = new Image();
             image.onload = function () {
                 texture.setImage( image, format );
                 loadingComplete();
@@ -43,12 +42,7 @@ module.exports = function () {
             return texture;
         };
 
-        var greyscale = loadTexture( 'mockup/greyscale.png', Texture.ALPHA );
-        greyscale.setUnrefImageDataAfterApply( true );
-
-        loadTexture( 'mockup/rgb24.png', Texture.RGB );
-        loadTexture( 'mockup/rgba32.png', Texture.RGBA );
-
+        var greyscale;
         ready = function () {
             var cnv = document.createElement( 'canvas' );
             cnv.setAttribute( 'width', 128 );
@@ -71,15 +65,23 @@ module.exports = function () {
             texture = new Texture();
             texture.setImage( cnv );
             assert.isOk( texture.getImage().isReady() === true, 'Image is ready because of canvas' );
-
-
             assert.isOk( greyscale.isDirty() === true, 'dirty is true' );
+
             greyscale.apply( state );
+
             assert.isOk( greyscale._image === undefined, 'image should be undefined because of unrefAfterApply' );
             assert.isOk( greyscale._textureObject !== undefined, 'texture object' );
             assert.isOk( greyscale.isDirty() === false, 'dirty is false' );
-
             done();
         };
+        loadTexture( 'mockup/rgb24.png', Texture.RGB );
+        loadTexture( 'mockup/rgba32.png', Texture.RGBA );
+        greyscale = loadTexture( 'mockup/greyscale.png', Texture.ALPHA );
+        greyscale.setUnrefImageDataAfterApply( true );
+        if ( mockup.isNodeContext() ) {
+            image.onload();
+            image.onload();
+            image.onload();
+        }
     } );
 };

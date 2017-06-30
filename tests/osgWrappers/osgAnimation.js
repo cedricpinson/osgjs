@@ -3,6 +3,10 @@ var assert = require( 'chai' ).assert;
 
 var MACROUTILS = require( 'osg/Utils' );
 var Input = require( 'osgDB/Input' );
+var mockup = require( 'tests/mockup/mockup' )
+if ( mockup.isNodeContext() ) {
+    Input = require( 'tests/mockup/InputMockup' );
+}
 var BasicAnimationManager = require( 'osgAnimation/BasicAnimationManager' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 

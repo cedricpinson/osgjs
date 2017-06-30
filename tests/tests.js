@@ -1,8 +1,3 @@
-// add missing class for phantom js execution context
-if ( window.HTMLVideoElement === undefined ) {
-    window.HTMLVideoElement = function () {};
-}
-
 var OSG = require( 'OSG' );
 
 var osg = require( 'tests/osg/osgTests' );

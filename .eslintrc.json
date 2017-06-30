@@ -17,6 +17,9 @@
         "mocha": true
     },
     "globals": {
+        "process": false,
+        "__dirname": false,
+        "global": false,
         "describe": false,
         "it": false,
         "define": false,

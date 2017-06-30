@@ -1,15 +1,15 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
-var Viewer = require( 'osgViewer/Viewer' );
 var Shape = require( 'osg/shape' );
+
 
 module.exports = function () {
 
     test( 'Viewer', function () {
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             assert.isOk( viewer.getCamera() !== undefined, 'Check camera creation' );
             assert.isOk( viewer.getCamera().getViewport() !== undefined, 'Check camera viewport' );
             assert.isOk( viewer.getCamera().getRenderer() !== undefined, 'Check camera Renderer' );
@@ -22,7 +22,7 @@ module.exports = function () {
 
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             var createScene = function () {
                 return Shape.createTexturedBoxGeometry( 0, 0, 0,
                     10, 10, 10 );
@@ -48,34 +48,36 @@ module.exports = function () {
         } )();
 
         // test device
-        ( function () {
-            var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
-            var args = {
-                'devices': {
-                    'Mouse': {
-                        'eventNode': canvas
+        if ( !mockup.isNodeContext() ) {
+
+            ( function () {
+                var canvas = mockup.createCanvas();
+                var viewer = new mockup.Viewer( canvas );
+                var args = {
+                    'devices': {
+                        'Mouse': {
+                            'eventNode': canvas
+                        }
                     }
-                }
-            };
-            var list = viewer.initEventProxy( args );
+                };
+                var list = viewer.initEventProxy( args );
 
-            assert.notEqual( list.LeapMotion, undefined, 'detected leapmotion' );
-            assert.notEqual( list.StandardMouseKeyboard, undefined, 'detected mouse' );
+                assert.notEqual( list.LeapMotion, undefined, 'detected leapmotion' );
+                assert.notEqual( list.StandardMouseKeyboard, undefined, 'detected mouse' );
 
-            viewer.updateEventProxy( list, undefined );
-            //assert.isOk(true, 'detected mouse');
+                viewer.updateEventProxy( list, undefined );
 
-            mockup.removeCanvas( canvas );
+                mockup.removeCanvas( canvas );
 
-        } )();
+            } )();
+        }
 
 
         // test context lost
         ( function () {
 
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
 
             viewer.setContextLostCallback( function () {
                 assert.isOk( true, 'detected contextLost Lost' );

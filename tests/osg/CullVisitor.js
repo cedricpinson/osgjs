@@ -18,7 +18,6 @@ var TransformEnums = require( 'osg/transformEnums' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var Viewport = require( 'osg/Viewport' );
 var View = require( 'osgViewer/View' );
-var Viewer = require( 'osgViewer/Viewer' );
 var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
 
 
@@ -27,7 +26,7 @@ module.exports = function () {
     test( 'CullVisitor', function () {
 
         var canvas = mockup.createCanvas();
-        var viewer = new Viewer( canvas );
+        var viewer = new mockup.Viewer( canvas );
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
@@ -80,7 +79,7 @@ module.exports = function () {
         // check render stage and render bin
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             viewer.setupManipulator();
             viewer.init();
             viewer.frame();
@@ -427,7 +426,7 @@ module.exports = function () {
             root.addChild( node0 );
 
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             viewer.init();
             viewer.frame();
             var cull = viewer.getCamera().getRenderer()._cullVisitor;
@@ -454,7 +453,7 @@ module.exports = function () {
 
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             viewer.init();
             viewer.frame();
             var cull = viewer.getCamera().getRenderer()._cullVisitor;
@@ -509,7 +508,7 @@ module.exports = function () {
 
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             viewer.init();
 
             viewer.frame();
@@ -538,7 +537,7 @@ module.exports = function () {
 
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas, {
+            var viewer = new mockup.Viewer( canvas, {
                 'enableFrustumCulling': true
             } );
 

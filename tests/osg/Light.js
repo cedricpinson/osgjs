@@ -2,7 +2,6 @@
 var assert = require( 'chai' ).assert;
 var mockup = require( 'tests/mockup/mockup' );
 var Light = require( 'osg/Light' );
-var Viewer = require( 'osgViewer/Viewer' );
 var Shape = require( 'osg/shape' );
 var Node = require( 'osg/Node' );
 var RenderStage = require( 'osg/RenderStage' );
@@ -50,7 +49,7 @@ module.exports = function () {
 
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             viewer.init();
 
             var l0 = new Light();
@@ -88,7 +87,7 @@ module.exports = function () {
 
         ( function () {
             var canvas = mockup.createCanvas();
-            var viewer = new Viewer( canvas );
+            var viewer = new mockup.Viewer( canvas );
             viewer.init();
             var root = new Node();
             var node0 = new Node();

@@ -4,6 +4,10 @@ var mockup = require( 'tests/mockup/mockup' );
 var ReaderParser = require( 'osgDB/readerParser' );
 var Texture = require( 'osg/Texture' );
 var Input = require( 'osgDB/Input' );
+var mockup = require( 'tests/mockup/mockup' )
+if ( mockup.isNodeContext() ) {
+    Input = require( 'tests/mockup/InputMockup' );
+}
 var primitiveSet = require( 'osg/primitiveSet' );
 
 

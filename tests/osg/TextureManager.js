@@ -85,8 +85,8 @@ module.exports = function () {
         assert.equal( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length, 40, 'check orphan 1024x1024 after release' );
         assert.equal( tm._textureSetMap[ '3553640810241024' ].getUsedTextureObjects().length, 0, 'check used 1024x1024 empty after release' );
 
-        // flush TO's in 0.001 seconds
-        tm.flushDeletedTextureObjects( gl, 0.00001 );
+        // try to flush TO's in 0 seconds, so none TO will be released
+        tm.flushDeletedTextureObjects( gl, 0 );
         // There is no time to flush all the released texture objects
         assert.isOk( tm._textureSetMap[ '3553640810241024' ].getOrphanedTextureObjects().length > 0, 'check orphan 1024x1024 delete not empty' );
         // flush all TO's

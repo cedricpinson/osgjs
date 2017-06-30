@@ -21,6 +21,10 @@ module.exports = {
         libraryTarget: 'umd',
         library: 'OSG'
     },
+    node: {
+       fs: "empty"
+    },
+    target: 'node',
     externals: [ {
         'qunit': {
             root: 'QUnit',
