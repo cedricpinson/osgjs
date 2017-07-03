@@ -24,7 +24,7 @@ install:
  - npm install -g grunt
  - npm install -g grunt-cli
 
-script: if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then grunt check --verbose && grunt build  --verbose && grunt test --verbose ; fi
+script: if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then grunt check --verbose && grunt build --verbose && grunt test --verbose ; fi
 
 
 notifications:

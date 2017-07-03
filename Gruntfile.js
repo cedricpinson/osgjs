@@ -101,30 +101,17 @@ var gruntTasks = {};
 
     var targets = {
         build: {
-            entry: {
-                OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ],
-                benchmarks: [ './benchmarks/benchmarks.js' ]
-            },
             devtool: 'source-map',
-
             module: {
                 loaders: [ {
                     test: /\.js$/,
                     loader: 'webpack-strip-block'
                 } ]
             }
-
         },
 
         builddebug: {
-            entry: {
-                OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ],
-                benchmarks: [ './benchmarks/benchmarks.js' ]
-            },
             devtool: 'eval-source-map'
-
         },
 
         buildrelease: {

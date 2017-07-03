@@ -10,5 +10,5 @@ var mocha = new Mocha( {
     reporter: 'list'
 } );
 
-mocha.addFile( '../builds/dist/benchmarks.js' );
+mocha.addFile( '../builds/tests/benchmarks.js' );
 mocha.run();
