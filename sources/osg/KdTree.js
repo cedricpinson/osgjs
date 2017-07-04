@@ -74,7 +74,7 @@ InfoCollector.prototype = {
                 operatorTriangle: function () {
                     self._numVertexIndices += 4;
                 }
-            }
+            };
         };
         var pf = new PrimitiveIndexFunctor( node, cb );
         pf.apply();
@@ -204,13 +204,12 @@ PrimitiveIndicesCollector.prototype = {
                 operatorTriangle: function ( i1, i2, i3 ) {
                     self.buildKdTreeTriangle( i1, i2, i3 );
                 }
-            }
+            };
         };
         var pf = new PrimitiveIndexFunctor( node, cb );
         pf.apply();
     }
 };
-
 
 
 var BuildKdTree = function ( kdTree ) {

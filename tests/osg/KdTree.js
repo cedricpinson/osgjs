@@ -237,7 +237,7 @@ module.exports = function () {
         // does not exist anymore. 
 
 
-        var lsi = new LineSegmentIntersector()
+        var lsi = new LineSegmentIntersector();
         var lsif = new LineSegmentIntersectFunctor();
         var iv = new IntersectionVisitor();
         iv.setIntersector( lsi );

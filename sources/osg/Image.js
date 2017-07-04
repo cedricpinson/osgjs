@@ -50,7 +50,7 @@ MACROUTILS.createPrototypeObject( ImageObject, MACROUTILS.objectInherit( Object.
     },
 
     useOrCreateImage: function ( img ) {
-        return ( img instanceof( ImageObject ) === false ) ? new ImageObject( img ) : img;
+        return ( img instanceof ImageObject === false ) ? new ImageObject( img ) : img;
     },
 
     setImage: function ( img ) {
