@@ -230,12 +230,8 @@ module.exports = function () {
         var start = [ 0.4, 0.2, -2.0 ];
         var end = [ 0.4, 0.2, 0.5 ];
 
-        var hits = [];
-
-
         // FIXME: Need to reimplement this tests, as intersectRay and intersectSphere
         // does not exist anymore. 
-
 
         var lsi = new LineSegmentIntersector();
         var lsif = new LineSegmentIntersectFunctor();

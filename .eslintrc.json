@@ -1,4 +1,5 @@
 {
+    "root": true,
     "parserOptions": {
         "ecmaVersion": 5,
         "sourceType": "module",
@@ -39,8 +40,9 @@
         "ArrayBuffer": false
     },
     "rules": {
+        "array-bracket-spacing": [ "error", "always" ],
         "comma-spacing": [ "error", { "before": false, "after": true } ],
-        "space-infix-ops": [ "error", {"int32Hint": true} ],
+        "space-infix-ops": [ "error", { "int32Hint": true } ],
         "key-spacing": [ "error", { "beforeColon": false, "afterColon": true, "mode": "strict" } ],
         "semi": [ "error", "always" ],
         "no-trailing-spaces": "error",
@@ -53,14 +55,14 @@
         "quotes": [ 2, "single" ],
         "brace-style": [ "error", "1tbs", { "allowSingleLine": true } ],
         "linebreak-style": [ "error", "unix" ],
-        "object-property-newline": ["error", { "allowMultiplePropertiesPerLine": true }],
+        "object-property-newline": [ "error", { "allowMultiplePropertiesPerLine": true } ],
         "space-before-blocks": [ "error", "always" ],
         "space-before-function-paren": [ "error", "always" ],
         "keyword-spacing": [ "error", { "before": true, "after": true } ],
         "indent": [ "error", 4 ],
         "no-bitwise": 0,
         "camelcase": 2,
-        "eqeqeq": ["error", "always", {"null": "ignore"}],
+        "eqeqeq": [ "error", "always", { "null": "ignore" } ],
         "space-in-parens": [ "error", "always" ],
         "wrap-iife": [ 2, "any" ],
         "no-use-before-define": [ 2, { "functions": false } ],
@@ -70,9 +72,11 @@
         "no-undef": 2,
         "no-unused-vars": 2,
         "no-multi-str": 0,
+        "no-redeclare": [ "error" ],
         "object-shorthand": [ "error", "never" ],
         "comma-style": [ 2, "last" ],
         "dot-notation": 0,
+
         "no-shadow": [ "error" ]
     }
 }
