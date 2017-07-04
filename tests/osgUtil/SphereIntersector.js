@@ -76,9 +76,9 @@ module.exports = function () {
         assert.isOk( spi._intersections[ 0 ]._nodePath.length === 4, 'NodePath should be 4 and result is ' + spi._intersections[ 0 ]._nodePath.length );
 
         // Bigger sphere we should intersect both branches
-        var spi = new SphereIntersector();
+        spi = new SphereIntersector();
         spi.set( vec3.fromValues( 420, 300, 0.5 ), 0.5 );
-        var iv = new IntersectionVisitor();
+        iv = new IntersectionVisitor();
         iv.setIntersector( spi );
         camera.accept( iv );
         assert.isOk( spi._intersections.length === 4, 'Hits should be 2 and result is ' + spi._intersections.length );
@@ -123,7 +123,7 @@ module.exports = function () {
         assert.isOk( spi._intersections[ 0 ]._nodePath.length === 1, 'NodePath should be 1 and result is ' + spi._intersections[ 0 ]._nodePath.length );
         // Move the sphere so we hit both triangles
         spi.set( vec3.fromValues( 0.0, 0.0, 0.0 ), 0.1 );
-        var iv = new IntersectionVisitor();
+        iv = new IntersectionVisitor();
         iv.setIntersector( spi );
         scene.accept( iv );
         assert.isOk( spi._intersections.length === 2, 'Intersections should be 2 and result is ' + spi._intersections.length );

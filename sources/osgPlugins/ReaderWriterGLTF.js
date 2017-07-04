@@ -29,7 +29,6 @@ var UpdateMatrixTransform = require( 'osgAnimation/UpdateMatrixTransform' );
 var FileHelper = require( 'osgDB/FileHelper' );
 
 var Uniform = require( 'osg/Uniform' );
-var P = require( 'bluebird' );
 var vec3 = require( 'osg/glMatrix' ).vec3;
 var quat = require( 'osg/glMatrix' ).quat;
 var mat4 = require( 'osg/glMatrix' ).mat4;
