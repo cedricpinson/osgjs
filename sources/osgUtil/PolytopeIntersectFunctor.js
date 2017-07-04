@@ -296,7 +296,7 @@ PolytopeIntersectFunctor.prototype = {
                 operatorTriangle: function ( v1, v2, v3 ) {
                     self.operatorTriangle( v1, v2, v3 );
                 }
-            }
+            };
         };
         var pf = new PrimitiveFunctor( node, cb, vertices );
         pf.apply();
