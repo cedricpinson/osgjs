@@ -8,6 +8,10 @@ git clone ../ --branch master --single-branch "${build_dir}/osg-clone"
 cd "${build_dir}/osg-clone"
 
 npm install
+grunt sync
+mkdir -p ${build_dir}/node_modules/mocha
+cp node_modules/mocha/mocha.* "${build_dir}/node_modules/mocha"
+
 grunt build docs
 
 build_dist="${build_dir}/osg-clone/builds"
