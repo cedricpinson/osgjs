@@ -18,6 +18,7 @@ var SOURCE_PATH = 'sources/';
 var EXAMPLE_PATH = 'examples/';
 var BUILD_PATH = 'builds/';
 var TEST_PATH = 'tests/';
+var BENCHMARK_PATH = 'benchmarks/';
 var DIST_PATH = path.join( BUILD_PATH, 'dist/' );
 
 // Utility functions
@@ -51,7 +52,11 @@ var exampleFiles = find( EXAMPLE_PATH, '**/*.js' ).map( function ( pathname ) {
     return pathname;
 } );
 
-var testsFiles = find( TEST_PATH, '**/*.js' ).map( function ( pathname ) {
+var testFiles = find( TEST_PATH, '**/*.js' ).map( function ( pathname ) {
+    return pathname;
+} );
+
+var benchmarkFiles = find( BENCHMARK_PATH, '**/*.js' ).map( function ( pathname ) {
     return pathname;
 } );
 
@@ -168,7 +173,7 @@ var gruntTasks = {};
         options: {
             node: true
         },
-        src: [ 'Gruntfile.js' ]
+        src: [ 'Gruntfile.js', 'webpack.config.js' ]
     };
 
     gruntTasks.eslint.sources = {
@@ -204,10 +209,20 @@ var gruntTasks = {};
         options: {
             browser: true
         },
-        src: testsFiles.filter( function ( pathName ) {
+        src: testFiles.filter( function ( pathName ) {
             return pathName.indexOf( 'glMatrix' ) === -1;
         } ).map( function ( pathname ) {
             return path.join( TEST_PATH, pathname );
+        } )
+
+    };
+
+    gruntTasks.eslint.benchmarks = {
+        options: {
+            browser: true
+        },
+        src: benchmarkFiles.map( function ( pathname ) {
+            return path.join( BENCHMARK_PATH, pathname );
         } )
 
     };
@@ -220,7 +235,7 @@ var gruntTasks = {};
         src: []
     };
 
-    [ 'tests', 'examples', 'sources', 'self' ].forEach( function ( target ) {
+    [ 'tests', 'examples', 'sources', 'self', 'benchmarks' ].forEach( function ( target ) {
         gruntTasks.eslint.fix.src = gruntTasks.eslint.fix.src.concat( gruntTasks.eslint[ target ].src );
     } );
 
@@ -447,7 +462,7 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-execute' );
 
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'eslint:self', 'eslint:sources', 'eslint:examples', 'eslint:tests' ] );
+    grunt.registerTask( 'check', [ 'eslint:self', 'eslint:sources', 'eslint:examples', 'eslint:tests', 'eslint:benchmarks' ] );
 
     grunt.registerTask( 'beautify', [ 'eslint:fix' ] );
 

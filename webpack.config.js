@@ -1,4 +1,5 @@
 'use strict';
+/*eslint-env node*/
 
 var webpack = require( 'webpack' );
 
@@ -11,22 +12,15 @@ var BUILD_PATH = path.join( ROOT_PATH, 'builds/dist/' );
 var BUILD_TESTS_PATH = path.join( ROOT_PATH, 'builds/tests/' );
 
 var resolve = {
-        root: [
-            SOURCES_PATH,
-            VENDORS_PATH,
-            ROOT_PATH,
-            NODE_PATH
-        ]
+    root: [
+        SOURCES_PATH,
+        VENDORS_PATH,
+        ROOT_PATH,
+        NODE_PATH
+    ]
 };
 
 var externals = [ {
-    'qunit': {
-        root: 'QUnit',
-        commonjs2: 'qunit',
-        commonjs: 'qunit',
-        amd: 'qunit'
-    }
-}, {
     'zlib': {
         root: 'Zlib',
         commonjs2: 'zlib',
@@ -80,7 +74,7 @@ var mainlibConfig = {
         libraryTarget: 'umd',
         library: 'OSG'
     },
-    externals : externals,
+    externals: externals,
     resolve: resolve,
     module: {
         loaders: [ {
@@ -113,7 +107,7 @@ var testconfig = {
         fs: 'empty'
     },
     target: 'node',
-    externals : externals,
+    externals: externals,
     resolve: resolve,
     module: {
         loaders: [ {
@@ -129,7 +123,7 @@ var testconfig = {
             'Cedric Pinson <trigrou@trigrou.com> (http://cedricpinson.com)'
         ].join( '\n' ) )
     ]
-}
+};
 
 module.exports = [ mainlibConfig, testconfig ];
 

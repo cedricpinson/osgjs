@@ -20,7 +20,6 @@ module.exports = function () {
         pShadow.addChild( n, 0, 200 );
         assert.isOk( pShadow.children.length === 1, 'number of children must be 1' );
     } );
-    
 
     var DummyIntersector = function () {
         this.point = [ 0.5, 0.5, 0.5 ];

@@ -19,7 +19,7 @@ mocha.loadFiles( function () {
     var count = 0;
     mocha.suite.eachTest( function ( ) {
         count += 1;
-    } )
+    } );
     if ( count === 0 ) {
         console.error( 'No tests found' );
         process.exit( -1 );

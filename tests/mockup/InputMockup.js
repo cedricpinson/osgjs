@@ -5,7 +5,7 @@ var Input = require( 'osgDB/Input' );
 var P = require( 'bluebird' );
 var fs = require( 'fs' );
 var notify = require( 'osg/notify' );
- 
+
 var InputMockup = function ( json, identifier ) {
     Input.call( this, json, identifier );
 };
@@ -26,7 +26,7 @@ MACROUTILS.createPrototypeObject( InputMockup, MACROUTILS.objectInherit( Input.p
         } else {
             data = fs.readFileSync( nurl, 'utf8' );
         }
-        if  ( options && options.progress ) options.progress();
+        if ( options && options.progress ) options.progress();
 
         return P.resolve( data );
     },

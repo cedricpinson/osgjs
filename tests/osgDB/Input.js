@@ -2,7 +2,7 @@
 var assert = require( 'chai' ).assert;
 var P = require( 'bluebird' );
 var Input = require( 'osgDB/Input' );
-var mockup = require( 'tests/mockup/mockup' )
+var mockup = require( 'tests/mockup/mockup' );
 if ( mockup.isNodeContext() ) {
     Input = require( 'tests/mockup/InputMockup' );
 }

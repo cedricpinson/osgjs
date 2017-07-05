@@ -57,8 +57,8 @@ module.exports = function () {
         window.decodeURI = global.decodeURI;
         window.encodeURI = global.encodeURI;
         console.profile = console.profileEnd = function () {};
-    }
+    };
 
     createWindowVars( jsdom.window );
-}
+};
 
