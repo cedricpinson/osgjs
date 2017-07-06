@@ -306,18 +306,17 @@ var times = {};
 
 // we bind the function to Notify.console once and for all to avoid costly apply function
 
-Utils.time = ( Notify.console.time || function ( name ) {
+Utils.time = ( function ( name ) {
     times[ name ] = Timer.instance().tick();
 } ).bind( Notify.console );
 
-Utils.timeEnd = ( Notify.console.timeEnd || function ( name ) {
-
+Utils.timeEnd = ( function ( name ) {
     if ( times[ name ] === undefined )
         return;
 
     var duration = Timer.instance().deltaM( times[ name ], Timer.instance().tick() );
 
-    Notify.debug( name + ': ' + duration + 'ms' );
+    Notify.info( name + ': ' + duration + 'ms' );
     times[ name ] = undefined;
 
 } ).bind( Notify.console );
