@@ -1,7 +1,7 @@
 'use strict';
 var assert = require( 'chai' ).assert;
 var Image = require( 'osg/Image' );
-
+var mockup = require( 'tests/mockup/mockup' );
 
 module.exports = function () {
 
@@ -19,8 +19,12 @@ module.exports = function () {
         img.onload = function () {
             test( this );
         };
+
         img.src = 'mockup/greyscale.png';
 
+        if ( mockup.isNodeContext() ) {
+            img.onload();
+        }
     } );
 
     test( 'Image.isGreyScale color image', function ( done ) {
@@ -38,7 +42,9 @@ module.exports = function () {
             test( this );
         };
         img.src = 'mockup/rgba32.png';
-
+        if ( mockup.isNodeContext() ) {
+            img.onload();
+        }
     } );
 
     test( 'Image.isReady', function () {

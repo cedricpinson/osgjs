@@ -116,7 +116,6 @@ Input.prototype = {
         return url;
     },
 
-
     requestFile: function ( url, options ) {
         return _requestFile( url, options );
     },

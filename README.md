@@ -42,7 +42,7 @@ Compile:
 
 Compile whenever watched files change:
 
-    webpack -w
+    grunt watch
 
 The built version of osgjs will be put in the `build/` subdirectory.
 

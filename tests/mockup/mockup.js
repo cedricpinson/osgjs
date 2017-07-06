@@ -12,7 +12,12 @@ var StackedScale = require( 'osgAnimation/StackedScale' );
 var StackedQuaternion = require( 'osgAnimation/StackedQuaternion' );
 var StackedTranslate = require( 'osgAnimation/StackedTranslate' );
 var StackedMatrix = require( 'osgAnimation/StackedMatrix' );
+var ViewerOriginal = require( 'osgViewer/Viewer' );
+var Utils = require( 'osg/Utils' );
 
+var isNodeContext = function () {
+    return ( typeof process !== 'undefined' ) && ( process.release.name === 'node' ); // eslint-disable-line no-undef
+};
 
 var isNumber = function ( a ) {
     return typeof a === 'number';
@@ -174,15 +179,46 @@ var createFakeRenderer = function () {
 var createFakeWebGLCanvas = function () {
     var obj = {
         addEventListener: function () {},
-        getContext: function () {
-            return createFakeRenderer();
+        getContext: function ( dimension ) {
+            var grey = true;
+            if ( dimension === '2d' ) {
+                return {
+                    createImageData: function () {
+                        return {
+                            data: [ 0, 0, 0, 0 ]
+                        };
+                    },
+                    getImageData: function () {
+                        return { data: grey ? [ 0, 0, 0, 0 ] : [ 1, 0, 0, 0 ] };
+                    },
+                    putImageData: function () {},
+                    measureText: function () {
+                        return {
+                            width: 100
+                        };
+                    },
+                    fillText: function () {},
+                    clearRect: function () {},
+                    drawImage: function ( img ) {
+                        if ( img.src === 'mockup/rgba32.png' ) grey = false;
+                    }
+                };
+            } else {
+                return createFakeRenderer();
+            }
         },
         style: {
             width: 300
         },
         getAttribute: function () {
             return 0;
-        }
+        },
+        isReady: function () {
+            return true;
+        },
+        setAttribute: function () { },
+        width: 300,
+        height: 300
     };
     return obj;
 };
@@ -313,10 +349,25 @@ var createAnimationUpdateCallback = function ( animations ) {
     return cbMap;
 };
 
+
+// override initEventProxy because no events/no canvas in nodejs context
+// but keep the same class if in browser context
+var Viewer = function () {
+    ViewerOriginal.apply( this, arguments );
+};
+
+Utils.createPrototypeObject( Viewer, Utils.objectInherit( ViewerOriginal.prototype, {
+    initEventProxy: function () {
+
+        if ( isNodeContext() ) return {};
+
+        return ViewerOriginal.prototype.initEventProxy.apply( this, arguments );
+    }
+} ) );
+
 var createCanvas = function ( noGL ) {
 
-    // mockup for phantomjs or benchmarks
-    if ( noGL || navigator.userAgent.indexOf( 'PhantomJS' ) !== -1 ) {
+    if ( noGL || isNodeContext() ) {
         return createFakeWebGLCanvas();
     }
 
@@ -341,6 +392,18 @@ var removeCanvas = function ( canvas ) {
     parent.removeChild( canvas );
 };
 
+document.createElementOld = document.createElement;
+
+document.createElement = function ( type ) {
+    if ( type === 'canvas' ) {
+        return createCanvas();
+    }
+    return document.createElementOld( type );
+};
+
+
+
+
 module.exports = {
     checkNear: checkNear,
     createFakeRenderer: createFakeRenderer,
@@ -355,5 +418,7 @@ module.exports = {
     createAnimationWithNegativeKey: createAnimationWithNegativeKey,
     createAnimationUpdateCallback: createAnimationUpdateCallback,
     getBoxScene: getBoxScene,
-    getScene: getScene
+    getScene: getScene,
+    Viewer: Viewer,
+    isNodeContext: isNodeContext
 };

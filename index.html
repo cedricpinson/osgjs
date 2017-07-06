@@ -113,6 +113,24 @@
         li.appendChild( link );
         sidebar.appendChild( li );
 
+        // And benchmarks
+        var li = document.createElement( 'li' );
+        var link = document.createElement( 'a' );
+        link.className = 'link';
+        var benchText = document.createElement( 'h3' );
+        benchText.textContent = 'Benchmarks';
+        link.href = 'benchmarks/index.html';
+        link.setAttribute( 'target', 'viewer' );
+        link.appendChild( benchText );
+        link.addEventListener( 'click', function ( event, link ) {
+            if ( event.button === 0 ) {
+                window.location = '#benchmarks/index.html';
+            }
+        }.bind( link ) );
+        li.appendChild( link );
+        sidebar.appendChild( li );
+
+
         // Handle refresh/reload
         if ( baseHash ) {
             viewer = updateIframe( viewer, window.location.href );

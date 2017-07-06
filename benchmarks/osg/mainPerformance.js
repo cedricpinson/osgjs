@@ -3,7 +3,6 @@ var mockup = require( 'tests/mockup/mockup' );
 var mat4 = require( 'osg/glMatrix' ).mat4;
 var Node = require( 'osg/Node' );
 var Timer = require( 'osg/Timer' );
-var Viewer = require( 'osgViewer/Viewer' );
 var reportStats = require( 'benchmarks/reportStats' );
 var mockupBench = require( 'benchmarks/mockupBench' );
 
@@ -12,7 +11,7 @@ module.exports = function () {
     test( 'CullVisitor Heavy Static Scene', function () {
 
         var canvas = mockup.createCanvas( true );
-        var viewer = new Viewer( canvas );
+        var viewer = new mockup.Viewer( canvas );
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
@@ -54,7 +53,7 @@ module.exports = function () {
     test( 'CullVisitor Heavy Static Scene with Frustum culling (Worst Cases as Scene is Flat) ', function () {
 
         var canvas = mockup.createCanvas( true );
-        var viewer = new Viewer( canvas );
+        var viewer = new mockup.Viewer( canvas );
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
@@ -96,7 +95,7 @@ module.exports = function () {
     test( 'CullVisitor Heavy Static Scene with 1 light And Shadows ', function () {
 
         var canvas = mockup.createCanvas( true );
-        var viewer = new Viewer( canvas );
+        var viewer = new mockup.Viewer( canvas );
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
@@ -142,7 +141,7 @@ module.exports = function () {
     test( 'Draw Pass ', function () {
 
         var canvas = mockup.createCanvas( true );
-        var viewer = new Viewer( canvas );
+        var viewer = new mockup.Viewer( canvas );
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
@@ -198,7 +197,7 @@ module.exports = function () {
     test( 'Full Frame ', function () {
 
         var canvas = mockup.createCanvas( true );
-        var viewer = new Viewer( canvas );
+        var viewer = new mockup.Viewer( canvas );
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();

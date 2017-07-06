@@ -18,6 +18,7 @@ var SOURCE_PATH = 'sources/';
 var EXAMPLE_PATH = 'examples/';
 var BUILD_PATH = 'builds/';
 var TEST_PATH = 'tests/';
+var BENCHMARK_PATH = 'benchmarks/';
 var DIST_PATH = path.join( BUILD_PATH, 'dist/' );
 
 // Utility functions
@@ -51,7 +52,11 @@ var exampleFiles = find( EXAMPLE_PATH, '**/*.js' ).map( function ( pathname ) {
     return pathname;
 } );
 
-var testsFiles = find( TEST_PATH, '**/*.js' ).map( function ( pathname ) {
+var testFiles = find( TEST_PATH, '**/*.js' ).map( function ( pathname ) {
+    return pathname;
+} );
+
+var benchmarkFiles = find( BENCHMARK_PATH, '**/*.js' ).map( function ( pathname ) {
     return pathname;
 } );
 
@@ -101,30 +106,17 @@ var gruntTasks = {};
 
     var targets = {
         build: {
-            entry: {
-                OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ],
-                benchmarks: [ './benchmarks/benchmarks.js' ]
-            },
             devtool: 'source-map',
-
             module: {
                 loaders: [ {
                     test: /\.js$/,
                     loader: 'webpack-strip-block'
                 } ]
             }
-
         },
 
         builddebug: {
-            entry: {
-                OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ],
-                benchmarks: [ './benchmarks/benchmarks.js' ]
-            },
             devtool: 'eval-source-map'
-
         },
 
         buildrelease: {
@@ -181,7 +173,7 @@ var gruntTasks = {};
         options: {
             node: true
         },
-        src: [ 'Gruntfile.js' ]
+        src: [ 'Gruntfile.js', 'webpack.config.js' ]
     };
 
     gruntTasks.eslint.sources = {
@@ -217,11 +209,20 @@ var gruntTasks = {};
         options: {
             browser: true
         },
-        src: testsFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'glMatrix' ) === -1 &&
-                pathName.indexOf( 'mocha.js' ) === -1;
+        src: testFiles.filter( function ( pathName ) {
+            return pathName.indexOf( 'glMatrix' ) === -1;
         } ).map( function ( pathname ) {
             return path.join( TEST_PATH, pathname );
+        } )
+
+    };
+
+    gruntTasks.eslint.benchmarks = {
+        options: {
+            browser: true
+        },
+        src: benchmarkFiles.map( function ( pathname ) {
+            return path.join( BENCHMARK_PATH, pathname );
         } )
 
     };
@@ -234,7 +235,7 @@ var gruntTasks = {};
         src: []
     };
 
-    [ 'tests', 'examples', 'sources', 'self' ].forEach( function ( target ) {
+    [ 'tests', 'examples', 'sources', 'self', 'benchmarks' ].forEach( function ( target ) {
         gruntTasks.eslint.fix.src = gruntTasks.eslint.fix.src.concat( gruntTasks.eslint[ target ].src );
     } );
 
@@ -253,32 +254,16 @@ var gruntTasks = {};
 } )();
 
 ( function () {
-    gruntTasks.mocha = {
+    gruntTasks.execute = {
         test: {
-            options: {
-                urls: [ 'http://localhost:9001/tests/index.html' ],
-                mocha: {
-                    ui: 'qunit'
-                },
-                reporter: 'Spec',
-                timeout: 10000,
-                log: true
-            }
+            src: [ 'tests/runTests.js' ]
         },
         bench: {
-            options: {
-                urls: [ 'http://localhost:9001/benchmarks/index.html' ],
-                mocha: {
-                    ui: 'qunit'
-                },
-                reporter: 'list'
-            }
+            src: [ 'benchmarks/runBenchmarks.js' ]
         }
-
     };
 
 } )();
-
 
 // ## Documentation
 //
@@ -458,7 +443,6 @@ module.exports = function ( grunt ) {
     }, gruntTasks ) );
 
     grunt.loadNpmTasks( 'grunt-documentation' );
-    grunt.loadNpmTasks( 'grunt-mocha' );
 
     grunt.loadNpmTasks( 'grunt-plato' );
 
@@ -475,15 +459,17 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-shell' );
     grunt.loadNpmTasks( 'grunt-webpack' );
 
+    grunt.loadNpmTasks( 'grunt-execute' );
+
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'eslint:self', 'eslint:sources', 'eslint:examples', 'eslint:tests' ] );
+    grunt.registerTask( 'check', [ 'eslint:self', 'eslint:sources', 'eslint:examples', 'eslint:tests', 'eslint:benchmarks' ] );
 
     grunt.registerTask( 'beautify', [ 'eslint:fix' ] );
 
     grunt.registerTask( 'sync', [ 'update_submodules:default' ] );
 
-    grunt.registerTask( 'test', [ 'connect:server', 'mocha:test' ] );
-    grunt.registerTask( 'benchmarks', [ 'connect:server', 'mocha:bench' ] );
+    grunt.registerTask( 'test', [ 'execute:test' ] );
+    grunt.registerTask( 'benchmarks', [ 'execute:bench' ] );
 
     grunt.registerTask( 'docs', [ 'plato', 'documentation:default' ] );
 
