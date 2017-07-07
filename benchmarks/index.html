@@ -8,21 +8,16 @@
   </head>
   <body>
     <div id="mocha"></div>
-    <script type='text/javascript' src='../examples/vendors/bluebird.js'></script>
-    <script type='text/javascript' src='../examples/vendors/hammer.js'></script>
-    <script type='text/javascript' src='../examples/vendors/leap.js'></script>
+    <script type="text/javascript" src="../node_modules/bluebird/js/browser/bluebird.min.js"></script>
+    <script type="text/javascript" src="../node_modules/hammerjs/hammer.min.js"></script>
 
-    <script src="../node_modules/mocha/mocha.js"></script>
+    <script  type="text/javascript" src="../node_modules/mocha/mocha.js"></script>
     <script> mocha.setup('qunit'); </script>
-    <script src='../builds/tests/benchmarks.js'></script>
+    <script  type="text/javascript" src='../builds/tests/benchmarks.js'></script>
 
     <!-- run mocha -->
     <script type="text/javascript" charset="utf-8">
-        // If tests run in a real browser
-        // Can alternatively do a check on window.PHANTOMJS
-        if (navigator.userAgent.indexOf('PhantomJS') < 0) {
             mocha.run();
-        }
     </script>
 
   </body>

@@ -1,4 +1,5 @@
 'use strict';
+
 var MACROUTILS = require('osg/Utils');
 var vec3 = require('osg/glMatrix').vec3;
 var mat4 = require('osg/glMatrix').mat4;
@@ -6,7 +7,6 @@ var Manipulator = require('osgGA/Manipulator');
 var OrbitManipulatorDeviceOrientationController = require('osgGA/OrbitManipulatorDeviceOrientationController');
 var OrbitManipulatorGamePadController = require('osgGA/OrbitManipulatorGamePadController');
 var OrbitManipulatorHammerController = require('osgGA/OrbitManipulatorHammerController');
-var OrbitManipulatorLeapMotionController = require('osgGA/OrbitManipulatorLeapMotionController');
 var OrbitManipulatorStandardMouseKeyboardController = require('osgGA/OrbitManipulatorStandardMouseKeyboardController');
 var OrbitManipulatorWebVRController = require('osgGA/OrbitManipulatorWebVRController');
 var DelayInterpolator = require('osgUtil/DelayInterpolator');
@@ -24,7 +24,6 @@ var OrbitManipulator = function(boundStrategy) {
 
 OrbitManipulator.AvailableControllerList = [
     'StandardMouseKeyboard',
-    'LeapMotion',
     'GamePad',
     'Hammer',
     'DeviceOrientation',
@@ -33,7 +32,6 @@ OrbitManipulator.AvailableControllerList = [
 
 OrbitManipulator.ControllerList = [
     'StandardMouseKeyboard',
-    'LeapMotion',
     'GamePad',
     'Hammer',
     'DeviceOrientation',
@@ -404,7 +402,6 @@ MACROUTILS.createPrototypeObject(
 OrbitManipulator.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
 OrbitManipulator.GamePad = OrbitManipulatorGamePadController;
 OrbitManipulator.Hammer = OrbitManipulatorHammerController;
-OrbitManipulator.LeapMotion = OrbitManipulatorLeapMotionController;
 OrbitManipulator.WebVR = OrbitManipulatorWebVRController;
 OrbitManipulator.StandardMouseKeyboard = OrbitManipulatorStandardMouseKeyboardController;
 

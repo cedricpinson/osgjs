@@ -171,7 +171,6 @@ var gruntTasks = {};
         src: srcFiles
             .filter(function(pathName) {
                 return (
-                    pathName.indexOf('vendors') === -1 &&
                     pathName.indexOf('glMatrix') === -1 &&
                     pathName.indexOf('webgl-debug.js') === -1 &&
                     pathName.indexOf('webgl-utils.js') === -1
@@ -186,13 +185,9 @@ var gruntTasks = {};
         options: {
             browser: true
         },
-        src: exampleFiles
-            .filter(function(pathName) {
-                return pathName.indexOf('vendors') === -1;
-            })
-            .map(function(pathname) {
-                return path.join(EXAMPLE_PATH, pathname);
-            })
+        src: exampleFiles.map(function(pathname) {
+            return path.join(EXAMPLE_PATH, pathname);
+        })
     };
 
     gruntTasks.eslint.tests = {
@@ -339,28 +334,6 @@ function buildPrettierOptions(grunt) {
         }
     };
 })();
-// ## Copy
-// (explicit because windows doesn't support symlinks)
-(function() {
-    gruntTasks.copyto = {
-        main: {
-            files: [
-                //Hammer:
-                {
-                    cwd: './',
-                    src: 'examples/vendors/hammer-2.0.4.js',
-                    dest: 'examples/vendors/hammer.js'
-                },
-                //Bluebird:
-                {
-                    cwd: './',
-                    src: 'examples/vendors/bluebird-2.10.2.js',
-                    dest: 'examples/vendors/bluebird.js'
-                }
-            ]
-        }
-    };
-})();
 
 (function() {
     gruntTasks.release = {
@@ -456,14 +429,11 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-release');
     grunt.loadNpmTasks('grunt-contrib-connect');
-
     grunt.loadNpmTasks('grunt-update-submodules');
-
     grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-clean');
 
-    grunt.loadNpmTasks('grunt-copy-to');
     grunt.loadNpmTasks('grunt-shell');
     grunt.loadNpmTasks('grunt-webpack');
 
@@ -485,12 +455,11 @@ module.exports = function(grunt) {
     grunt.registerTask('test', ['execute:test']);
     grunt.registerTask('benchmarks', ['execute:bench']);
 
+    grunt.registerTask('build', ['webpack:build']);
+    grunt.registerTask('build-release', ['webpack:buildrelease']);
+    grunt.registerTask('build-debug', ['webpack:builddebug']);
+
     grunt.registerTask('docs', ['plato', 'documentation:default']);
-
-    grunt.registerTask('build', ['copyto', 'webpack:build']);
-    grunt.registerTask('build-release', ['copyto', 'webpack:buildrelease']);
-    grunt.registerTask('build-debug', ['copyto', 'webpack:builddebug']);
-
     grunt.registerTask('default', ['check', 'build']);
     grunt.registerTask('serve', ['sync', 'build', 'connect:dist:keepalive']);
 };

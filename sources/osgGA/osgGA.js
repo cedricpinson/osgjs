@@ -13,7 +13,6 @@ var OrbitManipulator = require('osgGA/OrbitManipulator');
 var OrbitManipulatorDeviceOrientationController = require('osgGA/OrbitManipulatorDeviceOrientationController');
 var OrbitManipulatorGamePadController = require('osgGA/OrbitManipulatorGamePadController');
 var OrbitManipulatorHammerController = require('osgGA/OrbitManipulatorHammerController');
-var OrbitManipulatorLeapMotionController = require('osgGA/OrbitManipulatorLeapMotionController');
 var OrbitManipulatorStandardMouseKeyboardController = require('osgGA/OrbitManipulatorStandardMouseKeyboardController');
 var OrbitManipulatorWebVRController = require('osgGA/OrbitManipulatorWebVRController');
 var SwitchManipulator = require('osgGA/SwitchManipulator');
@@ -53,9 +52,6 @@ osgGA.getOrbitManipulatorGamePadController = function() {
 };
 osgGA.getOrbitManipulatorHammerController = function() {
     return OrbitManipulatorHammerController;
-};
-osgGA.getOrbitManipulatorLeapMotionController = function() {
-    return OrbitManipulatorLeapMotionController;
 };
 osgGA.getOrbitManipulatorStandardMouseKeyboardController = function() {
     return OrbitManipulatorStandardMouseKeyboardController;

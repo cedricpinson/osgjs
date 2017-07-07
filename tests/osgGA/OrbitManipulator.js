@@ -14,7 +14,6 @@ module.exports = function() {
         var list = manipulator.getControllerList();
         assert.isOk(list.StandardMouseKeyboard !== undefined, 'check mouse support');
         assert.isOk(list.Hammer !== undefined, 'check hammer support');
-        assert.isOk(list.LeapMotion !== undefined, 'check leap motion support');
         assert.isOk(list.GamePad !== undefined, 'check game pad support');
     });
 
