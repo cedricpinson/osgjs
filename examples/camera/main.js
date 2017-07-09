@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
@@ -6,76 +6,92 @@
     var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
 
-    function createScene () {
-
-        var canvas = document.getElementById( 'View' );
+    function createScene() {
+        var canvas = document.getElementById('View');
 
         // create a camera that will render to texture
-        var rttSize = [ 512, 512 ];
+        var rttSize = [512, 512];
         var rttCamera = new osg.Camera();
-        rttCamera.setName( 'rttCamera' );
-        osg.mat4.ortho( rttCamera.getProjectionMatrix(), 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5 );
-        rttCamera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
-        rttCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
-        rttCamera.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
+        rttCamera.setName('rttCamera');
+        osg.mat4.ortho(rttCamera.getProjectionMatrix(), 0, rttSize[0], 0, rttSize[1], -5, 5);
+        rttCamera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
+        rttCamera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+        rttCamera.setViewport(new osg.Viewport(0, 0, rttSize[0], rttSize[1]));
 
         // we will render a textured quad on the rtt target with a fixed texture without
         // motion
-        var textureQuad = osg.createTexturedQuadGeometry( 0, 0, 0,
-            rttSize[ 0 ], 0, 0,
-            0, rttSize[ 1 ], 0 );
-        osgDB.readImageURL( 'textures/sol_trauma_periph.png' ).then( function ( image ) {
+        var textureQuad = osg.createTexturedQuadGeometry(
+            0,
+            0,
+            0,
+            rttSize[0],
+            0,
+            0,
+            0,
+            rttSize[1],
+            0
+        );
+        osgDB.readImageURL('textures/sol_trauma_periph.png').then(function(image) {
             var texture = new osg.Texture();
-            texture.setImage( image );
-            textureQuad.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
-        } );
-        rttCamera.addChild( textureQuad );
+            texture.setImage(image);
+            textureQuad.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
+        });
+        rttCamera.addChild(textureQuad);
 
         // we attach the target texture to our camera
         var rttTargetTexture = new osg.Texture();
-        rttTargetTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
-        rttTargetTexture.setMinFilter( 'LINEAR' );
-        rttTargetTexture.setMagFilter( 'LINEAR' );
-        rttCamera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTargetTexture );
+        rttTargetTexture.setTextureSize(rttSize[0], rttSize[1]);
+        rttTargetTexture.setMinFilter('LINEAR');
+        rttTargetTexture.setMagFilter('LINEAR');
+        rttCamera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTargetTexture);
 
         // now we want to use the result of the previous rtt
         // for this we will create a textured quad that will use the rtt
         // target texture
-        var texturedQuadUsingTargetTexture = osg.createTexturedQuadGeometry( -25, -25, 0,
-            50, 0, 0,
-            0, 50, 0 );
-        texturedQuadUsingTargetTexture.getOrCreateStateSet().setTextureAttributeAndModes( 0, rttTargetTexture );
+        var texturedQuadUsingTargetTexture = osg.createTexturedQuadGeometry(
+            -25,
+            -25,
+            0,
+            50,
+            0,
+            0,
+            0,
+            50,
+            0
+        );
+        texturedQuadUsingTargetTexture
+            .getOrCreateStateSet()
+            .setTextureAttributeAndModes(0, rttTargetTexture);
 
         var root = new osg.Node();
 
         // we add this quad to manipulate it with the mouse
-        root.addChild( texturedQuadUsingTargetTexture );
+        root.addChild(texturedQuadUsingTargetTexture);
 
         // we create a ortho camera to display the rtt in hud like
         var hudCamera = new osg.Camera();
 
-        osg.mat4.ortho( hudCamera.getProjectionMatrix(), 0, canvas.width, 0, canvas.height, -5, 5 );
-        osg.mat4.fromTranslation( hudCamera.getViewMatrix(), [ 25, 25, 0 ] );
-        hudCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
-        hudCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+        osg.mat4.ortho(hudCamera.getProjectionMatrix(), 0, canvas.width, 0, canvas.height, -5, 5);
+        osg.mat4.fromTranslation(hudCamera.getViewMatrix(), [25, 25, 0]);
+        hudCamera.setRenderOrder(osg.Camera.NESTED_RENDER, 0);
+        hudCamera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
 
-        hudCamera.addChild( texturedQuadUsingTargetTexture );
+        hudCamera.addChild(texturedQuadUsingTargetTexture);
 
-        root.addChild( hudCamera );
-        root.addChild( rttCamera );
+        root.addChild(hudCamera);
+        root.addChild(rttCamera);
 
         return root;
     }
 
-    var main = function () {
-
-        var viewer = new osgViewer.Viewer( document.getElementById( 'View' ) );
+    var main = function() {
+        var viewer = new osgViewer.Viewer(document.getElementById('View'));
         viewer.init();
-        viewer.setSceneData( createScene() );
+        viewer.setSceneData(createScene());
         //var m = new osgGA.FirstPersonManipulator();
         viewer.setupManipulator();
         viewer.run();
     };
 
-    window.addEventListener( 'load', main, true );
-} )();
+    window.addEventListener('load', main, true);
+})();

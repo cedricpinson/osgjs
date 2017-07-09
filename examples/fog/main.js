@@ -1,11 +1,11 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
 
-    function getShader () {
+    function getShader() {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -19,7 +19,7 @@
             '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '  position = uModelViewMatrix * vec4(Vertex,1.0);',
             '}'
-        ].join( '\n' );
+        ].join('\n');
 
         var fragmentshader = [
             '',
@@ -35,63 +35,73 @@
             '  gl_FragColor = f * vec4(0.6, 0.2, 0.2, 1.0);',
             '}',
             ''
-        ].join( '\n' );
+        ].join('\n');
 
         var program = new osg.Program(
-            new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-            new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+            new osg.Shader('VERTEX_SHADER', vertexshader),
+            new osg.Shader('FRAGMENT_SHADER', fragmentshader)
+        );
 
         program.trackAttributes = {};
         program.trackAttributes.attributeKeys = [];
-        program.trackAttributes.attributeKeys.push( 'Material' );
+        program.trackAttributes.attributeKeys.push('Material');
 
         return program;
     }
 
-
-    function createScene () {
+    function createScene() {
         var group = new osg.Node();
 
         var size = 500;
-        var ground = osg.createTexturedQuadGeometry( -size * 0.5, -size * 0.5, -50.0, size, 0.0, 0.0, 0.0, size, 0.0 );
+        var ground = osg.createTexturedQuadGeometry(
+            -size * 0.5,
+            -size * 0.5,
+            -50.0,
+            size,
+            0.0,
+            0.0,
+            0.0,
+            size,
+            0.0
+        );
 
-        ground.getOrCreateStateSet().setAttributeAndModes( getShader() );
+        ground.getOrCreateStateSet().setAttributeAndModes(getShader());
 
-        var density = osg.Uniform.createFloat1( 0.002, 'density' );
+        var density = osg.Uniform.createFloat1(0.002, 'density');
 
         var gui = new window.dat.GUI();
 
         var param = {
-            density: density.getInternalArray()[ 0 ]
+            density: density.getInternalArray()[0]
         };
 
-        gui.add( param, 'density', 0, 0.006 ).onChange( function ( value ) {
-            density.setFloat( value );
-        } );
+        gui.add(param, 'density', 0, 0.006).onChange(function(value) {
+            density.setFloat(value);
+        });
 
-        ground.getOrCreateStateSet().addUniform( density );
+        ground.getOrCreateStateSet().addUniform(density);
 
-        group.addChild( ground );
-        group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
+        group.addChild(ground);
+        group.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
 
         return group;
     }
 
-    var main = function () {
-        var canvas = document.getElementById( 'View' );
+    var main = function() {
+        var canvas = document.getElementById('View');
 
         var viewer;
         // try {
-        viewer = new osgViewer.Viewer( canvas, {
+        viewer = new osgViewer.Viewer(canvas, {
             antialias: true,
             alpha: true
-        } );
+        });
         viewer.init();
         viewer.setupManipulator();
         var rotate = new osg.MatrixTransform();
-        rotate.addChild( createScene() );
-        viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
-        viewer.setSceneData( rotate );
+        rotate.addChild(createScene());
+        viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
+        viewer.setSceneData(rotate);
         viewer.getManipulator().computeHomePosition();
 
         //viewer.getManipulator().setDistance(100.0);
@@ -104,5 +114,5 @@
         // }
     };
 
-    window.addEventListener( 'load', main, true );
-} )();
+    window.addEventListener('load', main, true);
+})();

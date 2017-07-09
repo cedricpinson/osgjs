@@ -1,6 +1,5 @@
 'use strict';
 var defaultOptions = {
-
     // prefix to built url to load resource
     prefixURL: '',
 

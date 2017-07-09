@@ -1,19 +1,15 @@
 'use strict';
 
-
-var CullSettings = function () {
-
+var CullSettings = function() {
     // Not doing a this.reset()
     // because of multiple inheritance
     // it will call the wrong reset
     // cullstack reset for isntance()
-    CullSettings.prototype.reset.call( this );
-
+    CullSettings.prototype.reset.call(this);
 };
 
 CullSettings.prototype = {
-    reset: function () {
-
+    reset: function() {
         this._computeNearFar = true;
         this._nearFarRatio = 0.005;
 
@@ -43,7 +39,7 @@ CullSettings.prototype = {
         this._clampProjectionMatrixCallback = undefined;
     },
 
-    setCullSettings: function ( settings ) {
+    setCullSettings: function(settings) {
         this._computeNearFar = settings._computeNearFar;
         this._nearFarRatio = settings._nearFarRatio;
         this._enableFrustumCulling = settings._enableFrustumCulling;
@@ -51,45 +47,44 @@ CullSettings.prototype = {
         this._clampProjectionMatrixCallback = settings._clampProjectionMatrixCallback;
     },
 
-    setNearFarRatio: function ( ratio ) {
+    setNearFarRatio: function(ratio) {
         this._nearFarRatio = ratio;
     },
-    getNearFarRatio: function () {
+    getNearFarRatio: function() {
         return this._nearFarRatio;
     },
-    setComputeNearFar: function ( value ) {
+    setComputeNearFar: function(value) {
         this._computeNearFar = value;
     },
-    getComputeNearFar: function () {
+    getComputeNearFar: function() {
         return this._computeNearFar;
     },
 
-    setEnableFrustumCulling: function ( value ) {
+    setEnableFrustumCulling: function(value) {
         this._enableFrustumCulling = value;
     },
-    getEnableFrustumCulling: function () {
+    getEnableFrustumCulling: function() {
         return this._enableFrustumCulling;
     },
 
-    getSettingSourceOverrider: function () {
+    getSettingSourceOverrider: function() {
         return this._settingsSourceOverrider;
     },
 
-    setClampProjectionMatrixCallback: function ( callback ) {
+    setClampProjectionMatrixCallback: function(callback) {
         this._clampProjectionMatrixCallback = callback;
     },
 
-    getClampProjectionMatrixCallback: function () {
+    getClampProjectionMatrixCallback: function() {
         return this._clampProjectionMatrixCallback;
     },
 
-    setLODScale: function ( scale ) {
+    setLODScale: function(scale) {
         this._LODScale = scale;
     },
-    getLODScale: function () {
+    getLODScale: function() {
         return this._LODScale;
     }
-
 };
 
 module.exports = CullSettings;

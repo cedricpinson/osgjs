@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
@@ -6,145 +6,146 @@
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
 
-    var Example = function () {
+    var Example = function() {
         var self = this;
 
         this._config = {
             url: 'https://krpano.com/videoserver/cat-test-video-320x240.mp4',
-            'PLAY': function () {
-                if ( self._currentImageStream ) self._currentImageStream.play();
+            PLAY: function() {
+                if (self._currentImageStream) self._currentImageStream.play();
             },
-            'STOP': function () {
-                if ( self._currentImageStream ) self._currentImageStream.stop();
+            STOP: function() {
+                if (self._currentImageStream) self._currentImageStream.stop();
             }
         };
 
         this._scene = new osg.Node();
-        this._scene.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
+        this._scene.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
         this._currentImageStream = undefined;
-
     };
 
     Example.prototype = {
-
-        initDatGUI: function () {
-
+        initDatGUI: function() {
             var gui = new window.dat.GUI();
-            var controller = gui.add( this._config, 'url' );
-            controller.onFinishChange( function () {
-                this.recreateScene();
-            }.bind( this ) );
+            var controller = gui.add(this._config, 'url');
+            controller.onFinishChange(
+                function() {
+                    this.recreateScene();
+                }.bind(this)
+            );
             this.recreateScene();
 
-            gui.add( this._config, 'PLAY' );
-            gui.add( this._config, 'STOP' );
-
+            gui.add(this._config, 'PLAY');
+            gui.add(this._config, 'STOP');
         },
 
-
         // get the model
-        getOrCreateModel: function ( width, height ) {
-
-            if ( !this._model ) {
-
+        getOrCreateModel: function(width, height) {
+            if (!this._model) {
                 // check osg/shape.js to see arguements of createTexturedQuadGeometry
-                this._model = osg.createTexturedQuadGeometry( -width / 2, 0, -height / 2,
-                    width, 0, 0,
-                    0, 0, height );
-
+                this._model = osg.createTexturedQuadGeometry(
+                    -width / 2,
+                    0,
+                    -height / 2,
+                    width,
+                    0,
+                    0,
+                    0,
+                    0,
+                    height
+                );
             }
 
             return this._model;
         },
 
-        recreateScene: function () {
+        recreateScene: function() {
             this._scene.removeChildren();
             var model = this.createTextureVideo();
-            this._scene.addChild( model );
+            this._scene.addChild(model);
         },
 
-
-        createTextureVideo: function () {
-
+        createTextureVideo: function() {
             var root = new osg.Node();
 
-            var videoElement = $( 'video' )[ 0 ];
+            var videoElement = $('video')[0];
 
-            var image = new osg.ImageStream( videoElement );
+            var image = new osg.ImageStream(videoElement);
 
             videoElement.preload = 'auto';
             videoElement.loop = true;
             videoElement.crossOrigin = 'anonymous';
             videoElement.src = this._config.url;
 
-            videoElement.onerror = function () {
+            videoElement.onerror = function() {
                 var err = 'unknown error';
-                switch ( videoElement.error.code ) {
-                case 1:
-                    err = 'video loading aborted';
-                    break;
-                case 2:
-                    err = 'network loading error';
-                    break;
-                case 3:
-                    err = 'video decoding failed / corrupted data or unsupported codec';
-                    break;
-                case 4:
-                    err = 'video not supported';
-                    break;
+                switch (videoElement.error.code) {
+                    case 1:
+                        err = 'video loading aborted';
+                        break;
+                    case 2:
+                        err = 'network loading error';
+                        break;
+                    case 3:
+                        err = 'video decoding failed / corrupted data or unsupported codec';
+                        break;
+                    case 4:
+                        err = 'video not supported';
+                        break;
                 }
-                osg.error( 'Error: ' + err + ' (errorcode=' + videoElement.error.code + ')' );
+                osg.error('Error: ' + err + ' (errorcode=' + videoElement.error.code + ')');
             };
 
             window.image = image;
             this._currentImageStream = image;
 
-            image.whenReady().then( function ( imageStream ) {
+            image.whenReady().then(
+                function(imageStream) {
+                    var w, h;
+                    w = imageStream.getWidth();
+                    h = imageStream.getHeight();
 
-                var w, h;
-                w = imageStream.getWidth();
-                h = imageStream.getHeight();
+                    var model = this.getOrCreateModel(w, h);
 
-                var model = this.getOrCreateModel( w, h );
+                    root.addChild(model);
+                    var texture = new osg.Texture();
+                    texture.setImage(image);
 
-                root.addChild( model );
-                var texture = new osg.Texture();
-                texture.setImage( image );
+                    var stateSet = model.getOrCreateStateSet();
+                    stateSet.setTextureAttributeAndModes(0, texture);
 
-                var stateSet = model.getOrCreateStateSet();
-                stateSet.setTextureAttributeAndModes( 0, texture );
+                    this._viewer.getManipulator().computeHomePosition();
 
-                this._viewer.getManipulator().computeHomePosition();
-
-                imageStream.play();
-
-            }.bind( this ) );
+                    imageStream.play();
+                }.bind(this)
+            );
 
             return root;
         },
 
-        run: function ( canvas ) {
-
+        run: function(canvas) {
             var viewer;
-            viewer = new osgViewer.Viewer( canvas, this._osgOptions );
+            viewer = new osgViewer.Viewer(canvas, this._osgOptions);
             this._viewer = viewer;
             viewer.init();
 
-            viewer.setSceneData( this._scene );
+            viewer.setSceneData(this._scene);
             viewer.setupManipulator();
             viewer.getManipulator().computeHomePosition();
 
             viewer.run();
 
             this.initDatGUI();
-
         }
     };
 
-    window.addEventListener( 'load', function () {
-        var example = new Example();
-        var canvas = $( '#View' )[ 0 ];
-        example.run( canvas );
-    }, true );
-
-} )();
+    window.addEventListener(
+        'load',
+        function() {
+            var example = new Example();
+            var canvas = $('#View')[0];
+            example.run(canvas);
+        },
+        true
+    );
+})();

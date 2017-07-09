@@ -1,10 +1,10 @@
 'use strict';
 
-var vec3 = require( 'osg/glMatrix' ).vec3;
-var mat4 = require( 'osg/glMatrix' ).mat4;
-var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
+var vec3 = require('osg/glMatrix').vec3;
+var mat4 = require('osg/glMatrix').mat4;
+var TriangleIndexFunctor = require('osg/TriangleIndexFunctor');
 
-var LineSegmentIntersection = function ( i1, i2, i3, r1, r2, r3 ) {
+var LineSegmentIntersection = function(i1, i2, i3, r1, r2, r3) {
     this._intersectionPoints = [];
     this._primitiveIndex = undefined;
     this._ratio = 0;
@@ -28,7 +28,7 @@ var LineSegmentIntersection = function ( i1, i2, i3, r1, r2, r3 ) {
 };
 
 // Settings are needed.
-var LineSegmentIntersectFunctor = function () {
+var LineSegmentIntersectFunctor = function() {
     this._settings = undefined;
     this._primitiveIndex = 0;
 
@@ -45,174 +45,168 @@ var LineSegmentIntersectFunctor = function () {
 };
 
 LineSegmentIntersectFunctor.prototype = {
-
-
-    reset: function () {
+    reset: function() {
         this._hit = false;
     },
 
-
-    set: function ( start, end, settings ) {
+    set: function(start, end, settings) {
         this._settings = settings;
         this._start = start;
         this._end = end;
-        vec3.sub( this._d, end, start );
+        vec3.sub(this._d, end, start);
 
-        this._length = vec3.length( this._d );
-        this._invLength = ( this._length !== 0.0 ) ? 1.0 / this._length : 0.0;
+        this._length = vec3.length(this._d);
+        this._invLength = this._length !== 0.0 ? 1.0 / this._length : 0.0;
 
-        vec3.scale( this._d, this._d, this._invLength );
-        if ( this._d[ 0 ] !== 0.0 ) vec3.scale( this._dInvX, this._d, 1.0 / this._d[ 0 ] );
-        if ( this._d[ 1 ] !== 0.0 ) vec3.scale( this._dInvY, this._d, 1.0 / this._d[ 1 ] );
-        if ( this._d[ 2 ] !== 0.0 ) vec3.scale( this._dInvZ, this._d, 1.0 / this._d[ 2 ] );
+        vec3.scale(this._d, this._d, this._invLength);
+        if (this._d[0] !== 0.0) vec3.scale(this._dInvX, this._d, 1.0 / this._d[0]);
+        if (this._d[1] !== 0.0) vec3.scale(this._dInvY, this._d, 1.0 / this._d[1]);
+        if (this._d[2] !== 0.0) vec3.scale(this._dInvZ, this._d, 1.0 / this._d[2]);
     },
 
-    enter: function ( bbox, s, e ) {
+    enter: function(bbox, s, e) {
         var min = bbox._min;
-        var xmin = min[ 0 ];
-        var ymin = min[ 1 ];
-        var zmin = min[ 2 ];
+        var xmin = min[0];
+        var ymin = min[1];
+        var zmin = min[2];
 
         var max = bbox._max;
-        var xmax = max[ 0 ];
-        var ymax = max[ 1 ];
-        var zmax = max[ 2 ];
+        var xmax = max[0];
+        var ymax = max[1];
+        var zmax = max[2];
 
         var invX = this._dInvX;
         var invY = this._dInvY;
         var invZ = this._dInvZ;
 
-        if ( s[ 0 ] <= e[ 0 ] ) {
+        if (s[0] <= e[0]) {
             // trivial reject of segment wholely outside.
-            if ( e[ 0 ] < xmin ) return false;
-            if ( s[ 0 ] > xmax ) return false;
+            if (e[0] < xmin) return false;
+            if (s[0] > xmax) return false;
 
-            if ( s[ 0 ] < xmin ) {
+            if (s[0] < xmin) {
                 // clip s to xMin.
-                vec3.scaleAndAdd( s, s, invX, xmin - s[ 0 ] );
+                vec3.scaleAndAdd(s, s, invX, xmin - s[0]);
             }
 
-            if ( e[ 0 ] > xmax ) {
+            if (e[0] > xmax) {
                 // clip e to xMax.
-                vec3.scaleAndAdd( e, s, invX, xmax - s[ 0 ] );
+                vec3.scaleAndAdd(e, s, invX, xmax - s[0]);
             }
         } else {
-            if ( s[ 0 ] < xmin ) return false;
-            if ( e[ 0 ] > xmax ) return false;
+            if (s[0] < xmin) return false;
+            if (e[0] > xmax) return false;
 
-            if ( e[ 0 ] < xmin ) {
+            if (e[0] < xmin) {
                 // clip s to xMin.
-                vec3.scaleAndAdd( e, s, invX, xmin - s[ 0 ] );
+                vec3.scaleAndAdd(e, s, invX, xmin - s[0]);
             }
 
-            if ( s[ 0 ] > xmax ) {
+            if (s[0] > xmax) {
                 // clip e to xMax.
-                vec3.scaleAndAdd( s, s, invX, xmax - s[ 0 ] );
+                vec3.scaleAndAdd(s, s, invX, xmax - s[0]);
             }
         }
 
         // compare s and e against the yMin to yMax range of bb.
-        if ( s[ 1 ] <= e[ 1 ] ) {
-
+        if (s[1] <= e[1]) {
             // trivial reject of segment wholely outside.
-            if ( e[ 1 ] < ymin ) return false;
-            if ( s[ 1 ] > ymax ) return false;
+            if (e[1] < ymin) return false;
+            if (s[1] > ymax) return false;
 
-            if ( s[ 1 ] < ymin ) {
+            if (s[1] < ymin) {
                 // clip s to yMin.
-                vec3.scaleAndAdd( s, s, invY, ymin - s[ 1 ] );
+                vec3.scaleAndAdd(s, s, invY, ymin - s[1]);
             }
 
-            if ( e[ 1 ] > ymax ) {
+            if (e[1] > ymax) {
                 // clip e to yMax.
-                vec3.scaleAndAdd( e, s, invY, ymax - s[ 1 ] );
+                vec3.scaleAndAdd(e, s, invY, ymax - s[1]);
             }
         } else {
-            if ( s[ 1 ] < ymin ) return false;
-            if ( e[ 1 ] > ymax ) return false;
+            if (s[1] < ymin) return false;
+            if (e[1] > ymax) return false;
 
-            if ( e[ 1 ] < ymin ) {
+            if (e[1] < ymin) {
                 // clip s to yMin.
-                vec3.scaleAndAdd( e, s, invY, ymin - s[ 1 ] );
+                vec3.scaleAndAdd(e, s, invY, ymin - s[1]);
             }
 
-            if ( s[ 1 ] > ymax ) {
+            if (s[1] > ymax) {
                 // clip e to yMax.
-                vec3.scaleAndAdd( s, s, invY, ymax - s[ 1 ] );
+                vec3.scaleAndAdd(s, s, invY, ymax - s[1]);
             }
         }
 
         // compare s and e against the zMin to zMax range of bb.
-        if ( s[ 2 ] <= e[ 2 ] ) {
+        if (s[2] <= e[2]) {
             // trivial reject of segment wholely outside.
-            if ( e[ 2 ] < zmin ) return false;
-            if ( s[ 2 ] > zmax ) return false;
+            if (e[2] < zmin) return false;
+            if (s[2] > zmax) return false;
 
-            if ( s[ 2 ] < zmin ) {
+            if (s[2] < zmin) {
                 // clip s to zMin.
-                vec3.scaleAndAdd( s, s, invZ, zmin - s[ 2 ] );
+                vec3.scaleAndAdd(s, s, invZ, zmin - s[2]);
             }
 
-            if ( e[ 2 ] > zmax ) {
+            if (e[2] > zmax) {
                 // clip e to zMax.
-                vec3.scaleAndAdd( e, s, invZ, zmax - s[ 2 ] );
+                vec3.scaleAndAdd(e, s, invZ, zmax - s[2]);
             }
         } else {
-            if ( s[ 2 ] < zmin ) return false;
-            if ( e[ 2 ] > zmax ) return false;
+            if (s[2] < zmin) return false;
+            if (e[2] > zmax) return false;
 
-            if ( e[ 2 ] < zmin ) {
+            if (e[2] < zmin) {
                 // clip s to zMin.
-                vec3.scaleAndAdd( e, s, invZ, zmin - s[ 2 ] );
+                vec3.scaleAndAdd(e, s, invZ, zmin - s[2]);
             }
 
-            if ( s[ 2 ] > zmax ) {
+            if (s[2] > zmax) {
                 // clip e to zMax.
-                vec3.scaleAndAdd( s, s, invZ, zmax - s[ 2 ] );
+                vec3.scaleAndAdd(s, s, invZ, zmax - s[2]);
             }
         }
 
         return true;
     },
 
-    intersect: ( function () {
-
+    intersect: (function() {
         var normal = vec3.create();
         var e2 = vec3.create();
         var e1 = vec3.create();
         var tvec = vec3.create();
         var pvec = vec3.create();
         var qvec = vec3.create();
-        var epsilon = 1E-20;
-        return function ( v0, v1, v2, i1, i2, i3 ) {
-
-            if ( this._settings._limitOneIntersection && this._hit ) return;
+        var epsilon = 1e-20;
+        return function(v0, v1, v2, i1, i2, i3) {
+            if (this._settings._limitOneIntersection && this._hit) return;
             var d = this._d;
 
-            vec3.sub( e2, v2, v0 );
-            vec3.sub( e1, v1, v0 );
-            vec3.cross( pvec, d, e2 );
+            vec3.sub(e2, v2, v0);
+            vec3.sub(e1, v1, v0);
+            vec3.cross(pvec, d, e2);
 
-            var det = vec3.dot( pvec, e1 );
-            if ( det > -epsilon && det < epsilon )
-                return;
+            var det = vec3.dot(pvec, e1);
+            if (det > -epsilon && det < epsilon) return;
             var invDet = 1.0 / det;
 
-            vec3.sub( tvec, this._start, v0 );
+            vec3.sub(tvec, this._start, v0);
 
-            var u = vec3.dot( pvec, tvec ) * invDet;
-            if ( u < 0.0 || u > 1.0 )
-                return;
+            var u = vec3.dot(pvec, tvec) * invDet;
+            if (u < 0.0 || u > 1.0) return;
 
-            vec3.cross( qvec, tvec, e1 );
+            vec3.cross(qvec, tvec, e1);
 
-            var v = vec3.dot( qvec, d ) * invDet;
-            if ( v < 0.0 || ( u + v ) > 1.0 )
-                return;
+            var v = vec3.dot(qvec, d) * invDet;
+            if (v < 0.0 || u + v > 1.0) return;
 
-            var t = vec3.dot( qvec, e2 ) * invDet;
+            var t = vec3.dot(qvec, e2) * invDet;
 
-            if ( t < epsilon || t > this._length ) //no intersection
+            if (
+                t < epsilon ||
+                t > this._length //no intersection
+            )
                 return;
 
             var r0 = 1.0 - u - v;
@@ -220,16 +214,16 @@ LineSegmentIntersectFunctor.prototype = {
             var r2 = v;
             var r = t * this._invLength;
 
-            var interX = v0[ 0 ] * r0 + v1[ 0 ] * r1 + v2[ 0 ] * r2;
-            var interY = v0[ 1 ] * r0 + v1[ 1 ] * r1 + v2[ 1 ] * r2;
-            var interZ = v0[ 2 ] * r0 + v1[ 2 ] * r1 + v2[ 2 ] * r2;
+            var interX = v0[0] * r0 + v1[0] * r1 + v2[0] * r2;
+            var interY = v0[1] * r0 + v1[1] * r1 + v2[1] * r2;
+            var interZ = v0[2] * r0 + v1[2] * r1 + v2[2] * r2;
 
-            vec3.cross( normal, e1, e2 );
-            vec3.normalize( normal, normal );
+            vec3.cross(normal, e1, e2);
+            vec3.normalize(normal, normal);
 
-            var intersection = new LineSegmentIntersection( i1, i2, i3, r0, r1, r2 );
+            var intersection = new LineSegmentIntersection(i1, i2, i3, r0, r1, r2);
             intersection._ratio = r;
-            intersection._matrix = mat4.clone( this._settings._intersectionVisitor.getModelMatrix() );
+            intersection._matrix = mat4.clone(this._settings._intersectionVisitor.getModelMatrix());
             intersection._nodePath = this._settings._intersectionVisitor.getNodePath().slice();
             intersection._drawable = this._settings._drawable;
             intersection._primitiveIndex = this._primitiveIndex;
@@ -237,90 +231,85 @@ LineSegmentIntersectFunctor.prototype = {
             // https://en.wikipedia.org/wiki/Determinant#Orientation_of_a_basis
             // you can't exactly extract scale of a matrix but the determinant will tell you
             // if the orientation is preserved
-            intersection._backface = mat4.determinant( intersection._matrix ) * det < 0;
-            intersection._localIntersectionPoint = vec3.fromValues( interX, interY, interZ );
-            intersection._localIntersectionNormal = vec3.clone( normal );
+            intersection._backface = mat4.determinant(intersection._matrix) * det < 0;
+            intersection._localIntersectionPoint = vec3.fromValues(interX, interY, interZ);
+            intersection._localIntersectionNormal = vec3.clone(normal);
 
-            this._settings._lineSegIntersector.getIntersections().push( intersection );
+            this._settings._lineSegIntersector.getIntersections().push(intersection);
             this._hit = true;
         };
-    } )(),
-    operatorPoint: function () {
+    })(),
+    operatorPoint: function() {
         this._primitiveIndex++;
     },
 
-    operatorLine: function () {
+    operatorLine: function() {
         this._primitiveIndex++;
     },
 
-    operatorTriangle: function ( v0, v1, v2 ) {
-        if ( this._settings._limitOneIntersection && this._hit ) return;
-        this.intersect( v0, v1, v2 );
+    operatorTriangle: function(v0, v1, v2) {
+        if (this._settings._limitOneIntersection && this._hit) return;
+        this.intersect(v0, v1, v2);
     },
-    intersectPoint: function () {},
+    intersectPoint: function() {},
 
-    intersectLine: function () {},
+    intersectLine: function() {},
 
-    intersectTriangle: ( function () {
+    intersectTriangle: (function() {
         var v0 = vec3.create();
         var v1 = vec3.create();
         var v2 = vec3.create();
-        return function ( vertices, primitiveIndex, p0, p1, p2 ) {
-            if ( this._settings._limitOneIntersection && this._hit ) return;
+        return function(vertices, primitiveIndex, p0, p1, p2) {
+            if (this._settings._limitOneIntersection && this._hit) return;
             this._primitiveIndex = primitiveIndex;
-            vec3.set( v0, vertices[ 3 * p0 ], vertices[ 3 * p0 + 1 ], vertices[ 3 * p0 + 2 ] );
-            vec3.set( v1, vertices[ 3 * p1 ], vertices[ 3 * p1 + 1 ], vertices[ 3 * p1 + 2 ] );
-            vec3.set( v2, vertices[ 3 * p2 ], vertices[ 3 * p2 + 1 ], vertices[ 3 * p2 + 2 ] );
-            this.intersect( v0, v1, v2, p0, p1, p2 );
+            vec3.set(v0, vertices[3 * p0], vertices[3 * p0 + 1], vertices[3 * p0 + 2]);
+            vec3.set(v1, vertices[3 * p1], vertices[3 * p1 + 1], vertices[3 * p1 + 2]);
+            vec3.set(v2, vertices[3 * p2], vertices[3 * p2 + 1], vertices[3 * p2 + 2]);
+            this.intersect(v0, v1, v2, p0, p1, p2);
         };
-    } )(),
+    })(),
 
-    leave: function () {
+    leave: function() {
         //Do nothing
     },
 
-    apply: ( function () {
-
+    apply: (function() {
         var v1 = vec3.create();
         var v2 = vec3.create();
         var v3 = vec3.create();
         var tif = new TriangleIndexFunctor();
 
-        return function ( node ) {
-
-            if ( !node.getAttributes().Vertex ) {
+        return function(node) {
+            if (!node.getAttributes().Vertex) {
                 return;
             }
             var vertices = node.getAttributes().Vertex.getElements();
             var self = this;
 
-            var cb = function ( i1, i2, i3 ) {
-
-                if ( i1 === i2 || i1 === i3 || i2 === i3 )
-                    return;
+            var cb = function(i1, i2, i3) {
+                if (i1 === i2 || i1 === i3 || i2 === i3) return;
 
                 var j = i1 * 3;
-                v1[ 0 ] = vertices[ j ];
-                v1[ 1 ] = vertices[ j + 1 ];
-                v1[ 2 ] = vertices[ j + 2 ];
+                v1[0] = vertices[j];
+                v1[1] = vertices[j + 1];
+                v1[2] = vertices[j + 2];
 
                 j = i2 * 3;
-                v2[ 0 ] = vertices[ j ];
-                v2[ 1 ] = vertices[ j + 1 ];
-                v2[ 2 ] = vertices[ j + 2 ];
+                v2[0] = vertices[j];
+                v2[1] = vertices[j + 1];
+                v2[2] = vertices[j + 2];
 
                 j = i3 * 3;
-                v3[ 0 ] = vertices[ j ];
-                v3[ 1 ] = vertices[ j + 1 ];
-                v3[ 2 ] = vertices[ j + 2 ];
+                v3[0] = vertices[j];
+                v3[1] = vertices[j + 1];
+                v3[2] = vertices[j + 2];
 
-                self.intersect( v1, v2, v3, i1, i2, i3 );
+                self.intersect(v1, v2, v3, i1, i2, i3);
             };
-            tif.init( node, cb );
+            tif.init(node, cb);
             tif.apply();
-
         };
-    } )(),
+    })()
 };
 
 module.exports = LineSegmentIntersectFunctor;

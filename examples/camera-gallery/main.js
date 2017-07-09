@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var viewer;
@@ -8,38 +8,39 @@
     var osgViewer = OSG.osgViewer;
 
     // contructor that will generate random camera around a target
-    var CameraSwitcher = function ( nb, center, range ) {
+    var CameraSwitcher = function(nb, center, range) {
         this._camera = [];
-        if ( nb !== undefined &&
-            center !== undefined &&
-            range !== undefined ) {
-            this.createRandomCamera( nb, center, range );
+        if (nb !== undefined && center !== undefined && range !== undefined) {
+            this.createRandomCamera(nb, center, range);
         }
     };
     CameraSwitcher.prototype = {
-        createRandomCamera: function ( nb, center, range ) {
+        createRandomCamera: function(nb, center, range) {
             var camera = [];
-            for ( var x = 0; x < nb; x++ ) {
-                var vec = [ ( Math.random() - 0.5 ) * range[ 0 ], ( Math.random() - 0.5 ) * range[ 1 ], ( Math.random() - 0.5 ) * range[ 2 ] ];
-                var position = osg.vec3.add( osg.vec3.create(), center, vec );
-                camera.push( {
-                    'position': position,
-                    'target': osg.vec3.clone( center ),
-                    'duration': 4.0
-                } );
+            for (var x = 0; x < nb; x++) {
+                var vec = [
+                    (Math.random() - 0.5) * range[0],
+                    (Math.random() - 0.5) * range[1],
+                    (Math.random() - 0.5) * range[2]
+                ];
+                var position = osg.vec3.add(osg.vec3.create(), center, vec);
+                camera.push({
+                    position: position,
+                    target: osg.vec3.clone(center),
+                    duration: 4.0
+                });
             }
             this._camera = camera;
             return camera;
         },
 
-        update: function ( nv ) {
-
+        update: function(nv) {
             var t = nv.getFrameStamp().getSimulationTime();
-            if ( this._lastUpdate === undefined ) {
+            if (this._lastUpdate === undefined) {
                 this._lastUpdate = t;
             }
 
-            if ( this._currentCamera === undefined ) {
+            if (this._currentCamera === undefined) {
                 this._currentCamera = 0;
             }
 
@@ -47,90 +48,84 @@
             // current camera index
             var camera = this._currentCamera;
             // current camera duration
-            var duration = this._camera[ camera ].duration;
+            var duration = this._camera[camera].duration;
 
             // need to change camera ?
-            if ( delta > duration ) {
+            if (delta > duration) {
                 // set the next current camera
-                this._currentCamera = ( this._currentCamera + 1 ) % this._camera.length;
+                this._currentCamera = (this._currentCamera + 1) % this._camera.length;
 
                 // fix delta to new camera
                 delta = delta - duration;
-                duration = this._camera[ this._currentCamera ].duration;
+                duration = this._camera[this._currentCamera].duration;
                 this._lastUpdate = t;
             }
 
             // compute lerp position and target
-            var srcPosition = this._camera[ this._currentCamera ].position;
-            var dstPosition = this._camera[ ( this._currentCamera + 1 ) % this._camera.length ].position;
+            var srcPosition = this._camera[this._currentCamera].position;
+            var dstPosition = this._camera[(this._currentCamera + 1) % this._camera.length]
+                .position;
 
-            var srcTarget = this._camera[ this._currentCamera ].target;
-            var dstTarget = this._camera[ ( this._currentCamera + 1 ) % this._camera.length ].target;
+            var srcTarget = this._camera[this._currentCamera].target;
+            var dstTarget = this._camera[(this._currentCamera + 1) % this._camera.length].target;
             var frac = delta / duration;
-            var currentPosition = osg.vec3.lerp( osg.vec3.create(), srcPosition, dstPosition, frac );
-            var currentTarget = osg.vec3.lerp( osg.vec3.create(), srcTarget, dstTarget, frac );
+            var currentPosition = osg.vec3.lerp(osg.vec3.create(), srcPosition, dstPosition, frac);
+            var currentTarget = osg.vec3.lerp(osg.vec3.create(), srcTarget, dstTarget, frac);
 
             this._currentPosition = currentPosition;
             this._currentTarget = currentTarget;
         },
 
-        getCurrentPosition: function () {
+        getCurrentPosition: function() {
             return this._currentPosition;
         },
-        getCurrentTarget: function () {
+        getCurrentTarget: function() {
             return this._currentTarget;
         }
-
     };
 
-
-    var main = function () {
-
-
-        function createScene () {
+    var main = function() {
+        function createScene() {
             var group = new osg.Node();
 
             var size = 50;
-            var ground = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
+            var ground = osg.createTexturedBoxGeometry(0, 0, 0, size, size, size);
 
-            group.addChild( ground );
-            group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
+            group.addChild(ground);
+            group.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
 
             return group;
         }
 
-
-
-        var canvas = document.getElementById( 'View' );
+        var canvas = document.getElementById('View');
 
         var manipulator = new osgGA.OrbitManipulator();
-        manipulator._cameraSwitcher = new CameraSwitcher( 10, [ 0, 0, 0 ], [ 2000, 20, 2000 ] );
-        manipulator.update = function ( nv ) {
-            this._cameraSwitcher.update( nv );
+        manipulator._cameraSwitcher = new CameraSwitcher(10, [0, 0, 0], [2000, 20, 2000]);
+        manipulator.update = function(nv) {
+            this._cameraSwitcher.update(nv);
 
             osg.mat4.lookAt(
                 this._inverseMatrix,
                 this._cameraSwitcher.getCurrentPosition(), // eye
                 this._cameraSwitcher.getCurrentTarget(), // center
-                [ 0, 1, 0 ] ); // up
+                [0, 1, 0]
+            ); // up
         };
 
-        viewer = new osgViewer.Viewer( canvas, {
+        viewer = new osgViewer.Viewer(canvas, {
             antialias: true,
             alpha: true
-        } );
+        });
         viewer.init();
-        viewer.setupManipulator( manipulator );
+        viewer.setupManipulator(manipulator);
         var rotate = new osg.MatrixTransform();
-        rotate.addChild( createScene() );
-        viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
-        viewer.setSceneData( rotate );
+        rotate.addChild(createScene());
+        viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
+        viewer.setSceneData(rotate);
         viewer.getManipulator().computeHomePosition();
 
         viewer.run();
-
     };
 
-    window.addEventListener( 'load', main, true );
-
-} )();
+    window.addEventListener('load', main, true);
+})();

@@ -1,10 +1,10 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
     var osg = OSG.osg;
 
-    function getShader () {
+    function getShader() {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -18,7 +18,7 @@
             '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
             '  vLocalVertex = Vertex.xy;',
             '}'
-        ].join( '\n' );
+        ].join('\n');
 
         var fragmentshader = [
             '',
@@ -33,17 +33,18 @@
             '   gl_FragColor = vec4(groundColor, 1.0 - f);',
             '}',
             ''
-        ].join( '\n' );
+        ].join('\n');
 
         var program = new osg.Program(
-            new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-            new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+            new osg.Shader('VERTEX_SHADER', vertexshader),
+            new osg.Shader('FRAGMENT_SHADER', fragmentshader)
+        );
 
         return program;
     }
 
-    window.Ground = function () {
-        osg.MatrixTransform.call( this );
+    window.Ground = function() {
+        osg.MatrixTransform.call(this);
 
         // Height position of the ground, applied with the translateMatrix
         // This value is normalized for all models and is scaled by the model scale factor
@@ -65,65 +66,72 @@
         this._center = osg.vec3.create();
 
         // Create geometry for the ground, 1 unit and centered around 0
-        var quad = osg.createTexturedQuadGeometry( -0.5, -0.5, 0.0,
-            1.0, 0.0, 0.0,
-            0.0, 1.0, 0.0
-        );
-        this._color = osg.Uniform.createFloat3( [ 0.7, 0.7, 0.7 ], 'groundColor' );
+        var quad = osg.createTexturedQuadGeometry(-0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        this._color = osg.Uniform.createFloat3([0.7, 0.7, 0.7], 'groundColor');
 
-        quad.getOrCreateStateSet().setAttributeAndModes( getShader() );
-        quad.getOrCreateStateSet().setAttributeAndModes( new osg.BlendFunc( 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA' ) );
-        quad.getOrCreateStateSet().addUniform( this._color );
+        quad.getOrCreateStateSet().setAttributeAndModes(getShader());
+        quad
+            .getOrCreateStateSet()
+            .setAttributeAndModes(new osg.BlendFunc('SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA'));
+        quad.getOrCreateStateSet().addUniform(this._color);
 
-        this.addChild( quad );
+        this.addChild(quad);
     };
 
-    window.Ground.prototype = osg.objectLibraryClass( osg.objectInherit( osg.MatrixTransform.prototype, {
+    window.Ground.prototype = osg.objectLibraryClass(
+        osg.objectInherit(osg.MatrixTransform.prototype, {
+            // The min height of a bsphere will near always be lower than
+            // that of the bounding box, so try to compensate it
+            _correction: Math.sqrt(2) / Math.sqrt(3),
 
-        // The min height of a bsphere will near always be lower than
-        // that of the bounding box, so try to compensate it
-        _correction: Math.sqrt( 2 ) / Math.sqrt( 3 ),
-
-        /**
+            /**
          * This function set the scale factor to the model bsphere radius
          * and set the ground under the model (normalizedHeight = -1)
          */
-        setGroundFromModel: function ( model ) {
+            setGroundFromModel: function(model) {
+                var bsphere = model.getBound();
 
-            var bsphere = model.getBound();
+                this._normalizedHeight = -1.0;
+                this._scale = bsphere.radius() * this._correction;
 
-            this._normalizedHeight = -1.0;
-            this._scale = bsphere.radius() * this._correction;
+                osg.vec3.copy(this._center, bsphere.center());
 
-            osg.vec3.copy( this._center, bsphere.center() );
+                this.computeMatrix();
+            },
 
-            this.computeMatrix();
-        },
+            computeMatrix: function() {
+                osg.mat4.fromScaling(this._scaleMatrix, [
+                    this._scale * this._size,
+                    this._scale * this._size,
+                    1
+                ]);
+                osg.mat4.fromTranslation(this._yTranslateMatrix, [
+                    this._center[0],
+                    this._center[1],
+                    this._center[2] + this._normalizedHeight * this._scale
+                ]);
 
-        computeMatrix: function () {
+                osg.mat4.mul(this.getMatrix(), this._yTranslateMatrix, this._scaleMatrix);
+            },
 
-            osg.mat4.fromScaling( this._scaleMatrix, [ this._scale * this._size, this._scale * this._size, 1 ] );
-            osg.mat4.fromTranslation( this._yTranslateMatrix, [ this._center[ 0 ], this._center[ 1 ], this._center[ 2 ] + ( this._normalizedHeight * this._scale ) ] );
+            setNormalizedHeight: function(normalizedHeight) {
+                this._normalizedHeight = normalizedHeight;
+                this.computeMatrix();
+            },
 
-            osg.mat4.mul( this.getMatrix(), this._yTranslateMatrix, this._scaleMatrix );
-        },
+            getNormalizedHeight: function() {
+                return this._normalizedHeight;
+            },
 
-        setNormalizedHeight: function ( normalizedHeight ) {
-            this._normalizedHeight = normalizedHeight;
-            this.computeMatrix();
-        },
+            setColor: function(color) {
+                osg.vec3.copy(this.getColor(), color);
+            },
 
-        getNormalizedHeight: function () {
-            return this._normalizedHeight;
-        },
-
-        setColor: function ( color ) {
-            osg.vec3.copy( this.getColor(), color );
-        },
-
-        getColor: function () {
-            return this._color.getInternalArray();
-        }
-
-    } ), 'osgUtil', 'Ground' );
-} )();
+            getColor: function() {
+                return this._color.getInternalArray();
+            }
+        }),
+        'osgUtil',
+        'Ground'
+    );
+})();

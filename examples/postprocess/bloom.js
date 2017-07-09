@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
@@ -10,42 +10,42 @@
         This filter simulate a property of lenses which tends to make
         highly lit areas bleed along its normal borders
     */
-    window.getPostSceneBloom = function ( sceneTexture, bloomTextureFactor ) {
+    window.getPostSceneBloom = function(sceneTexture, bloomTextureFactor) {
+        var threshold = osg.Uniform.createFloat1(0.8, 'threshold');
+        var factor = osg.Uniform.createFloat1(0.6, 'factor');
 
-        var threshold = osg.Uniform.createFloat1( 0.8, 'threshold' );
-        var factor = osg.Uniform.createFloat1( 0.6, 'factor' );
-
-        if ( bloomTextureFactor === undefined )
-            bloomTextureFactor = 8;
+        if (bloomTextureFactor === undefined) bloomTextureFactor = 8;
 
         var currentSceneTexture = new osg.Texture();
-        osgDB.readImageURL( 'Budapest.jpg' ).then( function ( image ) {
-            currentSceneTexture.setImage( image );
-        } );
+        osgDB.readImageURL('Budapest.jpg').then(function(image) {
+            currentSceneTexture.setImage(image);
+        });
         var cachedScenes = [];
         var brightFilter;
         var additiveFilter;
 
-        var setSceneTexture = function ( sceneFile ) {
-
+        var setSceneTexture = function(sceneFile) {
             // On met en cache lors du premier chargement
-            if ( cachedScenes[ sceneFile ] === undefined ) {
-                cachedScenes[ sceneFile ] = new osg.Texture();
-                osgDB.readImageURL( sceneFile ).then( function ( image ) {
-                    cachedScenes[ sceneFile ].setImage( image );
-                } );
+            if (cachedScenes[sceneFile] === undefined) {
+                cachedScenes[sceneFile] = new osg.Texture();
+                osgDB.readImageURL(sceneFile).then(function(image) {
+                    cachedScenes[sceneFile].setImage(image);
+                });
             }
 
-            currentSceneTexture = cachedScenes[ sceneFile ];
-            additiveFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
-            brightFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
+            currentSceneTexture = cachedScenes[sceneFile];
+            additiveFilter.getStateSet().setTextureAttributeAndModes(0, currentSceneTexture);
+            brightFilter.getStateSet().setTextureAttributeAndModes(0, currentSceneTexture);
         };
 
         // create a downsized texture to render the bloom to
         var bloomTexture = new osg.Texture();
-        bloomTexture.setTextureSize( sceneTexture.getWidth() / bloomTextureFactor, sceneTexture.getHeight() / bloomTextureFactor );
-        bloomTexture.setMinFilter( 'LINEAR' );
-        bloomTexture.setMagFilter( 'LINEAR' );
+        bloomTexture.setTextureSize(
+            sceneTexture.getWidth() / bloomTextureFactor,
+            sceneTexture.getHeight() / bloomTextureFactor
+        );
+        bloomTexture.setMinFilter('LINEAR');
+        bloomTexture.setMagFilter('LINEAR');
 
         brightFilter = new osgUtil.Composer.Filter.Custom(
             [
@@ -83,10 +83,11 @@
                 '   #endif',
                 '   gl_FragColor = vec4(result, 1.0);',
 
-                '}',
-            ].join( '\n' ), {
-                'Texture0': currentSceneTexture,
-                'threshold': threshold
+                '}'
+            ].join('\n'),
+            {
+                Texture0: currentSceneTexture,
+                threshold: threshold
             }
         );
 
@@ -100,17 +101,17 @@
                 'uniform sampler2D Texture1;',
                 'uniform float factor;',
 
-
                 'void main(void) {',
                 '  vec4 color_a = texture2D( Texture0, vTexCoord0);',
                 '  vec4 color_b = texture2D( Texture1, vTexCoord0);',
 
                 '  gl_FragColor = color_a + (color_b * factor);',
-                '}',
-            ].join( '\n' ), {
-                'Texture0': currentSceneTexture,
-                'Texture1': bloomTexture,
-                'factor': factor
+                '}'
+            ].join('\n'),
+            {
+                Texture0: currentSceneTexture,
+                Texture1: bloomTexture,
+                factor: factor
             }
         );
 
@@ -122,61 +123,57 @@
             (the downsampling helps to reduce the cost of the blur)
         */
         var effect = {
-
             name: 'Bloom',
             needCommonCube: false,
 
-            buildComposer: function ( finalTexture ) {
-
+            buildComposer: function(finalTexture) {
                 var composer = new osgUtil.Composer();
 
                 // Keep only the bright pixels and downsize the scene texture
-                composer.addPass( brightFilter, bloomTexture );
+                composer.addPass(brightFilter, bloomTexture);
 
                 // Blur the bright downsized sceneTexture
-                composer.addPass( new osgUtil.Composer.Filter.VBlur( 10 ) );
-                composer.addPass( new osgUtil.Composer.Filter.HBlur( 10 ) );
-                composer.addPass( new osgUtil.Composer.Filter.VBlur( 10 ) );
-                composer.addPass( new osgUtil.Composer.Filter.HBlur( 10 ), bloomTexture );
+                composer.addPass(new osgUtil.Composer.Filter.VBlur(10));
+                composer.addPass(new osgUtil.Composer.Filter.HBlur(10));
+                composer.addPass(new osgUtil.Composer.Filter.VBlur(10));
+                composer.addPass(new osgUtil.Composer.Filter.HBlur(10), bloomTexture);
 
                 // Add the original scene texture and the bloom texture and render into final texture
-                composer.addPass( additiveFilter, finalTexture );
+                composer.addPass(additiveFilter, finalTexture);
 
                 composer.build();
 
                 return composer;
             },
 
-            buildGui: function ( mainGui ) {
-
-                var folder = mainGui.addFolder( 'Bloom' );
+            buildGui: function(mainGui) {
+                var folder = mainGui.addFolder('Bloom');
                 folder.open();
 
                 var bloom = {
-                    scene: [ 'Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg' ],
-                    threshold: threshold.getInternalArray()[ 0 ],
-                    factor: factor.getInternalArray()[ 0 ]
+                    scene: ['Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg'],
+                    threshold: threshold.getInternalArray()[0],
+                    factor: factor.getInternalArray()[0]
                 };
 
-                var sceneCtrl = folder.add( bloom, 'scene', bloom.scene );
-                var thresholdCtrl = folder.add( bloom, 'threshold', 0.0, 1.0 );
-                var factorCtrl = folder.add( bloom, 'factor', 0.0, 1.0 );
+                var sceneCtrl = folder.add(bloom, 'scene', bloom.scene);
+                var thresholdCtrl = folder.add(bloom, 'threshold', 0.0, 1.0);
+                var factorCtrl = folder.add(bloom, 'factor', 0.0, 1.0);
 
-                thresholdCtrl.onChange( function ( value ) {
-                    threshold.setFloat( value );
-                } );
+                thresholdCtrl.onChange(function(value) {
+                    threshold.setFloat(value);
+                });
 
-                factorCtrl.onChange( function ( value ) {
-                    factor.setFloat( value );
-                } );
+                factorCtrl.onChange(function(value) {
+                    factor.setFloat(value);
+                });
 
-                sceneCtrl.onChange( function ( value ) {
-                    setSceneTexture( value );
-                } );
+                sceneCtrl.onChange(function(value) {
+                    setSceneTexture(value);
+                });
             }
         };
 
         return effect;
-
     };
-} )();
+})();

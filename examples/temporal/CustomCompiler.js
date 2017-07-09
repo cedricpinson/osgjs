@@ -1,35 +1,32 @@
 'use strict';
 var CustomCompiler;
-( function () {
-
+(function() {
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
 
     // this compiler use basic lighting and add a node to demonstrate how to
     // customize the shader compiler
-    CustomCompiler = function () {
-        osgShader.Compiler.apply( this, arguments );
+    CustomCompiler = function() {
+        osgShader.Compiler.apply(this, arguments);
     };
 
-    var config = osgShader.Compiler.cloneStateAttributeConfig( osgShader.Compiler );
-    config.attribute.push( 'Temporal' );
-    osgShader.Compiler.setStateAttributeConfig( CustomCompiler, config );
+    var config = osgShader.Compiler.cloneStateAttributeConfig(osgShader.Compiler);
+    config.attribute.push('Temporal');
+    osgShader.Compiler.setStateAttributeConfig(CustomCompiler, config);
 
-    CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
+    CustomCompiler.prototype = osg.objectInherit(osgShader.Compiler.prototype, {
+        getOrCreateProjectionMatrix: function() {
+            var projMat = this.getVariable('projectionMatrix');
+            if (projMat) return projMat;
 
-        getOrCreateProjectionMatrix: function () {
-            var projMat = this.getVariable( 'projectionMatrix' );
-            if ( projMat )
-                return projMat;
+            projMat = this.createVariable('mat4', 'projectionMatrix');
 
-            projMat = this.createVariable( 'mat4', 'projectionMatrix' );
+            var projectionMatrix = this.getOrCreateUniform('mat4', 'uProjectionMatrix');
+            var halton = this.getOrCreateUniform('vec4', 'halton');
+            var renderSize = this.getOrCreateUniform('vec2', 'RenderSize');
 
-
-            var projectionMatrix = this.getOrCreateUniform( 'mat4', 'uProjectionMatrix' );
-            var halton = this.getOrCreateUniform( 'vec4', 'halton' );
-            var renderSize = this.getOrCreateUniform( 'vec2', 'RenderSize' );
-
-            var code = [ '',
+            var code = [
+                '',
                 ' %projMat = %projectionMatrix;',
                 ' if (%halton.z == 1.0)',
                 ' {',
@@ -38,18 +35,18 @@ var CustomCompiler;
                 ' }',
                 ''
             ];
-            this.getNode( 'InlineCode' ).code( code.join( '\n' ) ).inputs( {
-                projectionMatrix: projectionMatrix,
-                halton: halton,
-                renderSize: renderSize
-            } ).outputs( {
-                projMat: projMat
-            } );
+            this.getNode('InlineCode')
+                .code(code.join('\n'))
+                .inputs({
+                    projectionMatrix: projectionMatrix,
+                    halton: halton,
+                    renderSize: renderSize
+                })
+                .outputs({
+                    projMat: projMat
+                });
 
             return projMat;
-
         }
-
-    } );
-
-} )();
+    });
+})();

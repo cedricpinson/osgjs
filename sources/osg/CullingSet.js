@@ -1,61 +1,58 @@
 'use strict';
-var Polytope = require( 'osg/Polytope' );
+var Polytope = require('osg/Polytope');
 
-var CullingSet = function () {
-
+var CullingSet = function() {
     this._mask = CullingSet.DEFAULT_CULLING;
     this._frustum = new Polytope();
-
 };
 
 CullingSet.prototype = {
-
-    reset: function () {
+    reset: function() {
         this._mask = CullingSet.DEFAULT_CULLING;
         this._frustum.clear();
     },
-    setCullingMask: function ( mask ) {
+    setCullingMask: function(mask) {
         this._mask = mask;
     },
-    getCullingMask: function () {
+    getCullingMask: function() {
         return this._mask;
     },
-    setFrustum: function ( frustum ) {
+    setFrustum: function(frustum) {
         this._frustum = frustum;
     },
-    getFrustum: function () {
+    getFrustum: function() {
         return this._frustum;
     },
-    getCurrentResultMask: function () {
+    getCurrentResultMask: function() {
         return this._frustum.getCurrentMask();
     },
-    pushCurrentMask: function () {
+    pushCurrentMask: function() {
         this._frustum.pushCurrentMask();
     },
-    popCurrentMask: function () {
+    popCurrentMask: function() {
         this._frustum.popCurrentMask();
     },
-    resetCullingMask: function () {
-        this._frustum.setResultMask( this._frustum.getCurrentMask() );
+    resetCullingMask: function() {
+        this._frustum.setResultMask(this._frustum.getCurrentMask());
     },
-    isBoundingBoxCulled: function ( bbox ) {
-        if ( this._mask & CullingSet.VIEW_FRUSTUM_CULLING ) {
+    isBoundingBoxCulled: function(bbox) {
+        if (this._mask & CullingSet.VIEW_FRUSTUM_CULLING) {
             // is it outside the view frustum...
-            if ( !this._frustum.containsBoundingBox( bbox ) ) return true;
+            if (!this._frustum.containsBoundingBox(bbox)) return true;
         }
         return false;
     },
-    isBoundingSphereCulled: function ( bs ) {
-        if ( this._mask & CullingSet.VIEW_FRUSTUM_CULLING ) {
+    isBoundingSphereCulled: function(bs) {
+        if (this._mask & CullingSet.VIEW_FRUSTUM_CULLING) {
             // is it outside the view frustum...
-            if ( !this._frustum.containsBoundingSphere( bs ) ) return true;
+            if (!this._frustum.containsBoundingSphere(bs)) return true;
         }
         return false;
     },
-    isVerticesCulled: function ( vertices ) {
-        if ( this._mask & CullingSet.VIEW_FRUSTUM_CULLING ) {
+    isVerticesCulled: function(vertices) {
+        if (this._mask & CullingSet.VIEW_FRUSTUM_CULLING) {
             // is it outside the view frustum...
-            if ( !this._frustum.containsVertices( vertices ) ) return true;
+            if (!this._frustum.containsVertices(vertices)) return true;
         }
         return false;
     }
@@ -70,9 +67,16 @@ CullingSet.VIEW_FRUSTUM_BOTTOM_CULLING = 0x4;
 CullingSet.NEAR_PLANE_CULLING = 0x5;
 CullingSet.FAR_PLANE_CULLING = 0x6;
 
-CullingSet.VIEW_FRUSTUM_SIDES_CULLING = CullingSet.VIEW_FRUSTUM_LEFT_CULLING | CullingSet.VIEW_FRUSTUM_RIGHT_CULLING | CullingSet.VIEW_FRUSTUM_BOTTOM_CULLING | CullingSet.VIEW_FRUSTUM_TOP_CULLING;
+CullingSet.VIEW_FRUSTUM_SIDES_CULLING =
+    CullingSet.VIEW_FRUSTUM_LEFT_CULLING |
+    CullingSet.VIEW_FRUSTUM_RIGHT_CULLING |
+    CullingSet.VIEW_FRUSTUM_BOTTOM_CULLING |
+    CullingSet.VIEW_FRUSTUM_TOP_CULLING;
 
-CullingSet.VIEW_FRUSTUM_CULLING = CullingSet.VIEW_FRUSTUM_SIDES_CULLING | CullingSet.NEAR_PLANE_CULLING | CullingSet.FAR_PLANE_CULLING;
+CullingSet.VIEW_FRUSTUM_CULLING =
+    CullingSet.VIEW_FRUSTUM_SIDES_CULLING |
+    CullingSet.NEAR_PLANE_CULLING |
+    CullingSet.FAR_PLANE_CULLING;
 
 CullingSet.DEFAULT_CULLING = CullingSet.VIEW_FRUSTUM_SIDES_CULLING;
 

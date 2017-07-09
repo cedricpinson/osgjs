@@ -1,15 +1,19 @@
 'use strict';
-var MACROUTILS = require( 'osg/Utils' );
-var Texture = require( 'osg/Texture' );
+var MACROUTILS = require('osg/Utils');
+var Texture = require('osg/Texture');
 
-var kernelSizeList = [ '1Tap(4texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)' ];
+var kernelSizeList = [
+    '1Tap(4texFetch)',
+    '4Tap(16texFetch)',
+    '9Tap(36texFetch)',
+    '16Tap(64texFetch)'
+];
 
 /**
  *  ShadowSettings provides the parameters that the ShadowTechnique should use as a guide for setting up shadowing
  *  @class ShadowSettings
  */
-var ShadowSettings = function ( options ) {
-
+var ShadowSettings = function(options) {
     this.castsShadowDrawTraversalMask = 0xffffffff;
     this.castsShadowBoundsTraversalMask = 0xffffffff;
 
@@ -48,64 +52,61 @@ var ShadowSettings = function ( options ) {
     // normal exploding offset (shadow acne / peter panning)
     this.normalBias = undefined;
 
-
     // defaut shader generator name for shadow casting
     this.shadowCastShaderGeneratorName = 'ShadowCast';
 
     // if url options override url options
-    MACROUTILS.objectMix( this, options );
+    MACROUTILS.objectMix(this, options);
 };
 
 ShadowSettings.kernelSizeList = kernelSizeList;
 
 ShadowSettings.prototype = {
-
-    setCastsShadowDrawTraversalMask: function ( mask ) {
+    setCastsShadowDrawTraversalMask: function(mask) {
         this.castsShadowDrawTraversalMask = mask;
     },
-    getCastsShadowDrawTraversalMask: function () {
+    getCastsShadowDrawTraversalMask: function() {
         return this.castsDrawShadowTraversalMask;
     },
 
-    setCastsShadowBoundsTraversalMask: function ( mask ) {
+    setCastsShadowBoundsTraversalMask: function(mask) {
         this.castsShadowBoundsTraversalMask = mask;
     },
-    getCastsShadowBoundsTraversalMask: function () {
+    getCastsShadowBoundsTraversalMask: function() {
         return this.castsShadowBoundsTraversalMask;
     },
 
-    setLight: function ( light ) {
+    setLight: function(light) {
         this.light = light;
     },
-    getLight: function () {
+    getLight: function() {
         return this.light;
     },
 
-    setTextureSize: function ( textureSize ) {
+    setTextureSize: function(textureSize) {
         this.textureSize = textureSize;
     },
-    getTextureSize: function () {
+    getTextureSize: function() {
         return this.textureSize;
     },
-    setTextureType: function ( tt ) {
+    setTextureType: function(tt) {
         this.textureType = tt;
     },
-    getTextureType: function () {
+    getTextureType: function() {
         return this.textureType;
     },
-    setTextureFormat: function ( tf ) {
+    setTextureFormat: function(tf) {
         this.textureFormat = tf;
     },
-    getTextureFormat: function () {
+    getTextureFormat: function() {
         return this.textureFormat;
     },
-    setShadowCastShaderGeneratorName: function ( n ) {
+    setShadowCastShaderGeneratorName: function(n) {
         this.shadowCastShaderGeneratorName = n;
     },
-    getShadowCastShaderGeneratorName: function () {
+    getShadowCastShaderGeneratorName: function() {
         return this.shadowCastShaderGeneratorName;
     }
-
 };
 
 module.exports = ShadowSettings;

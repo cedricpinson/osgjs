@@ -3,17 +3,17 @@
 // This file contains needed polyfills mainly for IE11
 
 // IE11 does not support Set with constructing arguments. May 2017.
-var checkSetSupport = function () {
-    var setTest = new window.Set( [ 'test' ] );
-    var hasConstructorParameterSupport = setTest.has( 'test' );
+var checkSetSupport = function() {
+    var setTest = new window.Set(['test']);
+    var hasConstructorParameterSupport = setTest.has('test');
 
-    if ( !hasConstructorParameterSupport ) {
+    if (!hasConstructorParameterSupport) {
         var nativeSetConstructor = window.Set;
-        window.Set = function ( init ) {
+        window.Set = function(init) {
             var set = new nativeSetConstructor();
-            if ( init ) {
-                for ( var i = 0; i < init.length; ++i ) {
-                    set.add( init[ i ] );
+            if (init) {
+                for (var i = 0; i < init.length; ++i) {
+                    set.add(init[i]);
                 }
             }
             return set;
@@ -23,10 +23,10 @@ var checkSetSupport = function () {
 
 checkSetSupport();
 
-var checkTypedArraySlice = function () {
-    if ( !Float32Array.prototype.slice ) {
-        var slicePolyfill = function ( start, end ) {
-            return new this.constructor( this.subarray( start, end ) );
+var checkTypedArraySlice = function() {
+    if (!Float32Array.prototype.slice) {
+        var slicePolyfill = function(start, end) {
+            return new this.constructor(this.subarray(start, end));
         };
 
         Int8Array.prototype.slice = slicePolyfill;

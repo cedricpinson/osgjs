@@ -2,14 +2,13 @@
 
 var applyFunctionArray = [];
 
-var registerApplyFunction = function ( type, apply ) {
-    applyFunctionArray[ type ] = apply;
+var registerApplyFunction = function(type, apply) {
+    applyFunctionArray[type] = apply;
 };
 
-var getApplyFunction = function ( type ) {
-    return applyFunctionArray[ type ];
+var getApplyFunction = function(type) {
+    return applyFunctionArray[type];
 };
-
 
 module.exports = {
     applyFunctionArray: applyFunctionArray,

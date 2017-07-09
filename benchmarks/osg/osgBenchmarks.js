@@ -1,18 +1,15 @@
 'use strict';
-var MainPerformance = require( 'benchmarks/osg/mainPerformance' );
-var Geometry = require( 'benchmarks/osg/Geometry' );
-var Visitor = require( 'benchmarks/osg/Visitor' );
+var MainPerformance = require('benchmarks/osg/mainPerformance');
+var Geometry = require('benchmarks/osg/Geometry');
+var Visitor = require('benchmarks/osg/Visitor');
 
-
-module.exports = function () {
-
-    suite( 'MainPerformance' );
+module.exports = function() {
+    suite('MainPerformance');
     MainPerformance();
 
-    suite( 'Visitor' );
+    suite('Visitor');
     Visitor();
 
-    suite( 'Geometry' );
+    suite('Geometry');
     Geometry();
-
 };

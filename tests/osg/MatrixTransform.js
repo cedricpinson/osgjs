@@ -1,57 +1,53 @@
 'use strict';
-var assert = require( 'chai' ).assert;
-var mockup = require( 'tests/mockup/mockup' );
-var MatrixTransform = require( 'osg/MatrixTransform' );
-var mat4 = require( 'osg/glMatrix' ).mat4;
-var ReaderParser = require( 'osgDB/readerParser' );
-var TransformEnums = require( 'osg/transformEnums' );
+var assert = require('chai').assert;
+var mockup = require('tests/mockup/mockup');
+var MatrixTransform = require('osg/MatrixTransform');
+var mat4 = require('osg/glMatrix').mat4;
+var ReaderParser = require('osgDB/readerParser');
+var TransformEnums = require('osg/transformEnums');
 
-
-module.exports = function () {
-
-    test( 'MatrixTransform', function () {
-
+module.exports = function() {
+    test('MatrixTransform', function() {
         var n = new MatrixTransform();
-        var scene = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
-        mat4.fromTranslation( n.getMatrix(), [ 100, 0, 0 ] );
-        n.addChild( scene );
+        var scene = ReaderParser.parseSceneGraph(mockup.getBoxScene());
+        mat4.fromTranslation(n.getMatrix(), [100, 0, 0]);
+        n.addChild(scene);
         var bs = n.getBound();
-        assert.equalVector( bs.center(), [ 100, 0, 0 ] );
-        assert.equalVector( bs.radius(), 2.414213562373095 );
-    } );
+        assert.equalVector(bs.center(), [100, 0, 0]);
+        assert.equalVector(bs.radius(), 2.414213562373095);
+    });
 
-    test( 'Transform', function () {
-
+    test('Transform', function() {
         var n = new MatrixTransform();
-        var scene = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
-        mat4.fromScaling( n.getMatrix(), [ 2, 3, 4 ] );
-        n.addChild( scene );
+        var scene = ReaderParser.parseSceneGraph(mockup.getBoxScene());
+        mat4.fromScaling(n.getMatrix(), [2, 3, 4]);
+        n.addChild(scene);
         var bs = n.getBound();
-        assert.equalVector( bs.center(), [ 0, 0, 0 ] );
-        assert.equalVector( bs.radius(), 9.65685424949238 );
-    } );
+        assert.equalVector(bs.center(), [0, 0, 0]);
+        assert.equalVector(bs.radius(), 9.65685424949238);
+    });
 
-    test( 'Transform absolute vs relative', function () {
-        var mat = mat4.fromRotation( mat4.create(), -Math.PI * 0.5, [ 1.0, 0.0, 0.0 ] );
+    test('Transform absolute vs relative', function() {
+        var mat = mat4.fromRotation(mat4.create(), -Math.PI * 0.5, [1.0, 0.0, 0.0]);
         var inv = mat4.create();
-        mat4.invert( inv, mat );
+        mat4.invert(inv, mat);
 
         var n = new MatrixTransform();
-        mat4.copy( n.getMatrix(), mat );
+        mat4.copy(n.getMatrix(), mat);
         var test = mat4.create();
 
-        var checkMatrices = function ( node ) {
-            assert.equalVector( node.getWorldMatrices()[ 0 ], mat );
+        var checkMatrices = function(node) {
+            assert.equalVector(node.getWorldMatrices()[0], mat);
 
-            node.computeLocalToWorldMatrix( mat4.identity( test ) );
-            assert.equalVector( test, mat );
+            node.computeLocalToWorldMatrix(mat4.identity(test));
+            assert.equalVector(test, mat);
 
-            node.computeWorldToLocalMatrix( mat4.identity( test ) );
-            assert.equalVector( test, inv );
+            node.computeWorldToLocalMatrix(mat4.identity(test));
+            assert.equalVector(test, inv);
         };
 
-        checkMatrices( n );
-        n.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
-        checkMatrices( n );
-    } );
+        checkMatrices(n);
+        n.setReferenceFrame(TransformEnums.ABSOLUTE_RF);
+        checkMatrices(n);
+    });
 };

@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
@@ -10,32 +10,28 @@
         It is useful on blurred images to regain details
         It works by increasing the difference between near pixels
     */
-    window.getPostSceneSharpen = function () {
-
+    window.getPostSceneSharpen = function() {
         // Discrete Laplace convolution kernels from
         // http://en.wikipedia.org/wiki/Laplace_filter#Implementation_in_Image_Processing
-        function laplace ( x ) {
-            return [ 0, -x, 0, -x, x * 4, -x, 0, -x, 0 ];
+        function laplace(x) {
+            return [0, -x, 0, -x, x * 4, -x, 0, -x, 0];
         }
 
-        function laplaceDiagonal ( x ) {
-            return [ -0.5 * x, -x, -0.5 * x, -x, x * 6, -x, -0.5 * x, -x, -0.5 * x ];
+        function laplaceDiagonal(x) {
+            return [-0.5 * x, -x, -0.5 * x, -x, x * 6, -x, -0.5 * x, -x, -0.5 * x];
         }
 
         var inputTexture = new osg.Texture();
-        osgDB.readImageURL( 'Medusa.png' ).then( function ( image ) {
-            inputTexture.setImage( image );
-        } );
-        var kernel = osg.Uniform.createMatrix3( laplace( 1 ), 'kernel' );
+        osgDB.readImageURL('Medusa.png').then(function(image) {
+            inputTexture.setImage(image);
+        });
+        var kernel = osg.Uniform.createMatrix3(laplace(1), 'kernel');
         var useDiagonal = false;
         var factor = 0;
 
-        function updateKernel () {
-
-            if ( useDiagonal )
-                kernel.setMatrix3( laplaceDiagonal( factor ) );
-            else
-                kernel.setMatrix3( laplace( factor ) );
+        function updateKernel() {
+            if (useDiagonal) kernel.setMatrix3(laplaceDiagonal(factor));
+            else kernel.setMatrix3(laplace(factor));
         }
 
         // 3x3 tap, 9 textures fetches
@@ -74,30 +70,28 @@
                 '	}',
 
                 '	gl_FragColor = color;',
-                '}',
-            ].join( '\n' ), {
-                'kernel': kernel,
-                'inputTexture': inputTexture
+                '}'
+            ].join('\n'),
+            {
+                kernel: kernel,
+                inputTexture: inputTexture
             }
         );
 
         var effect = {
-
             name: 'Sharpen',
             needCommonCube: false,
 
-            buildComposer: function ( finalTexture ) {
-
+            buildComposer: function(finalTexture) {
                 var composer = new osgUtil.Composer();
-                composer.addPass( sharpenFilter, finalTexture );
+                composer.addPass(sharpenFilter, finalTexture);
                 composer.build();
 
                 return composer;
             },
 
-            buildGui: function ( mainGui ) {
-
-                var folder = mainGui.addFolder( this.name );
+            buildGui: function(mainGui) {
+                var folder = mainGui.addFolder(this.name);
                 folder.open();
 
                 var kernelConfig = {
@@ -105,20 +99,20 @@
                     'sample diagonal': false
                 };
 
-                var kernelCtrl = folder.add( kernelConfig, 'kernel', 0, 5.0 );
-                var diagonalCtrl = folder.add( kernelConfig, 'sample diagonal' );
+                var kernelCtrl = folder.add(kernelConfig, 'kernel', 0, 5.0);
+                var diagonalCtrl = folder.add(kernelConfig, 'sample diagonal');
 
-                kernelCtrl.onChange( function ( value ) {
+                kernelCtrl.onChange(function(value) {
                     factor = value;
                     updateKernel();
-                } );
-                diagonalCtrl.onChange( function ( bool ) {
+                });
+                diagonalCtrl.onChange(function(bool) {
                     useDiagonal = bool;
                     updateKernel();
-                } );
+                });
             }
         };
 
         return effect;
     };
-} )();
+})();

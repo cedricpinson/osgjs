@@ -5,12 +5,12 @@
  */
 var Object = window.Object;
 
-( function () {
+(function() {
     'use strict';
 
     var isCommonjs = typeof module !== 'undefined' && module.exports;
 
-    var fn = ( function () {
+    var fn = (function() {
         var val;
         var valLength;
 
@@ -31,7 +31,6 @@ var Object = window.Object;
                 'webkitFullscreenEnabled',
                 'webkitfullscreenchange',
                 'webkitfullscreenerror'
-
             ],
             // old WebKit (Safari 5.1)
             [
@@ -41,7 +40,6 @@ var Object = window.Object;
                 'webkitCancelFullScreen',
                 'webkitfullscreenchange',
                 'webkitfullscreenerror'
-
             ],
             [
                 'mozRequestFullScreen',
@@ -65,41 +63,40 @@ var Object = window.Object;
         var l = fnMap.length;
         var ret = {};
 
-        for ( ; i < l; i++ ) {
-            val = fnMap[ i ];
-            if ( val && val[ 1 ] in document ) {
-                for ( i = 0, valLength = val.length; i < valLength; i++ ) {
-                    ret[ fnMap[ 0 ][ i ] ] = val[ i ];
+        for (; i < l; i++) {
+            val = fnMap[i];
+            if (val && val[1] in document) {
+                for (i = 0, valLength = val.length; i < valLength; i++) {
+                    ret[fnMap[0][i]] = val[i];
                 }
                 return ret;
             }
         }
 
         return false;
-    } )();
+    })();
 
     var screenfull = {
-        request: function ( elem, options ) {
+        request: function(elem, options) {
             var request = fn.requestFullscreen;
             var element = elem || document.documentElement;
-            element[ request ]( options );
-
+            element[request](options);
         },
-        exit: function () {
-            document[ fn.exitFullscreen ]();
+        exit: function() {
+            document[fn.exitFullscreen]();
         },
-        toggle: function ( elem, options ) {
-            if ( this.isFullscreen ) {
+        toggle: function(elem, options) {
+            if (this.isFullscreen) {
                 this.exit();
             } else {
-                this.request( elem, options );
+                this.request(elem, options);
             }
         },
         raw: fn
     };
 
-    if ( !fn ) {
-        if ( isCommonjs ) {
+    if (!fn) {
+        if (isCommonjs) {
             module.exports = false;
         } else {
             window.screenfull = false;
@@ -108,30 +105,30 @@ var Object = window.Object;
         return;
     }
 
-    Object.defineProperties( screenfull, {
+    Object.defineProperties(screenfull, {
         isFullscreen: {
-            get: function () {
-                return !!document[ fn.fullscreenElement ];
+            get: function() {
+                return !!document[fn.fullscreenElement];
             }
         },
         element: {
             enumerable: true,
-            get: function () {
-                return document[ fn.fullscreenElement ];
+            get: function() {
+                return document[fn.fullscreenElement];
             }
         },
         enabled: {
             enumerable: true,
-            get: function () {
+            get: function() {
                 // Coerce to boolean in case of old WebKit
-                return !!document[ fn.fullscreenEnabled ];
+                return !!document[fn.fullscreenEnabled];
             }
         }
-    } );
+    });
 
-    if ( isCommonjs ) {
+    if (isCommonjs) {
         module.exports = screenfull;
     } else {
         window.screenfull = screenfull;
     }
-} )();
+})();

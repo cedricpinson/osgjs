@@ -1,6 +1,6 @@
 /* exported files */
-var files = { // eslint-disable-line
-
+// eslint-disable-next-line
+var files = {
     Examples: [
         'animation',
         'camera',
@@ -52,5 +52,4 @@ var files = { // eslint-disable-line
         'screenshot',
         'usercamera'
     ]
-
 };
