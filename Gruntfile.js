@@ -1,15 +1,14 @@
 'use strict';
 
-var fs = require( 'fs' );
-var path = require( 'path' );
+var fs = require('fs');
+var path = require('path');
 
-var webpackConfig = require( './webpack.config.js' );
+var webpackConfig = require('./webpack.config.js');
 
-var extend = require( 'extend' );
-var glob = require( 'glob' );
+var extend = require('extend');
+var glob = require('glob');
 
 // var jshintrc = JSON.parse( fs.readFileSync( './.jshintrc' ).toString() );
-
 
 // Base paths used by the tasks.
 // They always have to finish with a '/'.
@@ -19,47 +18,44 @@ var EXAMPLE_PATH = 'examples/';
 var BUILD_PATH = 'builds/';
 var TEST_PATH = 'tests/';
 var BENCHMARK_PATH = 'benchmarks/';
-var DIST_PATH = path.join( BUILD_PATH, 'dist/' );
+var DIST_PATH = path.join(BUILD_PATH, 'dist/');
 
+var eslintConfigFilename = './.eslintrc.json';
 // Utility functions
-var find = function ( cwd, pattern ) {
-
-    if ( typeof pattern === 'undefined' ) {
+var find = function(cwd, pattern) {
+    if (typeof pattern === 'undefined') {
         pattern = cwd;
         cwd = undefined;
     }
 
-    var isEntity = function ( pathname ) {
-        if ( cwd ) pathname = path.join( cwd, pathname );
-        return !fs.lstatSync( pathname ).isDirectory();
+    var isEntity = function(pathname) {
+        if (cwd) pathname = path.join(cwd, pathname);
+        return !fs.lstatSync(pathname).isDirectory();
     };
 
     var options = {};
 
-    if ( cwd )
-        options.cwd = cwd;
+    if (cwd) options.cwd = cwd;
 
-    return glob.sync( pattern, options ).filter( isEntity );
-
+    return glob.sync(pattern, options).filter(isEntity);
 };
 
 // get source file once and for all, caching results.
-var srcFiles = find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+var srcFiles = find(SOURCE_PATH, '**/*.js').map(function(pathname) {
     return pathname;
-} );
+});
 
-var exampleFiles = find( EXAMPLE_PATH, '**/*.js' ).map( function ( pathname ) {
+var exampleFiles = find(EXAMPLE_PATH, '**/*.js').map(function(pathname) {
     return pathname;
-} );
+});
 
-var testFiles = find( TEST_PATH, '**/*.js' ).map( function ( pathname ) {
+var testFiles = find(TEST_PATH, '**/*.js').map(function(pathname) {
     return pathname;
-} );
+});
 
-var benchmarkFiles = find( BENCHMARK_PATH, '**/*.js' ).map( function ( pathname ) {
+var benchmarkFiles = find(BENCHMARK_PATH, '**/*.js').map(function(pathname) {
     return pathname;
-} );
-
+});
 
 // Used to store all Grunt tasks
 //
@@ -67,14 +63,11 @@ var gruntTasks = {};
 
 // ## Top-level configurations
 //
-( function () {
-
-    var configFilename = './.eslintrc.json';
-
+(function() {
     // to finish https://github.com/sketchfab/showwebgl/blob/f5028b774ab47c976461807eab522b302edc1e2b/Gruntfile.js
     gruntTasks.eslint = {
         options: {
-            configFile: configFilename
+            configFile: eslintConfigFilename
         }
     };
 
@@ -91,27 +84,26 @@ var gruntTasks = {};
     gruntTasks.qunit = {};
 
     gruntTasks.connect = {};
-
-} )();
-
+})();
 
 // ## Webpack
 //
 // Build OSGJS with webpack
 //
-( function () {
-
-    var webpack = require( 'webpack' );
+(function() {
+    var webpack = require('webpack');
     // var ExtractTextPlugin = require( 'extract-text-webpack-plugin' );
 
     var targets = {
         build: {
             devtool: 'source-map',
             module: {
-                loaders: [ {
-                    test: /\.js$/,
-                    loader: 'webpack-strip-block'
-                } ]
+                loaders: [
+                    {
+                        test: /\.js$/,
+                        loader: 'webpack-strip-block'
+                    }
+                ]
             }
         },
 
@@ -128,19 +120,20 @@ var gruntTasks = {};
                 library: 'OSG'
             },
 
-            loaders: [ {
-                test: /\.js$/,
-                loader: 'webpack-strip-block'
-            } ],
+            loaders: [
+                {
+                    test: /\.js$/,
+                    loader: 'webpack-strip-block'
+                }
+            ],
             // additional plugins for this specific mode
             plugins: [
-                new webpack.optimize.UglifyJsPlugin( {
+                new webpack.optimize.UglifyJsPlugin({
                     sourceMap: false
-                } )
+                })
             ]
         }
     };
-
 
     gruntTasks.webpack = {
         options: webpackConfig,
@@ -155,158 +148,166 @@ var gruntTasks = {};
             // You need to keep the grunt process alive
             watch: true,
             keepalive: true
-
         }
     };
-
-
-} )();
-
+})();
 
 // ## ESLint
 //
 // Will check the Gruntfile and every "*.js" file in the "statics/sources/" folder.
 //
-( function () {
-
+(function() {
     gruntTasks.eslint.self = {
         options: {
             node: true
         },
-        src: [ 'Gruntfile.js', 'webpack.config.js' ]
+        src: ['Gruntfile.js', 'webpack.config.js']
     };
 
     gruntTasks.eslint.sources = {
         options: {
             browser: true
         },
-        src: srcFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1 &&
-                pathName.indexOf( 'glMatrix' ) === -1 &&
-                pathName.indexOf( 'webgl-debug.js' ) === -1 &&
-                pathName.indexOf( 'webgl-utils.js' ) === -1;
-
-        } ).map( function ( pathname ) {
-            return path.join( SOURCE_PATH, pathname );
-        } )
-
+        src: srcFiles
+            .filter(function(pathName) {
+                return (
+                    pathName.indexOf('vendors') === -1 &&
+                    pathName.indexOf('glMatrix') === -1 &&
+                    pathName.indexOf('webgl-debug.js') === -1 &&
+                    pathName.indexOf('webgl-utils.js') === -1
+                );
+            })
+            .map(function(pathname) {
+                return path.join(SOURCE_PATH, pathname);
+            })
     };
 
     gruntTasks.eslint.examples = {
         options: {
             browser: true
         },
-        src: exampleFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1;
-
-        } ).map( function ( pathname ) {
-            return path.join( EXAMPLE_PATH, pathname );
-        } )
-
+        src: exampleFiles
+            .filter(function(pathName) {
+                return pathName.indexOf('vendors') === -1;
+            })
+            .map(function(pathname) {
+                return path.join(EXAMPLE_PATH, pathname);
+            })
     };
 
     gruntTasks.eslint.tests = {
         options: {
             browser: true
         },
-        src: testFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'glMatrix' ) === -1;
-        } ).map( function ( pathname ) {
-            return path.join( TEST_PATH, pathname );
-        } )
-
+        src: testFiles
+            .filter(function(pathName) {
+                return pathName.indexOf('glMatrix') === -1;
+            })
+            .map(function(pathname) {
+                return path.join(TEST_PATH, pathname);
+            })
     };
 
     gruntTasks.eslint.benchmarks = {
         options: {
             browser: true
         },
-        src: benchmarkFiles.map( function ( pathname ) {
-            return path.join( BENCHMARK_PATH, pathname );
-        } )
-
+        src: benchmarkFiles.map(function(pathname) {
+            return path.join(BENCHMARK_PATH, pathname);
+        })
     };
-
-    gruntTasks.eslint.fix = {
-        options: {
-            fix: true,
-            browser: true
-        },
-        src: []
-    };
-
-    [ 'tests', 'examples', 'sources', 'self', 'benchmarks' ].forEach( function ( target ) {
-        gruntTasks.eslint.fix.src = gruntTasks.eslint.fix.src.concat( gruntTasks.eslint[ target ].src );
-    } );
-
-} )();
-
+})();
 
 // ## Clean
 //
-( function () {
-
+(function() {
     gruntTasks.clean.staticWeb = {
-        src: [ path.join( BUILD_PATH, 'web' ) ]
+        src: [path.join(BUILD_PATH, 'web')]
     };
+})();
 
+function buildPrettierOptions(grunt) {
+    var filesList = [];
+    ['tests', 'examples', 'sources', 'self', 'benchmarks'].forEach(function(target) {
+        filesList = filesList.concat(gruntTasks.eslint[target].src);
+    });
 
-} )();
+    var eslintConfigObject = grunt.file.readJSON(eslintConfigFilename);
+    var prettierConfig = eslintConfigObject.rules['prettier/prettier'][1];
+    var prettierOptions = ['--write'];
 
-( function () {
+    prettierOptions.push('--print-width', prettierConfig.printWidth);
+    if (prettierConfig.singleQuote) prettierOptions.push('--single-quote');
+    if (prettierConfig.tabWidth) prettierOptions.push('--tab-width', prettierConfig.tabWidth);
+    if (prettierConfig.jsxBracketSameLine) prettierOptions.push('--jsx-bracket-same-line');
+    if (prettierConfig.trailingComma)
+        prettierOptions.push('--trailing-comma', prettierConfig.trailingComma);
+    if (prettierConfig.bracketSpacing !== undefined)
+        prettierOptions.push('--bracket-spacing', prettierConfig.bracketSpacing);
+
+    Array.prototype.push.apply(prettierOptions, filesList);
+    var prettierArgs = prettierOptions;
+
+    gruntTasks.execute.prettier = {
+        options: {
+            args: prettierArgs
+        },
+        src: ['node_modules/.bin/prettier']
+    };
+}
+
+(function() {
     gruntTasks.execute = {
         test: {
-            src: [ 'tests/runTests.js' ]
+            src: ['tests/runTests.js']
         },
         bench: {
-            src: [ 'benchmarks/runBenchmarks.js' ]
+            src: ['benchmarks/runBenchmarks.js']
         }
     };
-
-} )();
+})();
 
 // ## Documentation
 //
-( function () {
+(function() {
     gruntTasks.documentation = {
-        'default': {
-            files: [ {
-                expand: true,
-                cwd: 'sources',
-                src: [ '**/*.js' ]
-            } ],
+        default: {
+            files: [
+                {
+                    expand: true,
+                    cwd: 'sources',
+                    src: ['**/*.js']
+                }
+            ],
             options: {
                 destination: 'docs'
             }
         }
     };
-
-} ) ();
+})();
 
 // ## Plato
-( function () {
+(function() {
     gruntTasks.plato = {
         options: {
             // Task-specific options go here.
         },
         main: {
             files: {
-                'docs/analysis': srcFiles.map( function ( pathname ) {
-                    return path.join( SOURCE_PATH, pathname );
-                } )
+                'docs/analysis': srcFiles.map(function(pathname) {
+                    return path.join(SOURCE_PATH, pathname);
+                })
             }
         }
     };
-} )();
-
+})();
 
 // ## connect
 //
-( function () {
-
+(function() {
     // will start a server on port 9001 with root directory at the same level of
     // the grunt file
-    var currentDirectory = path.dirname( path.resolve( './Gruntfile.js', './' ) );
+    var currentDirectory = path.dirname(path.resolve('./Gruntfile.js', './'));
     gruntTasks.connect = {
         server: {
             options: {
@@ -320,34 +321,28 @@ var gruntTasks = {};
                 directory: currentDirectory,
                 hostname: 'localhost',
                 open: true,
-                middleware: function ( connect, options, middlewares ) {
-
+                middleware: function(connect, options, middlewares) {
                     // inject a custom middleware into the array of default middlewares
-                    middlewares.unshift( function ( req, res, next ) {
-
-                        var ext = path.extname( req.url );
-                        if ( ext === '.gz' ) {
-                            res.setHeader( 'Content-Type', 'text/plain' );
-                            res.setHeader( 'Content-Encoding', 'gzip' );
+                    middlewares.unshift(function(req, res, next) {
+                        var ext = path.extname(req.url);
+                        if (ext === '.gz') {
+                            res.setHeader('Content-Type', 'text/plain');
+                            res.setHeader('Content-Encoding', 'gzip');
                         }
 
                         return next();
-                    } );
+                    });
 
                     return middlewares;
                 }
             }
         }
-
     };
-
-} )();
+})();
 // ## Copy
 // (explicit because windows doesn't support symlinks)
-( function () {
-
+(function() {
     gruntTasks.copyto = {
-
         main: {
             files: [
                 //Hammer:
@@ -365,19 +360,18 @@ var gruntTasks = {};
             ]
         }
     };
+})();
 
-} )();
-
-( function () {
+(function() {
     gruntTasks.release = {
         options: {
             npm: false
         }
     };
-} )();
+})();
 
 /* eslint-disable camelcase */
-( function () {
+(function() {
     gruntTasks.update_submodules = {
         default: {
             options: {
@@ -385,100 +379,118 @@ var gruntTasks = {};
             }
         }
     };
-} )();
+})();
 
 /* eslint-enable camelcase */
 
-
-( function () {
+(function() {
     gruntTasks.copy = {
         staticWeb: {
-            files: [ {
-                expand: true,
-                src: [ 'sources/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
-            }, {
-                expand: true,
-                src: [ 'docs/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
-            }, {
-                expand: true,
-                src: [ 'examples/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
-            }, {
-                expand: true,
-                src: [ 'tests/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
-            }, {
-                expand: true,
-                src: [ 'tutorials/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
-            }, {
-                expand: true,
-                src: [ 'benchmarks/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
-            }, {
-                expand: true,
-                cwd: 'builds',
-                src: [ 'dist/**' ],
-                dest: path.join( BUILD_PATH, 'web/builds/' )
-            }, {
-                expand: true,
-                cwd: 'builds',
-                src: [ 'active/**' ],
-                dest: path.join( BUILD_PATH, 'web/builds/' )
-            } ]
+            files: [
+                {
+                    expand: true,
+                    src: ['sources/**'],
+                    dest: path.join(BUILD_PATH, 'web/')
+                },
+                {
+                    expand: true,
+                    src: ['docs/**'],
+                    dest: path.join(BUILD_PATH, 'web/')
+                },
+                {
+                    expand: true,
+                    src: ['examples/**'],
+                    dest: path.join(BUILD_PATH, 'web/')
+                },
+                {
+                    expand: true,
+                    src: ['tests/**'],
+                    dest: path.join(BUILD_PATH, 'web/')
+                },
+                {
+                    expand: true,
+                    src: ['tutorials/**'],
+                    dest: path.join(BUILD_PATH, 'web/')
+                },
+                {
+                    expand: true,
+                    src: ['benchmarks/**'],
+                    dest: path.join(BUILD_PATH, 'web/')
+                },
+                {
+                    expand: true,
+                    cwd: 'builds',
+                    src: ['dist/**'],
+                    dest: path.join(BUILD_PATH, 'web/builds/')
+                },
+                {
+                    expand: true,
+                    cwd: 'builds',
+                    src: ['active/**'],
+                    dest: path.join(BUILD_PATH, 'web/builds/')
+                }
+            ]
         }
     };
-} )();
+})();
 
+module.exports = function(grunt) {
+    var distFullPath = path.normalize(path.join(__dirname, DIST_PATH)); // eslint-disable-line no-undef
+    grunt.file.mkdir(distFullPath);
 
-module.exports = function ( grunt ) {
+    // use same options as eslintrc for prettier
+    buildPrettierOptions(grunt);
 
-    var distFullPath = path.normalize( path.join( __dirname, DIST_PATH ) ); // eslint-disable-line no-undef
-    grunt.file.mkdir( distFullPath );
+    grunt.initConfig(
+        extend(
+            {
+                pkg: grunt.file.readJSON('package.json')
+            },
+            gruntTasks
+        )
+    );
 
-    grunt.initConfig( extend( {
-        pkg: grunt.file.readJSON( 'package.json' )
-    }, gruntTasks ) );
+    grunt.loadNpmTasks('grunt-documentation');
 
-    grunt.loadNpmTasks( 'grunt-documentation' );
+    grunt.loadNpmTasks('grunt-plato');
 
-    grunt.loadNpmTasks( 'grunt-plato' );
+    grunt.loadNpmTasks('grunt-release');
+    grunt.loadNpmTasks('grunt-contrib-connect');
 
-    grunt.loadNpmTasks( 'grunt-release' );
-    grunt.loadNpmTasks( 'grunt-contrib-connect' );
+    grunt.loadNpmTasks('grunt-update-submodules');
 
-    grunt.loadNpmTasks( 'grunt-update-submodules' );
+    grunt.loadNpmTasks('grunt-eslint');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-clean');
 
-    grunt.loadNpmTasks( 'grunt-eslint' );
-    grunt.loadNpmTasks( 'grunt-contrib-copy' );
-    grunt.loadNpmTasks( 'grunt-contrib-clean' );
+    grunt.loadNpmTasks('grunt-copy-to');
+    grunt.loadNpmTasks('grunt-shell');
+    grunt.loadNpmTasks('grunt-webpack');
 
-    grunt.loadNpmTasks( 'grunt-copy-to' );
-    grunt.loadNpmTasks( 'grunt-shell' );
-    grunt.loadNpmTasks( 'grunt-webpack' );
+    grunt.loadNpmTasks('grunt-execute');
 
-    grunt.loadNpmTasks( 'grunt-execute' );
+    grunt.registerTask('watch', ['webpack:watch']);
+    grunt.registerTask('check', [
+        'eslint:self',
+        'eslint:sources',
+        'eslint:examples',
+        'eslint:tests',
+        'eslint:benchmarks'
+    ]);
 
-    grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'eslint:self', 'eslint:sources', 'eslint:examples', 'eslint:tests', 'eslint:benchmarks' ] );
+    grunt.registerTask('prettier', ['execute:prettier']);
 
-    grunt.registerTask( 'beautify', [ 'eslint:fix' ] );
+    grunt.registerTask('sync', ['update_submodules:default']);
 
-    grunt.registerTask( 'sync', [ 'update_submodules:default' ] );
+    grunt.registerTask('test', ['execute:test']);
+    grunt.registerTask('benchmarks', ['execute:bench']);
 
-    grunt.registerTask( 'test', [ 'execute:test' ] );
-    grunt.registerTask( 'benchmarks', [ 'execute:bench' ] );
+    grunt.registerTask('docs', ['plato', 'documentation:default']);
 
-    grunt.registerTask( 'docs', [ 'plato', 'documentation:default' ] );
+    grunt.registerTask('build', ['copyto', 'webpack:build']);
+    grunt.registerTask('build-release', ['copyto', 'webpack:buildrelease']);
+    grunt.registerTask('build-debug', ['copyto', 'webpack:builddebug']);
 
-    grunt.registerTask( 'build', [ 'copyto', 'webpack:build' ] );
-    grunt.registerTask( 'build-release', [ 'copyto', 'webpack:buildrelease' ] );
-    grunt.registerTask( 'build-debug', [ 'copyto', 'webpack:builddebug' ] );
-
-    grunt.registerTask( 'default', [ 'check', 'build' ] );
-    grunt.registerTask( 'serve', [ 'sync', 'build', 'connect:dist:keepalive' ] );
-
-
+    grunt.registerTask('default', ['check', 'build']);
+    grunt.registerTask('serve', ['sync', 'build', 'connect:dist:keepalive']);
 };
