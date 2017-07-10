@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
@@ -12,13 +12,12 @@
         As wavelengths are what we perceive as colors, we can see "fringes" of color along
         boundaries that separate dark and bright parts.
     */
-    window.getPostSceneChromaticAberration = function () {
-
+    window.getPostSceneChromaticAberration = function() {
         var inputTexture = new osg.Texture();
-        osgDB.readImageURL( 'Chess20.png' ).then( function ( image ) {
-            inputTexture.setImage( image );
-        } );
-        var factor = osg.Uniform.createFloat1( 0.01, 'factor' );
+        osgDB.readImageURL('Chess20.png').then(function(image) {
+            inputTexture.setImage(image);
+        });
+        var factor = osg.Uniform.createFloat1(0.01, 'factor');
 
         // TODO: Add a (radial?) blur because sharp red and blue aberrations are not realistic
         var chromaticAbberationFilter = new osgUtil.Composer.Filter.Custom(
@@ -56,40 +55,39 @@
                 '   gl_FragColor = vec4(r, g, b, 1.0);',
 
                 '}'
-            ].join( '\n' ), {
+            ].join('\n'),
+            {
                 inputTexture: inputTexture,
                 factor: factor
-            } );
+            }
+        );
 
         var effect = {
-
             name: 'Chromatic abberation',
             needCommonCube: false,
 
-            buildComposer: function ( finalTexture ) {
-
+            buildComposer: function(finalTexture) {
                 var composer = new osgUtil.Composer();
-                composer.addPass( chromaticAbberationFilter, finalTexture );
+                composer.addPass(chromaticAbberationFilter, finalTexture);
                 return composer;
             },
 
-            buildGui: function ( mainGui ) {
-
-                var folder = mainGui.addFolder( this.name );
+            buildGui: function(mainGui) {
+                var folder = mainGui.addFolder(this.name);
                 folder.open();
 
                 var param = {
-                    factor: factor.getInternalArray()[ 0 ]
+                    factor: factor.getInternalArray()[0]
                 };
 
-                var factorCtrl = folder.add( param, 'factor', 0, 0.05 );
+                var factorCtrl = folder.add(param, 'factor', 0, 0.05);
 
-                factorCtrl.onChange( function ( value ) {
-                    factor.setFloat( value );
-                } );
+                factorCtrl.onChange(function(value) {
+                    factor.setFloat(value);
+                });
             }
         };
 
         return effect;
     };
-} )();
+})();

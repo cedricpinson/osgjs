@@ -4,81 +4,79 @@
  *  OrbitManipulator
  *  @class
  */
-var SwitchManipulator = function () {
+var SwitchManipulator = function() {
     this._manipulatorList = [];
     this._currentManipulator = undefined;
 };
 
 /** @lends SwitchManipulator.prototype */
 SwitchManipulator.prototype = {
-    getCamera: function () {
+    getCamera: function() {
         return this.getCurrentManipulator().getCamera();
     },
-    setCamera: function ( cam ) {
+    setCamera: function(cam) {
         var cbList = this.getManipulatorList();
-        for ( var i = 0, nb = cbList.length; i < nb; ++i )
-            cbList[ i ].setCamera( cam );
+        for (var i = 0, nb = cbList.length; i < nb; ++i) cbList[i].setCamera(cam);
     },
-    update: function ( nv ) {
+    update: function(nv) {
         var manipulator = this.getCurrentManipulator();
-        if ( manipulator !== undefined ) {
-            return manipulator.update( nv );
+        if (manipulator !== undefined) {
+            return manipulator.update(nv);
         }
         return undefined;
     },
-    getNode: function () {
+    getNode: function() {
         // we should add an accessor in the osgjs manipulator
         return this.getCurrentManipulator()._node;
     },
-    setNode: function ( node ) {
+    setNode: function(node) {
         var cbList = this.getManipulatorList();
-        for ( var i = 0, nb = cbList.length; i < nb; ++i )
-            cbList[ i ].setNode( node );
+        for (var i = 0, nb = cbList.length; i < nb; ++i) cbList[i].setNode(node);
     },
-    getControllerList: function () {
+    getControllerList: function() {
         return this.getCurrentManipulator().getControllerList();
     },
-    getNumManipulator: function () {
+    getNumManipulator: function() {
         return this._manipulatorList.length;
     },
-    addManipulator: function ( manipulator ) {
-        this._manipulatorList.push( manipulator );
-        if ( this._currentManipulator === undefined ) {
-            this.setManipulatorIndex( 0 );
+    addManipulator: function(manipulator) {
+        this._manipulatorList.push(manipulator);
+        if (this._currentManipulator === undefined) {
+            this.setManipulatorIndex(0);
         }
     },
-    getManipulatorList: function () {
+    getManipulatorList: function() {
         return this._manipulatorList;
     },
-    setManipulatorIndex: function ( index ) {
+    setManipulatorIndex: function(index) {
         this._currentManipulator = index;
     },
-    getCurrentManipulatorIndex: function () {
+    getCurrentManipulatorIndex: function() {
         return this._currentManipulator;
     },
-    getCurrentManipulator: function () {
-        return this._manipulatorList[ this._currentManipulator ];
+    getCurrentManipulator: function() {
+        return this._manipulatorList[this._currentManipulator];
     },
-    reset: function () {
+    reset: function() {
         this.getCurrentManipulator().reset();
     },
-    computeHomePosition: function ( useBoundingBox ) {
+    computeHomePosition: function(useBoundingBox) {
         var manipulator = this.getCurrentManipulator();
-        if ( manipulator !== undefined ) {
-            manipulator.computeHomePosition( useBoundingBox );
+        if (manipulator !== undefined) {
+            manipulator.computeHomePosition(useBoundingBox);
         }
     },
-    getInverseMatrix: function () {
+    getInverseMatrix: function() {
         var manipulator = this.getCurrentManipulator();
-        if ( manipulator !== undefined ) {
+        if (manipulator !== undefined) {
             return manipulator.getInverseMatrix();
         }
     },
-    getHomeBound: function ( boundStrategy ) {
-        return this.getCurrentManipulator().getHomeBound( boundStrategy );
+    getHomeBound: function(boundStrategy) {
+        return this.getCurrentManipulator().getHomeBound(boundStrategy);
     },
-    getHomeDistance: function ( bs ) {
-        return this.getCurrentManipulator().getHomeDistance( bs );
+    getHomeDistance: function(bs) {
+        return this.getCurrentManipulator().getHomeDistance(bs);
     }
 };
 

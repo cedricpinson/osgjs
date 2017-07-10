@@ -1,7 +1,7 @@
 'use strict';
 
-var Notify = require( 'osg/notify' );
-var WebGLCaps = require( 'osg/WebGLCaps' );
+var Notify = require('osg/notify');
+var WebGLCaps = require('osg/WebGLCaps');
 
 /*
 use EXT_disjoint_timer_queryto time webgl calls GPU side average over multiple frames
@@ -14,37 +14,34 @@ queries, that way you can track a particular of gl command for examples
 
 */
 
-var TimerGPU = function ( gl ) {
-
+var TimerGPU = function(gl) {
     this._enabled = false;
 
-    if ( gl ) {
-
-        var ext = WebGLCaps.instance( gl ).getDisjointTimerQuery();
-        if ( !ext ) return this;
+    if (gl) {
+        var ext = WebGLCaps.instance(gl).getDisjointTimerQuery();
+        if (!ext) return this;
 
         // webgl1 to webgl2
-        if ( !gl.getQueryParameter ) gl.getQueryParameter = ext.getQueryObjectEXT.bind( ext );
+        if (!gl.getQueryParameter) gl.getQueryParameter = ext.getQueryObjectEXT.bind(ext);
 
         // https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/extensions/ext-disjoint-timer-query.html#L102
         // run the page if strange results
         // to validate you gpu/browser has correct gpu queries support
-        this._hasTimeElapsed = gl.getQuery( ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
-        this._hasTimeStamp = gl.getQuery( ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
+        this._hasTimeElapsed = gl.getQuery(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30;
+        this._hasTimeStamp = gl.getQuery(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30;
 
-        if ( !this._hasTimeElapsed && !this._hasTimeStamp ) {
+        if (!this._hasTimeElapsed && !this._hasTimeStamp) {
             return this;
         }
 
         // no timestamp means not start/end absolute time
         // which means each start must be followed by a end
         // BEFORE any other start (of other queryID)
-        if ( !this._hasTimeStamp ) Notify.debug( 'Warning: do not use interleaved GPU query' );
+        if (!this._hasTimeStamp) Notify.debug('Warning: do not use interleaved GPU query');
 
         this._ext = ext;
         this._gl = gl;
         this._enabled = true;
-
     }
 
     this._frameAverageCount = 10;
@@ -60,35 +57,32 @@ var TimerGPU = function ( gl ) {
 
 TimerGPU.FRAME_COUNT = 0;
 
-TimerGPU.instance = function ( gl ) {
-
-    if ( !TimerGPU._instance ) {
-        TimerGPU._instance = new TimerGPU( gl );
-    } else if ( gl && TimerGPU._instance.getContext() !== gl ) {
-        TimerGPU._instance.setContext( gl );
+TimerGPU.instance = function(gl) {
+    if (!TimerGPU._instance) {
+        TimerGPU._instance = new TimerGPU(gl);
+    } else if (gl && TimerGPU._instance.getContext() !== gl) {
+        TimerGPU._instance.setContext(gl);
     }
     return TimerGPU._instance;
-
 };
 
 TimerGPU.prototype = {
-
-    getContext: function () {
+    getContext: function() {
         return this._gl;
     },
-    setContext: function ( gl ) {
+    setContext: function(gl) {
         this._gl = gl;
     },
-    setFrameAverageCount: function ( val ) {
+    setFrameAverageCount: function(val) {
         this._frameAverageCount = val;
     },
 
-    clearQueries: function () {
+    clearQueries: function() {
         var glQueries = this._glQueries;
-        for ( var i = 0, nbQueries = glQueries.length; i < nbQueries; ++i ) {
-            var query = glQueries[ i ];
-            this._gl.deleteQuery( query._pollingStartQuery );
-            if ( query._pollingEndQuery ) this._gl.deleteQuery( query );
+        for (var i = 0, nbQueries = glQueries.length; i < nbQueries; ++i) {
+            var query = glQueries[i];
+            this._gl.deleteQuery(query._pollingStartQuery);
+            if (query._pollingEndQuery) this._gl.deleteQuery(query);
         }
 
         this._userQueries.length = 0;
@@ -96,31 +90,31 @@ TimerGPU.prototype = {
         this._queriesByID = {};
     },
 
-    supportTimeStamp: function () {
+    supportTimeStamp: function() {
         return this._hasTimeStamp;
     },
 
     // many browser doesn't yet have
     // the marvellous gpu timers
-    enable: function () {
+    enable: function() {
         // enable only if we have the extension
         this._enabled = !!this._ext;
     },
 
-    disable: function () {
+    disable: function() {
         this._enabled = false;
     },
-    isEnabled: function () {
+    isEnabled: function() {
         return this._enabled;
     },
 
-    setCallback: function ( cb ) {
+    setCallback: function(cb) {
         this._callback = cb;
     },
 
-    createUserQuery: function ( queryID ) {
+    createUserQuery: function(queryID) {
         var query;
-        if ( this._hasTimeStamp ) {
+        if (this._hasTimeStamp) {
             query = this.createGLQuery();
         } else {
             query = {
@@ -137,7 +131,7 @@ TimerGPU.prototype = {
         return query;
     },
 
-    createGLQuery: function () {
+    createGLQuery: function() {
         var query = {};
         query._isWaiting = false; // wait typically 1 or 2 frames
         query._pollingStartQuery = undefined; // gl query object
@@ -145,65 +139,64 @@ TimerGPU.prototype = {
         query._averageTimer = 0.0; // cumulative average time
         query._resultCount = 0; // cumulative average count
 
-        if ( this._hasTimeStamp ) query._pollingEndQuery = this._gl.createQuery();
+        if (this._hasTimeStamp) query._pollingEndQuery = this._gl.createQuery();
         query._pollingStartQuery = this._gl.createQuery();
 
-        this._glQueries.push( query );
+        this._glQueries.push(query);
 
         return query;
     },
 
-    getOrCreateLastGLQuery: function () {
-        var query = this._glQueries[ this._queryCount - 1 ];
-        if ( query ) return query;
+    getOrCreateLastGLQuery: function() {
+        var query = this._glQueries[this._queryCount - 1];
+        if (query) return query;
 
-        query = this._glQueries[ this._queryCount - 1 ] = this.createGLQuery();
+        query = this._glQueries[this._queryCount - 1] = this.createGLQuery();
 
         return query;
     },
 
-    beginCurrentQuery: function () {
-        if ( this._nbOpened === 0 ) return;
+    beginCurrentQuery: function() {
+        if (this._nbOpened === 0) return;
 
         this._queryCount++;
 
         var query = this.getOrCreateLastGLQuery();
-        if ( !query._isWaiting ) {
-            this._gl.beginQuery( this._ext.TIME_ELAPSED_EXT, query._pollingStartQuery );
+        if (!query._isWaiting) {
+            this._gl.beginQuery(this._ext.TIME_ELAPSED_EXT, query._pollingStartQuery);
         }
     },
 
-    endCurrentQuery: function () {
-        if ( this._nbOpened === 0 ) return;
+    endCurrentQuery: function() {
+        if (this._nbOpened === 0) return;
 
-        if ( !this.getOrCreateLastGLQuery()._isWaiting ) {
-            this._gl.endQuery( this._ext.TIME_ELAPSED_EXT );
+        if (!this.getOrCreateLastGLQuery()._isWaiting) {
+            this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
         }
     },
 
-    getAvailableQueryByID: function ( queryID ) {
-        var query = this._queriesByID[ queryID ];
-        if ( !query ) {
-            query = this._queriesByID[ queryID ] = this.createUserQuery( queryID );
-            this._userQueries.push( query );
+    getAvailableQueryByID: function(queryID) {
+        var query = this._queriesByID[queryID];
+        if (!query) {
+            query = this._queriesByID[queryID] = this.createUserQuery(queryID);
+            this._userQueries.push(query);
             return query;
         }
 
-        if ( query._frame === TimerGPU.FRAME_COUNT ) {
-
-            if ( query._isOpened ) return query;
+        if (query._frame === TimerGPU.FRAME_COUNT) {
+            if (query._isOpened) return query;
 
             var siblings = query._siblings;
-            for ( var i = 0, nbSiblings = siblings.length; i < nbSiblings; ++i ) {
-                var qsib = siblings[ i ];
-                if ( qsib._frame !== TimerGPU.FRAME_COUNT || qsib._isOpened ) {
+            for (var i = 0, nbSiblings = siblings.length; i < nbSiblings; ++i) {
+                var qsib = siblings[i];
+                if (qsib._frame !== TimerGPU.FRAME_COUNT || qsib._isOpened) {
                     qsib._frame = TimerGPU.FRAME_COUNT;
                     return qsib;
                 }
             }
 
             var newQuery = this.createUserQuery();
-            siblings.push( newQuery );
+            siblings.push(newQuery);
             return newQuery;
         }
 
@@ -213,99 +206,87 @@ TimerGPU.prototype = {
     },
 
     // start recording time if query already exist, don't recreate
-    start: function ( queryID ) {
-
+    start: function(queryID) {
         // If timing currently disabled or glTimer does not exist, exit early.
-        if ( !this._enabled ) {
+        if (!this._enabled) {
             return undefined;
         }
 
-        var query = this.getAvailableQueryByID( queryID );
+        var query = this.getAvailableQueryByID(queryID);
         query._isOpened = true;
 
-        if ( this._hasTimeStamp ) {
-
-            if ( !query._isWaiting ) this._ext.queryCounterEXT( query._pollingStartQuery, this._ext.TIMESTAMP_EXT );
-
+        if (this._hasTimeStamp) {
+            if (!query._isWaiting)
+                this._ext.queryCounterEXT(query._pollingStartQuery, this._ext.TIMESTAMP_EXT);
         } else {
-
             this.endCurrentQuery();
 
             this._nbOpened++;
             query._startIndex = this._queryCount;
 
             this.beginCurrentQuery();
-
         }
-
     },
 
     // stop query recording (if running) polls for results
-    end: function ( queryID ) {
-
-        if ( !this._enabled ) {
+    end: function(queryID) {
+        if (!this._enabled) {
             return;
         }
 
-        var query = this.getAvailableQueryByID( queryID );
+        var query = this.getAvailableQueryByID(queryID);
         query._isOpened = false;
 
-        if ( this._hasTimeStamp ) {
-
-            if ( !query._isWaiting ) this._ext.queryCounterEXT( query._pollingEndQuery, this._ext.TIMESTAMP_EXT );
-
+        if (this._hasTimeStamp) {
+            if (!query._isWaiting)
+                this._ext.queryCounterEXT(query._pollingEndQuery, this._ext.TIMESTAMP_EXT);
         } else {
-
             this.endCurrentQuery();
 
             query._endIndex = this._queryCount;
             this._nbOpened--;
 
             this.beginCurrentQuery();
-
         }
-
     },
 
-    computeQueryAverageTime: function ( query ) {
+    computeQueryAverageTime: function(query) {
         var average = 0;
         var glQueries = this._glQueries;
 
-        for ( var i = query._startIndex; i < query._endIndex; ++i ) {
-            var glAvg = glQueries[ i ]._averageTimer;
-            if ( glAvg < 0 ) return -1;
+        for (var i = query._startIndex; i < query._endIndex; ++i) {
+            var glAvg = glQueries[i]._averageTimer;
+            if (glAvg < 0) return -1;
             average += glAvg;
         }
 
         return average;
     },
 
-    computeFullAverageTime: function ( query ) {
-        var average = this.computeQueryAverageTime( query );
+    computeFullAverageTime: function(query) {
+        var average = this.computeQueryAverageTime(query);
 
-        if ( average < 0 ) return -1;
+        if (average < 0) return -1;
 
         var siblings = query._siblings;
-        for ( var i = 0, nbSiblings = siblings.length; i < nbSiblings; ++i ) {
-            var qsib = siblings[ i ];
-            if ( qsib._frame !== TimerGPU.FRAME_COUNT - 1 )
-                continue;
+        for (var i = 0, nbSiblings = siblings.length; i < nbSiblings; ++i) {
+            var qsib = siblings[i];
+            if (qsib._frame !== TimerGPU.FRAME_COUNT - 1) continue;
 
-            var sibAvg = this.computeQueryAverageTime( qsib );
-            if ( sibAvg < 0 ) return -1;
+            var sibAvg = this.computeQueryAverageTime(qsib);
+            if (sibAvg < 0) return -1;
             average += sibAvg;
         }
 
         return average;
     },
 
-    pollQueries: function () {
-
+    pollQueries: function() {
         TimerGPU.FRAME_COUNT++;
         this._queryCount = 0;
         this._nbOpened = 0;
 
-        if ( !this._enabled || !this._callback ) {
+        if (!this._enabled || !this._callback) {
             return;
         }
 
@@ -314,73 +295,71 @@ TimerGPU.prototype = {
         var i;
 
         // all timer are corrupted, clear the queries
-        var disjoint = this._gl.getParameter( this._ext.GPU_DISJOINT_EXT );
-        if ( disjoint ) {
-            for ( i = 0; i < nbGlQueries; ++i ) {
-                glQueries[ i ]._isWaiting = false;
+        var disjoint = this._gl.getParameter(this._ext.GPU_DISJOINT_EXT);
+        if (disjoint) {
+            for (i = 0; i < nbGlQueries; ++i) {
+                glQueries[i]._isWaiting = false;
             }
             return;
         }
 
-
         // update average time for each queries
-        for ( i = 0; i < nbGlQueries; ++i ) {
-            this.pollQuery( glQueries[ i ] );
+        for (i = 0; i < nbGlQueries; ++i) {
+            this.pollQuery(glQueries[i]);
         }
 
         var userQueries = this._userQueries;
         var nbUserQueries = userQueries.length;
 
-        for ( i = 0; i < nbUserQueries; ++i ) {
-            var query = userQueries[ i ];
-            var average = this.computeFullAverageTime( query );
-            if ( average > 0 ) {
-                this._callback( average, query._id );
+        for (i = 0; i < nbUserQueries; ++i) {
+            var query = userQueries[i];
+            var average = this.computeFullAverageTime(query);
+            if (average > 0) {
+                this._callback(average, query._id);
             }
         }
     },
 
-    pollQuery: function ( query ) {
+    pollQuery: function(query) {
         query._isWaiting = false;
 
         // last to be queried
         var lastQuery = this._hasTimeStamp ? query._pollingEndQuery : query._pollingStartQuery;
 
         // wait till results are ready
-        var available = this._gl.getQueryParameter( lastQuery, this._gl.QUERY_RESULT_AVAILABLE );
-        if ( !available ) {
+        var available = this._gl.getQueryParameter(lastQuery, this._gl.QUERY_RESULT_AVAILABLE);
+        if (!available) {
             query._isWaiting = true;
             return 0;
         }
 
         var timeElapsed;
 
-        if ( this._hasTimeStamp ) {
-
-            var startTime = this._gl.getQueryParameter( query._pollingStartQuery, this._gl.QUERY_RESULT );
-            var endTime = this._gl.getQueryParameter( lastQuery, this._gl.QUERY_RESULT );
+        if (this._hasTimeStamp) {
+            var startTime = this._gl.getQueryParameter(
+                query._pollingStartQuery,
+                this._gl.QUERY_RESULT
+            );
+            var endTime = this._gl.getQueryParameter(lastQuery, this._gl.QUERY_RESULT);
             timeElapsed = endTime - startTime;
-
         } else {
-
-            timeElapsed = this._gl.getQueryParameter( lastQuery, this._gl.QUERY_RESULT );
-
+            timeElapsed = this._gl.getQueryParameter(lastQuery, this._gl.QUERY_RESULT);
         }
 
         query._resultCount++;
 
         // restart cumulative average every frameAveragecount frames
-        if ( query._resultCount > this._frameAverageCount ) {
+        if (query._resultCount > this._frameAverageCount) {
             query._averageTimer = 0.0;
             query._resultCount = 1;
         }
 
         // https://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
-        query._averageTimer = query._averageTimer + ( ( timeElapsed - query._averageTimer ) / ( query._resultCount ) );
+        query._averageTimer =
+            query._averageTimer + (timeElapsed - query._averageTimer) / query._resultCount;
 
         return query._averageTimer;
     }
-
 };
 
 module.exports = TimerGPU;

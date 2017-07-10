@@ -1,6 +1,6 @@
 'use strict';
-var osgAnimation = require( 'tests/osgWrappers/osgAnimation' );
+var osgAnimation = require('tests/osgWrappers/osgAnimation');
 
-module.exports = function () {
+module.exports = function() {
     osgAnimation();
 };

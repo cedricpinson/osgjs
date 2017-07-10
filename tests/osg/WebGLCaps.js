@@ -1,22 +1,19 @@
 'use strict';
-var assert = require( 'chai' ).assert;
-var Texture = require( 'osg/Texture' );
-var WebGLCaps = require( 'osg/WebGLCaps' );
-var mockup = require( 'tests/mockup/mockup' );
+var assert = require('chai').assert;
+var Texture = require('osg/Texture');
+var WebGLCaps = require('osg/WebGLCaps');
+var mockup = require('tests/mockup/mockup');
 
-module.exports = function () {
-
-    test( 'WebGLCaps', function () {
-
-        var canvas = mockup.createCanvas( true );
+module.exports = function() {
+    test('WebGLCaps', function() {
+        var canvas = mockup.createCanvas(true);
         var gl = canvas.getContext();
-        var webglCaps = WebGLCaps.instance( gl );
+        var webglCaps = WebGLCaps.instance(gl);
 
         webglCaps.getWebGLExtensions().OES_texture_float = true; // eslint-disable-line
-        webglCaps._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
+        webglCaps._checkRTT[Texture.FLOAT + ',' + Texture.NEAREST] = true;
 
-        var hFloat = webglCaps.hasFloatRTT( gl );
-        assert.isOk( hFloat, 'float detect' );
-
-    } );
+        var hFloat = webglCaps.hasFloatRTT(gl);
+        assert.isOk(hFloat, 'float detect');
+    });
 };

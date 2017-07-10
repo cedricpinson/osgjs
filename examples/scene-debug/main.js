@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var OSG = window.OSG;
@@ -7,12 +7,11 @@
     var osgUtil = OSG.osgUtil;
     var $ = window.$;
 
-    var Example = function () {};
+    var Example = function() {};
 
     Example.prototype = {
-
         // This function will create a basic scene with some cubes
-        createScene: function () {
+        createScene: function() {
             var root = new osg.Node();
 
             var group1 = new osg.MatrixTransform();
@@ -23,82 +22,83 @@
             var group32 = new osg.MatrixTransform();
             var group4 = new osg.MatrixTransform();
 
-            osg.mat4.fromTranslation( group1.getMatrix(), [ +5, 10, -5 ] );
-            osg.mat4.fromTranslation( group21.getMatrix(), [ 0, 10, 0 ] );
-            osg.mat4.fromTranslation( group22.getMatrix(), [ 10, 0, 0 ] );
-            osg.mat4.fromTranslation( group3.getMatrix(), [ 0, 0, -5 ] );
+            osg.mat4.fromTranslation(group1.getMatrix(), [+5, 10, -5]);
+            osg.mat4.fromTranslation(group21.getMatrix(), [0, 10, 0]);
+            osg.mat4.fromTranslation(group22.getMatrix(), [10, 0, 0]);
+            osg.mat4.fromTranslation(group3.getMatrix(), [0, 0, -5]);
 
-            osg.mat4.fromTranslation( group31.getMatrix(), [ 0, -5, 0 ] );
-            osg.mat4.fromTranslation( group32.getMatrix(), [ -5, 0, 0 ] );
+            osg.mat4.fromTranslation(group31.getMatrix(), [0, -5, 0]);
+            osg.mat4.fromTranslation(group32.getMatrix(), [-5, 0, 0]);
 
-            var ground1 = osg.createTexturedBoxGeometry( 0, 0, 0, 6, 5, 4 );
-            var ground2 = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
-            var ground3 = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
-            var ground31 = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
-            var ground32 = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
-            var ground4 = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
+            var ground1 = osg.createTexturedBoxGeometry(0, 0, 0, 6, 5, 4);
+            var ground2 = osg.createTexturedBoxGeometry(0, 0, 0, 2, 2, 2);
+            var ground3 = osg.createTexturedBoxGeometry(0, 0, 0, 1, 1, 1);
+            var ground31 = osg.createTexturedBoxGeometry(0, 0, 0, 1, 1, 1);
+            var ground32 = osg.createTexturedBoxGeometry(0, 0, 0, 1, 1, 1);
+            var ground4 = osg.createTexturedBoxGeometry(0, 0, 0, 2, 2, 2);
 
             var material2 = new osg.Material();
             var material3 = new osg.Material();
             var material4 = new osg.Material();
-            material2.setDiffuse( [ 0, 0, 1, 1 ] );
-            material3.setDiffuse( [ 0, 1, 0, 1 ] );
-            material4.setDiffuse( [ 1, 0, 0, 1 ] );
-            ground2.getOrCreateStateSet().setAttributeAndModes( material2 );
-            group3.getOrCreateStateSet().setAttributeAndModes( material3 );
-            group4.getOrCreateStateSet().setAttributeAndModes( material4 );
+            material2.setDiffuse([0, 0, 1, 1]);
+            material3.setDiffuse([0, 1, 0, 1]);
+            material4.setDiffuse([1, 0, 0, 1]);
+            ground2.getOrCreateStateSet().setAttributeAndModes(material2);
+            group3.getOrCreateStateSet().setAttributeAndModes(material3);
+            group4.getOrCreateStateSet().setAttributeAndModes(material4);
 
-            group1.addChild( ground1 );
-            group21.addChild( ground2 );
-            group22.addChild( ground2 );
-            group3.addChild( ground3 );
-            group3.addChild( group31 );
-            group3.addChild( group32 );
-            group31.addChild( ground31 );
-            group32.addChild( ground32 );
-            group4.addChild( ground4 );
+            group1.addChild(ground1);
+            group21.addChild(ground2);
+            group22.addChild(ground2);
+            group3.addChild(ground3);
+            group3.addChild(group31);
+            group3.addChild(group32);
+            group31.addChild(ground31);
+            group32.addChild(ground32);
+            group4.addChild(ground4);
 
-            root.addChild( group1 );
-            root.addChild( group21 );
-            root.addChild( group22 );
-            root.addChild( group3 );
-            root.addChild( group4 );
+            root.addChild(group1);
+            root.addChild(group21);
+            root.addChild(group22);
+            root.addChild(group3);
+            root.addChild(group4);
 
             return root;
         },
 
-        run: function ( canvas ) {
-
+        run: function(canvas) {
             var viewer;
-            viewer = new osgViewer.Viewer( canvas, {
+            viewer = new osgViewer.Viewer(canvas, {
                 antialias: true,
                 alpha: true
-            } );
+            });
             viewer.init();
 
             var rotate = new osg.MatrixTransform();
             var root = this.createScene();
 
             var displayGraph = osgUtil.DisplayGraph.instance();
-            displayGraph.setDisplayGraphRenderer( true );
-            displayGraph.createGraph( root );
+            displayGraph.setDisplayGraphRenderer(true);
+            displayGraph.createGraph(root);
 
-            rotate.addChild( root );
+            rotate.addChild(root);
 
-            viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
-            viewer.setSceneData( rotate );
+            viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
+            viewer.setSceneData(rotate);
             viewer.setupManipulator();
             viewer.getManipulator().computeHomePosition();
 
             viewer.run();
         }
-
     };
 
-    window.addEventListener( 'load', function () {
-        var example = new Example();
-        var canvas = $( '#View' )[ 0 ];
-        example.run( canvas );
-    }, true );
-
-} )();
+    window.addEventListener(
+        'load',
+        function() {
+            var example = new Example();
+            var canvas = $('#View')[0];
+            example.run(canvas);
+        },
+        true
+    );
+})();

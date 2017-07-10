@@ -1,6 +1,6 @@
 'use strict';
 
-var Notify = require( 'osg/notify' );
+var Notify = require('osg/notify');
 
 /**
  * This is a very simplistic version of the OSG registry, we could
@@ -8,9 +8,8 @@ var Notify = require( 'osg/notify' );
  */
 
 var Registry = {
-
-    instance: function () {
-        if ( !Registry._instance ) {
+    instance: function() {
+        if (!Registry._instance) {
             Registry._instance = Registry;
             Registry._instance.plugins = new window.Map();
         }
@@ -18,16 +17,15 @@ var Registry = {
     },
 
     // We register directly a plugin for a extension.
-    addReaderWriter: function ( extension, plugin ) {
-        if ( Registry.instance().plugins.get( extension ) !== undefined )
-            Notify.warn( 'the \'' + extension + '\' plugin already exists' );
-        Registry.instance().plugins.set( extension, plugin );
+    addReaderWriter: function(extension, plugin) {
+        if (Registry.instance().plugins.get(extension) !== undefined)
+            Notify.warn("the '" + extension + "' plugin already exists");
+        Registry.instance().plugins.set(extension, plugin);
     },
 
-    getReaderWriterForExtension: function ( name ) {
-        return Registry.instance().plugins.get( name );
+    getReaderWriterForExtension: function(name) {
+        return Registry.instance().plugins.get(name);
     }
 };
-
 
 module.exports = Registry;

@@ -1,6 +1,6 @@
 'use strict';
-var ReaderWriterGLTF = require( 'osgPlugins/ReaderWriterGLTF' );
-var ReaderWriterZIP = require( 'osgPlugins/ReaderWriterZIP' );
+var ReaderWriterGLTF = require('osgPlugins/ReaderWriterGLTF');
+var ReaderWriterZIP = require('osgPlugins/ReaderWriterZIP');
 
 var osgPlugins = {};
 

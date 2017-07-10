@@ -1,211 +1,222 @@
 'use strict';
-var MACROUTILS = require( 'osg/Utils' );
-var shaderUtils = require( 'osgShader/utils' );
-var Node = require( 'osgShader/node/Node' );
+var MACROUTILS = require('osg/Utils');
+var shaderUtils = require('osgShader/utils');
+var Node = require('osgShader/node/Node');
 
 // base class for all point based light: Point/Directional/Spot/Hemi
 // avoid duplicate code
-var NodeLights = function () {
-    Node.call( this );
+var NodeLights = function() {
+    Node.call(this);
 };
 
-MACROUTILS.createPrototypeObject( NodeLights, MACROUTILS.objectInherit( Node.prototype, {
+MACROUTILS.createPrototypeObject(
+    NodeLights,
+    MACROUTILS.objectInherit(Node.prototype, {
+        validOutputs: ['color', 'lighted'],
 
-    validOutputs: [ 'color', 'lighted' ],
+        globalFunctionDeclaration: function() {
+            return '#pragma include "lights.glsl"';
+        }
+    }),
+    'osgShader',
+    'NodeLights'
+);
 
-    globalFunctionDeclaration: function () {
-        return '#pragma include "lights.glsl"';
-    }
-
-} ), 'osgShader', 'NodeLights' );
-
-var getVec3 = function ( vec ) {
+var getVec3 = function(vec) {
     return vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
 };
 
-var PointLight = function () {
-    NodeLights.call( this );
+var PointLight = function() {
+    NodeLights.call(this);
 };
 
-MACROUTILS.createPrototypeObject( PointLight, MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject(
+    PointLight,
+    MACROUTILS.objectInherit(NodeLights.prototype, {
+        type: 'PointLight',
 
-    type: 'PointLight',
+        validInputs: [
+            'normal',
+            'eyeVector',
 
-    validInputs: [
-        'normal',
-        'eyeVector',
+            'materialdiffuse',
+            'materialspecular',
+            'materialshininess',
 
-        'materialdiffuse',
-        'materialspecular',
-        'materialshininess',
+            'lightdiffuse',
+            'lightspecular',
+            'lightposition',
+            'lightattenuation',
+            'lightmatrix'
+        ],
 
-        'lightdiffuse',
-        'lightspecular',
-        'lightposition',
-        'lightattenuation',
-        'lightmatrix',
-    ],
+        computeShader: function() {
+            return shaderUtils.callFunction('computePointLightShading', this._outputs.color, [
+                this._inputs.normal,
+                this._inputs.eyeVector,
 
-    computeShader: function () {
+                getVec3(this._inputs.materialdiffuse),
+                getVec3(this._inputs.materialspecular),
+                this._inputs.materialshininess,
 
-        return shaderUtils.callFunction( 'computePointLightShading', this._outputs.color, [
-            this._inputs.normal,
-            this._inputs.eyeVector,
+                getVec3(this._inputs.lightdiffuse),
+                getVec3(this._inputs.lightspecular),
+                this._inputs.lightposition,
+                this._inputs.lightattenuation,
+                this._inputs.lightmatrix,
 
-            getVec3( this._inputs.materialdiffuse ),
-            getVec3( this._inputs.materialspecular ),
-            this._inputs.materialshininess,
+                this._outputs.lighted
+            ]);
+        }
+    }),
+    'osgShader',
+    'PointLight'
+);
 
-            getVec3( this._inputs.lightdiffuse ),
-            getVec3( this._inputs.lightspecular ),
-            this._inputs.lightposition,
-            this._inputs.lightattenuation,
-            this._inputs.lightmatrix,
-
-            this._outputs.lighted
-        ] );
-    }
-
-} ), 'osgShader', 'PointLight' );
-
-
-
-var SpotLight = function () {
-    NodeLights.call( this );
+var SpotLight = function() {
+    NodeLights.call(this);
 };
 
-MACROUTILS.createPrototypeObject( SpotLight, MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject(
+    SpotLight,
+    MACROUTILS.objectInherit(NodeLights.prototype, {
+        type: 'SpotLight',
 
-    type: 'SpotLight',
+        validInputs: [
+            'normal',
+            'eyeVector',
 
-    validInputs: [
-        'normal',
-        'eyeVector',
+            'materialdiffuse',
+            'materialspecular',
+            'materialshininess',
 
-        'materialdiffuse',
-        'materialspecular',
-        'materialshininess',
+            'lightdiffuse',
+            'lightspecular',
+            'lightdirection',
+            'lightattenuation',
+            'lightposition',
+            'lightspotCutOff',
+            'lightspotBlend',
+            'lightmatrix',
+            'lightinvMatrix'
+        ],
 
-        'lightdiffuse',
-        'lightspecular',
-        'lightdirection',
-        'lightattenuation',
-        'lightposition',
-        'lightspotCutOff',
-        'lightspotBlend',
-        'lightmatrix',
-        'lightinvMatrix',
-    ],
+        computeShader: function() {
+            return shaderUtils.callFunction('computeSpotLightShading', this._outputs.color, [
+                this._inputs.normal,
+                this._inputs.eyeVector,
 
-    computeShader: function () {
+                getVec3(this._inputs.materialdiffuse),
+                getVec3(this._inputs.materialspecular),
+                this._inputs.materialshininess,
 
-        return shaderUtils.callFunction( 'computeSpotLightShading', this._outputs.color, [
-            this._inputs.normal,
-            this._inputs.eyeVector,
+                getVec3(this._inputs.lightdiffuse),
+                getVec3(this._inputs.lightspecular),
+                this._inputs.lightdirection,
+                this._inputs.lightattenuation,
+                this._inputs.lightposition,
+                this._inputs.lightspotCutOff,
+                this._inputs.lightspotBlend,
+                this._inputs.lightmatrix,
+                this._inputs.lightinvMatrix,
 
-            getVec3( this._inputs.materialdiffuse ),
-            getVec3( this._inputs.materialspecular ),
-            this._inputs.materialshininess,
+                this._outputs.lighted
+            ]);
+        }
+    }),
+    'osgShader',
+    'SpotLight'
+);
 
-            getVec3( this._inputs.lightdiffuse ),
-            getVec3( this._inputs.lightspecular ),
-            this._inputs.lightdirection,
-            this._inputs.lightattenuation,
-            this._inputs.lightposition,
-            this._inputs.lightspotCutOff,
-            this._inputs.lightspotBlend,
-            this._inputs.lightmatrix,
-            this._inputs.lightinvMatrix,
-
-            this._outputs.lighted
-        ] );
-    }
-
-} ), 'osgShader', 'SpotLight' );
-
-
-var SunLight = function () {
-    NodeLights.call( this );
+var SunLight = function() {
+    NodeLights.call(this);
 };
 
-MACROUTILS.createPrototypeObject( SunLight, MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject(
+    SunLight,
+    MACROUTILS.objectInherit(NodeLights.prototype, {
+        type: 'SunLight',
 
-    type: 'SunLight',
+        validInputs: [
+            'normal',
+            'eyeVector',
 
-    validInputs: [
-        'normal',
-        'eyeVector',
+            'materialdiffuse',
+            'materialspecular',
+            'materialshininess',
 
-        'materialdiffuse',
-        'materialspecular',
-        'materialshininess',
+            'lightdiffuse',
+            'lightspecular',
+            'lightposition',
+            'lightmatrix'
+        ],
 
-        'lightdiffuse',
-        'lightspecular',
-        'lightposition',
-        'lightmatrix',
-    ],
+        computeShader: function() {
+            return shaderUtils.callFunction('computeSunLightShading', this._outputs.color, [
+                this._inputs.normal,
+                this._inputs.eyeVector,
 
-    computeShader: function () {
+                getVec3(this._inputs.materialdiffuse),
+                getVec3(this._inputs.materialspecular),
+                this._inputs.materialshininess,
 
-        return shaderUtils.callFunction( 'computeSunLightShading', this._outputs.color, [
-            this._inputs.normal,
-            this._inputs.eyeVector,
+                getVec3(this._inputs.lightdiffuse),
+                getVec3(this._inputs.lightspecular),
+                this._inputs.lightposition,
+                this._inputs.lightmatrix,
 
-            getVec3( this._inputs.materialdiffuse ),
-            getVec3( this._inputs.materialspecular ),
-            this._inputs.materialshininess,
+                this._outputs.lighted
+            ]);
+        }
+    }),
+    'osgShader',
+    'SunLight'
+);
 
-            getVec3( this._inputs.lightdiffuse ),
-            getVec3( this._inputs.lightspecular ),
-            this._inputs.lightposition,
-            this._inputs.lightmatrix,
-
-            this._outputs.lighted
-        ] );
-    }
-} ), 'osgShader', 'SunLight' );
-
-var HemiLight = function () {
-    NodeLights.call( this );
+var HemiLight = function() {
+    NodeLights.call(this);
 };
 
-MACROUTILS.createPrototypeObject( HemiLight, MACROUTILS.objectInherit( NodeLights.prototype, {
+MACROUTILS.createPrototypeObject(
+    HemiLight,
+    MACROUTILS.objectInherit(NodeLights.prototype, {
+        type: 'HemiLight',
 
-    type: 'HemiLight',
+        validInputs: [
+            'normal',
+            'eyeVector',
 
-    validInputs: [
-        'normal',
-        'eyeVector',
+            'materialdiffuse',
+            'materialspecular',
+            'materialshininess',
 
-        'materialdiffuse',
-        'materialspecular',
-        'materialshininess',
+            'lightdiffuse',
+            'lightground',
+            'lightposition',
+            'lightmatrix'
+        ],
 
-        'lightdiffuse',
-        'lightground',
-        'lightposition',
-        'lightmatrix',
-    ],
+        computeShader: function() {
+            return shaderUtils.callFunction('computeHemiLightShading', this._outputs.color, [
+                this._inputs.normal,
+                this._inputs.eyeVector,
 
-    computeShader: function () {
+                getVec3(this._inputs.materialdiffuse),
+                getVec3(this._inputs.materialspecular),
+                this._inputs.materialshininess,
 
-        return shaderUtils.callFunction( 'computeHemiLightShading', this._outputs.color, [
-            this._inputs.normal, this._inputs.eyeVector,
+                getVec3(this._inputs.lightdiffuse),
+                getVec3(this._inputs.lightground),
+                this._inputs.lightposition,
+                this._inputs.lightmatrix,
 
-            getVec3( this._inputs.materialdiffuse ),
-            getVec3( this._inputs.materialspecular ),
-            this._inputs.materialshininess,
-
-            getVec3( this._inputs.lightdiffuse ),
-            getVec3( this._inputs.lightground ),
-            this._inputs.lightposition,
-            this._inputs.lightmatrix,
-
-            this._outputs.lighted
-        ] );
-    }
-} ), 'osgShader', 'HemiLight' );
+                this._outputs.lighted
+            ]);
+        }
+    }),
+    'osgShader',
+    'HemiLight'
+);
 
 module.exports = {
     PointLight: PointLight,

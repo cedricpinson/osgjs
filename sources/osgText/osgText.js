@@ -1,5 +1,5 @@
 'use strict';
-var Text = require( 'osgText/Text' );
+var Text = require('osgText/Text');
 
 var osgText = {};
 osgText.Text = Text;

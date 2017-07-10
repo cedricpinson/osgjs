@@ -1,7 +1,7 @@
 'use strict';
-var osg = require( 'osgWrappers/serializers/osg' );
-var osgAnimation = require( 'osgWrappers/serializers/osgAnimation' );
-var osgText = require( 'osgWrappers/serializers/osgText' );
+var osg = require('osgWrappers/serializers/osg');
+var osgAnimation = require('osgWrappers/serializers/osgAnimation');
+var osgText = require('osgWrappers/serializers/osgText');
 
 var osgWrappers = {};
 

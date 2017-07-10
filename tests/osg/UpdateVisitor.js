@@ -1,76 +1,73 @@
 'use strict';
-var assert = require( 'chai' ).assert;
-var UpdateVisitor = require( 'osg/UpdateVisitor' );
-var Node = require( 'osg/Node' );
+var assert = require('chai').assert;
+var UpdateVisitor = require('osg/UpdateVisitor');
+var Node = require('osg/Node');
 
-
-module.exports = function () {
-
-    test( 'UpdateVisitor', function () {
-
+module.exports = function() {
+    test('UpdateVisitor', function() {
         var uv = new UpdateVisitor();
 
         var root = new Node();
-        root.setName( 'a' );
+        root.setName('a');
         var b = new Node();
-        b.setName( 'b' );
+        b.setName('b');
         var c = new Node();
-        c.setName( 'c' );
-        root.addChild( b );
-        b.addChild( c );
+        c.setName('c');
+        root.addChild(b);
+        b.addChild(c);
 
         var callRoot = 0;
         var callb = 0;
         var callc = 0;
         var stateSetUpdateCallbackCalled = 0;
 
-        var StateSetUpdateCallback = function () {
-            this.update = function ( /*stateset, nv */ ) {
+        var StateSetUpdateCallback = function() {
+            this.update = function(/*stateset, nv */) {
                 stateSetUpdateCallbackCalled += 1;
             };
         };
         var ss = b.getOrCreateStateSet();
-        ss.addUpdateCallback( new StateSetUpdateCallback() );
+        ss.addUpdateCallback(new StateSetUpdateCallback());
 
-        var Froot = function () {};
+        var Froot = function() {};
         Froot.prototype = {
-            update: function ( node, nv ) {
+            update: function(node, nv) {
                 callRoot = 1;
-                node.traverse( nv );
+                node.traverse(nv);
             }
         };
 
-        var Fb = function () {};
+        var Fb = function() {};
         Fb.prototype = {
-            update: function ( /*node, nv */ ) {
+            update: function(/*node, nv */) {
                 callb = 1;
                 return false;
             }
         };
 
-        var Fc = function () {};
+        var Fc = function() {};
         Fc.prototype = {
-            update: function ( /*node, nv */ ) {
+            update: function(/*node, nv */) {
                 callc = 1;
                 return true;
             }
         };
 
-        root.addUpdateCallback( new Froot() );
-        b.addUpdateCallback( new Fb() );
-        c.addUpdateCallback( new Fc() );
+        root.addUpdateCallback(new Froot());
+        b.addUpdateCallback(new Fb());
+        c.addUpdateCallback(new Fc());
 
-        uv.apply( root );
+        uv.apply(root);
 
-        assert.isOk( stateSetUpdateCallbackCalled > 0, 'Called stateSet update callback' );
+        assert.isOk(stateSetUpdateCallbackCalled > 0, 'Called stateSet update callback');
 
-        assert.isOk( callRoot === 1, 'Called root update callback' );
-        assert.isOk( callb === 1, 'Called b update callback' );
-        assert.isOk( callc === 0, 'Did not Call c update callback as expected' );
+        assert.isOk(callRoot === 1, 'Called root update callback');
+        assert.isOk(callb === 1, 'Called b update callback');
+        assert.isOk(callc === 0, 'Did not Call c update callback as expected');
 
-        root.setNodeMask( ~0 );
-        assert.isOk( callRoot === 1, 'Called root update callback' );
-        assert.isOk( callb === 1, 'Called b update callback' );
-        assert.isOk( callc === 0, 'Did not Call c update callback as expected' );
-    } );
+        root.setNodeMask(~0);
+        assert.isOk(callRoot === 1, 'Called root update callback');
+        assert.isOk(callb === 1, 'Called b update callback');
+        assert.isOk(callc === 0, 'Did not Call c update callback as expected');
+    });
 };

@@ -1,6 +1,6 @@
 'use strict';
 
-var pkg = require( 'json-loader!../package.json' );
+var pkg = require('json-loader!../package.json');
 
 module.exports = {
     name: pkg.name,

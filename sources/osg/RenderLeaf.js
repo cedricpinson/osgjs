@@ -1,72 +1,70 @@
 'use strict';
-var StateGraph = require( 'osg/StateGraph' );
+var StateGraph = require('osg/StateGraph');
 
 // just use inline function, it's faster than having the test in the code
 var applyUniformCache = [
     // apply just modelview and projection
-    function ( state, modelview, model, view, projection ) {
-        state.applyModelViewMatrix( modelview, model );
-        state.applyProjectionMatrix( projection );
+    function(state, modelview, model, view, projection) {
+        state.applyModelViewMatrix(modelview, model);
+        state.applyProjectionMatrix(projection);
     },
 
     // apply model
-    function ( state, modelview, model, view, projection ) {
+    function(state, modelview, model, view, projection) {
         var gl = state.getGraphicContext();
-        var matrixModelViewChanged = state.applyModelViewMatrix( modelview, model );
-        state.applyProjectionMatrix( projection );
+        var matrixModelViewChanged = state.applyModelViewMatrix(modelview, model);
+        state.applyProjectionMatrix(projection);
 
-        if ( matrixModelViewChanged ) {
+        if (matrixModelViewChanged) {
             var modelMatrix = state._modelMatrix;
-            modelMatrix.setMatrix4( model );
-            modelMatrix.apply( gl, this.modelUniform );
+            modelMatrix.setMatrix4(model);
+            modelMatrix.apply(gl, this.modelUniform);
         }
     },
 
     // apply view
-    function ( state, modelview, model, view, projection ) {
+    function(state, modelview, model, view, projection) {
         var gl = state.getGraphicContext();
-        var matrixModelViewChanged = state.applyModelViewMatrix( modelview, model );
-        state.applyProjectionMatrix( projection );
+        var matrixModelViewChanged = state.applyModelViewMatrix(modelview, model);
+        state.applyProjectionMatrix(projection);
 
-        if ( matrixModelViewChanged ) {
+        if (matrixModelViewChanged) {
             var viewMatrix = state._viewMatrix;
-            viewMatrix.setMatrix4( view );
-            viewMatrix.apply( gl, this.viewUniform );
+            viewMatrix.setMatrix4(view);
+            viewMatrix.apply(gl, this.viewUniform);
         }
     },
 
     // applyModelAndViewUniform
-    function ( state, modelview, model, view, projection ) {
+    function(state, modelview, model, view, projection) {
         var gl = state.getGraphicContext();
-        var matrixModelViewChanged = state.applyModelViewMatrix( modelview, model );
-        state.applyProjectionMatrix( projection );
+        var matrixModelViewChanged = state.applyModelViewMatrix(modelview, model);
+        state.applyProjectionMatrix(projection);
 
-        if ( matrixModelViewChanged ) {
+        if (matrixModelViewChanged) {
             var modelMatrix = state._modelMatrix;
-            modelMatrix.setMatrix4( model );
-            modelMatrix.apply( gl, this.modelUniform );
+            modelMatrix.setMatrix4(model);
+            modelMatrix.apply(gl, this.modelUniform);
 
             var viewMatrix = state._viewMatrix;
-            viewMatrix.setMatrix4( view );
-            viewMatrix.apply( gl, this.viewUniform );
+            viewMatrix.setMatrix4(view);
+            viewMatrix.apply(gl, this.viewUniform);
         }
     }
 ];
 
-var CacheUniformApply = function ( state, program ) {
-    this.modelUniform = program._uniformsCache[ state._modelMatrix.getName() ];
-    this.viewUniform = program._uniformsCache[ state._viewMatrix.getName() ];
+var CacheUniformApply = function(state, program) {
+    this.modelUniform = program._uniformsCache[state._modelMatrix.getName()];
+    this.viewUniform = program._uniformsCache[state._viewMatrix.getName()];
 
     var cacheIndex = 0;
-    if ( this.modelUniform ) cacheIndex = 1;
-    if ( this.viewUniform ) cacheIndex |= 2;
+    if (this.modelUniform) cacheIndex = 1;
+    if (this.viewUniform) cacheIndex |= 2;
 
-    this.apply = applyUniformCache[ cacheIndex ];
+    this.apply = applyUniformCache[cacheIndex];
 };
 
-
-var RenderLeaf = function () {
-
+var RenderLeaf = function() {
     this._parent = undefined;
     this._geometry = undefined;
     this._depth = 0.0;
@@ -78,8 +76,7 @@ var RenderLeaf = function () {
 };
 
 RenderLeaf.prototype = {
-
-    reset: function () {
+    reset: function() {
         this._parent = undefined;
         this._geometry = undefined;
         this._depth = 0.0;
@@ -90,8 +87,7 @@ RenderLeaf.prototype = {
         this._modelView = undefined;
     },
 
-    init: function ( parent, geom, projection, view, modelView, model, depth ) {
-
+    init: function(parent, geom, projection, view, modelView, model, depth) {
         this._parent = parent;
         this._geometry = geom;
         this._depth = depth;
@@ -100,36 +96,31 @@ RenderLeaf.prototype = {
         this._view = view;
         this._model = model;
         this._modelView = modelView;
-
     },
 
-    drawGeometry: ( function () {
-
-        return function ( state ) {
-
+    drawGeometry: (function() {
+        return function(state) {
             var program = state.getLastProgramApplied();
             var programInstanceID = program.getInstanceID();
             var cache = state.getCacheUniformsApplyRenderLeaf();
-            var obj = cache[ programInstanceID ];
+            var obj = cache[programInstanceID];
 
-            if ( !obj ) {
-                obj = new CacheUniformApply( state, program );
-                cache[ programInstanceID ] = obj;
+            if (!obj) {
+                obj = new CacheUniformApply(state, program);
+                cache[programInstanceID] = obj;
             }
 
-            obj.apply( state, this._modelView, this._model, this._view, this._projection );
+            obj.apply(state, this._modelView, this._model, this._view, this._projection);
 
-            this._geometry.drawImplementation( state );
-
+            this._geometry.drawImplementation(state);
         };
-    } )(),
+    })(),
 
-    render: ( function () {
+    render: (function() {
         var idLastDraw = 0;
         var lastStateSetStackSize = -1;
 
-        return function ( state, previousLeaf ) {
-
+        return function(state, previousLeaf) {
             var prevRenderGraph;
             var prevRenderGraphParent;
             var curRenderGraph = this._parent;
@@ -180,51 +171,40 @@ RenderLeaf.prototype = {
             // to do anything except if we used an insertStateSet
             //
 
-            if ( previousLeaf !== undefined ) {
-
+            if (previousLeaf !== undefined) {
                 // apply state if required.
                 prevRenderGraph = previousLeaf._parent;
                 prevRenderGraphParent = prevRenderGraph.parent;
 
-                if ( prevRenderGraphParent !== curRenderGraphParent ) {
-
+                if (prevRenderGraphParent !== curRenderGraphParent) {
                     // Case A
-                    StateGraph.moveStateGraph( state, prevRenderGraphParent, curRenderGraphParent );
+                    StateGraph.moveStateGraph(state, prevRenderGraphParent, curRenderGraphParent);
 
-                    state.applyStateSet( curRenderGraphStateSet );
-
-                } else if ( curRenderGraph !== prevRenderGraph ) {
-
+                    state.applyStateSet(curRenderGraphStateSet);
+                } else if (curRenderGraph !== prevRenderGraph) {
                     // Case B
-                    state.applyStateSet( curRenderGraphStateSet );
-
+                    state.applyStateSet(curRenderGraphStateSet);
                 } else {
-
                     // Case C
 
                     // in osg we call apply but actually we dont need
                     // except if the stateSetStack changed.
                     // for example if insert/remove StateSet has been used
-                    if ( state._stateSetStackChanged( idLastDraw, lastStateSetStackSize ) ) {
-                        state.applyStateSet( curRenderGraphStateSet );
+                    if (state._stateSetStackChanged(idLastDraw, lastStateSetStackSize)) {
+                        state.applyStateSet(curRenderGraphStateSet);
                     }
                 }
-
             } else {
-
-                StateGraph.moveStateGraph( state, undefined, curRenderGraphParent );
-                state.applyStateSet( curRenderGraphStateSet );
-
+                StateGraph.moveStateGraph(state, undefined, curRenderGraphParent);
+                state.applyStateSet(curRenderGraphStateSet);
             }
 
-            state._setStateSetsDrawID( ++idLastDraw );
+            state._setStateSetsDrawID(++idLastDraw);
             lastStateSetStackSize = state.getStateSetStackSize();
 
-            this.drawGeometry( state );
-
+            this.drawGeometry(state);
         };
-    } )()
-
+    })()
 };
 
 module.exports = RenderLeaf;

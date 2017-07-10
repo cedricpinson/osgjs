@@ -1,10 +1,9 @@
 'use strict';
-var Renderer = require( 'osgViewer/Renderer' );
-var View = require( 'osgViewer/View' );
-var Viewer = require( 'osgViewer/Viewer' );
-var EventProxy = require( 'osgViewer/eventProxy/eventProxy' );
-var Scene = require( 'osgViewer/Scene' );
-
+var Renderer = require('osgViewer/Renderer');
+var View = require('osgViewer/View');
+var Viewer = require('osgViewer/Viewer');
+var EventProxy = require('osgViewer/eventProxy/eventProxy');
+var Scene = require('osgViewer/Scene');
 
 var osgViewer = {};
 

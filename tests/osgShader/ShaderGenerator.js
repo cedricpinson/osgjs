@@ -1,64 +1,59 @@
 'use strict';
-var assert = require( 'chai' ).assert;
-var mockup = require( 'tests/mockup/mockup' );
-var State = require( 'osg/State' );
-var StateSet = require( 'osg/StateSet' );
-var Material = require( 'osg/Material' );
-var Shader = require( 'osg/Shader' );
-var Program = require( 'osg/Program' );
-var Texture = require( 'osg/Texture' );
-var ShaderGeneratorProxy = require( 'osgShader/ShaderGeneratorProxy' );
+var assert = require('chai').assert;
+var mockup = require('tests/mockup/mockup');
+var State = require('osg/State');
+var StateSet = require('osg/StateSet');
+var Material = require('osg/Material');
+var Shader = require('osg/Shader');
+var Program = require('osg/Program');
+var Texture = require('osg/Texture');
+var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
 
-
-module.exports = function () {
-
-    test( 'ShaderGenerator', function () {
-
-
-        ( function () {
-            var state = new State( new ShaderGeneratorProxy() );
+module.exports = function() {
+    test('ShaderGenerator', function() {
+        (function() {
+            var state = new State(new ShaderGeneratorProxy());
             var fakeRenderer = mockup.createFakeRenderer();
-            fakeRenderer.validateProgram = function () {
+            fakeRenderer.validateProgram = function() {
                 return true;
             };
-            fakeRenderer.getProgramParameter = function () {
+            fakeRenderer.getProgramParameter = function() {
                 return true;
             };
-            fakeRenderer.isContextLost = function () {
+            fakeRenderer.isContextLost = function() {
                 return false;
             };
-            state.setGraphicContext( fakeRenderer );
+            state.setGraphicContext(fakeRenderer);
 
             var stateSet0 = new StateSet();
-            stateSet0.setAttributeAndModes( new Material() );
+            stateSet0.setAttributeAndModes(new Material());
 
             var stateSet1 = new StateSet();
-            stateSet1.setTextureAttributeAndModes( 0, new Texture( undefined ) );
+            stateSet1.setTextureAttributeAndModes(0, new Texture(undefined));
 
-            state.pushStateSet( stateSet0 );
-            state.pushStateSet( stateSet1 );
+            state.pushStateSet(stateSet0);
+            state.pushStateSet(stateSet1);
             state.apply();
-            assert.isOk( true, 'check not exception on material generator use' );
+            assert.isOk(true, 'check not exception on material generator use');
+        })();
 
-        } )();
-
-        ( function () {
-            var state = new State( new ShaderGeneratorProxy() );
+        (function() {
+            var state = new State(new ShaderGeneratorProxy());
             var fakeRenderer = mockup.createFakeRenderer();
-            fakeRenderer.validateProgram = function () {
+            fakeRenderer.validateProgram = function() {
                 return true;
             };
-            fakeRenderer.getProgramParameter = function () {
+            fakeRenderer.getProgramParameter = function() {
                 return true;
             };
-            fakeRenderer.isContextLost = function () {
+            fakeRenderer.isContextLost = function() {
                 return false;
             };
-            state.setGraphicContext( fakeRenderer );
+            state.setGraphicContext(fakeRenderer);
 
             var stateSet = new StateSet();
 
-            function getShader () {
+            function getShader() {
                 var vertexshader = [
                     '',
                     'attribute vec3 Vertex;',
@@ -66,7 +61,7 @@ module.exports = function () {
                     'void main(void) {',
                     '  gl_Position = vec4(Vertex,1.0);',
                     '}'
-                ].join( '\n' );
+                ].join('\n');
 
                 var fragmentshader = [
                     '',
@@ -76,25 +71,23 @@ module.exports = function () {
                     '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);',
                     '}',
                     ''
-                ].join( '\n' );
+                ].join('\n');
 
                 var program = new Program(
-                    new Shader( 'VERTEX_SHADER', vertexshader ),
-                    new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+                    new Shader('VERTEX_SHADER', vertexshader),
+                    new Shader('FRAGMENT_SHADER', fragmentshader)
+                );
 
-                program.setTrackAttributes( {} );
+                program.setTrackAttributes({});
                 program.getTrackAttributes().attributeKeys = [];
 
                 return program;
             }
-            stateSet.setAttributeAndModes( getShader() );
+            stateSet.setAttributeAndModes(getShader());
 
-
-            state.pushStateSet( stateSet );
+            state.pushStateSet(stateSet);
             state.apply();
-            assert.isOk( true, 'check not exception on stateset generator use' );
-
-        } )();
-
-    } );
+            assert.isOk(true, 'check not exception on stateset generator use');
+        })();
+    });
 };

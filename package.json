@@ -1,23 +1,26 @@
 {
   "devDependencies": {
+    "bluebird": "*",
     "chai": "^3.5.0",
     "eslint": "^4.1.1",
     "eslint-config-google": "^0.8.0",
+    "eslint-config-prettier": "^2.3.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-node": "^5.1.0",
+    "eslint-plugin-prettier": "^2.1.2",
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^3.0.1",
-    "grunt-documentation": "*",
     "grunt-contrib-connect": "~0.9",
+    "grunt-documentation": "*",
     "grunt-execute": "^0.2.2",
     "grunt-plato": "~0.2.1",
-    "bluebird": "*",
     "grunt-release": "^0.10.0",
     "grunt-update-submodules": "^0.4.1",
     "jsdom": "11.0.0",
     "jsdom-global": "3.0.2",
     "mocha": "^2.5.3",
+    "prettier": "^1.5.2",
     "webpack-strip-block": "0.0.1"
   },
   "peerDependencies": {

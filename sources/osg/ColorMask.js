@@ -1,44 +1,45 @@
 'use strict';
-var MACROUTILS = require( 'osg/Utils' );
-var StateAttribute = require( 'osg/StateAttribute' );
+var MACROUTILS = require('osg/Utils');
+var StateAttribute = require('osg/StateAttribute');
 
+var ColorMask = function(red, green, blue, alpha) {
+    StateAttribute.call(this);
 
-var ColorMask = function ( red, green, blue, alpha ) {
-
-    StateAttribute.call( this );
-
-    this._colorMask = [ true, true, true, true ];
-    this.setMask( red, green, blue, alpha );
+    this._colorMask = [true, true, true, true];
+    this.setMask(red, green, blue, alpha);
 };
 
-MACROUTILS.createPrototypeStateAttribute( ColorMask, MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute(
+    ColorMask,
+    MACROUTILS.objectInherit(StateAttribute.prototype, {
+        attributeType: 'ColorMask',
 
-    attributeType: 'ColorMask',
+        cloneType: function() {
+            return new ColorMask();
+        },
 
-    cloneType: function () {
-        return new ColorMask();
-    },
+        setMask: function(red, green, blue, alpha) {
+            if (
+                red !== undefined &&
+                green !== undefined &&
+                blue !== undefined &&
+                alpha !== undefined
+            ) {
+                this._colorMask[0] = red;
+                this._colorMask[1] = green;
+                this._colorMask[2] = blue;
+                this._colorMask[3] = alpha;
+            }
+        },
 
-    setMask: function ( red, green, blue, alpha ) {
-
-        if ( red !== undefined &&
-            green !== undefined &&
-            blue !== undefined &&
-            alpha !== undefined ) {
-
-            this._colorMask[ 0 ] = red;
-            this._colorMask[ 1 ] = green;
-            this._colorMask[ 2 ] = blue;
-            this._colorMask[ 3 ] = alpha;
+        apply: function(state) {
+            var gl = state.getGraphicContext();
+            var colorMask = this._colorMask;
+            gl.colorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
         }
-    },
-
-    apply: function ( state ) {
-        var gl = state.getGraphicContext();
-        var colorMask = this._colorMask;
-        gl.colorMask( colorMask[ 0 ], colorMask[ 1 ], colorMask[ 2 ], colorMask[ 3 ] );
-    }
-
-} ), 'osg', 'ColorMask' );
+    }),
+    'osg',
+    'ColorMask'
+);
 
 module.exports = ColorMask;

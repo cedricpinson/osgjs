@@ -1,43 +1,45 @@
 'use strict';
-var MACROUTILS = require( 'osg/Utils' );
-var Object = require( 'osg/Object' );
-var vec3 = require( 'osg/glMatrix' ).vec3;
-var mat4 = require( 'osg/glMatrix' ).mat4;
-var Target = require( 'osgAnimation/target' );
-
+var MACROUTILS = require('osg/Utils');
+var Object = require('osg/Object');
+var vec3 = require('osg/glMatrix').vec3;
+var mat4 = require('osg/glMatrix').mat4;
+var Target = require('osgAnimation/target');
 
 /**
  *  StackedTranslate
  */
-var StackedTranslate = function ( name, translate ) {
-    Object.call( this );
-    this._target = Target.createVec3Target( translate || vec3.ZERO );
-    if ( name ) this.setName( name );
+var StackedTranslate = function(name, translate) {
+    Object.call(this);
+    this._target = Target.createVec3Target(translate || vec3.ZERO);
+    if (name) this.setName(name);
 };
 
+MACROUTILS.createPrototypeObject(
+    StackedTranslate,
+    MACROUTILS.objectInherit(Object.prototype, {
+        init: function(translate) {
+            this.setTranslate(translate);
+            vec3.copy(this._target.defaultValue, translate);
+        },
 
-MACROUTILS.createPrototypeObject( StackedTranslate, MACROUTILS.objectInherit( Object.prototype, {
+        setTranslate: function(translate) {
+            vec3.copy(this._target.value, translate);
+        },
 
-    init: function ( translate ) {
-        this.setTranslate( translate );
-        vec3.copy( this._target.defaultValue, translate );
-    },
+        getTarget: function() {
+            return this._target;
+        },
 
-    setTranslate: function ( translate ) {
-        vec3.copy( this._target.value, translate );
-    },
+        resetToDefaultValue: function() {
+            this.setTranslate(this._target.defaultValue);
+        },
 
-    getTarget: function () {
-        return this._target;
-    },
-
-    resetToDefaultValue: function () {
-        this.setTranslate( this._target.defaultValue );
-    },
-
-    applyToMatrix: function ( m ) {
-        mat4.translate( m, m, this._target.value );
-    }
-} ), 'osgAnimation', 'StackedTranslate' );
+        applyToMatrix: function(m) {
+            mat4.translate(m, m, this._target.value);
+        }
+    }),
+    'osgAnimation',
+    'StackedTranslate'
+);
 
 module.exports = StackedTranslate;

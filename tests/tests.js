@@ -1,45 +1,45 @@
-var OSG = require( 'OSG' );
+var OSG = require('OSG');
 
-var osg = require( 'tests/osg/osgTests' );
-var osgAnimation = require( 'tests/osgAnimation/osgAnimationTests' );
-var osgDB = require( 'tests/osgDB/osgDBTests' );
-var osgGA = require( 'tests/osgGA/osgGATests' );
-var osgUtil = require( 'tests/osgUtil/osgUtilTests' );
-var osgViewer = require( 'tests/osgViewer/osgViewerTests' );
-var osgShader = require( 'tests/osgShader/osgShaderTests' );
-var osgShadow = require( 'tests/osgShadow/osgShadowTests' );
-var osgText = require( 'tests/osgText/osgTextTests' );
-var osgWrappers = require( 'tests/osgWrappers/osgWrappersTests' );
+var osg = require('tests/osg/osgTests');
+var osgAnimation = require('tests/osgAnimation/osgAnimationTests');
+var osgDB = require('tests/osgDB/osgDBTests');
+var osgGA = require('tests/osgGA/osgGATests');
+var osgUtil = require('tests/osgUtil/osgUtilTests');
+var osgViewer = require('tests/osgViewer/osgViewerTests');
+var osgShader = require('tests/osgShader/osgShaderTests');
+var osgShadow = require('tests/osgShadow/osgShadowTests');
+var osgText = require('tests/osgText/osgTextTests');
+var osgWrappers = require('tests/osgWrappers/osgWrappersTests');
 
 // hack because of osgPool
 OSG.osg.init();
 
-suite( 'osgWrappers' );
+suite('osgWrappers');
 osgWrappers();
 
-suite( 'osgText' );
+suite('osgText');
 osgText();
 
-suite( 'osgShadow' );
+suite('osgShadow');
 osgShadow();
 
-suite( 'osgShader' );
+suite('osgShader');
 osgShader();
 
-suite( 'osgViewer' );
+suite('osgViewer');
 osgViewer();
 
-suite( 'osgUtil' );
+suite('osgUtil');
 osgUtil();
 
-suite( 'osgGA' );
+suite('osgGA');
 osgGA();
 
-suite( 'osgDB' );
+suite('osgDB');
 osgDB();
 
-suite( 'osg' );
+suite('osg');
 osg();
 
-suite( 'osgAnimation' );
+suite('osgAnimation');
 osgAnimation();

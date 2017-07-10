@@ -1,23 +1,21 @@
 'use strict';
 
-var MACROUTILS = require( 'osg/Utils' );
-var StateAttribute = require( 'osg/StateAttribute' );
-var Uniform = require( 'osg/Uniform' );
+var MACROUTILS = require('osg/Utils');
+var StateAttribute = require('osg/StateAttribute');
+var Uniform = require('osg/Uniform');
 
 /**
  * ShadowReceiveAttribute encapsulate Shadow Main State object
  * @class ShadowReceiveAttribute
  * @inherits StateAttribute
  */
-var ShadowReceiveAttribute = function ( lightNum, disable ) {
-    StateAttribute.call( this );
+var ShadowReceiveAttribute = function(lightNum, disable) {
+    StateAttribute.call(this);
 
     this._lightNumber = lightNum;
 
-
     // see shadowSettings.js header for shadow algo param explanations
     // hash change var
-
 
     // shadow depth bias as projected in shadow camera space texture
     // and viewer camera space projection introduce its bias
@@ -39,159 +37,158 @@ var ShadowReceiveAttribute = function ( lightNum, disable ) {
 };
 
 ShadowReceiveAttribute.uniforms = {};
-MACROUTILS.createPrototypeStateAttribute( ShadowReceiveAttribute, MACROUTILS.objectInherit( StateAttribute.prototype, {
+MACROUTILS.createPrototypeStateAttribute(
+    ShadowReceiveAttribute,
+    MACROUTILS.objectInherit(StateAttribute.prototype, {
+        attributeType: 'ShadowReceive',
 
-    attributeType: 'ShadowReceive',
+        cloneType: function() {
+            return new ShadowReceiveAttribute(this._lightNumber, true);
+        },
 
-    cloneType: function () {
-        return new ShadowReceiveAttribute( this._lightNumber, true );
-    },
+        getTypeMember: function() {
+            return this.attributeType + this.getLightNumber();
+        },
 
-    getTypeMember: function () {
-        return this.attributeType + this.getLightNumber();
-    },
+        getLightNumber: function() {
+            return this._lightNumber;
+        },
 
-    getLightNumber: function () {
-        return this._lightNumber;
-    },
+        getUniformName: function(name) {
+            var prefix = this.getType() + this.getLightNumber().toString();
+            return 'u' + prefix + '_' + name;
+        },
 
-    getUniformName: function ( name ) {
-        var prefix = this.getType() + this.getLightNumber().toString();
-        return 'u' + prefix + '_' + name;
-    },
+        getAtlas: function() {
+            return this._isAtlasTexture;
+        },
+        setAtlas: function(v) {
+            this._isAtlasTexture = v;
+        },
 
-    getAtlas: function () {
-        return this._isAtlasTexture;
-    },
-    setAtlas: function ( v ) {
-        this._isAtlasTexture = v;
-    },
+        setBias: function(bias) {
+            this._bias = bias;
+        },
 
-    setBias: function ( bias ) {
-        this._bias = bias;
-    },
+        getBias: function() {
+            return this._bias;
+        },
 
-    getBias: function () {
-        return this._bias;
-    },
+        setNormalBias: function(bias) {
+            this._normalBias = bias;
+        },
 
-    setNormalBias: function ( bias ) {
-        this._normalBias = bias;
-    },
+        getNormalBias: function() {
+            return this._normalBias;
+        },
 
-    getNormalBias: function () {
-        return this._normalBias;
-    },
+        getKernelSizePCF: function() {
+            return this._kernelSizePCF;
+        },
 
-    getKernelSizePCF: function () {
-        return this._kernelSizePCF;
-    },
+        setKernelSizePCF: function(v) {
+            this._kernelSizePCF = v;
+        },
 
-    setKernelSizePCF: function ( v ) {
-        this._kernelSizePCF = v;
-    },
+        setPrecision: function(precision) {
+            this._precision = precision;
+        },
 
-    setPrecision: function ( precision ) {
-        this._precision = precision;
-    },
+        getPrecision: function() {
+            return this._precision;
+        },
 
-    getPrecision: function () {
-        return this._precision;
-    },
+        setLightNumber: function(lightNum) {
+            this._lightNumber = lightNum;
+        },
 
-    setLightNumber: function ( lightNum ) {
-        this._lightNumber = lightNum;
-    },
+        getOrCreateUniforms: function() {
+            // uniform are once per CLASS attribute, not per instance
+            var obj = ShadowReceiveAttribute;
 
-    getOrCreateUniforms: function () {
-        // uniform are once per CLASS attribute, not per instance
-        var obj = ShadowReceiveAttribute;
+            var typeMember = this.getTypeMember();
 
-        var typeMember = this.getTypeMember();
+            if (obj.uniforms[typeMember]) return obj.uniforms[typeMember];
 
-        if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
+            obj.uniforms[typeMember] = {
+                bias: Uniform.createFloat(this.getUniformName('bias')),
+                normalBias: Uniform.createFloat(this.getUniformName('normalBias'))
+            };
 
-        obj.uniforms[ typeMember ] = {
-            bias: Uniform.createFloat( this.getUniformName( 'bias' ) ),
-            normalBias: Uniform.createFloat( this.getUniformName( 'normalBias' ) )
-        };
+            return obj.uniforms[typeMember];
+        },
 
-        return obj.uniforms[ typeMember ];
-    },
+        getExtensions: function() {
+            return ['#extension GL_OES_standard_derivatives : enable'];
+        },
 
-    getExtensions: function () {
-        return [ '#extension GL_OES_standard_derivatives : enable' ];
-    },
+        // Here to be common between  caster and receiver
+        // (used by shadowMap and shadow node shader)
+        getDefines: function() {
+            var textureType = this.getPrecision();
+            var defines = [];
 
-    // Here to be common between  caster and receiver
-    // (used by shadowMap and shadow node shader)
-    getDefines: function () {
+            var isFloat = false;
 
-        var textureType = this.getPrecision();
-        var defines = [];
+            if (textureType !== 'UNSIGNED_BYTE') isFloat = true;
 
-        var isFloat = false;
+            var pcf = this.getKernelSizePCF();
+            switch (pcf) {
+                case '4Tap(16texFetch)':
+                    defines.push('#define _PCFx4');
+                    break;
+                case '9Tap(36texFetch)':
+                    defines.push('#define _PCFx9');
+                    break;
+                case '16Tap(64texFetch)':
+                    defines.push('#define _PCFx25');
+                    break;
+                default:
+                case '1Tap(4texFetch)':
+                    defines.push('#define _PCFx1');
+                    break;
+            }
 
-        if ( textureType !== 'UNSIGNED_BYTE' )
-            isFloat = true;
+            if (isFloat) {
+                defines.push('#define _FLOATTEX');
+            }
 
-        var pcf = this.getKernelSizePCF();
-        switch ( pcf ) {
-        case '4Tap(16texFetch)':
-            defines.push( '#define _PCFx4' );
-            break;
-        case '9Tap(36texFetch)':
-            defines.push( '#define _PCFx9' );
-            break;
-        case '16Tap(64texFetch)':
-            defines.push( '#define _PCFx25' );
-            break;
-        default:
-        case '1Tap(4texFetch)':
-            defines.push( '#define _PCFx1' );
-            break;
+            if (this.getAtlas()) {
+                defines.push('#define _ATLAS_SHADOW');
+            }
+
+            if (this.getNormalBias()) {
+                defines.push('#define _NORMAL_OFFSET');
+            }
+
+            return defines;
+        },
+
+        apply: function() {
+            if (!this._enable) return;
+
+            var uniformMap = this.getOrCreateUniforms();
+
+            uniformMap.normalBias.setFloat(this._normalBias);
+            uniformMap.bias.setFloat(this._bias);
+        },
+
+        // need a isEnabled to let the ShaderGenerator to filter
+        // StateAttribute from the shader compilation
+        isEnabled: function() {
+            return this._enable;
+        },
+
+        getHash: function() {
+            return this._computeHash();
+        },
+
+        _computeHash: function() {
+            return this.getTypeMember() + '_' + this.getKernelSizePCF();
         }
-
-        if ( isFloat ) {
-            defines.push( '#define _FLOATTEX' );
-        }
-
-        if ( this.getAtlas() ) {
-            defines.push( '#define _ATLAS_SHADOW' );
-        }
-
-        if ( this.getNormalBias() ) {
-            defines.push( '#define _NORMAL_OFFSET' );
-        }
-
-        return defines;
-    },
-
-    apply: function () {
-
-        if ( !this._enable ) return;
-
-        var uniformMap = this.getOrCreateUniforms();
-
-        uniformMap.normalBias.setFloat( this._normalBias );
-        uniformMap.bias.setFloat( this._bias );
-
-    },
-
-    // need a isEnabled to let the ShaderGenerator to filter
-    // StateAttribute from the shader compilation
-    isEnabled: function () {
-        return this._enable;
-    },
-
-    getHash: function () {
-        return this._computeHash();
-    },
-
-    _computeHash: function () {
-        return this.getTypeMember() + '_' + this.getKernelSizePCF();
-    }
-
-} ), 'osgShadow', 'ShadowReceiveAttribute' );
+    }),
+    'osgShadow',
+    'ShadowReceiveAttribute'
+);
 
 module.exports = ShadowReceiveAttribute;

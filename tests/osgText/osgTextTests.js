@@ -1,7 +1,6 @@
 'use strict';
-var Text = require( 'tests/osgText/Text' );
+var Text = require('tests/osgText/Text');
 
-
-module.exports = function () {
+module.exports = function() {
     Text();
 };

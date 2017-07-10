@@ -1,51 +1,54 @@
 'use strict';
-var MACROUTILS = require( 'osg/Utils' );
+var MACROUTILS = require('osg/Utils');
 
 /**
  *  Object class
  *  @class Object
  */
-var Object = function () {
+var Object = function() {
     this._name = undefined;
     this._userdata = undefined;
     this._instanceID = Object.getInstanceID();
 };
 
 /** @lends Object.prototype */
-MACROUTILS.createPrototypeObject( Object, {
+MACROUTILS.createPrototypeObject(
+    Object,
+    {
+        // this method works only if constructor is set correctly
+        // see issue https://github.com/cedricpinson/osgjs/issues/494
+        cloneType: function() {
+            var Constructor = this.constructor;
+            return new Constructor();
+        },
 
-    // this method works only if constructor is set correctly
-    // see issue https://github.com/cedricpinson/osgjs/issues/494
-    cloneType: function () {
-        var Constructor = this.constructor;
-        return new Constructor();
+        getInstanceID: function() {
+            return this._instanceID;
+        },
+
+        setName: function(name) {
+            this._name = name;
+        },
+
+        getName: function() {
+            return this._name;
+        },
+
+        setUserData: function(data) {
+            this._userdata = data;
+        },
+
+        getUserData: function() {
+            return this._userdata;
+        }
     },
-
-    getInstanceID: function () {
-        return this._instanceID;
-    },
-
-    setName: function ( name ) {
-        this._name = name;
-    },
-
-    getName: function () {
-        return this._name;
-    },
-
-    setUserData: function ( data ) {
-        this._userdata = data;
-    },
-
-    getUserData: function () {
-        return this._userdata;
-    }
-}, 'osg', 'Object' );
-
+    'osg',
+    'Object'
+);
 
 // get an instanceID for each object
 var instanceID = 0;
-Object.getInstanceID = function () {
+Object.getInstanceID = function() {
     instanceID += 1;
     return instanceID;
 };

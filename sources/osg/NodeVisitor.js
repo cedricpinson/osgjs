@@ -1,12 +1,12 @@
 'use strict';
 
-var NodeVisitor = function ( traversalMode ) {
+var NodeVisitor = function(traversalMode) {
     /*jshint bitwise: false */
     this.traversalMask = ~0x0;
     /*jshint bitwise: true */
     this.nodeMaskOverride = 0;
     this.traversalMode = traversalMode;
-    if ( traversalMode === undefined ) {
+    if (traversalMode === undefined) {
         this.traversalMode = NodeVisitor.TRAVERSE_ALL_CHILDREN;
     }
     this.nodePath = [];
@@ -14,9 +14,9 @@ var NodeVisitor = function ( traversalMode ) {
     this._databaseRequestHandler = undefined;
     this._frameStamp = undefined;
 
-    this.traverse = NodeVisitor._traversalFunctions[ this.traversalMode ];
-    this.pushOntoNodePath = NodeVisitor._pushOntoNodePath[ this.traversalMode ];
-    this.popFromNodePath = NodeVisitor._popFromNodePath[ this.traversalMode ];
+    this.traverse = NodeVisitor._traversalFunctions[this.traversalMode];
+    this.pushOntoNodePath = NodeVisitor._pushOntoNodePath[this.traversalMode];
+    this.popFromNodePath = NodeVisitor._popFromNodePath[this.traversalMode];
 };
 
 //NodeVisitor.TRAVERSE_NONE = 0;
@@ -29,29 +29,24 @@ NodeVisitor.UPDATE_VISITOR = 1;
 NodeVisitor.CULL_VISITOR = 2;
 
 // =================== Traversal functions ===============
-var traverseParents = function traverseParents ( node ) {
-    node.ascend( this );
+var traverseParents = function traverseParents(node) {
+    node.ascend(this);
 };
 
-var traverseChildren = function traverseAllChildren ( node ) {
-    node.traverse( this );
+var traverseChildren = function traverseAllChildren(node) {
+    node.traverse(this);
 };
 
 // must be sync with TRAVERSE_ENUMS
-NodeVisitor._traversalFunctions = [
-    undefined,
-    traverseParents,
-    traverseChildren,
-    traverseChildren
-];
+NodeVisitor._traversalFunctions = [undefined, traverseParents, traverseChildren, traverseChildren];
 
 // =================== PushOntoNodePath functions ===============
-var pushOntoNodePathParents = function ( node ) {
-    this.nodePath.unshift( node );
+var pushOntoNodePathParents = function(node) {
+    this.nodePath.unshift(node);
 };
 
-var pushOntoNodePathChildren = function ( node ) {
-    this.nodePath.push( node );
+var pushOntoNodePathChildren = function(node) {
+    this.nodePath.push(node);
 };
 
 NodeVisitor._pushOntoNodePath = [
@@ -62,11 +57,11 @@ NodeVisitor._pushOntoNodePath = [
 ];
 
 // =================== PopOntoNodePath functions ===============
-var popFromNodePathParents = function () {
+var popFromNodePathParents = function() {
     return this.nodePath.shift();
 };
 
-var popFromNodePathChildren = function () {
+var popFromNodePathChildren = function() {
     this.nodePath.pop();
 };
 
@@ -77,66 +72,63 @@ NodeVisitor._popFromNodePath = [
     popFromNodePathChildren
 ];
 
-
 NodeVisitor.prototype = {
-
-    reset: function () {
+    reset: function() {
         // to be used when you want to re-use a nv
         this.nodePath.length = 0;
     },
 
-    setFrameStamp: function ( frameStamp ) {
+    setFrameStamp: function(frameStamp) {
         this._frameStamp = frameStamp;
     },
 
-    getFrameStamp: function () {
+    getFrameStamp: function() {
         return this._frameStamp;
     },
 
-
-    setNodeMaskOverride: function ( m ) {
+    setNodeMaskOverride: function(m) {
         this.nodeMaskOverride = m;
     },
-    getNodeMaskOverride: function () {
+    getNodeMaskOverride: function() {
         return this.nodeMaskOverride;
     },
 
-    setTraversalMask: function ( m ) {
+    setTraversalMask: function(m) {
         this.traversalMask = m;
     },
-    getTraversalMask: function () {
+    getTraversalMask: function() {
         return this.traversalMask;
     },
 
-    getNodePath: function () {
+    getNodePath: function() {
         return this.nodePath;
     },
 
-    pushOntoNodePath: function ( node ) {
-        NodeVisitor._pushOntoNodePath[ this.traversalMode ].call( this, node );
+    pushOntoNodePath: function(node) {
+        NodeVisitor._pushOntoNodePath[this.traversalMode].call(this, node);
     },
-    popFromNodePath: function () {
-        NodeVisitor._popFromNodePath[ this.traversalMode ].call( this );
+    popFromNodePath: function() {
+        NodeVisitor._popFromNodePath[this.traversalMode].call(this);
     },
-    validNodeMask: function ( node ) {
+    validNodeMask: function(node) {
         var nm = node.getNodeMask();
         /*jshint bitwise: false */
-        return ( ( this.traversalMask & ( this.nodeMaskOverride | nm ) ) !== 0 );
+        return (this.traversalMask & (this.nodeMaskOverride | nm)) !== 0;
         /*jshint bitwise: true */
     },
-    apply: function ( node ) {
-        this.traverse( node );
+    apply: function(node) {
+        this.traverse(node);
     },
-    traverse: function ( node ) {
-        NodeVisitor._traversalFunctions[ this.traversalMode ].call( this, node );
+    traverse: function(node) {
+        NodeVisitor._traversalFunctions[this.traversalMode].call(this, node);
     },
-    getVisitorType: function () {
+    getVisitorType: function() {
         return this.visitorType;
     },
-    setDatabaseRequestHandler: function ( dbpager ) {
+    setDatabaseRequestHandler: function(dbpager) {
         this._databaseRequestHandler = dbpager;
     },
-    getDatabaseRequestHandler: function () {
+    getDatabaseRequestHandler: function() {
         return this._databaseRequestHandler;
     }
 };

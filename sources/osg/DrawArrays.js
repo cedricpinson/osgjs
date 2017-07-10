@@ -1,16 +1,15 @@
 'use strict';
-var primitiveSet = require( 'osg/primitiveSet' );
-
+var primitiveSet = require('osg/primitiveSet');
 
 /**
  * DrawArrays manage rendering primitives
  * @class DrawArrays
  */
-var DrawArrays = function ( mode, first, count ) {
+var DrawArrays = function(mode, first, count) {
     this.mode = mode;
-    if ( mode !== undefined ) {
-        if ( typeof ( mode ) === 'string' ) {
-            mode = primitiveSet[ mode ];
+    if (mode !== undefined) {
+        if (typeof mode === 'string') {
+            mode = primitiveSet[mode];
         }
         this.mode = mode;
     }
@@ -20,34 +19,32 @@ var DrawArrays = function ( mode, first, count ) {
 
 /** @lends DrawArrays.prototype */
 DrawArrays.prototype = {
-    draw: function ( state ) {
-        if ( this.count === 0 )
-            return;
+    draw: function(state) {
+        if (this.count === 0) return;
         var gl = state.getGraphicContext();
-        gl.drawArrays( this.mode, this.first, this.count );
+        gl.drawArrays(this.mode, this.first, this.count);
     },
-    getMode: function () {
+    getMode: function() {
         return this.mode;
     },
-    setCount: function ( count ) {
+    setCount: function(count) {
         this.count = count;
     },
-    getCount: function () {
+    getCount: function() {
         return this.count;
     },
-    setFirst: function ( first ) {
+    setFirst: function(first) {
         this.first = first;
     },
-    getFirst: function () {
+    getFirst: function() {
         return this.first;
     },
-    getNumIndices: function () {
+    getNumIndices: function() {
         return this.count;
     },
-    index: function ( i ) {
+    index: function(i) {
         return this.first + i;
     }
-
 };
 
 module.exports = DrawArrays;

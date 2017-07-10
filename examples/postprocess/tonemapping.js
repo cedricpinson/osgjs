@@ -1,4 +1,4 @@
-( function () {
+(function() {
     'use strict';
 
     var P = window.P;
@@ -15,43 +15,44 @@
         To do this we modify the range of the image by 'mapping' it to
         LDR and try to conserve as much detail as possible in the process.
     */
-    window.getPostSceneToneMapping = function () {
-
+    window.getPostSceneToneMapping = function() {
         var scenes = {
-            'Alexs_Apartment': 'Alexs_Apt_2k.hdr',
-            'Arches_E_PineTree': 'Arches_E_PineTree_3k.hdr',
-            'GrandCanyon_C_YumaPoint': 'GCanyon_C_YumaPoint_3k.hdr',
-            'Milkyway': 'Milkyway_small.hdr',
-            'Walk_Of_Fame': 'Mans_Outside_2k.hdr',
-            'PaperMill_Ruins_E': 'PaperMill_E_3k.hdr',
-            'Tropical_Ruins': 'TropicalRuins_3k.hdr'
+            Alexs_Apartment: 'Alexs_Apt_2k.hdr',
+            Arches_E_PineTree: 'Arches_E_PineTree_3k.hdr',
+            GrandCanyon_C_YumaPoint: 'GCanyon_C_YumaPoint_3k.hdr',
+            Milkyway: 'Milkyway_small.hdr',
+            Walk_Of_Fame: 'Mans_Outside_2k.hdr',
+            PaperMill_Ruins_E: 'PaperMill_E_3k.hdr',
+            Tropical_Ruins: 'TropicalRuins_3k.hdr'
         };
 
         var cachedScenes = [];
         var lumTexture;
 
-        var currentSceneTexture = osg.Texture.createHDRFromURL( '../hdr/textures/Alexs_Apartment/Alexs_Apt_2k.hdr' );
-        currentSceneTexture.addApplyTexImage2DCallback( function () {
-            console.log( 'sceneTexture loaded' );
+        var currentSceneTexture = osg.Texture.createHDRFromURL(
+            '../hdr/textures/Alexs_Apartment/Alexs_Apt_2k.hdr'
+        );
+        currentSceneTexture.addApplyTexImage2DCallback(function() {
+            console.log('sceneTexture loaded');
             lumTexture.dirtyMipmap();
-        } );
+        });
 
         lumTexture = new osg.Texture();
-        lumTexture.setTextureSize( 1024, 1024 );
-        lumTexture.setMinFilter( osg.Texture.LINEAR_MIPMAP_LINEAR );
+        lumTexture.setTextureSize(1024, 1024);
+        lumTexture.setMinFilter(osg.Texture.LINEAR_MIPMAP_LINEAR);
 
-        var methods = [ 'None', 'Reinhardt', 'Filmic' ];
+        var methods = ['None', 'Reinhardt', 'Filmic'];
 
         // HDR parameters uniform
-        var gamma = osg.Uniform.createFloat1( 2.2, 'gamma' );
-        var method = osg.Uniform.createInt1( 2, 'method' );
-        var exposure = osg.Uniform.createFloat1( 1, 'exposure' );
-        var brightness = osg.Uniform.createFloat( 0.0, 'brightness' );
-        var contrast = osg.Uniform.createFloat( 0.0, 'contrast' );
-        var saturation = osg.Uniform.createFloat( 1.0, 'saturation' );
-        var middleGrey = osg.Uniform.createFloat1( 0.36, 'middleGrey' );
-        var locality = osg.Uniform.createFloat1( 11.0, 'locality' );
-        var whitePoint = osg.Uniform.createFloat1( 10, 'whitePoint' );
+        var gamma = osg.Uniform.createFloat1(2.2, 'gamma');
+        var method = osg.Uniform.createInt1(2, 'method');
+        var exposure = osg.Uniform.createFloat1(1, 'exposure');
+        var brightness = osg.Uniform.createFloat(0.0, 'brightness');
+        var contrast = osg.Uniform.createFloat(0.0, 'contrast');
+        var saturation = osg.Uniform.createFloat(1.0, 'saturation');
+        var middleGrey = osg.Uniform.createFloat1(0.36, 'middleGrey');
+        var locality = osg.Uniform.createFloat1(11.0, 'locality');
+        var whitePoint = osg.Uniform.createFloat1(10, 'whitePoint');
 
         var toneMappingFilter = new osgUtil.Composer.Filter.Custom(
             [
@@ -150,20 +151,22 @@
                 '   gl_FragColor = vec4(texel, 1.0);',
                 '    //gl_FragColor = vec4(vec3(avgLum), 1.0);',
 
-                '}',
-            ].join( '\n' ), {
-                'input_texture': currentSceneTexture,
-                'lum_texture': lumTexture,
-                'method': method,
-                'gamma': gamma,
-                'exposure': exposure,
-                'brightness': brightness,
-                'contrast': contrast,
-                'saturation': saturation,
-                'locality': locality,
-                'middleGrey': middleGrey,
-                'whitePoint': whitePoint
-            } );
+                '}'
+            ].join('\n'),
+            {
+                input_texture: currentSceneTexture,
+                lum_texture: lumTexture,
+                method: method,
+                gamma: gamma,
+                exposure: exposure,
+                brightness: brightness,
+                contrast: contrast,
+                saturation: saturation,
+                locality: locality,
+                middleGrey: middleGrey,
+                whitePoint: whitePoint
+            }
+        );
 
         var luminanceComputeFilter = new osgUtil.Composer.Filter.Custom(
             [
@@ -195,124 +198,124 @@
                 '   // TODO: Use log on luminance to decrease the influence of small bright spots',
                 '   vec3 texel = decodeRGBE(texture2D(input_texture, vTexCoord0));',
                 '   gl_FragColor = vec4(vec3(calcLuminance(texel)), 1.0);',
-                '}',
-
-            ].join( '\n' ), {
-                'input_texture': currentSceneTexture
+                '}'
+            ].join('\n'),
+            {
+                input_texture: currentSceneTexture
             }
         );
 
-        function setSceneTexture ( sceneFile ) {
-
+        function setSceneTexture(sceneFile) {
             // On met en cache lors du premier chargement
-            if ( cachedScenes[ sceneFile ] === undefined ) {
-                cachedScenes[ sceneFile ] = osg.Texture.createHDRFromURL( '../hdr/textures/' + sceneFile + '/' + scenes[ sceneFile ] );
+            if (cachedScenes[sceneFile] === undefined) {
+                cachedScenes[sceneFile] = osg.Texture.createHDRFromURL(
+                    '../hdr/textures/' + sceneFile + '/' + scenes[sceneFile]
+                );
                 // On attends la fin du chargement de la texture pour générer la mipmap chain
-                cachedScenes[ sceneFile ].addApplyTexImage2DCallback( function () {
+                cachedScenes[sceneFile].addApplyTexImage2DCallback(function() {
                     lumTexture.dirtyMipmap();
-                    console.log( 'sceneTexture loaded from cache' );
-                } );
+                    console.log('sceneTexture loaded from cache');
+                });
             } else {
                 // On flag la lumTexture pour regénérer la mipmap chain
                 lumTexture.dirtyMipmap();
-                console.log( 'sceneTexture loaded' );
+                console.log('sceneTexture loaded');
             }
-            currentSceneTexture = cachedScenes[ sceneFile ];
-            toneMappingFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
-            luminanceComputeFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
+            currentSceneTexture = cachedScenes[sceneFile];
+            toneMappingFilter.getStateSet().setTextureAttributeAndModes(0, currentSceneTexture);
+            luminanceComputeFilter
+                .getStateSet()
+                .setTextureAttributeAndModes(0, currentSceneTexture);
         }
 
         var effect = {
-
             name: 'Tone Mapping',
             needCommonCube: false,
 
-            buildComposer: function ( finalTexture ) {
-
+            buildComposer: function(finalTexture) {
                 var composer = new osgUtil.Composer();
-                composer.addPass( luminanceComputeFilter, lumTexture );
-                composer.addPass( toneMappingFilter, finalTexture );
+                composer.addPass(luminanceComputeFilter, lumTexture);
+                composer.addPass(toneMappingFilter, finalTexture);
                 composer.build();
                 return composer;
             },
 
-            buildGui: function ( mainGui ) {
-
-                var folder = mainGui.addFolder( this.name );
+            buildGui: function(mainGui) {
+                var folder = mainGui.addFolder(this.name);
                 folder.open();
                 var param = {
-                    'scene': Object.keys( scenes )[ 0 ],
-                    'tonemapping': methods[ method.getInternalArray()[ 0 ] - 1 ],
-                    'gamma': gamma.getInternalArray()[ 0 ],
-                    'exposure': exposure.getInternalArray()[ 0 ],
-                    'brightness': brightness.getInternalArray()[ 0 ],
-                    'contrast': contrast.getInternalArray()[ 0 ],
-                    'saturation': saturation.getInternalArray()[ 0 ],
-                    'locality': locality.getInternalArray()[ 0 ],
-                    'middleGrey': middleGrey.getInternalArray()[ 0 ],
-                    'whitePoint': whitePoint.getInternalArray()[ 0 ]
+                    scene: Object.keys(scenes)[0],
+                    tonemapping: methods[method.getInternalArray()[0] - 1],
+                    gamma: gamma.getInternalArray()[0],
+                    exposure: exposure.getInternalArray()[0],
+                    brightness: brightness.getInternalArray()[0],
+                    contrast: contrast.getInternalArray()[0],
+                    saturation: saturation.getInternalArray()[0],
+                    locality: locality.getInternalArray()[0],
+                    middleGrey: middleGrey.getInternalArray()[0],
+                    whitePoint: whitePoint.getInternalArray()[0]
                 };
 
-                var sceneCtrl = folder.add( param, 'scene', Object.keys( scenes ) );
-                sceneCtrl.onChange( function ( value ) {
-                    setSceneTexture( value );
-                } );
+                var sceneCtrl = folder.add(param, 'scene', Object.keys(scenes));
+                sceneCtrl.onChange(function(value) {
+                    setSceneTexture(value);
+                });
 
-                var exposureCtrl = folder.add( param, 'exposure', 0.0, 2.0 );
-                exposureCtrl.onChange( function ( value ) {
-                    exposure.setFloat( value );
-                } );
+                var exposureCtrl = folder.add(param, 'exposure', 0.0, 2.0);
+                exposureCtrl.onChange(function(value) {
+                    exposure.setFloat(value);
+                });
 
-                var brightnessCtrl = folder.add( param, 'brightness', -2.0, 2.0 );
-                brightnessCtrl.onChange( function ( value ) {
-                    brightness.setFloat( value );
-                } );
+                var brightnessCtrl = folder.add(param, 'brightness', -2.0, 2.0);
+                brightnessCtrl.onChange(function(value) {
+                    brightness.setFloat(value);
+                });
 
-                var contrastCtrl = folder.add( param, 'contrast', -1.0, 1.0 );
-                contrastCtrl.onChange( function ( value ) {
-                    contrast.setFloat( value );
-                } );
+                var contrastCtrl = folder.add(param, 'contrast', -1.0, 1.0);
+                contrastCtrl.onChange(function(value) {
+                    contrast.setFloat(value);
+                });
 
-                var saturationCtrl = folder.add( param, 'saturation', 0.0, 5.0 );
-                saturationCtrl.onChange( function ( value ) {
-                    saturation.setFloat( value );
-                } );
+                var saturationCtrl = folder.add(param, 'saturation', 0.0, 5.0);
+                saturationCtrl.onChange(function(value) {
+                    saturation.setFloat(value);
+                });
 
-                var gammaCtrl = folder.add( param, 'gamma', 0, 3 );
-                gammaCtrl.onChange( function ( value ) {
-                    gamma.setFloat( value );
-                } );
+                var gammaCtrl = folder.add(param, 'gamma', 0, 3);
+                gammaCtrl.onChange(function(value) {
+                    gamma.setFloat(value);
+                });
 
-                var methodCtrl = folder.add( param, 'tonemapping', methods );
-                methodCtrl.onChange( function ( value ) {
-                    method.setFloat( methods.indexOf( value ) + 1 );
-                } );
+                var methodCtrl = folder.add(param, 'tonemapping', methods);
+                methodCtrl.onChange(function(value) {
+                    method.setFloat(methods.indexOf(value) + 1);
+                });
 
-                var reinhardt = folder.addFolder( 'Reinhardt' );
+                var reinhardt = folder.addFolder('Reinhardt');
 
-                var middleGreyCtrl = reinhardt.add( param, 'middleGrey', 0.01, 1 );
-                middleGreyCtrl.onChange( function ( value ) {
-                    middleGrey.setFloat( value );
-                } );
+                var middleGreyCtrl = reinhardt.add(param, 'middleGrey', 0.01, 1);
+                middleGreyCtrl.onChange(function(value) {
+                    middleGrey.setFloat(value);
+                });
 
-                var localityCtrl = reinhardt.add( param, 'locality', 0.0, 11.0 );
-                localityCtrl.onChange( function ( value ) {
-                    locality.setFloat( value );
-                } );
+                var localityCtrl = reinhardt.add(param, 'locality', 0.0, 11.0);
+                localityCtrl.onChange(function(value) {
+                    locality.setFloat(value);
+                });
 
-                var whitePointCtrl = reinhardt.add( param, 'whitePoint', 0.01, 10 );
-                whitePointCtrl.onChange( function ( value ) {
-                    whitePoint.setFloat( value );
-                } );
+                var whitePointCtrl = reinhardt.add(param, 'whitePoint', 0.01, 10);
+                whitePointCtrl.onChange(function(value) {
+                    whitePoint.setFloat(value);
+                });
 
-                mainGui.remember( param );
+                mainGui.remember(param);
             }
         };
 
         return effect;
     };
 
-    function decodeHDRHeader ( buf ) {
+    function decodeHDRHeader(buf) {
         var info = {
             exposure: 1.0
         };
@@ -321,158 +324,158 @@
         var size = -1,
             size2 = -1,
             i;
-        for ( i = 0; i < buf.length - 1; i++ ) {
-            if ( buf[ i ] === 10 && buf[ i + 1 ] === 10 ) {
+        for (i = 0; i < buf.length - 1; i++) {
+            if (buf[i] === 10 && buf[i + 1] === 10) {
                 size = i;
                 break;
             }
         }
-        for ( i = size + 2; i < buf.length - 1; i++ ) {
-            if ( buf[ i ] === 10 ) {
+        for (i = size + 2; i < buf.length - 1; i++) {
+            if (buf[i] === 10) {
                 size2 = i;
                 break;
             }
         }
 
         // convert header from binary to text lines
-        var header = String.fromCharCode.apply( null, new Uint8Array( buf.subarray( 0, size ) ) ); // header is in text format
-        var lines = header.split( '\n' );
-        if ( lines[ 0 ] !== '#?RADIANCE' ) {
-            console.error( 'Invalid HDR image.' );
+        var header = String.fromCharCode.apply(null, new Uint8Array(buf.subarray(0, size))); // header is in text format
+        var lines = header.split('\n');
+        if (lines[0] !== '#?RADIANCE') {
+            console.error('Invalid HDR image.');
             return false;
         }
         var line;
         var matches;
-        for ( i = 0; i < lines.length; i++ ) {
-            line = lines[ i ];
-            matches = line.match( /(\w+)=(.*)/i );
-            if ( matches != null ) {
-                var key = matches[ 1 ],
-                    value = matches[ 2 ];
+        for (i = 0; i < lines.length; i++) {
+            line = lines[i];
+            matches = line.match(/(\w+)=(.*)/i);
+            if (matches != null) {
+                var key = matches[1],
+                    value = matches[2];
 
-                if ( key === 'FORMAT' )
-                    info.format = value;
-                else if ( key === 'EXPOSURE' )
-                    info.exposure = parseFloat( value );
+                if (key === 'FORMAT') info.format = value;
+                else if (key === 'EXPOSURE') info.exposure = parseFloat(value);
             }
         }
 
         // fill image resolution
-        line = String.fromCharCode.apply( null, new Uint8Array( buf.subarray( size + 2, size2 ) ) );
-        matches = line.match( /-Y (\d+) \+X (\d+)/ );
-        info.width = parseInt( matches[ 2 ] );
-        info.height = parseInt( matches[ 1 ] );
-        info.scanlineWidth = parseInt( matches[ 2 ] );
-        info.numScanlines = parseInt( matches[ 1 ] );
+        line = String.fromCharCode.apply(null, new Uint8Array(buf.subarray(size + 2, size2)));
+        matches = line.match(/-Y (\d+) \+X (\d+)/);
+        info.width = parseInt(matches[2]);
+        info.height = parseInt(matches[1]);
+        info.scanlineWidth = parseInt(matches[2]);
+        info.numScanlines = parseInt(matches[1]);
 
         info.size = size2 + 1;
         return info;
     }
 
-    function readImageURL ( url ) {
-        var ext = url.split( '.' ).pop();
-        if ( ext === 'hdr' )
-            return osg.readHDRImage( url );
+    function readImageURL(url) {
+        var ext = url.split('.').pop();
+        if (ext === 'hdr') return osg.readHDRImage(url);
 
-        return osgDB.readImageURL( url );
+        return osgDB.readImageURL(url);
     }
 
-    osg.Texture.createHDRFromURL = function ( imageSource, format ) {
+    osg.Texture.createHDRFromURL = function(imageSource, format) {
         var texture = new osg.Texture();
-        readImageURL( imageSource ).then( function ( img ) {
-            texture.setImage( img, format );
-            if ( img.data ) {
-                texture.setTextureSize( img.width, img.height );
-                texture.setImage( img.data, osg.Texture.RGBA );
+        readImageURL(imageSource).then(function(img) {
+            texture.setImage(img, format);
+            if (img.data) {
+                texture.setTextureSize(img.width, img.height);
+                texture.setImage(img.data, osg.Texture.RGBA);
             }
-        } );
+        });
         return texture;
     };
 
     // Read a radiance .hdr file (http://radsite.lbl.gov/radiance/refer/filefmts.pdf)
     // Ported from http://www.graphics.cornell.edu/~bjw/rgbe.html
-    osg.readHDRImage = function ( url, options ) {
-        if ( options === undefined ) {
+    osg.readHDRImage = function(url, options) {
+        if (options === undefined) {
             options = {};
         }
 
         var img = {
-            'data': null,
-            'width': 0,
-            'height': 0
+            data: null,
+            width: 0,
+            height: 0
         };
 
         // download .hdr file
         var xhr = new XMLHttpRequest();
-        xhr.open( 'GET', url, true );
+        xhr.open('GET', url, true);
         xhr.responseType = 'arraybuffer';
 
         var defer = P.defer();
-        xhr.onload = function () {
-            if ( xhr.response ) {
-                var bytes = new Uint8Array( xhr.response );
+        xhr.onload = function() {
+            if (xhr.response) {
+                var bytes = new Uint8Array(xhr.response);
 
-                var header = decodeHDRHeader( bytes );
-                if ( header === false )
-                    return;
+                var header = decodeHDRHeader(bytes);
+                if (header === false) return;
 
                 // initialize output buffer
-                var data = new Uint8Array( header.width * header.height * 4 );
+                var data = new Uint8Array(header.width * header.height * 4);
                 var imgOffset = 0;
 
-                if ( ( header.scanlineWidth < 8 ) || ( header.scanlineWidth > 0x7fff ) ) {
-                    console.error( 'not rle compressed .hdr file' );
+                if (header.scanlineWidth < 8 || header.scanlineWidth > 0x7fff) {
+                    console.error('not rle compressed .hdr file');
                     return;
                 }
 
                 // read in each successive scanline
-                var scanlineBuffer = new Uint8Array( 4 * header.scanlineWidth );
+                var scanlineBuffer = new Uint8Array(4 * header.scanlineWidth);
                 var readOffset = header.size;
                 var numScanlines = header.numScanlines;
-                while ( numScanlines > 0 ) {
+                while (numScanlines > 0) {
                     var offset = 0;
-                    var rgbe = [ bytes[ readOffset++ ], bytes[ readOffset++ ], bytes[ readOffset++ ], bytes[ readOffset++ ] ];
-                    var buf = [ 0, 0 ];
+                    var rgbe = [
+                        bytes[readOffset++],
+                        bytes[readOffset++],
+                        bytes[readOffset++],
+                        bytes[readOffset++]
+                    ];
+                    var buf = [0, 0];
 
-                    if ( ( rgbe[ 0 ] !== 2 ) || ( rgbe[ 1 ] !== 2 ) || ( rgbe[ 2 ] & 0x80 ) ) {
-                        console.error( 'this file is not run length encoded' );
+                    if (rgbe[0] !== 2 || rgbe[1] !== 2 || rgbe[2] & 0x80) {
+                        console.error('this file is not run length encoded');
                         return;
                     }
 
-                    if ( ( ( rgbe[ 2 ] ) << 8 | rgbe[ 3 ] ) !== header.scanlineWidth ) {
-                        console.error( 'wrong scanline width' );
+                    if (((rgbe[2] << 8) | rgbe[3]) !== header.scanlineWidth) {
+                        console.error('wrong scanline width');
                         return;
                     }
 
                     // read each of the four channels for the scanline into the buffer
-                    for ( var i = 0; i < 4; i++ ) {
-                        var offsetEnd = ( i + 1 ) * header.scanlineWidth;
+                    for (var i = 0; i < 4; i++) {
+                        var offsetEnd = (i + 1) * header.scanlineWidth;
                         var count;
-                        while ( offset < offsetEnd ) {
-                            buf[ 0 ] = bytes[ readOffset++ ];
-                            buf[ 1 ] = bytes[ readOffset++ ];
+                        while (offset < offsetEnd) {
+                            buf[0] = bytes[readOffset++];
+                            buf[1] = bytes[readOffset++];
 
-                            if ( buf[ 0 ] > 128 ) {
+                            if (buf[0] > 128) {
                                 // a run of the same value
-                                count = buf[ 0 ] - 128;
-                                if ( ( count === 0 ) || ( count > offsetEnd - offset ) ) {
-                                    console.error( 'bad scanline data' );
+                                count = buf[0] - 128;
+                                if (count === 0 || count > offsetEnd - offset) {
+                                    console.error('bad scanline data');
                                     return;
                                 }
-                                while ( count-- > 0 )
-                                    scanlineBuffer[ offset++ ] = buf[ 1 ];
+                                while (count-- > 0) scanlineBuffer[offset++] = buf[1];
                             } else {
                                 // a non-run
-                                count = buf[ 0 ];
-                                if ( ( count === 0 ) || ( count > offsetEnd - offset ) ) {
-                                    console.error( 'bad scanline data' );
+                                count = buf[0];
+                                if (count === 0 || count > offsetEnd - offset) {
+                                    console.error('bad scanline data');
                                     return;
                                 }
-                                scanlineBuffer[ offset++ ] = buf[ 1 ];
+                                scanlineBuffer[offset++] = buf[1];
 
-                                if ( --count > 0 ) {
-                                    while ( count-- > 0 ) {
-                                        scanlineBuffer[ offset++ ] = bytes[ readOffset++ ];
+                                if (--count > 0) {
+                                    while (count-- > 0) {
+                                        scanlineBuffer[offset++] = bytes[readOffset++];
                                     }
                                 }
                             }
@@ -480,11 +483,11 @@
                     }
 
                     // fill the image array
-                    for ( i = 0; i < header.scanlineWidth; i++ ) {
-                        data[ imgOffset++ ] = scanlineBuffer[ i ];
-                        data[ imgOffset++ ] = scanlineBuffer[ i + header.scanlineWidth ];
-                        data[ imgOffset++ ] = scanlineBuffer[ i + 2 * header.scanlineWidth ];
-                        data[ imgOffset++ ] = scanlineBuffer[ i + 3 * header.scanlineWidth ];
+                    for (i = 0; i < header.scanlineWidth; i++) {
+                        data[imgOffset++] = scanlineBuffer[i];
+                        data[imgOffset++] = scanlineBuffer[i + header.scanlineWidth];
+                        data[imgOffset++] = scanlineBuffer[i + 2 * header.scanlineWidth];
+                        data[imgOffset++] = scanlineBuffer[i + 3 * header.scanlineWidth];
                     }
 
                     numScanlines--;
@@ -494,12 +497,12 @@
                 img.data = data;
                 img.width = header.width;
                 img.height = header.height;
-                defer.resolve( img );
+                defer.resolve(img);
             }
         };
 
         // async/defer
-        xhr.send( null );
+        xhr.send(null);
         return defer.promise;
     };
-} )();
+})();

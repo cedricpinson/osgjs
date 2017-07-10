@@ -1,6 +1,5 @@
 'use strict';
-var Channel = require( 'osgAnimation/channel' );
-
+var Channel = require('osgAnimation/channel');
 
 // create Animation data
 // Animation {
@@ -13,17 +12,16 @@ var animationCount = 0;
 
 // assume that iniChannel has been called
 // on each channel
-var createAnimation = function ( channels, name ) {
-
+var createAnimation = function(channels, name) {
     var min = Infinity;
     var max = -Infinity;
-    for ( var i = 0; i < channels.length; i++ ) {
-        min = Math.min( min, channels[ i ].start );
-        max = Math.max( max, channels[ i ].end );
+    for (var i = 0; i < channels.length; i++) {
+        min = Math.min(min, channels[i].start);
+        max = Math.max(max, channels[i].end);
     }
 
     var duration = max - min;
-    var animationName = name || ( 'animation' + animationCount.toString() );
+    var animationName = name || 'animation' + animationCount.toString();
     animationCount++;
     return {
         channels: channels,
@@ -41,12 +39,11 @@ var createAnimation = function ( channels, name ) {
 //     start: 0.0, // used to know when an animation has been started
 //     name: string
 // },
-var createInstanceAnimation = function ( animation ) {
-
+var createInstanceAnimation = function(animation) {
     var channels = [];
-    for ( var i = 0; i < animation.channels.length; i++ ) {
-        var channel = Channel.createInstanceChannel( animation.channels[ i ] );
-        channels.push( channel );
+    for (var i = 0; i < animation.channels.length; i++) {
+        var channel = Channel.createInstanceChannel(animation.channels[i]);
+        channels.push(channel);
     }
 
     return {
@@ -58,8 +55,7 @@ var createInstanceAnimation = function ( animation ) {
     };
 };
 
-
-var Animation = function () {};
+var Animation = function() {};
 
 Animation.createAnimation = createAnimation;
 Animation.createInstanceAnimation = createInstanceAnimation;

@@ -1,8 +1,8 @@
 'use strict';
-var Notify = require( 'osg/notify' );
+var Notify = require('osg/notify');
 
 var instance = 0;
-var Node = function () {
+var Node = function() {
     this._name = 'AbstractNode';
     this._inputs = [];
     this._outputs = null;
@@ -22,52 +22,60 @@ var Node = function () {
 };
 
 Node.prototype = {
-
-    getID: function () {
+    getID: function() {
         return this._id;
     },
-    getName: function () {
+    getName: function() {
         return this._name;
     },
 
-    getType: function () {
+    getType: function() {
         return this.type;
     },
 
-    toString: function () {
+    toString: function() {
         var str = 'name : ' + this._name;
-        if ( this.type ) str += ' (' + this.type + ')';
+        if (this.type) str += ' (' + this.type + ')';
         return str;
     },
 
-    getInputs: function () {
+    getInputs: function() {
         return this._inputs;
     },
 
-    getOutputs: function () {
+    getOutputs: function() {
         return this._outputs;
     },
 
-    checkInputsOutputs: function () {
-
+    checkInputsOutputs: function() {
         var i, key;
-        if ( this.validInputs ) {
-
-            for ( i = 0; i < this.validInputs.length; i++ ) {
-                key = this.validInputs[ i ];
-                if ( !this._inputs[ key ] ) {
-                    Notify.error( 'Shader node ' + this.type + ' validation error input ' + key + ' is missing' );
+        if (this.validInputs) {
+            for (i = 0; i < this.validInputs.length; i++) {
+                key = this.validInputs[i];
+                if (!this._inputs[key]) {
+                    Notify.error(
+                        'Shader node ' +
+                            this.type +
+                            ' validation error input ' +
+                            key +
+                            ' is missing'
+                    );
                     return false;
                 }
             }
         }
 
-        if ( this.validOutputs ) {
-
-            for ( i = 0; i < this.validOutputs.length; i++ ) {
-                key = this.validOutputs[ i ];
-                if ( !this._outputs[ key ] ) {
-                    Notify.error( 'Shader node ' + this.type + ' validation error output ' + key + ' is missing' );
+        if (this.validOutputs) {
+            for (i = 0; i < this.validOutputs.length; i++) {
+                key = this.validOutputs[i];
+                if (!this._outputs[key]) {
+                    Notify.error(
+                        'Shader node ' +
+                            this.type +
+                            ' validation error output ' +
+                            key +
+                            ' is missing'
+                    );
                     return false;
                 }
             }
@@ -80,29 +88,31 @@ Node.prototype = {
     // inputs( [ a, b, c , d] )
     // inputs( { a: x, b: y } )
     // inputs( a, b, c, d )
-    inputs: function () {
+    inputs: function() {
         // handle inputs ( a, b, c, d)
-        for ( var i = 0, l = arguments.length; i < l; i++ ) {
-
-            var input = arguments[ i ];
-            if ( !input ) {
-                Notify.error( 'Shader node ' + this.type + ' input number ' + l + ' is undefined ' );
+        for (var i = 0, l = arguments.length; i < l; i++) {
+            var input = arguments[i];
+            if (!input) {
+                Notify.error('Shader node ' + this.type + ' input number ' + l + ' is undefined ');
                 break;
             }
 
             // handle inputs( [a, b, c ,d] )
-            if ( Array.isArray( input ) ) {
-
-                this.inputs.apply( this, input );
+            if (Array.isArray(input)) {
+                this.inputs.apply(this, input);
                 return this;
 
                 // check for an object {} and not something from base class Node
-            } else if ( typeof input === 'object' && input !== null && ( input instanceof Node === false ) ) {
+            } else if (
+                typeof input === 'object' &&
+                input !== null &&
+                input instanceof Node === false
+            ) {
                 this._inputs = input;
                 return this;
-
-            } else { // add argument to the array
-                this._inputs.push( input );
+            } else {
+                // add argument to the array
+                this._inputs.push(input);
             }
         }
 
@@ -112,48 +122,41 @@ Node.prototype = {
     // accepts inputs like that:
     // outputs( { a: x, b: y } )
     // outputs( a )
-    outputs: function ( outputs ) {
-
+    outputs: function(outputs) {
         this._outputs = outputs;
 
         // single output
-        if ( this._outputs instanceof Node === true ) {
-
-            this.autoLink( this._outputs );
-
+        if (this._outputs instanceof Node === true) {
+            this.autoLink(this._outputs);
         } else {
-
             // iterate on objects keys
-            for ( var key in this._outputs ) {
-                this.autoLink( this._outputs[ key ] );
+            for (var key in this._outputs) {
+                this.autoLink(this._outputs[key]);
             }
         }
 
         return this;
     },
 
-    autoLink: function ( output ) {
+    autoLink: function(output) {
+        if (output === undefined) return this;
 
-        if ( output === undefined )
-            return this;
-
-        output.inputs( this );
+        output.inputs(this);
 
         return this;
     },
 
-    computeShader: function () {
+    computeShader: function() {
         return this._text;
     },
 
-    comment: function ( txt ) {
+    comment: function(txt) {
         this._comment = '//' + txt;
     },
 
-    getComment: function () {
+    getComment: function() {
         return this._comment;
     }
 };
-
 
 module.exports = Node;

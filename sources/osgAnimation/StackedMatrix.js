@@ -1,43 +1,45 @@
 'use strict';
-var MACROUTILS = require( 'osg/Utils' );
-var Object = require( 'osg/Object' );
-var mat4 = require( 'osg/glMatrix' ).mat4;
-var Target = require( 'osgAnimation/target' );
+var MACROUTILS = require('osg/Utils');
+var Object = require('osg/Object');
+var mat4 = require('osg/glMatrix').mat4;
+var Target = require('osgAnimation/target');
 
-
-var StackedMatrix = function ( name, matrix ) {
-    Object.call( this );
-    this._target = Target.createMatrixTarget( matrix || mat4.IDENTITY );
-    if ( name ) this.setName( name );
+var StackedMatrix = function(name, matrix) {
+    Object.call(this);
+    this._target = Target.createMatrixTarget(matrix || mat4.IDENTITY);
+    if (name) this.setName(name);
 };
 
-MACROUTILS.createPrototypeObject( StackedMatrix, MACROUTILS.objectInherit( Object.prototype, {
+MACROUTILS.createPrototypeObject(
+    StackedMatrix,
+    MACROUTILS.objectInherit(Object.prototype, {
+        init: function(matrix) {
+            this.setMatrix(matrix);
+            mat4.copy(this._target.defaultValue, matrix);
+        },
 
-    init: function ( matrix ) {
-        this.setMatrix( matrix );
-        mat4.copy( this._target.defaultValue, matrix );
-    },
+        getTarget: function() {
+            return this._target;
+        },
 
-    getTarget: function () {
-        return this._target;
-    },
+        getMatrix: function() {
+            return this._target.value;
+        },
 
-    getMatrix: function () {
-        return this._target.value;
-    },
+        setMatrix: function(m) {
+            mat4.copy(this._target.value, m);
+        },
 
-    setMatrix: function ( m ) {
-        mat4.copy( this._target.value, m );
-    },
+        resetToDefaultValue: function() {
+            this.setMatrix(this._target.defaultValue);
+        },
 
-    resetToDefaultValue: function () {
-        this.setMatrix( this._target.defaultValue );
-    },
-
-    applyToMatrix: function ( m ) {
-        mat4.mul( m, m, this._target.value );
-    }
-
-} ), 'osgAnimation', 'StackedMatrix' );
+        applyToMatrix: function(m) {
+            mat4.mul(m, m, this._target.value);
+        }
+    }),
+    'osgAnimation',
+    'StackedMatrix'
+);
 
 module.exports = StackedMatrix;
