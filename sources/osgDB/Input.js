@@ -212,7 +212,6 @@ Input.prototype = {
             // recursion call
             return options.readNodeURL.call(this, url, options);
         }
-
         url = this.computeURL(url);
 
         var defer = P.defer();
@@ -266,7 +265,7 @@ Input.prototype = {
             var str = uintToString(typedArray);
             return str;
         };
-
+        MACROUTILS.time('osgjs.metric:Input.readNodeURL', Notify.INFO);
         // try to get the file as responseText to parse JSON
         var fileTextPromise = self.requestFile(url);
         fileTextPromise
@@ -279,7 +278,6 @@ Input.prototype = {
 
                     Notify.error('cant parse url ' + url + ' try to gunzip');
                 }
-
                 // we have the json, read it
                 if (data) return readSceneGraph(data);
 
@@ -296,8 +294,7 @@ Input.prototype = {
                     .catch(function(status) {
                         Notify.error('cant read file ' + url + ' status ' + status);
                         defer.reject();
-                    })
-                    .done();
+                    });
 
                 return true;
             })
@@ -305,7 +302,10 @@ Input.prototype = {
                 Notify.error('cant get file ' + url + ' status ' + status);
                 defer.reject();
             })
-            .done();
+            .finally(function() {
+                // Stop the timer
+                MACROUTILS.timeEnd('osgjs.metric:Input.readNodeURL');
+            });
 
         return defer.promise;
     },
