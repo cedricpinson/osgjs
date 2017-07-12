@@ -65,7 +65,11 @@ HammerController.prototype = {
     // use the update to set the input device to mouse controller
     // it's needed to compute size
     update: function() {
-        if (!this.isValid()) return;
+        var isValid = this.isValid();
+        var manip = this.getManipulatorController();
+        if (manip) manip.setValid(isValid);
+
+        if (!isValid) return;
 
         // we pass directly hammer object
         this.getManipulatorController().setEventProxy(this._hammer);

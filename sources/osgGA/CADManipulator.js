@@ -146,7 +146,7 @@ MACROUTILS.createPrototypeObject(
             this._orientation = quat.create();
             this._pivotPoint = vec3.create();
 
-            this._eye = undefined;
+            this._eye = vec3.create();
 
             this._zoomDir = vec3.create();
 
