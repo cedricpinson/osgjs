@@ -1107,8 +1107,10 @@ MACROUTILS.createPrototypeObject(
 // http://en.wikipedia.org/wiki/Sobel_operator
 Composer.Filter.SobelFilter = function() {
     Composer.Filter.call(this);
-    this._color = Uniform.createFloat3(vec3.fromValues(1.0, 1.0, 1.0), 'color');
-    this._factor = Uniform.createFloat(1.0, 'factor');
+    this._outlineColor = Uniform.createFloat3(vec3.fromValues(1.0, 1.0, 1.0), 'uOutlineColor');
+    this._outlineFactor = Uniform.createFloat(1.0, 'uOutlineFactor');
+    this._outlineWidth = Uniform.createFloat(1.0, 'uOutlineWidth');
+    this._highlightFactor = Uniform.createFloat(1.0, 'uHighlightFactor');
     this._fragmentName = 'SobelFilter';
 };
 
@@ -1116,25 +1118,37 @@ MACROUTILS.createPrototypeObject(
     Composer.Filter.SobelFilter,
     MACROUTILS.objectInherit(Composer.Filter.prototype, {
         setColor: function(color) {
-            this._color.setVec3(color);
+            this._outlineColor.setVec3(color);
         },
+
         setFactor: function(f) {
-            this._factor.setFloat(f);
+            this._highlightFactor.setFloat(f);
         },
+
+        setWidth: function(width) {
+            this._outlineWidth.setFloat(width);
+        },
+
+        setHighlightFactor: function(f) {
+            this._highlightFactor.setFloat(f);
+        },
+
         build: function() {
             var stateSet = this._stateSet;
             var vtx = Composer.Filter.defaultVertexShader;
             var fgt = [
                 '',
                 Composer.Filter.defaultFragmentShaderHeader,
-                'uniform vec3 color;',
-                'uniform float factor;',
+                'uniform vec3 uOutlineColor;',
+                'uniform float uOutlineFactor;',
+                'uniform float uOutlineWidth;',
+                'uniform float uHighlightFactor;',
                 'void main (void)',
                 '{',
                 '  float fac0 = 2.0;',
                 '  float fac1 = 1.0;',
-                '  float offsetx = 1.0/RenderSize[0];',
-                '  float offsety = 1.0/RenderSize[1];',
+                '  float offsetx = uOutlineWidth/RenderSize[0];',
+                '  float offsety = uOutlineWidth/RenderSize[1];',
                 '  vec4 texel0 = texture2D(Texture0, vTexCoord0 + vec2(offsetx, offsety));',
                 '  vec4 texel1 = texture2D(Texture0, vTexCoord0 + vec2(offsetx, 0.0));',
                 '  vec4 texel2 = texture2D(Texture0, vTexCoord0 + vec2(offsetx, -offsety));',
@@ -1146,10 +1160,10 @@ MACROUTILS.createPrototypeObject(
                 '  vec4 rowx = -fac0*texel5 + fac0*texel1 +  -fac1*texel6 + fac1*texel0 + -fac1*texel4 + fac1*texel2;',
                 '  vec4 rowy = -fac0*texel3 + fac0*texel7 +  -fac1*texel4 + fac1*texel6 + -fac1*texel2 + fac1*texel0;',
                 '  float mag = sqrt(dot(rowy,rowy)+dot(rowx,rowx));',
-                '  if (mag < 1.0/255.0) discard;',
-                '  mag *= factor;',
-                '  mag = min(1.0, mag);',
-                '  gl_FragColor = vec4(color*mag,mag);',
+                '  vec3 texelCenter = texture2D(Texture0, vTexCoord0).rgb;',
+                '  if (texelCenter == vec3(0.0) || (uHighlightFactor == 0.0 && mag < 1.0/255.0)) discard;',
+                '  float finalFactor = mag < 1.0/255.0 ? uHighlightFactor : min(1.0, mag * uOutlineFactor);',
+                '  gl_FragColor = finalFactor * vec4(uOutlineColor, 1.0);',
                 '}',
                 ''
             ].join('\n');
@@ -1160,8 +1174,10 @@ MACROUTILS.createPrototypeObject(
             );
 
             stateSet.setAttributeAndModes(program);
-            stateSet.addUniform(this._color);
-            stateSet.addUniform(this._factor);
+            stateSet.addUniform(this._outlineColor);
+            stateSet.addUniform(this._outlineFactor);
+            stateSet.addUniform(this._outlineWidth);
+            stateSet.addUniform(this._highlightFactor);
             stateSet.addUniform(Uniform.createInt1(0, 'Texture0'));
             this._dirty = false;
         }
