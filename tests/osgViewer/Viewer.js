@@ -68,7 +68,6 @@ module.exports = function() {
                 };
                 var list = viewer.initEventProxy(args);
 
-                assert.notEqual(list.LeapMotion, undefined, 'detected leapmotion');
                 assert.notEqual(list.StandardMouseKeyboard, undefined, 'detected mouse');
 
                 viewer.updateEventProxy(list, undefined);

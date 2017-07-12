@@ -11,6 +11,15 @@ npm install
 grunt sync
 mkdir -p ${build_dir}/node_modules/mocha
 cp node_modules/mocha/mocha.* "${build_dir}/node_modules/mocha"
+cp node_modules/rstatsjs/src/rStats* "${build_dir}/node_modules/rstatsjs/src"
+cp node_modules/hammerjs/hammer.min.js "${build_dir}/node_modules/hammerjs/hammer.min.js"
+cp node_modules/bluebird/js/browser/bluebird.min.js "${build_dir}/node_modules/bluebird/js/browser/bluebird.min.js"
+cp node_modules/jquery/dist/jquery.min.js "${build_dir}/node_modules/jquery/dist/jquery.min.js"
+cp node_modules/dat.gui/build/dat.gui.min.js "${build_dir}/node_modules/dat.gui/build/dat.gui.min.js"
+cp node_modules/hammerjs/hammer.min.js "${build_dir}/node_modules/hammerjs/hammer.min.js"
+cp node_modules/zlibjs/bin/gunzip.min.js "${build_dir}/node_modules/zlibjs/bin/gunzip.min.js"
+cp node_modules/d3/build/d3.min.js "${build_dir}/node_modules/d3/build/d3.min.js"
+cp node_modules/dagre/dist/dagre.min.js "${build_dir}/node_modules/dagre/dist/dagre.min.js"
 
 grunt build docs
 
