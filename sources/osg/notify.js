@@ -2,12 +2,15 @@
 
 var Notify = {};
 
-// must be uppercase and match loggers
-Notify.DEBUG = 0;
-Notify.INFO = 1;
-Notify.NOTICE = Notify.LOG = 2;
-Notify.WARN = 3;
-Notify.ERROR = 4;
+// Range of notify levels from DEBUG through to FATAL
+// ALWAYS is reserved for forcing the absorption of all messages.
+// Must be uppercase and match loggers
+Notify.ALWAYS = 0;
+Notify.FATAL = Notify.ERROR = 1;
+Notify.WARN = 2;
+Notify.NOTICE = Notify.LOG = 3;
+Notify.INFO = 4;
+Notify.DEBUG = 5;
 
 Notify.console = window.console;
 
@@ -54,7 +57,7 @@ function logMatrixFold(title, m, rowMajor) {
     if (Notify.console.table) logSubFold('table', title, unFlattenMatrix(m, rowMajor));
 }
 
-var levelEntries = ['log', 'info', 'warn', 'error', 'debug'];
+var levelEntries = ['error', 'warn', 'log', 'info', 'debug'];
 var loggers = {};
 
 (function() {
@@ -79,7 +82,7 @@ Notify.setNotifyLevel = function(logLevel) {
 
     for (var i = 0; i < levelEntries.length; ++i) {
         var level = levelEntries[i];
-        var doDummy = logLevel > Notify[level.toUpperCase()];
+        var doDummy = logLevel < Notify[level.toUpperCase()];
         Notify[level] = doDummy ? dummy : loggers[level];
         Notify[level + 'Fold'] = doDummy ? dummy : loggers[level + 'Fold'];
         Notify[level + 'Matrix'] = doDummy ? dummy : loggers[level + 'Matrix'];
@@ -91,9 +94,15 @@ Notify.setNotifyLevel = function(logLevel) {
     Notify.noticeFold = Notify.logFold;
     Notify.noticeMatrix = Notify.logMatrix;
     Notify.noticeMatrixFold = Notify.logMatrixFold;
+    // We need to store the current level
+    Notify.currentNotifyLevel = logLevel;
 };
 
 Notify.setNotifyLevel(Notify.NOTICE);
+
+Notify.getNotifyLevel = function() {
+    return Notify.currentNotifyLevel;
+};
 
 Notify.reportWebGLError = false;
 

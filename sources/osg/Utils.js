@@ -306,25 +306,38 @@ Utils.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
 Utils.Uint32Array = typeof Uint32Array !== 'undefined' ? Uint32Array : null;
 
 var times = {};
-
+var registeredTimers = {};
 // we bind the function to Notify.console once and for all to avoid costly apply function
 
-Utils.time = (Notify.console.time ||
+Utils.logTime = (Notify.console.time ||
     function(name) {
         times[name] = Timer.instance().tick();
     })
     .bind(Notify.console);
 
-Utils.timeEnd = (Notify.console.timeEnd ||
+Utils.logTimeEnd = (Notify.console.timeEnd ||
     function(name) {
         if (times[name] === undefined) return;
 
         var duration = Timer.instance().deltaM(times[name], Timer.instance().tick());
 
-        Notify.debug(name + ': ' + duration + 'ms');
+        Notify.log(name + ': ' + duration + 'ms');
         times[name] = undefined;
     })
     .bind(Notify.console);
+
+Utils.time = function(name, logLevel) {
+    var level = logLevel;
+    if (level === undefined) level = Notify.NOTICE;
+    if (level > Notify.getNotifyLevel()) return;
+    registeredTimers[name] = 1;
+    Utils.logTime(name);
+};
+
+Utils.timeEnd = function(name) {
+    if (registeredTimers[name] === undefined) return;
+    Utils.logTimeEnd(name);
+};
 
 Utils.timeStamp = (Notify.console.timeStamp || Notify.console.markTimeline || function() {})
     .bind(Notify.console);
