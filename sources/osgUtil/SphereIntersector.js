@@ -76,8 +76,10 @@ SphereIntersector.prototype = {
 
             var kdtree = node.getShape();
             if (kdtree) {
-                return kdtree.intersect(sif, kdtree.getNodes()[0]);
+                kdtree.intersect(sif, kdtree.getNodes()[0]);
+                return;
             }
+
             if (node.computeTransformedVertices) {
                 var vList = node.getVertexAttributeList();
                 var originVerts = vList.Vertex.getElements();
@@ -90,7 +92,6 @@ SphereIntersector.prototype = {
             } else {
                 sif.apply(node);
             }
-            return this._intersections > 0;
         };
     })(),
 

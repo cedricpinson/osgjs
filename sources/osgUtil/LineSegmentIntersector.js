@@ -112,13 +112,10 @@ LineSegmentIntersector.prototype = {
             var kdtree = node.getShape();
 
             if (kdtree) {
-                return kdtree.intersectLineSegment(
-                    lsf,
-                    kdtree.getNodes()[0],
-                    this._iStart,
-                    this._iEnd
-                );
+                kdtree.intersectLineSegment(lsf, kdtree.getNodes()[0], this._iStart, this._iEnd);
+                return;
             }
+
             // handle rig transformed vertices
             if (node.computeTransformedVertices) {
                 var vList = node.getVertexAttributeList();
