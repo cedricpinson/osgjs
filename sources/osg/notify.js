@@ -12,6 +12,8 @@ Notify.NOTICE = Notify.LOG = 3;
 Notify.INFO = 4;
 Notify.DEBUG = 5;
 
+Notify.currentNotifyLevel = Notify.LOG;
+
 Notify.console = window.console;
 
 /** logging with readability in mind.
@@ -19,19 +21,19 @@ Notify.console = window.console;
  * @param { str } actual log text
  * @param { fold  } sometimes you want to hide looooong text
  */
-function logSub(level, str) {
-    if (!Notify.console) return;
+function logSub(intLevel, strLevel, str) {
+    if (!Notify.console || intLevel > Notify.currentNotifyLevel) return;
 
-    Notify.console[level](str);
-    if (Notify.traceLogCall && level !== 'error') console.trace();
+    Notify.console[strLevel](str);
+    if (Notify.traceLogCall && intLevel !== Notify.ERROR) console.trace();
 }
 
-function logSubFold(level, title, str) {
-    if (!Notify.console) return;
+function logSubFold(intLevel, strLevel, title, str) {
+    if (!Notify.console || intLevel > Notify.currentNotifyLevel) return;
 
     if (Notify.console.groupCollapsed) Notify.console.groupCollapsed(title);
-    Notify.console[level](str);
-    if (Notify.traceLogCall && level !== 'error') console.trace();
+    Notify.console[strLevel](str);
+    if (Notify.traceLogCall && intLevel !== Notify.ERROR) console.trace();
 
     if (Notify.console.groupEnd) Notify.console.groupEnd();
 }
@@ -49,56 +51,44 @@ function unFlattenMatrix(m, rowMajor) {
     ];
 }
 
-function logMatrix(m, rowMajor) {
+function logMatrix(intLevel, m, rowMajor) {
+    if (intLevel > Notify.currentNotifyLevel) return;
+
     if (Notify.console.table) logSub('table', unFlattenMatrix(m, rowMajor));
 }
 
-function logMatrixFold(title, m, rowMajor) {
+function logMatrixFold(intLevel, title, m, rowMajor) {
+    if (intLevel > Notify.currentNotifyLevel) return;
+
     if (Notify.console.table) logSubFold('table', title, unFlattenMatrix(m, rowMajor));
 }
 
 var levelEntries = ['error', 'warn', 'log', 'info', 'debug'];
-var loggers = {};
 
-(function() {
-    for (var i = 0; i < levelEntries.length; ++i) {
-        var level = levelEntries[i];
-        loggers[level] = logSub.bind(Notify, level);
-        loggers[level + 'Fold'] = logSubFold.bind(Notify, level);
-        loggers[level + 'Matrix'] = logMatrix.bind(Notify);
-        loggers[level + 'MatrixFold'] = logMatrixFold.bind(Notify);
-    }
-})();
+for (var i = 0; i < levelEntries.length; ++i) {
+    var level = levelEntries[i];
+    var intLevel = Notify[level.toUpperCase()];
+    Notify[level] = logSub.bind(Notify, intLevel, level);
+    Notify[level + 'Fold'] = logSubFold.bind(Notify, intLevel, level);
+    Notify[level + 'Matrix'] = logMatrix.bind(Notify, intLevel);
+    Notify[level + 'MatrixFold'] = logMatrixFold.bind(Notify, intLevel);
+}
 
-var assert = function(test, str) {
+// alias
+Notify.notice = Notify.log;
+Notify.noticeFold = Notify.logFold;
+Notify.noticeMatrix = Notify.logMatrix;
+Notify.noticeMatrixFold = Notify.logMatrixFold;
+
+Notify.assert = function(test, str) {
     if (this.console !== undefined && !test) {
         this.console.assert(test, str);
     }
 };
-Notify.assert = assert;
 
 Notify.setNotifyLevel = function(logLevel) {
-    var dummy = function() {};
-
-    for (var i = 0; i < levelEntries.length; ++i) {
-        var level = levelEntries[i];
-        var doDummy = logLevel < Notify[level.toUpperCase()];
-        Notify[level] = doDummy ? dummy : loggers[level];
-        Notify[level + 'Fold'] = doDummy ? dummy : loggers[level + 'Fold'];
-        Notify[level + 'Matrix'] = doDummy ? dummy : loggers[level + 'Matrix'];
-        Notify[level + 'MatrixFold'] = doDummy ? dummy : loggers[level + 'MatrixFold'];
-    }
-
-    // alias
-    Notify.notice = Notify.log;
-    Notify.noticeFold = Notify.logFold;
-    Notify.noticeMatrix = Notify.logMatrix;
-    Notify.noticeMatrixFold = Notify.logMatrixFold;
-    // We need to store the current level
     Notify.currentNotifyLevel = logLevel;
 };
-
-Notify.setNotifyLevel(Notify.NOTICE);
 
 Notify.getNotifyLevel = function() {
     return Notify.currentNotifyLevel;
