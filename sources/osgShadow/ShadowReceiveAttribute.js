@@ -118,19 +118,10 @@ MACROUTILS.createPrototypeStateAttribute(
             return obj.uniforms[typeMember];
         },
 
-        getExtensions: function() {
-            return ['#extension GL_OES_standard_derivatives : enable'];
-        },
-
         // Here to be common between  caster and receiver
         // (used by shadowMap and shadow node shader)
         getDefines: function() {
-            var textureType = this.getPrecision();
             var defines = [];
-
-            var isFloat = false;
-
-            if (textureType !== 'UNSIGNED_BYTE') isFloat = true;
 
             var pcf = this.getKernelSizePCF();
             switch (pcf) {
@@ -149,17 +140,9 @@ MACROUTILS.createPrototypeStateAttribute(
                     break;
             }
 
-            if (isFloat) {
-                defines.push('#define _FLOATTEX');
-            }
-
-            if (this.getAtlas()) {
-                defines.push('#define _ATLAS_SHADOW');
-            }
-
-            if (this.getNormalBias()) {
-                defines.push('#define _NORMAL_OFFSET');
-            }
+            if (this.getPrecision() !== 'UNSIGNED_BYTE') defines.push('#define _FLOATTEX');
+            if (this.getAtlas()) defines.push('#define _ATLAS_SHADOW');
+            if (this.getNormalBias()) defines.push('#define _NORMAL_OFFSET');
 
             return defines;
         },

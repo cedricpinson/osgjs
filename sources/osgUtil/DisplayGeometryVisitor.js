@@ -43,7 +43,7 @@ MACROUTILS.createPrototypeObject(
                     alpha: this.createVariable('float').setValue('1.0')
                 })
                 .outputs({
-                    color: frag
+                    result: frag
                 });
 
             return [frag];
@@ -93,7 +93,7 @@ MACROUTILS.createPrototypeObject(
                     alpha: this.createVariable('float').setValue('1.0')
                 })
                 .outputs({
-                    color: frag
+                    result: frag
                 });
 
             return [frag];

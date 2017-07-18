@@ -237,6 +237,9 @@ ShaderProcessor.prototype = {
 
         var strCore = this.preprocess(preShader, sourceID, includeList, defines, type);
 
+        // avoid warning on unrecognized pragma
+        strCore = strCore.replace(/#pragma DECLARE_FUNCTION/g, '//#pragma DECLARE_FUNCTION');
+
         var isFragment = strCore.indexOf('gl_Position') === -1;
         var convertToWebGL2 = WebglCaps.instance().isWebGL2();
 
@@ -251,6 +254,10 @@ ShaderProcessor.prototype = {
             strExtensions = this._convertExtensionsToWebGL2(strExtensions);
             strDefines = this._convertToWebGL2(strDefines, isFragment);
             strCore = this._convertToWebGL2(strCore, isFragment);
+        } else {
+            // support multiline define
+            strDefines = strDefines.replace(/\\\n/g, '');
+            strCore = strCore.replace(/\\\n/g, '');
         }
 
         // vertex shader uses highp per default BUT if FS is using mediump then VS should too (conflict with varying/uniform otherwise)

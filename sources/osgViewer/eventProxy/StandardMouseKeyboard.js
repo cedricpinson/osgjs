@@ -28,7 +28,9 @@ StandardMouseKeyboard.prototype = {
         var mousewheel = options.wheelEventNode || mouse;
         var keyboard = options.keyboardEventNode || mouse;
 
-        if (options.getBoolean('scrollwheel') === false) mousewheel = null;
+        if (options.getBoolean('scrollwheel') === false) {
+            mousewheel = null;
+        }
 
         this._mouseEventNode = mouse;
         this._wheelEventNode = mousewheel;
@@ -91,8 +93,9 @@ StandardMouseKeyboard.prototype = {
             this._enable &&
             this._viewer.getManipulator() &&
             this._viewer.getManipulator().getControllerList()[this._type]
-        )
+        ) {
             return true;
+        }
         return false;
     },
     getManipulatorController: function() {
@@ -100,15 +103,17 @@ StandardMouseKeyboard.prototype = {
     },
 
     keyup: function(ev) {
-        if (this.isValid() && this.getManipulatorController().keyup)
+        if (this.isValid() && this.getManipulatorController().keyup) {
             return this.getManipulatorController().keyup(ev);
+        }
 
         return undefined;
     },
 
     keydown: function(ev) {
-        if (this.isValid() && this.getManipulatorController().keydown)
+        if (this.isValid() && this.getManipulatorController().keydown) {
             return this.getManipulatorController().keydown(ev);
+        }
 
         return undefined;
     },
@@ -125,131 +130,93 @@ StandardMouseKeyboard.prototype = {
     },
 
     mouseup: function(ev) {
-        if (this.isValid() && this.getManipulatorController().mouseup)
+        if (this.isValid() && this.getManipulatorController().mouseup) {
             return this.getManipulatorController().mouseup(ev);
+        }
 
         return undefined;
     },
 
     mouseout: function(ev) {
-        if (this.isValid() && this.getManipulatorController().mouseout)
+        if (this.isValid() && this.getManipulatorController().mouseout) {
             return this.getManipulatorController().mouseout(ev);
+        }
 
         return undefined;
     },
 
     mousemove: function(ev) {
-        if (this.isValid() && this.getManipulatorController().mousemove)
+        if (this.isValid() && this.getManipulatorController().mousemove) {
             return this.getManipulatorController().mousemove(ev);
+        }
 
         return undefined;
     },
 
     dblclick: function(ev) {
-        if (this.isValid() && this.getManipulatorController().dblclick)
+        if (this.isValid() && this.getManipulatorController().dblclick) {
             return this.getManipulatorController().dblclick(ev);
+        }
 
         return undefined;
     },
 
     mousewheel: function(event) {
-        if (!this.isValid()) return undefined;
+        if (!this.isValid()) {
+            return undefined;
+        }
 
         var manipulatorAdapter = this.getManipulatorController();
 
-        if (!manipulatorAdapter.mousewheel) return undefined;
+        if (!manipulatorAdapter.mousewheel) {
+            return undefined;
+        }
 
         event.preventDefault();
 
         // from jquery
-        var orgEvent = event || window.event,
-            args = [].slice.call(arguments, 1),
-            delta = 0,
-            deltaX = 0,
-            deltaY = 0;
+        var orgEvent = event || window.event;
+        var delta = 0;
+        var deltaX = 0;
+        var deltaY = 0;
 
         // Old school scrollwheel delta
-        if (event.wheelDelta) {
-            delta = event.wheelDelta / 120;
-        }
-        if (event.detail) {
-            delta = -event.detail / 3;
-        }
+        if (event.detail) delta = -event.detail / 3;
+        else if (event.wheelDelta) delta = event.wheelDelta / 120;
 
         // New school multidimensional scroll (touchpads) deltas
         deltaY = delta;
 
         // Gecko
-        if (orgEvent.axis !== undefined && orgEvent.axis === orgEvent.HORIZONTAL_AXIS) {
+        if (orgEvent.axis === orgEvent.HORIZONTAL_AXIS) {
             deltaY = 0;
             deltaX = -1 * delta;
         }
 
         // Webkit
-        if (orgEvent.wheelDeltaY !== undefined) {
-            deltaY = orgEvent.wheelDeltaY / 120;
-        }
-        if (orgEvent.wheelDeltaX !== undefined) {
-            deltaX = -1 * orgEvent.wheelDeltaX / 120;
-        }
-        // Add event and delta to the front of the arguments
-        args.unshift(event, delta, deltaX, deltaY);
+        if (orgEvent.wheelDeltaY !== undefined) deltaY = orgEvent.wheelDeltaY / 120;
+        if (orgEvent.wheelDeltaX !== undefined) deltaX = -1 * orgEvent.wheelDeltaX / 120;
 
-        return this.getManipulatorController().mousewheel.apply(manipulatorAdapter, args);
+        return manipulatorAdapter.mousewheel(event, delta, deltaX, deltaY);
     },
 
     preventDefault: function(event) {
         event.preventDefault();
     },
 
-    divGlobalOffset: function(obj) {
-        var x = 0,
-            y = 0;
-        x = obj.offsetLeft;
-        y = obj.offsetTop;
-        var body = document.getElementsByTagName('body')[0];
-        while (obj.offsetParent && obj !== body) {
-            x += obj.offsetParent.offsetLeft;
-            y += obj.offsetParent.offsetTop;
-            obj = obj.offsetParent;
-        }
-        this._mousePosition[0] = x;
-        this._mousePosition[1] = y;
-        return this._mousePosition;
-    },
-
     getPositionRelativeToCanvas: function(e, result) {
-        var myObject = e.target;
-        var posx, posy;
-        if (e.pageX || e.pageY) {
-            posx = e.pageX;
-            posy = e.pageY;
-        } else if (e.clientX || e.clientY) {
-            posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-            posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-        }
-
-        // posx and posy contain the mouse position relative to the document
-        // Do something with this information
-        var globalOffset = this.divGlobalOffset(myObject);
-        posx = posx - globalOffset[0];
-        posy = myObject.height - (posy - globalOffset[1]);
-
-        // copy data to result if need to keep result
-        // else we use a tmp variable inside manipulator
-        // that we override at each call
-        if (result === undefined) {
-            result = this._mousePosition;
-        }
-        result[0] = posx;
-        result[1] = posy;
+        result = result || this._mousePosition;
+        result[0] = e.offsetX === undefined ? e.layerX : e.offsetX;
+        result[1] = e.target.clientHeight - (e.offsetY === undefined ? e.layerY : e.offsetY);
         return result;
     },
 
     // use the update to set the input device to mouse controller
     // it's needed to compute size
     update: function() {
-        if (!this.isValid()) return;
+        if (!this.isValid()) {
+            return;
+        }
 
         this.getManipulatorController().setEventProxy(this);
     }

@@ -1,32 +1,33 @@
 //////////////////////////////
 // OPTIMIZED VERSION (NO IF)
 //////////////////////////////
-mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
+#pragma DECLARE_FUNCTION
+mat4 skinning( const in vec4 weights, const in vec4 bonesIndex ) {
     mat4 outMat_1;
     mat4 tmpMat_2;
     highp ivec4 tmpvar_3;
-    tmpvar_3 = (3 * ivec4(bonesIdx));
+    tmpvar_3 = (3 * ivec4(bonesIndex));
     tmpMat_2 = mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
     vec4 tmpvar_4;
-    tmpvar_4 = -(abs(weightsVec));
+    tmpvar_4 = -(abs(weights));
     tmpMat_2[0] = uBones[tmpvar_3.x];
     tmpMat_2[1] = uBones[(tmpvar_3.x + 1)];
     tmpMat_2[2] = uBones[(tmpvar_3.x + 2)];
     outMat_1 = ((float(
     ((tmpvar_4.x + tmpvar_4.y) >= -((tmpvar_4.z + tmpvar_4.w)))
-    ) * mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)) + (weightsVec.x * tmpMat_2));
+    ) * mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)) + (weights.x * tmpMat_2));
     tmpMat_2[0] = uBones[tmpvar_3.y];
     tmpMat_2[1] = uBones[(tmpvar_3.y + 1)];
     tmpMat_2[2] = uBones[(tmpvar_3.y + 2)];
-    outMat_1 = (outMat_1 + (weightsVec.y * tmpMat_2));
+    outMat_1 = (outMat_1 + (weights.y * tmpMat_2));
     tmpMat_2[0] = uBones[tmpvar_3.z];
     tmpMat_2[1] = uBones[(tmpvar_3.z + 1)];
     tmpMat_2[2] = uBones[(tmpvar_3.z + 2)];
-    outMat_1 = (outMat_1 + (weightsVec.z * tmpMat_2));
+    outMat_1 = (outMat_1 + (weights.z * tmpMat_2));
     tmpMat_2[0] = uBones[tmpvar_3.w];
     tmpMat_2[1] = uBones[(tmpvar_3.w + 1)];
     tmpMat_2[2] = uBones[(tmpvar_3.w + 2)];
-    outMat_1 = (outMat_1 + (weightsVec.w * tmpMat_2));
+    outMat_1 = (outMat_1 + (weights.w * tmpMat_2));
 
     return outMat_1;
 }
@@ -45,18 +46,18 @@ mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
 //     return myMat;
 // }
 
-// mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
-//     ivec4 idx =  3 * ivec4(bonesIdx);
+// mat4 skinning( const in vec4 weights, const in vec4 bonesIndex ) {
+//     ivec4 idx =  3 * ivec4(bonesIndex);
 //     mat4 tmpMat = mat4(1.0);
 //     mat4 outMat = mat4(0.0);
 
 //     // we handle negative weights
-//     if(all(equal(weightsVec, vec4(0.0)))) return tmpMat;
+//     if(all(equal(weights, vec4(0.0)))) return tmpMat;
 
-//     if(weightsVec.x != 0.0) outMat += weightsVec.x * getMat4FromVec4( idx.x, tmpMat );
-//     if(weightsVec.y != 0.0) outMat += weightsVec.y * getMat4FromVec4( idx.y, tmpMat );
-//     if(weightsVec.z != 0.0) outMat += weightsVec.z * getMat4FromVec4( idx.z, tmpMat );
-//     if(weightsVec.w != 0.0) outMat += weightsVec.w * getMat4FromVec4( idx.w, tmpMat );
+//     if(weights.x != 0.0) outMat += weights.x * getMat4FromVec4( idx.x, tmpMat );
+//     if(weights.y != 0.0) outMat += weights.y * getMat4FromVec4( idx.y, tmpMat );
+//     if(weights.z != 0.0) outMat += weights.z * getMat4FromVec4( idx.z, tmpMat );
+//     if(weights.w != 0.0) outMat += weights.w * getMat4FromVec4( idx.w, tmpMat );
 //     return outMat;
 // }
 
@@ -64,36 +65,36 @@ mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
 // UN-OPTIMIZED VERSION (NO IF)
 //////////////////////////////
 
-// mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
-//     ivec4 idx =  3 * ivec4(bonesIdx);
+// mat4 skinning( const in vec4 weights, const in vec4 bonesIndex ) {
+//     ivec4 idx =  3 * ivec4(bonesIndex);
 //     mat4 tmpMat = mat4(1.0);
 
 //     // if sum is 0, return identity
-//     vec4 absWeights = -abs(weightsVec);
+//     vec4 absWeights = -abs(weights);
 //     mat4 outMat = step(0.0, absWeights.x + absWeights.y + absWeights.z + absWeights.w) * tmpMat;
 
 //     // we handle negative weights
-//     // outMat[3][3] += weightsVec.x + weightsVec.y + weightsVec.z + weightsVec.w;
+//     // outMat[3][3] += weights.x + weights.y + weights.z + weights.w;
 
 //     tmpMat[0] = uBones[ idx.x ];
 //     tmpMat[1] = uBones[ idx.x + 1];
 //     tmpMat[2] = uBones[ idx.x + 2];
-//     outMat += weightsVec.x * tmpMat;
+//     outMat += weights.x * tmpMat;
 
 //     tmpMat[0] = uBones[ idx.y ];
 //     tmpMat[1] = uBones[ idx.y + 1];
 //     tmpMat[2] = uBones[ idx.y + 2];
-//     outMat += weightsVec.y * tmpMat;
+//     outMat += weights.y * tmpMat;
 
 //     tmpMat[0] = uBones[ idx.z ];
 //     tmpMat[1] = uBones[ idx.z + 1];
 //     tmpMat[2] = uBones[ idx.z + 2];
-//     outMat += weightsVec.z * tmpMat;
+//     outMat += weights.z * tmpMat;
 
 //     tmpMat[0] = uBones[ idx.w ];
 //     tmpMat[1] = uBones[ idx.w + 1];
 //     tmpMat[2] = uBones[ idx.w + 2];
-//     outMat += weightsVec.w * tmpMat;
+//     outMat += weights.w * tmpMat;
 
 //     return outMat;
 // }

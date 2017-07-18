@@ -1,27 +1,27 @@
 'use strict';
 var Notify = require('osg/notify');
-var skinning = require('osgShader/node/skinning');
 var data = require('osgShader/node/data');
-var functions = require('osgShader/node/functions');
-var lights = require('osgShader/node/lights');
-var shadows = require('osgShader/node/shadows');
 var operations = require('osgShader/node/operations');
-var textures = require('osgShader/node/textures');
-var morph = require('osgShader/node/morph');
-var billboard = require('osgShader/node/billboard');
+var shaderUtils = require('osgShader/utils');
+var shaderLib = require('osgShader/shaderLib');
+var shadowLib = require('osgShadow/shaderLib');
 
 var Factory = function() {
     this._nodes = new window.Map();
 
-    this.registerNodes(skinning);
+    this.extractFunctions(shaderLib, 'lights.glsl');
+    this.extractFunctions(shaderLib, 'lightCommon.glsl');
+    this.extractFunctions(shaderLib, 'skinning.glsl');
+    this.extractFunctions(shaderLib, 'morphing.glsl');
+    this.extractFunctions(shaderLib, 'billboard.glsl');
+    this.extractFunctions(shaderLib, 'functions.glsl');
+    this.extractFunctions(shaderLib, 'textures.glsl');
+
+    this.extractFunctions(shadowLib, 'shadowCast.glsl');
+    this.extractFunctions(shadowLib, 'shadowReceive.glsl');
+
     this.registerNodes(data);
-    this.registerNodes(textures);
-    this.registerNodes(functions);
-    this.registerNodes(lights);
-    this.registerNodes(morph);
-    this.registerNodes(shadows);
     this.registerNodes(operations);
-    this.registerNodes(billboard);
 };
 
 Factory.prototype = {
@@ -37,6 +37,11 @@ Factory.prototype = {
         }
         this._nodes.set(name, constructor);
     },
+
+    extractFunctions: function(lib, filename) {
+        this.registerNodes(shaderUtils.extractFunctions(lib, filename));
+    },
+
     // extra argument are passed to the constructor of the node
     getNode: function(name) {
         var Constructor = this._nodes.get(name);

@@ -1,5 +1,3 @@
-//begin shadows
-
 #pragma include "colorEncode.glsl"
 
 // end Float codec
@@ -23,5 +21,3 @@ vec4 getQuadFloatFromTex(const in sampler2D depths, const in vec2 uv){
     return texture2D(depths, uv).xyzw;
 }
 // end Float codec
-
-#pragma include "pcf.glsl" 

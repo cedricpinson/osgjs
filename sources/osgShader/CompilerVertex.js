@@ -142,8 +142,6 @@ var CompilerVertex = {
                 vec: out
             });
 
-        // not normalized
-
         return out;
     },
 
@@ -161,8 +159,6 @@ var CompilerVertex = {
             .outputs({
                 vec: out
             });
-
-        // not normalized
 
         return out;
     },
@@ -238,16 +234,15 @@ var CompilerVertex = {
                 ProjectionMatrix: this.getOrCreateUniform('mat4', 'uProjectionMatrix')
             })
             .outputs({
-                vec: glPosition
+                result: glPosition
             });
     },
 
     getOrCreateBoneMatrix: function() {
         // reusable BoneMatrix between Vertex, Normal, Tangent
         // Manadatory: scale animations must be uniform scale
-        var boneMatrix = this._variables['boneMatrix'];
+        var boneMatrix = this._variables.boneMatrix;
         if (boneMatrix) return boneMatrix;
-
         boneMatrix = this.createVariable('mat4', 'boneMatrix');
 
         var inputWeights = this.getOrCreateAttribute('vec4', 'Weights');
@@ -265,7 +260,7 @@ var CompilerVertex = {
                 matrixPalette: matrixPalette
             })
             .outputs({
-                mat4: boneMatrix
+                result: boneMatrix
             });
 
         return boneMatrix;
@@ -287,7 +282,7 @@ var CompilerVertex = {
                     vec: this.getOrCreateMorphNormal()
                 })
                 .outputs({
-                    vec: normalizedMorph
+                    result: normalizedMorph
                 });
         }
 
@@ -311,11 +306,12 @@ var CompilerVertex = {
         };
 
         var numTargets = this._morphAttribute.getNumTargets();
-        for (var i = 0; i < numTargets; i++)
+        for (var i = 0; i < numTargets; i++) {
             inputs['target' + i] = this.getTarget(inputVertex.getVariable(), i);
+        }
 
-        this.getNode('Morph').inputs(inputs).outputs({
-            out: outputVertex
+        this.getNode('Morphing').inputs(inputs).outputs({
+            result: outputVertex
         });
 
         return outputVertex;
@@ -433,7 +429,7 @@ var CompilerVertex = {
                 vec: normal
             })
             .outputs({
-                vec: vecOut
+                result: vecOut
             });
 
         return vecOut;
@@ -461,7 +457,7 @@ var CompilerVertex = {
                 vec: tang3
             })
             .outputs({
-                vec: tangNormalized
+                result: tangNormalized
             });
 
         this.getNode('SetAlpha')
@@ -470,7 +466,7 @@ var CompilerVertex = {
                 alpha: tang4
             })
             .outputs({
-                color: vecOut
+                result: vecOut
             });
 
         return vecOut;
@@ -479,8 +475,9 @@ var CompilerVertex = {
 
 var wrapperVertexOnly = function(fn, name) {
     return function() {
-        if (this._fragmentShaderMode)
+        if (this._fragmentShaderMode) {
             this.logError('This function should not be called from fragment shader : ' + name);
+        }
         return fn.apply(this, arguments);
     };
 };

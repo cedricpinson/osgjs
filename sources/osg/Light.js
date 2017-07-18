@@ -3,6 +3,7 @@
 var MACROUTILS = require('osg/Utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
+var mat3 = require('osg/glMatrix').mat3;
 var mat4 = require('osg/glMatrix').mat4;
 var vec3 = require('osg/glMatrix').vec3;
 var vec4 = require('osg/glMatrix').vec4;
@@ -59,8 +60,7 @@ MACROUTILS.createPrototypeStateAttribute(
         },
 
         getUniformName: function(name) {
-            var prefix = this.getType() + this._lightNumber.toString();
-            return 'u' + prefix + '_' + name;
+            return 'u' + this.getTypeMember() + '_' + name;
         },
 
         getHash: function() {
@@ -74,17 +74,21 @@ MACROUTILS.createPrototypeStateAttribute(
             if (obj.uniforms[typeMember]) return obj.uniforms[typeMember];
 
             obj.uniforms[typeMember] = {
+                viewPosition: Uniform.createFloat4(this.getUniformName('viewPosition')),
+                viewDirection: Uniform.createFloat3(this.getUniformName('viewDirection')),
+                modelViewMatrix: Uniform.createMatrix4(this.getUniformName('modelViewMatrix')),
+                modelViewNormalMatrix: Uniform.createMatrix3(
+                    this.getUniformName('modelViewNormalMatrix')
+                ),
+
                 ambient: Uniform.createFloat4(this.getUniformName('ambient')),
                 diffuse: Uniform.createFloat4(this.getUniformName('diffuse')),
                 specular: Uniform.createFloat4(this.getUniformName('specular')),
                 attenuation: Uniform.createFloat4(this.getUniformName('attenuation')),
-                position: Uniform.createFloat4(this.getUniformName('position')),
-                direction: Uniform.createFloat3(this.getUniformName('direction')),
+
                 spotCutOff: Uniform.createFloat1(this.getUniformName('spotCutOff')),
                 spotBlend: Uniform.createFloat1(this.getUniformName('spotBlend')),
-                ground: Uniform.createFloat4(this.getUniformName('ground')),
-                matrix: Uniform.createMatrix4(this.getUniformName('matrix')),
-                invMatrix: Uniform.createMatrix4(this.getUniformName('invMatrix'))
+                ground: Uniform.createFloat4(this.getUniformName('ground'))
             };
 
             return obj.uniforms[typeMember];
@@ -262,18 +266,16 @@ MACROUTILS.createPrototypeStateAttribute(
         applyPositionedUniform: function(matrix) {
             var uniformMap = this.getOrCreateUniforms();
 
-            var matrixArray = uniformMap.matrix.getInternalArray();
-            var invMatrixArray = uniformMap.invMatrix.getInternalArray();
+            var modelView = uniformMap.modelViewMatrix.getInternalArray();
+            var modelViewNormal = uniformMap.modelViewNormalMatrix.getInternalArray();
+            var viewPosition = uniformMap.viewPosition.getInternalArray();
+            var viewDirection = uniformMap.viewDirection.getInternalArray();
 
-            mat4.copy(matrixArray, matrix);
-            mat4.copy(invMatrixArray, matrix);
+            mat4.copy(modelView, matrix);
+            mat3.normalFromMat4(modelViewNormal, matrix);
 
-            invMatrixArray[12] = 0.0;
-            invMatrixArray[13] = 0.0;
-            invMatrixArray[14] = 0.0;
-
-            mat4.invert(invMatrixArray, invMatrixArray);
-            mat4.transpose(invMatrixArray, invMatrixArray);
+            vec4.transformMat4(viewPosition, this._position, modelView);
+            vec3.transformMat3(viewDirection, this._direction, modelViewNormal);
         },
 
         apply: function() {
@@ -281,16 +283,15 @@ MACROUTILS.createPrototypeStateAttribute(
 
             var uniformMap = this.getOrCreateUniforms();
 
-            uniformMap.position.setFloat4(this._position);
-
             if (this.isSpotLight()) {
                 var spotsize = Math.cos(this._spotCutoff * Math.PI / 180.0);
                 uniformMap.spotCutOff.setFloat(spotsize);
                 uniformMap.spotBlend.setFloat((1.0 - spotsize) * this._spotBlend);
-                uniformMap.direction.setFloat3(this._direction);
             }
 
-            if (this.isHemiLight()) uniformMap.ground.setFloat4(this._ground);
+            if (this.isHemiLight()) {
+                uniformMap.ground.setFloat4(this._ground);
+            }
 
             uniformMap.attenuation.setFloat4(this._attenuation);
             uniformMap.diffuse.setFloat4(this._diffuse);

@@ -42,15 +42,18 @@ MACROUTILS.createPrototypeObject(
 
         // Depth Shadow Map Casted from Light POV Depth encoded in color buffer
         createShadowCastDepth: function(out) {
+            var defines = this._shadowCastAttribute.getDefines();
+
             this.getNode('ShadowCast')
-                .setShadowCastAttribute(this._shadowCastAttribute)
                 .inputs({
                     shadowDepthRange: this.getOrCreateUniform('vec4', 'uShadowDepthRange'),
                     fragEye: this.getOrCreateVarying('vec4', 'vViewVertex')
                 })
                 .outputs({
-                    color: out
-                });
+                    result: out
+                }).getDefines = function() {
+                return defines;
+            };
 
             return out;
         },

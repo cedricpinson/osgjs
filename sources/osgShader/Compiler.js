@@ -181,7 +181,9 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
 
         for (var j = 0; j < texturesNum; j++) {
             var tu = textureAttributes[j];
-            if (tu === undefined) continue;
+            if (tu === undefined) {
+                continue;
+            }
 
             for (var t = 0, tl = tu.length; t < tl; t++) {
                 this.registerTextureAttributes(tu[t], j);
@@ -335,6 +337,7 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
 
     getNode: function(/*name, arg1, etc*/) {
         var n = factory.getNode.apply(factory, arguments);
+        if (!n) Notify.error('Unknown Node type : ' + arguments[0]);
         var cacheID = n.getID();
         this._activeNodeList[cacheID] = n;
         return n;
@@ -572,8 +575,7 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
             node.checkInputsOutputs();
 
             var child = inputs[i];
-
-            if (child !== undefined && child !== node) {
+            if (child && child !== node) {
                 this.traverse(functor, child);
             }
         }
@@ -583,15 +585,28 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
         this.markNodeAsVisited(node);
     },
 
-    // clean necessary bits before traversing called in each evaluate func belows
-    preTraverse: function(visitor) {
-        // store traversed list to prevent double traverse
+    _getAndInitFunctor: function(func) {
         this._traversedNodeList = {};
 
-        visitor._map = {};
-        visitor._text = [];
+        var map = {};
+        var text = [];
+        func = func.bind(this, map, text);
+        func._map = map;
+        func._text = text;
 
-        return visitor;
+        return func;
+    },
+
+    _functorEvaluateAndGatherField: function(field, map, text, node) {
+        var idx = node.getType();
+        if (idx === undefined || idx === '') {
+            this.logError('Your node ' + node + ' has no type');
+        }
+
+        if (!node[field] || map[idx]) return;
+        map[idx] = true;
+
+        Array.prototype.push.apply(text, node[field]());
     },
 
     // Gather a particular output field
@@ -604,21 +619,7 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
     // it use ID rather than Type as map index UNIQUE PER TYPE
     // TODO: adds includes so that we can remove it from the eval Global Functions ?
     evaluateAndGatherField: function(nodes, field) {
-        var func = function(node) {
-            var idx = node.getType();
-            if (idx === undefined || idx === '') {
-                this.logError('Your node ' + node + ' has no type');
-            }
-            if (node[field] && this._map[idx] === undefined) {
-                this._map[idx] = true;
-                var c = node[field]();
-                // push all elements of the array on text array
-                // node[field]()  must return an array
-                Array.prototype.push.apply(this._text, c);
-            }
-        };
-
-        this.preTraverse(func);
+        var func = this._getAndInitFunctor(this._functorEvaluateAndGatherField.bind(this, field));
 
         for (var j = 0, jl = nodes.length; j < jl; j++) {
             this.traverse(func, nodes[j]);
@@ -627,28 +628,26 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
         return func._text;
     },
 
+    _functorEvaluateGlobalFunctionDeclaration: function(map, text, node) {
+        // UNIQUE PER TYPE
+        var idx = node.getType();
+        if (idx === undefined || idx === '') {
+            this.logError('Your node ' + node + ' has no type');
+        }
+
+        if (!node.globalFunctionDeclaration || map[idx]) return;
+        map[idx] = true;
+
+        var decl = node.globalFunctionDeclaration();
+        if (decl) text.push(decl);
+    },
+
     // Gather a functions declartions of nodesfrom a nodeGraph
     // (for now pragma include done here too. could be done with define/etc...)
     // Node of same Type has to share exact same "node.globalFunctionDeclaration" output
     // as it use Type rather than ID as map index
     evaluateGlobalFunctionDeclaration: function(nodes) {
-        var func = function(node) {
-            // UNIQUE PER TYPE
-            var idx = node.getType();
-
-            if (idx === undefined || idx === '') {
-                this.logError('Your node ' + node + ' has no type');
-            }
-            if (node.globalFunctionDeclaration && this._map[idx] === undefined) {
-                this._map[idx] = true;
-                var c = node.globalFunctionDeclaration();
-                if (c !== undefined) {
-                    this._text.push(c);
-                }
-            }
-        };
-
-        this.preTraverse(func);
+        var func = this._getAndInitFunctor(this._functorEvaluateGlobalFunctionDeclaration);
 
         for (var j = 0, jl = nodes.length; j < jl; j++) {
             this.traverse(func, nodes[j]);
@@ -657,24 +656,21 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
         return func._text.join('\n');
     },
 
+    _functorEvaluateGlobalVariableDeclaration: function(map, text, node) {
+        // UNIQUE PER NODE
+        var idx = node.getID();
+        if (!node.globalDeclaration || map[idx]) return;
+        map[idx] = true;
+
+        var decl = node.globalDeclaration();
+        if (decl) text.push(decl);
+    },
+
     // Gather a Variables declarations of nodes from a nodeGraph to be outputted
     // outside the VOID MAIN code ( Uniforms, Varying )
     // Node of same Type has different output as it use Type rather than ID as map index
     evaluateGlobalVariableDeclaration: function(nodes) {
-        var func = function(node) {
-            // UNIQUE PER NODE
-            var idx = node.getID();
-
-            if (node.globalDeclaration && this._map[idx] === undefined) {
-                this._map[idx] = true;
-                var c = node.globalDeclaration();
-                if (c !== undefined) {
-                    this._text.push(c);
-                }
-            }
-        };
-
-        this.preTraverse(func);
+        var func = this._getAndInitFunctor(this._functorEvaluateGlobalVariableDeclaration);
 
         var i = 0;
         var nbNodes = nodes.length;
@@ -721,33 +717,26 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
         }
     },
 
+    _functorEvaluate: function(map, text, node) {
+        var id = node.getID();
+        if (map[id]) return;
+        map[id] = true;
+
+        var shader = node.computeShader();
+        if (!shader) return;
+
+        var comment = node.getComment && node.getComment();
+        if (comment) text.push(comment);
+        text.push(shader);
+    },
+
     evaluate: function(nodes) {
-        var func = function(node) {
-            var id = node.getID();
-            if (this._map[id] !== undefined) {
-                return;
-            }
-
-            var c = node.computeShader();
-            if (c !== undefined) {
-                if (node.getComment !== undefined) {
-                    var comment = node.getComment();
-                    if (comment !== undefined) {
-                        this._text.push(comment);
-                    }
-                }
-
-                this._text.push(c);
-            }
-
-            this._map[id] = true;
-        };
-
-        this.preTraverse(func);
+        var func = this._getAndInitFunctor(this._functorEvaluate);
 
         for (var j = 0, jl = nodes.length; j < jl; j++) {
             this.traverse(func, nodes[j]);
         }
+
         return func._text.join('\n');
     },
 

@@ -225,6 +225,27 @@ MACROUTILS.createPrototypeObject(
     'glPointSize'
 );
 
+var Define = function(name) {
+    Node.call(this);
+    this._defineName = name;
+    this._defineValue = '';
+};
+MACROUTILS.createPrototypeObject(
+    Define,
+    MACROUTILS.objectInherit(Node.prototype, {
+        type: 'Define',
+        setValue: function(value) {
+            this._defineValue = value;
+            return this;
+        },
+        getDefines: function() {
+            return ['#define ' + this._defineName + ' ' + this._defineValue];
+        }
+    }),
+    'osgShader',
+    'Define'
+);
+
 module.exports = {
     Output: Output,
     glPointSize: glPointSize,
@@ -235,5 +256,6 @@ module.exports = {
     Constant: Constant,
     Attribute: Attribute,
     Varying: Varying,
-    Uniform: Uniform
+    Uniform: Uniform,
+    Define: Define
 };
