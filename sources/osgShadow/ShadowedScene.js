@@ -148,8 +148,6 @@ MACROUTILS.createPrototypeNode(
 
             if (!bbox.valid()) {
                 // nothing to draw Early out.
-                this.noDraw();
-
                 if (this._removeNodesNeverCastingVisitor) {
                     // remove our flags changes on any bitmask
                     // not to break things
@@ -196,12 +194,6 @@ MACROUTILS.createPrototypeNode(
                     for (i = 0; i < lt; i++) {
                         st = this._shadowTechniques[i];
                         st.noDraw();
-                    }
-
-                    if (this._removeNodesNeverCastingVisitor) {
-                        // remove our flags changes on any bitmask
-                        // not to break things
-                        this._removeNodesNeverCastingVisitor.restore();
                     }
 
                     return;
