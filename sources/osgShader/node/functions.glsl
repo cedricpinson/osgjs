@@ -62,8 +62,8 @@ vec3 decodeRGBM(const in vec4 color, const in float range) {
 
 // https://twitter.com/pyalot/status/711956736639418369
 // https://github.com/mrdoob/three.js/issues/10331
-#pragma DECLARE_FUNCTION
-#define frontNormal(normal) gl_FrontFacing ? normal : -normal
+#pragma DECLARE_FUNCTION NODE_NAME:FrontNormal
+#define _frontNormal(normal) gl_FrontFacing ? normal : -normal
 
 #pragma DECLARE_FUNCTION NODE_NAME:Normalize
 #define _normalize(vec) normalize(vec)
