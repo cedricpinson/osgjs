@@ -19,16 +19,14 @@ var Vec4CopyKeyFrame = function(i, keys, result) {
 var Vec3LerpInterpolator = function(t, channelInstance) {
     var channel = channelInstance.channel;
     var value = channelInstance.value;
-    var start = channel.start;
-    var end = channel.end;
     var keys = channel.keys;
     var times = channel.times;
 
-    if (t >= end) {
+    if (t >= times[times.length - 1]) {
         channelInstance.key = 0;
         vec3CopyKeyFrame(keys.length - 3, keys, value);
         return;
-    } else if (t <= start) {
+    } else if (t <= times[0]) {
         channelInstance.key = 0;
         vec3CopyKeyFrame(0, keys, value);
         return;
@@ -65,16 +63,14 @@ var QuatLerpInterpolator = (function() {
     return function(t, channelInstance) {
         var channel = channelInstance.channel;
         var value = channelInstance.value;
-        var start = channel.start;
-        var end = channel.end;
         var keys = channel.keys;
         var times = channel.times;
 
-        if (t >= end) {
+        if (t >= times[times.length - 1]) {
             channelInstance.key = 0;
             Vec4CopyKeyFrame(keys.length - 4, keys, value);
             return;
-        } else if (t <= start) {
+        } else if (t <= times[0]) {
             channelInstance.key = 0;
             Vec4CopyKeyFrame(0, keys, value);
             return;
@@ -112,16 +108,14 @@ var QuatSlerpInterpolator = (function() {
     return function(t, channelInstance) {
         var channel = channelInstance.channel;
         var value = channelInstance.value;
-        var start = channel.start;
-        var end = channel.end;
         var keys = channel.keys;
         var times = channel.times;
 
-        if (t >= end) {
+        if (t >= times[times.length - 1]) {
             channelInstance.key = 0;
             Vec4CopyKeyFrame(keys.length - 4, keys, value);
             return;
-        } else if (t <= start) {
+        } else if (t <= times[0]) {
             channelInstance.key = 0;
             Vec4CopyKeyFrame(0, keys, value);
             return;
@@ -156,16 +150,14 @@ var QuatSlerpInterpolator = (function() {
 var FloatLerpInterpolator = function(t, channelInstance) {
     var channel = channelInstance.channel;
     var value = channelInstance.value;
-    var start = channel.start;
-    var end = channel.end;
     var keys = channel.keys;
     var times = channel.times;
 
-    if (t >= end) {
+    if (t >= times[times.length - 1]) {
         channelInstance.key = 0;
         channelInstance.value = keys[keys.length - 1];
         return;
-    } else if (t <= start) {
+    } else if (t <= times[0]) {
         channelInstance.key = 0;
         channelInstance.value = keys[0];
         return;
@@ -192,16 +184,14 @@ var FloatLerpInterpolator = function(t, channelInstance) {
 var FloatCubicBezierInterpolator = function(t, channelInstance) {
     var channel = channelInstance.channel;
     var value = channelInstance.value;
-    var start = channel.start;
-    var end = channel.end;
     var keys = channel.keys;
     var times = channel.times;
 
-    if (t >= end) {
+    if (t >= times[times.length - 1]) {
         channelInstance.key = 0;
         channelInstance.value = keys[keys.length - 3];
         return;
-    } else if (t <= start) {
+    } else if (t <= times[0]) {
         channelInstance.key = 0;
         channelInstance.value = keys[0];
         return;
@@ -237,16 +227,14 @@ var Vec3CubicBezierInterpolator = (function() {
     return function(t, channelInstance) {
         var channel = channelInstance.channel;
         var value = channelInstance.value;
-        var start = channel.start;
-        var end = channel.end;
         var keys = channel.keys;
         var times = channel.times;
 
-        if (t >= end) {
+        if (t >= times[times.length - 1]) {
             channelInstance.key = 0;
             vec3CopyKeyFrame(keys.length - 9, keys, value);
             return;
-        } else if (t <= start) {
+        } else if (t <= times[0]) {
             channelInstance.key = 0;
             vec3CopyKeyFrame(0, keys, value);
             return;
