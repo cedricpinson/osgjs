@@ -9,6 +9,7 @@
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
 
+    var nodeFactory = osgShader.nodeFactory;
     var CustomCompiler = window.CustomCompiler;
     var RampAttribute = window.RampAttribute;
     var NegatifAttribute = window.NegatifAttribute;
@@ -73,16 +74,21 @@
         },
 
         readShaders: function() {
-            // get or create shader processor
+            // get shader processor
             var shaderProcessor = new osgShader.ShaderProcessor();
 
             var promise = P.resolve($.get('shaders/custom.glsl'));
 
             // register shader to the shader processor
             promise.then(function(shader) {
-                shaderProcessor.addShaders({
+                var shaderLib = {
                     'custom.glsl': shader
-                });
+                };
+
+                shaderProcessor.addShaders(shaderLib);
+                // tell that we want to extract a compiler shader node function
+                // from our row shader
+                nodeFactory.extractFunctions(shaderLib, 'custom.glsl');
             });
 
             return promise;

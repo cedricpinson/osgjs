@@ -17,24 +17,27 @@
     osgShader.Compiler.setStateAttributeConfig(CustomCompiler, config);
 
     CustomCompiler.prototype = osg.objectInherit(osgShader.Compiler.prototype, {
-        createLighting: function() {
-            // we simply hook the createLighting function and apply our ramp and negatif attributes
-            var lightOutput = osgShader.Compiler.prototype.createLighting.call(this);
+        getLighting: function() {
+            // we simply hook the getLighting function and apply our ramp and negatif attributes
+            var lightOutput = osgShader.Compiler.prototype.getLighting.call(this);
 
             // ======================================================
             // my custom attribute ramp
             // it's here I connect ouput of light result with my ramp
             // ======================================================
             var rampAttribute = this.getAttributeType('Ramp');
-            if (rampAttribute && rampAttribute.getAttributeEnable()) {
+
+            if (rampAttribute) {
                 var rampResult = this.createVariable('vec3');
+
                 this.getNode('Ramp')
                     .inputs({
-                        color: lightOutput
+                        colorInput: lightOutput
                     })
                     .outputs({
-                        color: rampResult
+                        colorOutput: rampResult
                     });
+
                 lightOutput = rampResult;
             }
 
@@ -42,19 +45,22 @@
             // my custom attribute negatif
             // it's here I connect ouput of light result with my ramp
             // ======================================================
+
             var negatifAttribute = this.getAttributeType('Negatif');
+
             if (negatifAttribute) {
+                var uEnable = negatifAttribute.getOrCreateUniforms().enable;
                 var negatifResult = this.createVariable('vec3');
+
                 this.getNode('Negatif')
                     .inputs({
-                        color: lightOutput,
-                        enable: this.getOrCreateUniform(
-                            negatifAttribute.getOrCreateUniforms().enable
-                        )
+                        colorInput: lightOutput,
+                        enable: this.getOrCreateUniform(uEnable)
                     })
                     .outputs({
-                        color: negatifResult
+                        colorOutput: negatifResult
                     });
+
                 lightOutput = negatifResult;
             }
 

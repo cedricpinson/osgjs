@@ -1,3 +1,4 @@
+#pragma DECLARE_FUNCTION
 void ramp( const in vec3 colorInput, out vec3 colorOutput ) {
 
     // ramp 0.2
@@ -20,8 +21,7 @@ void ramp( const in vec3 colorInput, out vec3 colorOutput ) {
 
 }
 
-
-
+#pragma DECLARE_FUNCTION
 void negatif( const in int enable, const in vec3 colorInput, out vec3 colorOutput ) {
 
     if ( enable == 1 )
