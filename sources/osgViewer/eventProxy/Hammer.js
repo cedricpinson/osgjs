@@ -50,16 +50,15 @@ HammerController.prototype = {
     },
 
     isValid: function() {
-        if (
-            this._enable &&
-            this._viewer.getManipulator() &&
-            this._viewer.getManipulator().getControllerList()[this._type]
-        )
+        if (this._enable && this.getManipulatorController()) {
             return true;
+        }
         return false;
     },
+
     getManipulatorController: function() {
-        return this._viewer.getManipulator().getControllerList()[this._type];
+        var manip = this._viewer.getManipulator();
+        return manip && manip.getControllerList()[this._type];
     },
 
     // use the update to set the input device to mouse controller
