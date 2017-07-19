@@ -53,20 +53,20 @@ MACROUTILS.createPrototypeObject(
             if (!this._imageObject) {
                 return P.reject();
             }
-
-            if (!this._canPlayDefered) {
-                this._canPlayDefered = P.defer();
-                // resolve directly if the event is already fired
-                if (this._imageObject.readyState > 3) this._canPlayDefered.resolve(this);
-                else
-                    this._imageObject.addEventListener(
-                        'canplaythrough',
-                        this._canPlayDefered.resolve.bind(this._canPlayDefered, this),
-                        true
-                    );
-            }
-
-            return this._canPlayDefered.promise;
+            var that = this;
+            return new P(function(resolve) {
+                if (!that._canPlayDefered) {
+                    that._canPlayDefered = resolve;
+                    // resolve directly if the event is already fired
+                    if (that._imageObject.readyState > 3) that._canPlayDefered(that);
+                    else
+                        that._imageObject.addEventListener(
+                            'canplaythrough',
+                            that._canPlayDefered.bind(that._canPlayDefered, that),
+                            true
+                        );
+                }
+            });
         }
     }),
     'osg',

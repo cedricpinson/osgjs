@@ -1,7 +1,6 @@
 window.EnvironmentPanorama = (function() {
     'use strict';
 
-    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -65,8 +64,6 @@ window.EnvironmentPanorama = (function() {
         },
 
         loadPacked: function(type) {
-            var defer = P.defer();
-
             var readInputArray = function(inputArray) {
                 var data = inputArray;
                 if (osgDB.isGunzipBuffer(data)) data = osgDB.gunzip(data);
@@ -92,22 +89,18 @@ window.EnvironmentPanorama = (function() {
 
                 if (type === 'FLOAT') this.createFloatPacked(image);
                 else this.createRGBA8Packed(image);
-
-                defer.resolve();
             }.bind(this);
 
             if (this._data) {
-                readInputArray(this._data);
+                return readInputArray(this._data);
             } else {
                 var input = new osgDB.Input();
-                input
+                return input
                     .requestFile(this._file, {
                         responseType: 'arraybuffer'
                     })
                     .then(readInputArray);
             }
-
-            return defer.promise;
         },
 
         createFloatPacked: function(image) {

@@ -1,7 +1,6 @@
 window.IntegrateBRDFMap = (function() {
     'use strict';
 
-    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -26,8 +25,6 @@ window.IntegrateBRDFMap = (function() {
         },
 
         loadPacked: function() {
-            var defer = P.defer();
-
             var size = this._size;
 
             var readInputArray = function(inputArray) {
@@ -46,21 +43,19 @@ window.IntegrateBRDFMap = (function() {
                 this._texture = this.createTexture(image);
                 this._texture.setFlipY(false);
 
-                defer.resolve(this._texture);
+                return this._texture;
             }.bind(this);
 
             if (this._data) {
-                readInputArray(this._data);
+                return readInputArray(this._data);
             } else {
                 var input = new osgDB.Input();
-                input
+                return input
                     .requestFile(this._file, {
                         responseType: 'arraybuffer'
                     })
                     .then(readInputArray);
             }
-
-            return defer.promise;
         }
     };
 

@@ -463,8 +463,6 @@
         },
 
         readShaders: function() {
-            var defer = P.defer();
-
             var shaderNames = [
                 'math.glsl',
                 'cubemapVertex.glsl',
@@ -496,18 +494,14 @@
                 promises.push(P.resolve($.get(shader)));
             });
 
-            P.all(promises).then(function(args) {
+            return P.all(promises).then(function(args) {
                 var shaderNameContent = {};
                 shaderNames.forEach(function(name, idx) {
                     shaderNameContent[name] = args[idx];
                 });
 
                 shaderProcessor.addShaders(shaderNameContent);
-
-                defer.resolve();
             });
-
-            return defer.promise;
         },
 
         // config = {

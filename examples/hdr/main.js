@@ -81,106 +81,104 @@
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.responseType = 'arraybuffer';
+        return new P(function(resolve) {
+            xhr.onload = function() {
+                if (xhr.response) {
+                    var bytes = new Uint8Array(xhr.response);
 
-        var defer = P.defer();
-        xhr.onload = function(/*ev*/) {
-            if (xhr.response) {
-                var bytes = new Uint8Array(xhr.response);
+                    var header = decodeHDRHeader(bytes);
+                    if (header === false) return;
 
-                var header = decodeHDRHeader(bytes);
-                if (header === false) return;
+                    // initialize output buffer
+                    var data = new Uint8Array(header.width * header.height * 4);
+                    var imgOffset = 0;
 
-                // initialize output buffer
-                var data = new Uint8Array(header.width * header.height * 4);
-                var imgOffset = 0;
-
-                if (header.scanlineWidth < 8 || header.scanlineWidth > 0x7fff) {
-                    console.error('not rle compressed .hdr file');
-                    return;
-                }
-
-                // read in each successive scanline
-                var scanlineBuffer = new Uint8Array(4 * header.scanlineWidth);
-                var readOffset = header.size;
-                var numScanlines = header.numScanlines;
-                while (numScanlines > 0) {
-                    var offset = 0;
-                    var rgbe = [
-                        bytes[readOffset++],
-                        bytes[readOffset++],
-                        bytes[readOffset++],
-                        bytes[readOffset++]
-                    ];
-                    var buf = [0, 0];
-
-                    if (rgbe[0] !== 2 || rgbe[1] !== 2 || rgbe[2] & 0x80) {
-                        console.error('this file is not run length encoded');
+                    if (header.scanlineWidth < 8 || header.scanlineWidth > 0x7fff) {
+                        console.error('not rle compressed .hdr file');
                         return;
                     }
 
-                    if (((rgbe[2] << 8) | rgbe[3]) !== header.scanlineWidth) {
-                        console.error('wrong scanline width');
-                        return;
-                    }
+                    // read in each successive scanline
+                    var scanlineBuffer = new Uint8Array(4 * header.scanlineWidth);
+                    var readOffset = header.size;
+                    var numScanlines = header.numScanlines;
+                    while (numScanlines > 0) {
+                        var offset = 0;
+                        var rgbe = [
+                            bytes[readOffset++],
+                            bytes[readOffset++],
+                            bytes[readOffset++],
+                            bytes[readOffset++]
+                        ];
+                        var buf = [0, 0];
 
-                    // read each of the four channels for the scanline into the buffer
-                    var count;
-                    for (var i = 0; i < 4; i++) {
-                        var offsetEnd = (i + 1) * header.scanlineWidth;
-                        while (offset < offsetEnd) {
-                            buf[0] = bytes[readOffset++];
-                            buf[1] = bytes[readOffset++];
+                        if (rgbe[0] !== 2 || rgbe[1] !== 2 || rgbe[2] & 0x80) {
+                            console.error('this file is not run length encoded');
+                            return;
+                        }
 
-                            if (buf[0] > 128) {
-                                // a run of the same value
-                                count = buf[0] - 128;
-                                if (count === 0 || count > offsetEnd - offset) {
-                                    console.error('bad scanline data');
-                                    return;
-                                }
-                                while (count-- > 0) scanlineBuffer[offset++] = buf[1];
-                            } else {
-                                // a non-run
-                                count = buf[0];
-                                if (count === 0 || count > offsetEnd - offset) {
-                                    console.error('bad scanline data');
-                                    return;
-                                }
-                                scanlineBuffer[offset++] = buf[1];
+                        if (((rgbe[2] << 8) | rgbe[3]) !== header.scanlineWidth) {
+                            console.error('wrong scanline width');
+                            return;
+                        }
 
-                                if (--count > 0) {
-                                    while (count-- > 0) {
-                                        scanlineBuffer[offset++] = bytes[readOffset++];
+                        // read each of the four channels for the scanline into the buffer
+                        for (var i = 0; i < 4; i++) {
+                            var offsetEnd = (i + 1) * header.scanlineWidth;
+                            var count;
+                            while (offset < offsetEnd) {
+                                buf[0] = bytes[readOffset++];
+                                buf[1] = bytes[readOffset++];
+
+                                if (buf[0] > 128) {
+                                    // a run of the same value
+                                    count = buf[0] - 128;
+                                    if (count === 0 || count > offsetEnd - offset) {
+                                        console.error('bad scanline data');
+                                        return;
+                                    }
+                                    while (count-- > 0) scanlineBuffer[offset++] = buf[1];
+                                } else {
+                                    // a non-run
+                                    count = buf[0];
+                                    if (count === 0 || count > offsetEnd - offset) {
+                                        console.error('bad scanline data');
+                                        return;
+                                    }
+                                    scanlineBuffer[offset++] = buf[1];
+
+                                    if (--count > 0) {
+                                        while (count-- > 0) {
+                                            scanlineBuffer[offset++] = bytes[readOffset++];
+                                        }
                                     }
                                 }
                             }
                         }
+
+                        // fill the image array
+                        for (i = 0; i < header.scanlineWidth; i++) {
+                            data[imgOffset++] = scanlineBuffer[i];
+                            data[imgOffset++] = scanlineBuffer[i + header.scanlineWidth];
+                            data[imgOffset++] = scanlineBuffer[i + 2 * header.scanlineWidth];
+                            data[imgOffset++] = scanlineBuffer[i + 3 * header.scanlineWidth];
+                        }
+
+                        numScanlines--;
                     }
 
-                    // fill the image array
-                    for (i = 0; i < header.scanlineWidth; i++) {
-                        data[imgOffset++] = scanlineBuffer[i];
-                        data[imgOffset++] = scanlineBuffer[i + header.scanlineWidth];
-                        data[imgOffset++] = scanlineBuffer[i + 2 * header.scanlineWidth];
-                        data[imgOffset++] = scanlineBuffer[i + 3 * header.scanlineWidth];
-                    }
-
-                    numScanlines--;
+                    // send deferred info
+                    img.data = data;
+                    img.width = header.width;
+                    img.height = header.height;
+                    resolve(img);
                 }
+            };
 
-                // send deferred info
-                img.data = data;
-                img.width = header.width;
-                img.height = header.height;
-                defer.resolve(img);
-            }
-        };
-
-        // async/defer
-        xhr.send(null);
-        return defer.promise;
+            // async/defer
+            xhr.send(null);
+        });
     };
-
     var nbLoading = 0;
     var removeLoading = function() {
         nbLoading -= 1;

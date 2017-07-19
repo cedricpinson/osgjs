@@ -130,7 +130,6 @@
         readShaders: function(shadersFilenames) {
             this._shaderProcessor = new osgShader.ShaderProcessor();
 
-            var defer = P.defer();
             var shaderNames = shadersFilenames || this._shaderNames;
             var shaders = shaderNames.map(
                 function(arg) {
@@ -145,7 +144,7 @@
                 }.bind(this)
             );
 
-            P.all(promises).then(
+            return P.all(promises).then(
                 function(args) {
                     var shaderNameContent = {};
                     shaderNames.forEach(function(name, idx) {
@@ -153,12 +152,8 @@
                     });
 
                     this._shaderProcessor.addShaders(shaderNameContent);
-
-                    defer.resolve();
                 }.bind(this)
             );
-
-            return defer.promise;
 
             // wait for shaders:
             // this.readShaders.then(function(){ this.run(); }.bind(this))

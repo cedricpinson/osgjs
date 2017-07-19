@@ -32,39 +32,35 @@ MACROUTILS.createPrototypeObject(
             return P.resolve(data);
         },
 
-        fetchImage: function(image, url, options, defer) {
+        fetchImage: function(image, url, options) {
             var checkInlineImage = 'data:image/';
             // crossOrigin does not work for inline data image
             var isInlineImage = url.substring(0, checkInlineImage.length) === checkInlineImage;
             var img = new window.Image();
-            img.onerror = function() {
-                notify.warn('warning use white texture as fallback instead of ' + url);
-                image.setImage(Input.imageFallback);
-                image.getImage().crossOrigin = options.imageCrossOrigin;
-                if (defer) {
-                    defer.resolve(image);
-                }
-            };
-
-            img.onload = function() {
-                if (defer) {
-                    if (options.imageOnload) options.imageOnload.call(image);
-                    defer.resolve(image);
-                } else if (options.imageOnload) {
-                    options.imageOnload.call(image);
-                }
-            };
 
             image.setURL(url);
             image.setImage(img);
             img.src = url;
-            if (!isInlineImage && options.imageCrossOrigin) {
-                img.onerror();
-            } else {
-                img.onload();
-            }
 
-            return image;
+            return new P(function(resolve) {
+                img.onerror = function() {
+                    notify.warn('warning use white texture as fallback instead of ' + url);
+                    image.setImage(Input.imageFallback);
+                    image.setImage(Input.imageFallback);
+                    image.getImage().crossOrigin = options.imageCrossOrigin;
+                    resolve(image);
+                };
+
+                img.onload = function() {
+                    if (options.imageOnload) options.imageOnload.call(image);
+                    resolve(image);
+                };
+                if (!isInlineImage && options.imageCrossOrigin) {
+                    img.onerror();
+                } else {
+                    img.onload();
+                }
+            });
         }
     })
 );

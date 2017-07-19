@@ -1,7 +1,6 @@
 window.EnvironmentCubeMap = (function() {
     'use strict';
 
-    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -91,8 +90,6 @@ window.EnvironmentCubeMap = (function() {
             var type = type0;
             if (type === undefined) type = 'FLOAT';
 
-            var defer = P.defer();
-
             var readInputArray = function(inputArray) {
                 var data = inputArray;
                 if (osgDB.isGunzipBuffer(data)) data = osgDB.gunzip(data);
@@ -116,13 +113,11 @@ window.EnvironmentCubeMap = (function() {
                             imageData = new Float32Array(data, offset, byteSize / 4);
                             deinterleave = new Float32Array(byteSize / 4);
                             this.deinterleaveImage3(size, imageData, deinterleave);
-                            //deinterleave = imageData;
                         } else {
                             byteSize = size * size * 4;
                             imageData = new Uint8Array(data, offset, byteSize);
                             deinterleave = new Uint8Array(byteSize);
                             this.deinterleaveImage4(size, imageData, deinterleave);
-                            //deinterleave = imageData;
                         }
                         imageData = deinterleave;
 
@@ -140,22 +135,18 @@ window.EnvironmentCubeMap = (function() {
 
                 if (type === 'FLOAT') this.createFloatPacked();
                 else this.createRGBA8Packed();
-
-                defer.resolve();
             }.bind(this);
 
             if (this._data) {
-                readInputArray(this._data);
+                return readInputArray(this._data);
             } else {
                 var input = new osgDB.Input();
-                input
+                return input
                     .requestFile(this._file, {
                         responseType: 'arraybuffer'
                     })
                     .then(readInputArray);
             }
-
-            return defer.promise;
         },
 
         getTexture: function() {
@@ -166,8 +157,6 @@ window.EnvironmentCubeMap = (function() {
             var texture = new osg.TextureCubeMap();
             texture.setMinFilter(this._options.minFilter || 'LINEAR_MIPMAP_LINEAR');
             texture.setMagFilter(this._options.magFilter || 'LINEAR');
-            // texture.setMinFilter( 'NEAREST_MIPMAP_NEAREST' );
-            // texture.setMagFilter( 'NEAREST' );
             texture.setType('FLOAT');
             texture.setFlipY(false);
 
@@ -183,8 +172,6 @@ window.EnvironmentCubeMap = (function() {
             var texture = new osg.TextureCubeMap();
             texture.setMinFilter('LINEAR_MIPMAP_LINEAR');
             texture.setMagFilter('LINEAR');
-            // texture.setMinFilter( 'NEAREST_MIPMAP_NEAREST' );
-            // texture.setMagFilter( 'NEAREST' );
             texture.setFlipY(false);
 
             for (var j = 0; j < 6; j++) {

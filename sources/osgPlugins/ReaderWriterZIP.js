@@ -15,10 +15,9 @@ var ReaderWriterZIP = function() {
 
 ReaderWriterZIP.prototype = {
     readNodeURL: function(url, options) {
-        var defer = P.defer();
         if (JSZip === undefined) {
             Notify.error('You need to add JSZip as a dependency');
-            return defer.reject();
+            return;
         }
         Notify.log('starting to read: ' + url);
         // Check if we already have the file
@@ -43,17 +42,14 @@ ReaderWriterZIP.prototype = {
             responseType: 'blob'
         });
 
-        filePromise.then(function(zfile) {
+        return filePromise.then(function(zfile) {
             self.readZipFile(zfile).then(function() {
                 // At this point we have the main file name and a Map containing all the resources
-                defer.resolve(
-                    ReaderParser.readNodeURL(self._fileName, {
-                        filesMap: self._filesMap
-                    })
-                );
+                return ReaderParser.readNodeURL(self._fileName, {
+                    filesMap: self._filesMap
+                });
             });
         });
-        return defer.promise;
     },
 
     _registerZipImage: function(fileName, type, extension, fileData) {
@@ -67,8 +63,7 @@ ReaderWriterZIP.prototype = {
     },
 
     readZipFile: function(fileOrBlob) {
-        var defer = P.defer();
-        JSZip.loadAsync(fileOrBlob).then(
+        return JSZip.loadAsync(fileOrBlob).then(
             function(zip) {
                 var promisesArray = [];
 
@@ -94,13 +89,9 @@ ReaderWriterZIP.prototype = {
                     promisesArray.push(p);
                 }
 
-                P.all(promisesArray).then(function() {
-                    defer.resolve();
-                });
+                return P.all(promisesArray);
             }.bind(this)
         );
-
-        return defer.promise;
     }
 };
 
