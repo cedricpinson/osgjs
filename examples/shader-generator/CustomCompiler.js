@@ -27,7 +27,7 @@
             // ======================================================
             var rampAttribute = this.getAttributeType('Ramp');
 
-            if (rampAttribute) {
+            if (rampAttribute && rampAttribute.getAttributeEnable()) {
                 var rampResult = this.createVariable('vec3');
 
                 this.getNode('Ramp')
