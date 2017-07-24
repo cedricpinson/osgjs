@@ -91,12 +91,13 @@ vec3 computeIBL_UE4( const in vec3 normal,
                      const in vec3 view,
                      const in vec3 albedo,
                      const in float roughness,
-                     const in vec3 specular)
+                     const in vec3 specular,
+                     const in float ao)
 {
 
     vec3 color = vec3(0.0);
     if ( albedo != color ) { // skip if no diffuse
-        color += uBrightness * albedo * evaluateDiffuseSphericalHarmonics(normal,
+        color += uBrightness * albedo * ao * evaluateDiffuseSphericalHarmonics(normal,
                                                                           view );
     }
 

@@ -28,6 +28,7 @@ varying vec3 vViewVertex;
 varying vec3 vViewNormal;
 varying vec2 vTexCoord0;
 varying vec4 vViewTangent;
+varying vec4 vVertexColor;
 
 mat3 environmentTransform;
 
@@ -36,13 +37,19 @@ uniform sampler2D metallicRoughnessMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D aoMap;
+uniform sampler2D emissiveMap;
+uniform vec4 uBaseColorFactor;
+uniform vec3 uEmissiveFactor;
+uniform vec3 uSpecularFactor;
+uniform float uGlossinessFactor;
+uniform float uMetallicFactor;
+uniform float uRoughnessFactor;
 uniform int uNormalAA;
 uniform int uSpecularPeak;
 uniform int uOcclusionHorizon;
 
 #pragma include "sphericalHarmonics.glsl"
 #pragma include "colorSpace.glsl"
-
 
 // From Sebastien Lagarde Moving Frostbite to PBR page 69
 // We have a better approximation of the off specular peak
@@ -143,9 +150,17 @@ void main(void) {
 
     const vec3 dielectricColor = vec3(0.04);
     float minRoughness = 1.e-4;
-
-    vec4 albedoSource = texture2D( albedoMap, uv ).rgba;
-    vec3 albedo = sRGBToLinear( albedoSource.rgb, DefaultGamma );
+    vec4 albedoSource = texture2D( albedoMap, uv );
+    albedoSource.a *=  uBaseColorFactor.a;
+    vec3 albedo = sRGBToLinear( albedoSource.rgb, DefaultGamma ) * uBaseColorFactor.rgb;
+#ifdef VERTEX_COLOR
+    vec3 vertexColorLinear = sRGBToLinear( vVertexColor.rgb, DefaultGamma );
+    // Check non zero non completely transparent
+    if(vertexColorLinear.rgb != vec3(0.0) && vVertexColor.a != 0.0){
+        albedo *= vertexColorLinear;
+        albedoSource.a *= vVertexColor.a;
+    }
+#endif
 
 #ifdef NORMAL
     vec3 normalTexel = texture2D( normalMap, uv ).rgb;
@@ -156,10 +171,10 @@ void main(void) {
 #endif
 
 #ifdef SPECULAR_GLOSSINESS
-    float roughness = texture2D( metallicRoughnessMap, uv ).a;
+    float roughness = texture2D( metallicRoughnessMap, uv ).a * uGlossinessFactor;
     roughness = 1.0 - roughness;
 #else
-    float roughness = texture2D( metallicRoughnessMap, uv ).g;
+    float roughness = texture2D( metallicRoughnessMap, uv ).g * uRoughnessFactor;
 #endif
 
     roughness = max( minRoughness , roughness );
@@ -176,18 +191,22 @@ void main(void) {
 #endif
     vec3 specular;
 #ifdef SPECULAR
-    specular = sRGBToLinear( texture2D( specularMap, vTexCoord0 ), DefaultGamma ).rgb;
+    specular = sRGBToLinear( texture2D( specularMap, uv ), DefaultGamma ).rgb * uSpecularFactor;
 #else 
     #ifdef SPECULAR_GLOSSINESS
-        specular = sRGBToLinear( texture2D( metallicRoughnessMap, vTexCoord0 ), DefaultGamma ).rgb;
+        specular = sRGBToLinear( texture2D( metallicRoughnessMap, uv ), DefaultGamma ).rgb * uSpecularFactor;
     #else
-        float metallic = texture2D( metallicRoughnessMap, uv ).b;
+        float metallic = texture2D( metallicRoughnessMap, uv ).b * uMetallicFactor;
         vec3 albedoReduced = albedo * (1.0 - metallic);
         specular = mix( dielectricColor, albedo, metallic);
         albedo = albedoReduced;
     #endif
 #endif
-    vec3 resultIBL = computeIBL_UE4( normal, -eye, albedo, roughness, specular );
+    vec3 resultIBL = computeIBL_UE4( normal, -eye, albedo, roughness, specular, ao );
+#ifdef EMISSIVE
+    vec3 emissiveChannel = sRGBToLinear( texture2D( emissiveMap, uv ), DefaultGamma ).rgb * uEmissiveFactor;
+    resultIBL = resultIBL + emissiveChannel;
+#endif
     vec4 result = vec4( resultIBL, albedoSource.a );
 
     gl_FragColor = linearTosRGB(result, DefaultGamma );

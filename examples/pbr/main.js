@@ -93,19 +93,25 @@
         return result;
     };
 
-    var PBRWorklowVisitor = function() {
+    var PBRWorkflowVisitor = function() {
         this._workflow = [];
         osg.NodeVisitor.call(this);
     };
 
-    PBRWorklowVisitor.prototype = osg.objectInherit(osg.NodeVisitor.prototype, {
+    PBRWorkflowVisitor.prototype = osg.objectInherit(osg.NodeVisitor.prototype, {
         apply: function(node) {
             var data = node.getUserData();
+            var vertexColor;
             if (data && data.pbrWorklow) {
                 var stateSetWorkflow = {
                     stateSet: node.getOrCreateStateSet(),
                     workflow: data.pbrWorklow
                 };
+                // Need to store if model has vertexColors
+                if (node instanceof osg.Geometry) {
+                    vertexColor = node.getAttributes().Color !== undefined;
+                    stateSetWorkflow.vertexColor = vertexColor;
+                }
                 this._workflow.push(stateSetWorkflow);
             }
             this.traverse(node);
@@ -525,8 +531,12 @@
 
             if (config && config.normalMap === true) defines.push('#define NORMAL');
 
+            if (config && config.vertexColor === true) defines.push('#define VERTEX_COLOR');
+
             if (config && config.specularGlossinessMap === true)
                 defines.push('#define SPECULAR_GLOSSINESS');
+
+            if (config && config.emissiveMap === true) defines.push('#define EMISSIVE');
 
             if (config && config.specularMap === true) defines.push('#define SPECULAR');
 
@@ -732,28 +742,45 @@
                 ) {
                     model = this._modelsLoaded[this._config.model];
 
-                    var visitorWorkflow = new PBRWorklowVisitor();
+                    var visitorWorkflow = new PBRWorkflowVisitor();
                     model.accept(visitorWorkflow);
 
                     var workflows = visitorWorkflow.getWorkflows();
+                    var tex1 = this.getTexture1111();
                     for (var i = 0; i < workflows.length; ++i) {
+                        var normalMap = true;
+                        var emissive = true;
+                        var vertexColor = false;
+                        var stateSet = workflows[i].stateSet;
                         var specularWorkflow = workflows[i].workflow === window.GLTF_PBR_SPEC_MODE;
                         // Check we have textures, else generate 1x1 texture
-                        if (
-                            specularWorkflow &&
-                            workflows[i].stateSet.getNumTextureAttributeLists() === 0
-                        ) {
-                            var tex1 = this.getTexture1111();
-                            var tex0 = this.getTexture0000();
-                            workflows[i].stateSet.setTextureAttributeAndModes(2, tex1);
-                            workflows[i].stateSet.setTextureAttributeAndModes(3, tex1);
-                            workflows[i].stateSet.setTextureAttributeAndModes(5, tex0);
-                        }
 
+                        // From the spec:  If a texture is not given, all respective texture components
+                        // within this material model are assumed to have a value of 1.0.
+                        // If both factors and textures are present the factor value acts
+                        // as a linear multiplier for the corresponding texture values.
+                        if (stateSet.getTextureAttribute(2, 'Texture') === undefined) {
+                            stateSet.setTextureAttributeAndModes(2, tex1);
+                        }
+                        if (stateSet.getTextureAttribute(3, 'Texture') === undefined) {
+                            stateSet.setTextureAttributeAndModes(3, tex1);
+                        }
+                        if (stateSet.getTextureAttribute(5, 'Texture') === undefined) {
+                            normalMap = false;
+                        }
+                        if (stateSet.getTextureAttribute(7, 'Texture') === undefined) {
+                            emissive = false;
+                        }
+                        // Search for vertex colors in the model
+                        if (workflows[i].vertexColor === true) {
+                            vertexColor = true;
+                        }
                         var shaderConfig = {
-                            normalMap: true,
+                            normalMap: normalMap,
+                            vertexColor: vertexColor,
                             noTangent: false,
-                            specularGlossinessMap: specularWorkflow
+                            specularGlossinessMap: specularWorkflow,
+                            emissiveMap: emissive
                         };
 
                         var config = {
@@ -1110,26 +1137,38 @@
                     this.updateEnvironment();
                     // y up
                     osg.mat4.fromRotation(group.getMatrix(), -Math.PI / 2, [-1, 0, 0]);
+                    var stateSet = root.getOrCreateStateSet();
+                    stateSet.addUniform(
+                        osg.Uniform.createInt(
+                            window.METALLIC_ROUGHNESS_TEXTURE_UNIT,
+                            'metallicRoughnessMap'
+                        )
+                    );
+                    stateSet.addUniform(
+                        osg.Uniform.createInt(window.NORMAL_TEXTURE_UNIT, 'normalMap')
+                    );
+                    stateSet.addUniform(
+                        osg.Uniform.createInt(window.SPECULAR_TEXTURE_UNIT, 'specularMap')
+                    );
+                    stateSet.addUniform(
+                        osg.Uniform.createInt(window.ALBEDO_TEXTURE_UNIT, 'albedoMap')
+                    );
 
-                    root
-                        .getOrCreateStateSet()
-                        .addUniform(
-                            osg.Uniform.createInt(
-                                window.METALLIC_ROUGHNESS_TEXTURE_UNIT,
-                                'metallicRoughnessMap'
-                            )
-                        );
-                    root
-                        .getOrCreateStateSet()
-                        .addUniform(osg.Uniform.createInt(window.NORMAL_TEXTURE_UNIT, 'normalMap'));
-                    root
-                        .getOrCreateStateSet()
-                        .addUniform(
-                            osg.Uniform.createInt(window.SPECULAR_TEXTURE_UNIT, 'specularMap')
-                        );
-                    root
-                        .getOrCreateStateSet()
-                        .addUniform(osg.Uniform.createInt(window.ALBEDO_TEXTURE_UNIT, 'albedoMap'));
+                    //PBR default uniforms
+                    stateSet.addUniform(
+                        osg.Uniform.createFloat4(
+                            osg.vec4.fromValues(1.0, 1.0, 1.0, 1.0),
+                            'uBaseColorFactor'
+                        )
+                    );
+                    stateSet.addUniform(osg.Uniform.createFloat1(1.0, 'uMetallicFactor'));
+                    stateSet.addUniform(osg.Uniform.createFloat1(1.0, 'uRoughnessFactor'));
+
+                    //PBR default specular/glossiness
+                    stateSet.addUniform(osg.Uniform.createFloat1(1.0, 'uGlossinessFactor'));
+                    stateSet.addUniform(
+                        osg.Uniform.createFloat3(osg.vec3.fromValues(1, 1, 1), 'uSpecularFactor')
+                    );
 
                     this._viewer.getManipulator().computeHomePosition();
                     this.updateCameraPreset();
