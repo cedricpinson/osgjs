@@ -88,12 +88,14 @@ ReaderWriterGLTF.METALLIC_ROUGHNESS_TEXTURE_UNIT = 3;
 ReaderWriterGLTF.SPECULAR_TEXTURE_UNIT = 4;
 ReaderWriterGLTF.NORMAL_TEXTURE_UNIT = 5;
 ReaderWriterGLTF.AO_TEXTURE_UNIT = 6;
+ReaderWriterGLTF.EMISSIVE_TEXTURE_UNIT = 7;
 
 ReaderWriterGLTF.ALBEDO_UNIFORM = 'albedoMap';
 ReaderWriterGLTF.METALLIC_ROUGHNESS_UNIFORM = 'metallicRoughnessMap';
 ReaderWriterGLTF.SPECULAR_UNIFORM = 'specularMap';
 ReaderWriterGLTF.NORMAL_UNIFORM = 'normalMap';
 ReaderWriterGLTF.AO_UNIFORM = 'aoMap';
+ReaderWriterGLTF.EMISSIVE_UNIFORM = 'emissiveMap';
 
 ReaderWriterGLTF.prototype = {
     init: function() {
@@ -479,6 +481,7 @@ ReaderWriterGLTF.prototype = {
 
         var promises = [];
         var model = '';
+
         if (pbrMetallicRoughness) {
             if (pbrMetallicRoughness.baseColorTexture)
                 promises.push(
@@ -489,6 +492,24 @@ ReaderWriterGLTF.prototype = {
                         ReaderWriterGLTF.ALBEDO_UNIFORM
                     )
                 );
+            if (pbrMetallicRoughness.baseColorFactor) {
+                //PBR default uniforms
+                osgStateSet.addUniform(
+                    Uniform.createFloat4(pbrMetallicRoughness.baseColorFactor, 'uBaseColorFactor')
+                );
+            }
+
+            if (pbrMetallicRoughness.metallicFactor !== undefined) {
+                osgStateSet.addUniform(
+                    Uniform.createFloat1(pbrMetallicRoughness.metallicFactor, 'uMetallicFactor')
+                );
+            }
+            if (pbrMetallicRoughness.roughnessFactor !== undefined) {
+                osgStateSet.addUniform(
+                    Uniform.createFloat1(pbrMetallicRoughness.roughnessFactor, 'uRoughnessFactor')
+                );
+            }
+
             if (pbrMetallicRoughness.metallicRoughnessTexture)
                 promises.push(
                     this.createTextureAndSetAttrib(
@@ -500,7 +521,24 @@ ReaderWriterGLTF.prototype = {
                 );
             model = ReaderWriterGLTF.PBR_METAL_MODE;
         }
+        // SPECULAR/GLOSSINESS
         if (extension) {
+            if (extension.diffuseFactor) {
+                //PBR default uniforms
+                osgStateSet.addUniform(
+                    Uniform.createFloat4(extension.diffuseFactor, 'uBaseColorFactor')
+                );
+            }
+            if (extension.glossinessFactor !== undefined) {
+                osgStateSet.addUniform(
+                    Uniform.createFloat1(extension.glossinessFactor, 'uGlossinessFactor')
+                );
+            }
+            if (extension.specularFactor !== undefined) {
+                osgStateSet.addUniform(
+                    Uniform.createFloat3(extension.specularFactor, 'uSpecularFactor')
+                );
+            }
             if (extension.diffuseTexture) {
                 promises.push(
                     this.createTextureAndSetAttrib(
@@ -523,7 +561,7 @@ ReaderWriterGLTF.prototype = {
             }
             model = ReaderWriterGLTF.PBR_SPEC_MODE;
         }
-        if (glTFmaterial.normalTexture)
+        if (glTFmaterial.normalTexture) {
             promises.push(
                 this.createTextureAndSetAttrib(
                     glTFmaterial.normalTexture,
@@ -532,7 +570,8 @@ ReaderWriterGLTF.prototype = {
                     ReaderWriterGLTF.NORMAL_UNIFORM
                 )
             );
-        if (glTFmaterial.occlusionTexture)
+        }
+        if (glTFmaterial.occlusionTexture) {
             promises.push(
                 this.createTextureAndSetAttrib(
                     glTFmaterial.occlusionTexture,
@@ -541,7 +580,22 @@ ReaderWriterGLTF.prototype = {
                     ReaderWriterGLTF.AO_UNIFORM
                 )
             );
-
+        }
+        if (glTFmaterial.emissiveFactor !== undefined) {
+            osgStateSet.addUniform(
+                Uniform.createFloat3(glTFmaterial.emissiveFactor, 'uEmissiveFactor')
+            );
+        }
+        if (glTFmaterial.emissiveTexture !== undefined) {
+            promises.push(
+                this.createTextureAndSetAttrib(
+                    glTFmaterial.emissiveTexture,
+                    osgStateSet,
+                    ReaderWriterGLTF.EMISSIVE_TEXTURE_UNIT,
+                    ReaderWriterGLTF.EMISSIVE_UNIFORM
+                )
+            );
+        }
         // TODO:Need to check for specular glossiness extension
         geometryNode.setUserData({
             pbrWorklow: model
@@ -646,6 +700,8 @@ ReaderWriterGLTF.prototype = {
                 promise.then(cbSetBuffer.bind(rigOrGeom, 'Bones'));
             } else if (attributesKeys[i].indexOf('WEIGHT') !== -1) {
                 promise.then(attributeWeight);
+            } else if (attributesKeys[i].indexOf('COLOR') !== -1) {
+                promise.then(cbSetBuffer.bind(geom, 'Color'));
             } else if (attributesKeys[i].indexOf('TEXCOORD') !== -1) {
                 var texCoordId = attributesKeys[i].substr(9);
                 promise.then(cbSetBuffer.bind(geom, 'TexCoord' + texCoordId));
