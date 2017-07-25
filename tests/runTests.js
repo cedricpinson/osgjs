@@ -13,23 +13,16 @@ var mocha = new Mocha({
 
 mocha.addFile('../builds/tests/tests.js');
 
-// In case the file has no tests we should make mocha fail
-mocha.loadFiles(function() {
-    // upon completion list the tests found
-    var count = 0;
-    mocha.suite.eachTest(function() {
-        count += 1;
-    });
-    if (count === 0) {
+mocha.run().on('end', function() {
+    // In case the file has no tests we should make mocha fail
+    if (this.stats.tests === 0) {
         console.error('No tests found');
         process.exit(-1);
     }
-});
 
-// in case we have tests, but they don't run
-mocha.run().on('end', function() {
-    if (this.stats.passes === 0) {
-        console.error('No tests passed');
+    // One ore more tests failed or skipped
+    if (this.stats.passes < this.stats.tests) {
+        console.error('test failed');
         process.exit(-1);
     }
 });
