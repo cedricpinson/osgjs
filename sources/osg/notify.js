@@ -13,7 +13,6 @@ Notify.INFO = 4;
 Notify.DEBUG = 5;
 
 Notify.currentNotifyLevel = Notify.LOG;
-
 Notify.console = window.console;
 
 /** logging with readability in mind.
@@ -86,8 +85,9 @@ Notify.assert = function(test, str) {
     }
 };
 
-Notify.setNotifyLevel = function(logLevel) {
+Notify.setNotifyLevel = function(logLevel, trace) {
     Notify.currentNotifyLevel = logLevel;
+    if (trace !== undefined) Notify.traceLogCall = trace;
 };
 
 Notify.getNotifyLevel = function() {
