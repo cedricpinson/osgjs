@@ -209,7 +209,7 @@ TextureManager.prototype = {
         return textureObject;
     },
 
-    updateStats: function(frameNumber, rStats) {
+    updateStats: function(frameNumber, stats) {
         var totalUsed = 0;
         var totalUnused = 0;
         for (var keyTexture in this._textureSetMap) {
@@ -222,9 +222,9 @@ TextureManager.prototype = {
         }
 
         var MB = 1024 * 1024;
-        rStats('textureused').set(totalUsed / MB);
-        rStats('texturereserved').set(totalUnused / MB);
-        rStats('texturetotal').set((totalUsed + totalUnused) / MB);
+        stats.getCounter('textureused').set(totalUsed / MB);
+        stats.getCounter('texturereserved').set(totalUnused / MB);
+        stats.getCounter('texturetotal').set((totalUsed + totalUnused) / MB);
     },
 
     reportStats: function() {

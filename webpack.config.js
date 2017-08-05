@@ -33,14 +33,6 @@ var externals = [
         }
     },
     {
-        rstats: {
-            root: 'rStats',
-            commonjs2: 'rstats',
-            commonjs: 'rstats',
-            amd: 'rstats'
-        }
-    },
-    {
         hammer: {
             root: 'Hammer',
             commonjs2: 'hammerjs',
