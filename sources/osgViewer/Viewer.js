@@ -9,12 +9,15 @@ var UpdateVisitor = require('osg/UpdateVisitor');
 var MACROUTILS = require('osg/Utils');
 var Texture = require('osg/Texture');
 var OrbitManipulator = require('osgGA/OrbitManipulator');
-var createStats = require('osgViewer/createStats');
 var EventProxy = require('osgViewer/eventProxy/eventProxy');
 var View = require('osgViewer/View');
 var WebGLUtils = require('osgViewer/webgl-utils');
 var WebGLDebugUtils = require('osgViewer/webgl-debug');
 var requestFile = require('osgDB/requestFile');
+var Stats = require('osgStats/Stats');
+var defaultStats = require('osgStats/defaultStats');
+var glStats = require('osgStats/glStats');
+var browserStats = require('osgStats/browserStats');
 
 var getGLSLOptimizer = function() {
     var deferOptimizeGLSL = P.defer();
@@ -79,11 +82,11 @@ var Viewer = function(canvas, userOptions, error) {
     MACROUTILS.init();
 
     this.initDeviceEvents(options, canvas);
-    this.initStats(options, canvas);
     this.initRun(options);
     this._updateVisitor = new UpdateVisitor();
 
     this.setUpView(gl.canvas, options);
+    this.initStats(options, canvas);
 
     this._hmd = null;
     this._requestAnimationFrame = window.requestAnimationFrame.bind(window);
@@ -243,18 +246,18 @@ MACROUTILS.createPrototypeObject(
                 return;
             }
 
-            // if value is a string it's a filter
-            if (Number(options.stats) === 'NaN' && options.stats.toLowerCase !== 'true') {
-                if (!options.rstats) options.rstats = {};
-                options.rstats.filterStats = options.stats;
-            }
-            this._stats = createStats(options);
+            this._stats = new Stats(this.getCamera().getViewport(), options);
+            this._stats.addConfig(defaultStats);
+            this._stats.addConfig(glStats);
+            this._stats.addConfig(browserStats);
+
+            this.getCamera().addChild(this._stats.getNode());
 
             timerGPU.setCallback(this.callbackTimerGPU.bind(this));
         },
 
         callbackTimerGPU: function(average, queryID) {
-            if (this._stats) this._stats.rStats(queryID).set(average / 1e6);
+            if (this._stats) this._stats.getCounter(queryID).set(average / 1e6);
         },
 
         getViewerStats: function() {
@@ -272,39 +275,39 @@ MACROUTILS.createPrototypeObject(
 
                 var renderer = this.getCamera().getRenderer();
 
-                if (stats) stats.rStats('cull').start();
+                if (stats) stats.getCounter('cull').start();
 
                 renderer.cull();
 
-                if (stats) stats.rStats('cull').end();
+                if (stats) stats.getCounter('cull').end();
 
                 timerGPU.pollQueries();
                 timerGPU.start('glframe');
 
                 if (stats) {
-                    stats.rStats('render').start();
+                    stats.getCounter('render').start();
                 }
 
                 renderer.draw();
 
                 if (stats) {
-                    stats.rStats('render').end();
+                    stats.getCounter('render').end();
                 }
 
                 timerGPU.end('glframe');
 
                 if (stats) {
                     var cullVisitor = renderer.getCullVisitor();
-                    stats.rStats('cullcamera').set(cullVisitor._numCamera);
-                    stats.rStats('cullmatrixtransform').set(cullVisitor._numMatrixTransform);
-                    stats.rStats('cullprojection').set(cullVisitor._numProjection);
-                    stats.rStats('cullnode').set(cullVisitor._numNode);
-                    stats.rStats('culllightsource').set(cullVisitor._numLightSource);
-                    stats.rStats('cullgeometry').set(cullVisitor._numGeometry);
+                    stats.getCounter('cullcamera').set(cullVisitor._numCamera);
+                    stats.getCounter('cullmatrixtransform').set(cullVisitor._numMatrixTransform);
+                    stats.getCounter('cullprojection').set(cullVisitor._numProjection);
+                    stats.getCounter('cullnode').set(cullVisitor._numNode);
+                    stats.getCounter('culllightsource').set(cullVisitor._numLightSource);
+                    stats.getCounter('cullgeometry').set(cullVisitor._numGeometry);
 
-                    stats.rStats('pushstateset').set(renderer.getState()._numPushStateSet);
+                    stats.getCounter('pushstateset').set(renderer.getState()._numPushStateSet);
 
-                    stats.rStats('state.apply').set(renderer.getState()._numApply);
+                    stats.getCounter('applyStateSet').set(renderer.getState()._numApply);
                 }
             }
         },
@@ -312,20 +315,21 @@ MACROUTILS.createPrototypeObject(
         updateTraversal: function() {
             var stats = this._stats;
 
-            if (stats) stats.rStats('update').start();
+            if (stats) stats.getCounter('update').start();
 
             // update the scene
             this._updateVisitor.resetStats();
             this.getScene().updateSceneGraph(this._updateVisitor);
 
-            if (stats) stats.rStats('updatecallback').set(this._updateVisitor._numUpdateCallback);
+            if (stats)
+                stats.getCounter('updatecallback').set(this._updateVisitor._numUpdateCallback);
 
             // Remove ExpiredSubgraphs from DatabasePager
             this.getDatabasePager().releaseGLExpiredSubgraphs(0.005);
             // In OSG this.is deferred until the draw traversal, to handle multiple contexts
             this.flushDeletedGLObjects(0.005);
 
-            if (stats) stats.rStats('update').end();
+            if (stats) stats.getCounter('update').end();
         },
 
         advance: function(simulationTime) {
@@ -350,31 +354,28 @@ MACROUTILS.createPrototypeObject(
             var stats = this._stats;
 
             if (stats) {
-                stats.rStats('frame').start();
-                stats.glS.start();
+                stats.getCounter('frame').start();
 
-                stats.rStats('rAF').tick();
-                stats.rStats('FPS').frame();
+                stats.getCounter('raf').tick();
+                stats.getCounter('fps').frame();
             }
         },
 
         endFrame: function() {
             var frameNumber = this.getFrameStamp().getFrameNumber();
 
-            var stats = this._stats;
-            var rStats = stats ? stats.rStats : undefined;
-
             // update texture stats
-            if (rStats) {
+            if (this._stats) {
                 Texture.getTextureManager(this.getGraphicContext()).updateStats(
                     frameNumber,
-                    rStats
+                    this._stats
                 );
-                rStats('frame').end();
 
-                rStats('rStats').start();
-                rStats().update();
-                rStats('rStats').end();
+                this._stats.getCounter('stats').start();
+                this._stats.update();
+                this._stats.getCounter('stats').end();
+
+                this._stats.getCounter('frame').end();
             }
         },
 

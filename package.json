@@ -48,7 +48,6 @@
     "path": "^0.11.14",
     "prettier": "^1.5.2",
     "raw-loader": "^0.5.1",
-    "rstatsjs": "^1.0.1",
     "webpack": "^1.7.3",
     "webpack-dev-server": "^1.7.0",
     "zlibjs": "^0.3.1"
