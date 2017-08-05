@@ -245,12 +245,22 @@ View.prototype = {
     },
 
     setSceneData: function(node) {
-        if (node === this._scene.getSceneData()) return;
+        var previousNode = this._scene.getSceneData();
+        if (node === previousNode) return;
 
         this._scene.setSceneData(node);
 
+        var children = this._camera.getChildren();
+        var statsNode = undefined;
+        for (var i = 0, l = children.length; i < l; i++) {
+            if (children[i].getName() === 'osgStats') {
+                statsNode = children[i];
+                break;
+            }
+        }
         this._camera.removeChildren();
         this._camera.addChild(node);
+        if (statsNode) this._camera.addChild(statsNode);
     },
 
     getSceneData: function() {

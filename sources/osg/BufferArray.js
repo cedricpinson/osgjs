@@ -54,10 +54,15 @@ var BufferArray = function(target, elements, itemSize, preserveArrayType) {
         }
         this.setElements(typedArray);
     }
+
+    this._usage = BufferArray.STATIC_DRAW;
 };
 
 BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
 BufferArray.ARRAY_BUFFER = 0x8892;
+BufferArray.STATIC_DRAW = 0x88e4;
+BufferArray.DYNAMIC_DRAW = 0x88e8;
+BufferArray.STREAM_DRAW = 0x88e0;
 
 // static cache of glBuffers flagged for deletion, which will actually
 // be deleted in the correct GL context.
@@ -100,6 +105,12 @@ BufferArray.flushAllDeletedGLBufferArrays = function(gl) {
 MACROUTILS.createPrototypeObject(
     BufferArray,
     MACROUTILS.objectInherit(GLObject.prototype, {
+        setUsage: function(usage) {
+            this._usage = usage;
+        },
+        getUsage: function() {
+            return this._usage;
+        },
         getInstanceID: function() {
             return this._instanceID;
         },
@@ -156,7 +167,7 @@ MACROUTILS.createPrototypeObject(
         compile: function(gl) {
             if (this._dirty) {
                 MACROUTILS.timeStamp('osgjs.metrics:bufferData');
-                gl.bufferData(this._target, this._elements, gl.STATIC_DRAW);
+                gl.bufferData(this._target, this._elements, this._usage);
                 this._dirty = false;
             }
         },

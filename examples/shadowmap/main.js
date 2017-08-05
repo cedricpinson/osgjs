@@ -1255,7 +1255,7 @@
             }
         },
 
-        getOptionsStats: function() {
+        getStatsConfig: function() {
             var values = {
                 gltotalframe: {
                     caption: 'Total frame',
@@ -1276,6 +1276,7 @@
 
             var groups = [
                 {
+                    name: 'glShadows',
                     caption: 'GL Frame',
                     values: groupValues
                 }
@@ -1307,6 +1308,8 @@
             }
 
             this.updateShadow();
+            if (this._viewer.getViewerStats())
+                this._viewer.getViewerStats().addConfig(this.getStatsConfig());
         }
     });
 
@@ -1315,13 +1318,8 @@
         'load',
         function() {
             osg.log(osg.WebGLCaps.instance().getWebGLParameters());
-
             var example = new Example();
-
-            var opt = {
-                rstats: example.getOptionsStats()
-            };
-            example.run(opt);
+            example.run();
         },
         true
     );
