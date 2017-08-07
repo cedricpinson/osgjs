@@ -208,7 +208,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         addLoadedDataToSceneGraph: function(frameStamp, availableTime) {
-            if (availableTime <= 0.0) return 0.0;
+            if (!this._pendingNodes.length || availableTime <= 0.0) return 0.0;
 
             // Prune the list of database requests.
             var elapsedTime = 0.0;
