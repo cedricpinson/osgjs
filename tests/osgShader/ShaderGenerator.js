@@ -32,8 +32,9 @@ module.exports = function() {
             stateSet1.setTextureAttributeAndModes(0, new Texture(undefined));
 
             state.pushStateSet(stateSet0);
-            state.pushStateSet(stateSet1);
-            state.apply();
+
+            state.applyStateSet(stateSet1);
+
             assert.isOk(true, 'check not exception on material generator use');
         })();
 
@@ -85,8 +86,7 @@ module.exports = function() {
             }
             stateSet.setAttributeAndModes(getShader());
 
-            state.pushStateSet(stateSet);
-            state.apply();
+            state.applyStateSet(stateSet);
             assert.isOk(true, 'check not exception on stateset generator use');
         })();
     });
