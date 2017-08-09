@@ -6,10 +6,10 @@ var WebGLCaps = require('osg/WebGLCaps');
 /*
 use EXT_disjoint_timer_queryto time webgl calls GPU side average over multiple frames
 
-If timestamp feature is not supported, we virtualize the query by splitting and adding 
+If timestamp feature is not supported, we virtualize the query by splitting and adding
 dummy queries, that way it should handle both nested and interleaved queries.
 
-Also, if you time the same queryID multiple time in the same frame, it will sum the different 
+Also, if you time the same queryID multiple time in the same frame, it will sum the different
 queries, that way you can track a particular of gl command for examples
 
 */
