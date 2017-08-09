@@ -243,6 +243,11 @@ MACROUTILS.createPrototypeObject(
                 return;
             }
 
+            // if value is a string it's a filter
+            if (typeof options.stats === 'string') {
+                if (!options.rstats) options.rstats = {};
+                options.rstats.filterStats = options.stats;
+            }
             this._stats = createStats(options);
 
             timerGPU.setCallback(this.callbackTimerGPU.bind(this));
@@ -294,7 +299,7 @@ MACROUTILS.createPrototypeObject(
                     stats.rStats('cullmatrixtransform').set(cullVisitor._numMatrixTransform);
                     stats.rStats('cullprojection').set(cullVisitor._numProjection);
                     stats.rStats('cullnode').set(cullVisitor._numNode);
-                    stats.rStats('cullightsource').set(cullVisitor._numLightSource);
+                    stats.rStats('culllightsource').set(cullVisitor._numLightSource);
                     stats.rStats('cullgeometry').set(cullVisitor._numGeometry);
 
                     stats.rStats('pushstateset').set(renderer.getState()._numPushStateSet);

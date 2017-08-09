@@ -127,14 +127,38 @@ var CanvasStats = function(opts) {
 
     var plugins = [this.bS, this.glS];
 
+    var filterCounter, i, k, oldValues;
     if (opts) {
         if (opts.values) MACROUTILS.objectMix(values, opts.values);
         if (opts.groups) Array.prototype.unshift.apply(groups, opts.groups);
         if (opts.fractions) Array.prototype.push.apply(fractions, opts.fractions);
         if (opts.plugins) Array.prototype.push.apply(plugins, opts.plugins);
-    }
 
-    this.rStats = new rStats({
+        // filter out to keep only single value
+        if (opts.filterStats) {
+            oldValues = values;
+            var noCap = { caption: '' };
+            plugins = [];
+            fractions = [];
+            filterCounter = opts.filterStats;
+            i = 0;
+            for (var lGroup = groups.length; i < lGroup; i++) {
+                k = 0;
+                var valuesArray = groups[i].values;
+                for (var lValues = valuesArray.length; k < lValues; k++) {
+                    var name = valuesArray[k];
+                    if (name !== filterCounter) {
+                        oldValues[name] = noCap;
+                    }
+                }
+            }
+            groups = [{ caption: '', values: [] }];
+            for (i in oldValues) {
+                if (i !== filterCounter) groups[0].values.push(i);
+            }
+        }
+    }
+    var settings = {
         values: values,
         groups: groups,
         fractions: fractions,
@@ -177,7 +201,36 @@ var CanvasStats = function(opts) {
             '#e6f23d',
             '#730000'
         ]
-    });
+    };
+    this.rStats = new rStats(settings);
+
+    if (filterCounter) {
+        var noop = function() {};
+        settings.groups[0].div = { appendChild: noop };
+        var fakePerfCounter = {
+            set: noop,
+            start: noop,
+            tick: noop,
+            end: noop,
+            frame: noop,
+            value: noop,
+            draw: noop
+        };
+
+        for (i in oldValues) {
+            if (i !== filterCounter) {
+                var perfCounter = this.rStats(i);
+                perfCounter[k] = fakePerfCounter;
+            }
+        }
+        settings._groups = [];
+        var oldrStats = this.rStats;
+
+        this.rStats = function(id) {
+            if (!id) return oldrStats();
+            return oldrStats(id);
+        };
+    }
 };
 
 var createStats = function(options) {
