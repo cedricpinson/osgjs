@@ -5,42 +5,10 @@ var NodeVisitor = require('osg/NodeVisitor');
 var PagedLOD = require('osg/PagedLOD');
 var Timer = require('osg/Timer');
 
-/**
- * Database paging class which manages the loading of files
- * and synchronizing of loaded models with the main scene graph.
- *  @class DatabasePager
- */
-var DatabasePager = function() {
-    this._pendingRequests = [];
-    this._pendingNodes = [];
-    this._loading = false;
-    this._progressCallback = undefined;
-    this._lastCB = true;
-    this._activePagedLODList = new Set();
-    this._childrenToRemoveList = new Set();
-    this._downloadingRequestsNumber = 0;
-    this._maxRequestsPerFrame = 10;
-    this._acceptNewRequests = true;
-    // In OSG the targetMaximumNumberOfPagedLOD is 300 by default
-    // here we set 75 as we need to be more strict with memory in a browser
-    // This value can be setted using setTargetMaximumNumberOfPageLOD method.
-    this._targetMaximumNumberOfPagedLOD = 75;
-};
-
-var DatabaseRequest = function() {
-    this._loadedModel = undefined;
-    this._group = undefined;
-    this._url = undefined;
-    this._function = undefined;
-    this._timeStamp = 0.0;
-    this._groupExpired = false;
-    this._priority = 0.0;
-};
-
-var FindPagedLODsVisitor = function(pagedLODList, frameNumber) {
+var FindPagedLODsVisitor = function() {
     NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
-    this._activePagedLODList = pagedLODList;
-    this._frameNumber = frameNumber;
+    this._activePagedLODList = undefined;
+    this._frameNumber = 0;
 };
 
 MACROUTILS.createPrototypeObject(
@@ -52,6 +20,10 @@ MACROUTILS.createPrototypeObject(
                 this._activePagedLODList.add(node);
             }
             this.traverse(node);
+        },
+        set: function(pagedLODList, frameNumber) {
+            this._activePagedLODList = pagedLODList;
+            this._frameNumber = frameNumber;
         }
     }),
     'osgDB',
@@ -75,13 +47,13 @@ MACROUTILS.createPrototypeObject(
     'ReleaseVisitor'
 );
 
-var ExpirePagedLODVisitor = function() {
+var ExpiredPagedLODVisitor = function() {
     NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
     this._childrenList = [];
 };
 
 MACROUTILS.createPrototypeObject(
-    ExpirePagedLODVisitor,
+    ExpiredPagedLODVisitor,
     MACROUTILS.objectInherit(NodeVisitor.prototype, {
         apply: function(node) {
             if (node.getTypeID() === PagedLOD.getTypeID()) {
@@ -117,11 +89,49 @@ MACROUTILS.createPrototypeObject(
                     request._loadedModel = null;
                 }
             }
+        },
+        reset: function() {
+            this._childrenList.length = 0;
         }
     }),
     'osgDB',
-    'ExpirePagedLODVisitor'
+    'ExpiredPagedLODVisitor'
 );
+
+/**
+ * Database paging class which manages the loading of files
+ * and synchronizing of loaded models with the main scene graph.
+ *  @class DatabasePager
+ */
+var DatabasePager = function() {
+    this._pendingRequests = [];
+    this._pendingNodes = [];
+    this._loading = false;
+    this._progressCallback = undefined;
+    this._lastCB = true;
+    this._activePagedLODList = new Set();
+    this._childrenToRemoveList = new Set();
+    this._downloadingRequestsNumber = 0;
+    this._maxRequestsPerFrame = 10;
+    this._acceptNewRequests = true;
+    this._releaseVisitor = new ReleaseVisitor();
+    this._expiredPagedLODVisitor = new ExpiredPagedLODVisitor();
+    this._findPagedLODsVisitor = new FindPagedLODsVisitor();
+    // In OSG the targetMaximumNumberOfPagedLOD is 300 by default
+    // here we set 75 as we need to be more strict with memory in a browser
+    // This value can be setted using setTargetMaximumNumberOfPageLOD method.
+    this._targetMaximumNumberOfPagedLOD = 75;
+};
+
+var DatabaseRequest = function() {
+    this._loadedModel = undefined;
+    this._group = undefined;
+    this._url = undefined;
+    this._function = undefined;
+    this._timeStamp = 0.0;
+    this._groupExpired = false;
+    this._priority = 0.0;
+};
 
 MACROUTILS.createPrototypeObject(
     DatabasePager,
@@ -254,7 +264,8 @@ MACROUTILS.createPrototypeObject(
 
         registerPagedLODs: function(subgraph, frameNumber) {
             if (!subgraph) return;
-            subgraph.accept(new FindPagedLODsVisitor(this._activePagedLODList, frameNumber));
+            this._findPagedLODsVisitor.set(this._activePagedLODList, frameNumber);
+            subgraph.accept(this._findPagedLODsVisitor);
         },
 
         requestNodeFile: function(func, url, node, timestamp, priority) {
@@ -344,7 +355,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         releaseGLExpiredSubgraphs: function(availableTime) {
-            if (availableTime <= 0.0) return 0.0;
+            if (!this._childrenToRemoveList.size || availableTime <= 0.0) return 0.0;
             // We need to test if we have time to flush
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
@@ -354,7 +365,7 @@ MACROUTILS.createPrototypeObject(
                 // If we don't have more time, break the loop.
                 if (elapsedTime > availableTime) return;
                 that._childrenToRemoveList.delete(node);
-                node.accept(new ReleaseVisitor());
+                node.accept(that._releaseVisitor);
                 node.removeChildren();
                 node = null;
                 elapsedTime = Timer.instance().deltaS(beginTime, Timer.instance().tick());
@@ -391,7 +402,8 @@ MACROUTILS.createPrototypeObject(
             var beginTime = Timer.instance().tick();
             var that = this;
             var removedChildren = [];
-            var expiredPagedLODVisitor = new ExpirePagedLODVisitor();
+            var expiredPagedLODVisitor = this._expiredPagedLODVisitor;
+            expiredPagedLODVisitor.reset();
 
             this._activePagedLODList.forEach(function(plod) {
                 // Check if we have time, else return 0
