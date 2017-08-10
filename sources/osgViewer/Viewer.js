@@ -244,7 +244,7 @@ MACROUTILS.createPrototypeObject(
             }
 
             // if value is a string it's a filter
-            if (typeof options.stats === 'string') {
+            if (Number(options.stats) === 'NaN' && options.stats.toLowerCase !== 'true') {
                 if (!options.rstats) options.rstats = {};
                 options.rstats.filterStats = options.stats;
             }
