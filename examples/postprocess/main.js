@@ -2,229 +2,404 @@
     'use strict';
 
     var OSG = window.OSG;
-    var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
-    var Object = window.Object;
+    var osgUtil = OSG.osgUtil;
+    var osgShader = OSG.osgShader;
 
-    function commonScene(rttSize) {
-        var model = osg.createTexturedBoxGeometry(0, 0, 0, 2, 2, 2);
+    var osgDB = OSG.osgDB;
+    var requestFile = osgDB.requestFile;
 
-        var near = 0.1;
-        var far = 100;
-        var root = new osg.MatrixTransform();
+    var osg = OSG.osg;
 
-        var quadSize = [16 / 9, 1];
+    var P = window.P;
 
-        // add a node to animate the scene
-        var rootModel = new osg.MatrixTransform();
-        rootModel.addChild(model);
+    var Example = function() {
+        this._composer = undefined;
+        this._shaderProcessor = undefined;
+        this._camera = undefined;
 
-        var UpdateCallback = function() {
-            this.update = function(node, nv) {
-                var currentTime = nv.getFrameStamp().getSimulationTime();
-                var x = Math.cos(currentTime);
-                osg.mat4.fromRotation(node.getMatrix(), -x, [0, 0, 1]);
-                node.traverse(nv);
-            };
-        };
-        rootModel.addUpdateCallback(new UpdateCallback());
-
-        // create the camera that render the scene
-        var camera = new osg.Camera();
-        camera.setName('scene');
-        camera.setProjectionMatrix(
-            osg.mat4.perspective(osg.mat4.create(), Math.PI / 180 * 50, quadSize[0], near, far)
-        );
-
-        camera.setViewMatrix(osg.mat4.lookAt(osg.mat4.create(), [0, -10, 0], [0, 0, 0], [0, 0, 1]));
-        camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-        camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-        camera.setViewport(new osg.Viewport(0, 0, rttSize[0], rttSize[1]));
-        camera.setClearColor([0.5, 0.5, 0.5, 1]);
-
-        // attach a texture to the camera to render the scene on
-        var sceneTexture = new osg.Texture();
-        sceneTexture.setTextureSize(rttSize[0], rttSize[1]);
-        sceneTexture.setMinFilter('LINEAR');
-        sceneTexture.setMagFilter('LINEAR');
-        camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, sceneTexture, 0);
-        camera.attachRenderBuffer(
-            osg.FrameBufferObject.DEPTH_ATTACHMENT,
-            osg.FrameBufferObject.DEPTH_COMPONENT16
-        );
-        // add the scene to the camera
-        camera.addChild(rootModel);
-
-        // attach camera to root
-        root.addChild(camera);
-        return [root, sceneTexture];
-    }
-
-    function getTextureShader() {
-        var vertexshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'attribute vec3 Vertex;',
-            'attribute vec2 TexCoord0;',
-            'varying vec2 vTexCoord0;',
-            'uniform mat4 uModelViewMatrix;',
-            'uniform mat4 uProjectionMatrix;',
-            'void main(void) {',
-            '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
-            '  vTexCoord0 = TexCoord0;',
-            '}',
-            ''
-        ].join('\n');
-
-        var fragmentshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'varying vec2 vTexCoord0;',
-            'uniform sampler2D Texture0;',
-
-            '',
-            'void main (void)',
-            '{',
-            '  vec2 uv = vTexCoord0;',
-            '  gl_FragColor = vec4(texture2D(Texture0, uv));',
-            '}',
-            ''
-        ].join('\n');
-
-        var program = new osg.Program(
-            new osg.Shader('VERTEX_SHADER', vertexshader),
-            new osg.Shader('FRAGMENT_SHADER', fragmentshader)
-        );
-        return program;
-    }
-
-    function createScene(width, height, gui) {
-        var rttSize = [2048, 2048];
-
-        var result = commonScene(rttSize);
-        var commonNode = result[0];
-        var sceneTexture = result[1];
-
-        var root = new osg.Node();
-
-        var texW = osg.Uniform.createFloat1(rttSize[0], 'tex_w');
-        var texH = osg.Uniform.createFloat1(rttSize[1], 'tex_h');
-
-        root.getOrCreateStateSet().addUniform(texW);
-        root.getOrCreateStateSet().addUniform(texH);
-
-        // create a quad on which will be applied the postprocess effects
-        var quadSize = [16 / 9, 1];
-        var quad = osg.createTexturedQuadGeometry(
-            -quadSize[0] / 2.0,
-            0,
-            -quadSize[1] / 2.0,
-            quadSize[0],
-            0,
-            0,
-            0,
-            0,
-            quadSize[1]
-        );
-        quad.getOrCreateStateSet().setAttributeAndModes(getTextureShader());
-
-        var scene = new osg.MatrixTransform();
-
-        // create a texture to render the effect to
-        var finalTexture = new osg.Texture();
-        finalTexture.setTextureSize(rttSize[0], rttSize[1]);
-        finalTexture.setMinFilter(osg.Texture.LINEAR);
-        finalTexture.setMagFilter(osg.Texture.LINEAR);
-
-        // Set the final texture on the quad
-        quad.getOrCreateStateSet().setTextureAttributeAndModes(0, finalTexture);
-
-        var postScenes = [
-            window.getPostSceneVignette(sceneTexture),
-            window.getPostSceneToneMapping(),
-            window.getPostSceneBlur(sceneTexture),
-            window.getPostSceneBloom(sceneTexture),
-            window.getPostSceneSharpen(sceneTexture),
-            window.getPostSceneChromaticAberration()
+        this._composerConfigNames = ['passthrough.json'];
+        this._composerConfigFiles = {};
+        this._composerConfigFiles['passthrough.json'] = [
+            {
+                func: 'passthrough',
+                textures: ['%last'],
+                out: { name: '%next' }
+            }
         ];
 
-        var effects = [];
-        for (var i = 0; i < postScenes.length; i++) effects[postScenes[i].name] = postScenes[i];
+        var shaders = {};
+        shaders['passthrough.glsl'] =
+            'vec4 passthrough() { return vec4(TEXTURE_2D_TextureInput(gTexCoord).rgb,1.0);}';
 
-        var globalGui = {
-            filter: postScenes[0].name
+        this._shaderProcessor = new osgShader.ShaderProcessor();
+        this._shaderProcessor.addShaders(shaders);
+
+        this._params = {
+            composer: this._composerConfigNames[0]
         };
 
-        var setComposer;
+        this._lutTextureNames = [
+            'ue4_neutralLUT.png',
+            'ue4_lut2.jpg',
+            'ue4_lut3.jpg',
+            '2strip.jpg',
+            '3strip.jpg',
+            'wtf.jpg'
+        ];
 
-        function addSceneController() {
-            gui.add(globalGui, 'filter', Object.keys(effects)).onChange(function(value) {
-                setComposer(value);
-            });
-        }
-
-        var currentComposer = postScenes[0].buildComposer(finalTexture);
-        addSceneController();
-        postScenes[0].buildGui(gui);
-
-        var cachedComposers = [];
-        cachedComposers[postScenes[0].name] = currentComposer;
-
-        setComposer = function(effectName) {
-            // Put the composer in cache at first utilisation
-            if (cachedComposers[effectName] === undefined) {
-                cachedComposers[effectName] = effects[effectName].buildComposer(finalTexture);
-            }
-
-            // Recreate the whole gui
-            gui.destroy();
-            gui = new window.dat.GUI();
-            addSceneController();
-            effects[effectName].buildGui(gui);
-
-            // Change the composer
-            scene.removeChild(currentComposer);
-            currentComposer = cachedComposers[effectName];
-            scene.addChild(currentComposer);
-
-            if (effects[effectName].needCommonCube) root.addChild(commonNode);
-            else root.removeChild(commonNode);
-        };
-
-        scene.addChild(quad);
-        scene.addChild(currentComposer);
-
-        root.addChild(scene);
-        root.addChild(commonNode);
-
-        return root;
-    }
-
-    var main = function() {
-        // osg.ReportWebGLError = true;
-
-        var canvas = document.getElementById('View');
-        canvas.style.width = canvas.width = window.innerWidth;
-        canvas.style.height = canvas.height = window.innerHeight;
-
-        var gui = new window.dat.GUI();
-
-        var rotate = new osg.MatrixTransform();
-        rotate.addChild(createScene(canvas.width, canvas.height, gui));
-        rotate.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
-
-        var viewer = new osgViewer.Viewer(canvas);
-        viewer.init();
-        viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
-        viewer.setSceneData(rotate);
-        viewer.setupManipulator();
-        viewer.getManipulator().computeHomePosition();
-        viewer.run();
+        this._lutTextures = {};
     };
 
-    window.addEventListener('load', main, true);
+    Example.prototype = {
+        run: function() {
+            this._viewer = new osgViewer.Viewer(document.getElementById('View'));
+            this._viewer.init();
+            this._viewer.setSceneData(this.createScene());
+            this._viewer.setupManipulator();
+            this._viewer.getManipulator().computeHomePosition();
+            this._viewer.run();
+
+            this.rebuildGUI('passthrough.json');
+        },
+
+        createCamera: function(width, height, texture) {
+            var camera = new osg.Camera();
+            camera.setName('MainCamera');
+
+            camera.setViewport(new osg.Viewport(0, 0, width, height));
+
+            camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
+            camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture);
+
+            camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+
+            camera.attachRenderBuffer(
+                osg.FrameBufferObject.DEPTH_ATTACHMENT,
+                osg.FrameBufferObject.DEPTH_COMPONENT16
+            );
+
+            camera.setClearColor([0.5, 0.5, 0.5, 1.0]);
+            return camera;
+        },
+
+        addInternalTextures: function() {
+            this._composer.addInternalTexture({
+                name: 'TextureColor',
+                immuable: true,
+                srgb: true,
+                rgbm: false
+            });
+
+            this._composer.setInputTexture('TextureColor');
+        },
+
+        createComposer: function(name, width, height) {
+            var composer = new osgUtil.ComposerPostProcess();
+            composer.setName(name);
+            composer.setScreenSize(width, height);
+            composer.setShaderProcessor(this._shaderProcessor);
+
+            return composer;
+        },
+
+        loadLutTextures: function() {
+            var promises = [];
+
+            var i;
+            for (i = 0; i < this._lutTextureNames.length; i++) {
+                var name = this._lutTextureNames[i];
+
+                var texture = new osg.Texture();
+                texture.setMinFilter(osg.Texture.LINEAR);
+                texture.setMagFilter(osg.Texture.LINEAR);
+
+                this._lutTextures[name] = texture;
+                var promise = osgDB.readImageURL('../media/textures/lookup-tables/' + name);
+                promises.push(promise);
+            }
+
+            var self = this;
+
+            P.all(promises).then(function(images) {
+                for (i = 0; i < self._lutTextureNames.length; i++) {
+                    self._lutTextures[self._lutTextureNames[i]].setImage(images[i]);
+                }
+            });
+        },
+
+        createScene: function() {
+            var viewer = this._viewer;
+            var width = viewer.getCanvasWidth();
+            var height = viewer.getCanvasHeight();
+
+            this._composer = this.createComposer('ComposerPostProcess', width, height);
+            this.rebuildComposer('passthrough.json');
+
+            var rttCamera = this.createCamera(
+                width,
+                height,
+                this._composer.getInternalTexture('TextureColor')
+            );
+
+            rttCamera.setName('DepthCamera');
+
+            //TODO: wut?
+            // setClampProjectionMatrixCallback mandatory to update matrices
+            // copy first projection = first frame bug
+            // not copy first camera means nothing draw
+            // ssao copies proj but not camera
+            osg.mat4.copy(rttCamera.getViewMatrix(), viewer.getCamera().getViewMatrix());
+
+            rttCamera.setClampProjectionMatrixCallback(function() {
+                osg.mat4.copy(rttCamera.getViewMatrix(), viewer.getCamera().getViewMatrix());
+                osg.mat4.copy(
+                    rttCamera.getProjectionMatrix(),
+                    viewer.getCamera().getProjectionMatrix()
+                );
+            });
+
+            this._camera = rttCamera;
+
+            var texture = new osg.Texture();
+            var quad = osg.createTexturedFullScreenFakeQuadGeometry();
+
+            osgDB.readImageURL('../media/textures/trees.jpeg').then(function(image) {
+                texture.setImage(image);
+                quad.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
+            });
+
+            this.loadLutTextures();
+
+            this._camera.addChild(quad);
+
+            var rootNode = new osg.Node();
+            rootNode.addChild(rttCamera);
+            rootNode.addChild(this._composer);
+
+            return rootNode;
+        },
+
+        rebuildComposer: function(fileName) {
+            var composer = this._composer;
+            composer.clear();
+
+            // we want to reload shaders on the fly
+            // using cache would prevent that
+            composer.clearShaderCache();
+
+            if (fileName === 'colorCorrection.json') {
+                this._composer.addExternalTexture(
+                    'TextureLut',
+                    this._lutTextures[this._lutTextureNames[0]]
+                );
+            }
+
+            this.addInternalTextures();
+
+            var configFile = this._composerConfigFiles[fileName];
+
+            var passes =
+                fileName === 'passthrough.json' ? configFile : JSON.parse(configFile).passes;
+
+            composer.build(passes);
+
+            var st = this._composer.getOrCreateStateSet();
+            st.addUniform(osg.Uniform.createFloat2(osg.vec2.fromValues(0.8, 0.25), 'uLensRadius'));
+
+            st.addUniform(
+                osg.Uniform.createFloat2(osg.vec2.fromValues(0.25, 0.25), 'uRedControl1')
+            );
+
+            st.addUniform(
+                osg.Uniform.createFloat2(osg.vec2.fromValues(0.75, 0.75), 'uRedControl2')
+            );
+
+            st.addUniform(
+                osg.Uniform.createFloat2(osg.vec2.fromValues(0.25, 0.5), 'uGreenControl1')
+            );
+            st.addUniform(
+                osg.Uniform.createFloat2(osg.vec2.fromValues(0.5, 0.75), 'uGreenControl2')
+            );
+
+            st.addUniform(
+                osg.Uniform.createFloat2(osg.vec2.fromValues(0.25, 0.75), 'uBlueControl1')
+            );
+            st.addUniform(
+                osg.Uniform.createFloat2(osg.vec2.fromValues(0.5, 0.875), 'uBlueControl2')
+            );
+        },
+
+        rebuildGUI: function(name) {
+            if (this._gui) {
+                this._gui.destroy();
+            }
+
+            this._gui = new window.dat.GUI();
+
+            var cb = this._gui.add(this._params, 'composer', this._composerConfigNames).listen();
+            var self = this;
+
+            cb.onFinishChange(function(value) {
+                self.rebuildComposer(value);
+                self.rebuildGUI(value);
+            });
+
+            var folder = this._gui.addFolder(name);
+            folder.open();
+
+            var st = this._composer.getOrCreateStateSet();
+
+            if (name === 'vignette.json') {
+                var uLensRadius = st.getUniform('uLensRadius');
+
+                var vignette = {
+                    innerRadius: uLensRadius.getInternalArray()[1],
+                    outerRadius: uLensRadius.getInternalArray()[0]
+                };
+
+                var innerCtrl = folder.add(vignette, 'innerRadius', 0, 1);
+                var outerCtrl = folder.add(vignette, 'outerRadius', 0, 1);
+
+                innerCtrl.onChange(function(value) {
+                    uLensRadius.getInternalArray()[1] = value;
+                });
+
+                outerCtrl.onChange(function(value) {
+                    uLensRadius.getInternalArray()[0] = value;
+                });
+            } else if (name === 'colorCorrection.json') {
+                var colorCorrectionParams = {
+                    current: this._lutTextureNames[0]
+                };
+
+                var lutCtrl = folder.add(colorCorrectionParams, 'current', this._lutTextureNames);
+                lutCtrl.onFinishChange(function(value) {
+                    var passStateSet = self._composer.getStateSetPass('colorCorrection');
+                    var uniform = passStateSet.getUniform('TextureLut');
+                    passStateSet.setTextureAttributeAndModes(
+                        uniform.getInternalArray()[0],
+                        self._lutTextures[value]
+                    );
+                });
+            } else if (name === 'colorBalance.json') {
+                var uRedControl1 = st.getUniform('uRedControl1');
+                var uRedControl2 = st.getUniform('uRedControl2');
+                var uGreenControl1 = st.getUniform('uGreenControl1');
+                var uGreenControl2 = st.getUniform('uGreenControl2');
+                var uBlueControl1 = st.getUniform('uBlueControl1');
+                var uBlueControl2 = st.getUniform('uBlueControl2');
+
+                var colorBalanceParams = {
+                    r1x: uRedControl1.getInternalArray()[0],
+                    r1y: uRedControl1.getInternalArray()[1],
+                    r2x: uRedControl2.getInternalArray()[0],
+                    r2y: uRedControl2.getInternalArray()[1],
+                    g1x: uGreenControl1.getInternalArray()[0],
+                    g1y: uGreenControl1.getInternalArray()[1],
+                    g2x: uGreenControl2.getInternalArray()[0],
+                    g2y: uGreenControl2.getInternalArray()[1],
+                    b1x: uBlueControl1.getInternalArray()[0],
+                    b1y: uBlueControl1.getInternalArray()[1],
+                    b2x: uBlueControl2.getInternalArray()[0],
+                    b2y: uBlueControl2.getInternalArray()[1]
+                };
+
+                this.addWidget(folder, colorBalanceParams, 'r1x', uRedControl1, 0);
+                this.addWidget(folder, colorBalanceParams, 'r1y', uRedControl1, 1);
+                this.addWidget(folder, colorBalanceParams, 'r2x', uRedControl2, 0);
+                this.addWidget(folder, colorBalanceParams, 'r2y', uRedControl2, 1);
+
+                this.addWidget(folder, colorBalanceParams, 'g1x', uGreenControl1, 0);
+                this.addWidget(folder, colorBalanceParams, 'g1y', uGreenControl1, 1);
+                this.addWidget(folder, colorBalanceParams, 'g2x', uGreenControl2, 0);
+                this.addWidget(folder, colorBalanceParams, 'g2y', uGreenControl2, 1);
+
+                this.addWidget(folder, colorBalanceParams, 'b1x', uBlueControl1, 0);
+                this.addWidget(folder, colorBalanceParams, 'b1y', uBlueControl1, 1);
+                this.addWidget(folder, colorBalanceParams, 'b2x', uBlueControl2, 0);
+                this.addWidget(folder, colorBalanceParams, 'b2y', uBlueControl2, 1);
+            }
+
+            this._currentComposer = name;
+        },
+
+        addWidget: function(folder, params, nameParam, uniform, index) {
+            var ctrl = folder.add(params, nameParam, 0.0, 1.0);
+            ctrl.onChange(function(value) {
+                uniform.getInternalArray()[index] = value;
+            });
+        },
+
+        addComposerConfig: function(name, content) {
+            this._composerConfigNames.push(name);
+            this._composerConfigFiles[name] = content;
+
+            // dat.GUI doesn't have an easy way to add elements into the combobox
+            // so we just rebuild the whole GUI
+            this.rebuildGUI(this._currentComposer);
+        }
+    };
+
+    var dragOverEvent = function(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'copy';
+    };
+
+    var dropEvent = function(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+
+        var files = evt.dataTransfer.files;
+        if (files.length) {
+            var promises = [];
+
+            var i;
+            for (i = 0; i < files.length; i++) {
+                var file = files[i];
+
+                if (file.name.indexOf('.json') === -1 && file.name.indexOf('.glsl') === -1) {
+                    continue;
+                }
+
+                promises.push(
+                    requestFile(file, {
+                        requestType: 'string'
+                    })
+                );
+            }
+
+            var example = this;
+
+            P.all(promises).then(function(fileContents) {
+                var shaders = {};
+
+                for (i = 0; i < fileContents.length; i++) {
+                    var name = files[i].name;
+                    var content = fileContents[i];
+
+                    if (name.indexOf('.json') !== -1) {
+                        example.addComposerConfig(name, content);
+                    } else {
+                        shaders[name] = content;
+                    }
+                }
+
+                example._shaderProcessor.addShaders(shaders);
+            });
+        }
+    };
+
+    window.addEventListener(
+        'load',
+        function() {
+            var example = new Example();
+            example.run();
+
+            window.addEventListener('dragover', dragOverEvent.bind(example), false);
+            window.addEventListener('drop', dropEvent.bind(example), false);
+        },
+        true
+    );
 })();

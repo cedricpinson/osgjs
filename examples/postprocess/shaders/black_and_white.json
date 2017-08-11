@@ -1,0 +1,12 @@
+{
+	"passes": [
+		{
+			"func": "blackAndWhite",
+			"textures": "%last",
+			"out": {
+				"name": "%next"
+			},
+			"collapsible": true
+		}
+	]
+}

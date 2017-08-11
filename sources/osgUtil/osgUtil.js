@@ -1,5 +1,6 @@
 'use strict';
 var Composer = require('osgUtil/Composer');
+var ComposerPostProcess = require('osgUtil/ComposerPostProcess');
 var debug = require('osgUtil/debug');
 var DelayInterpolator = require('osgUtil/DelayInterpolator');
 var DisplayNormalVisitor = require('osgUtil/DisplayNormalVisitor');
@@ -22,6 +23,7 @@ var intersectionEnums = require('osgUtil/intersectionEnums');
 var osgUtil = {};
 
 osgUtil.Composer = Composer;
+osgUtil.ComposerPostProcess = ComposerPostProcess;
 MACROUTILS.objectMix(osgUtil, debug);
 osgUtil.DelayInterpolator = DelayInterpolator;
 osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
