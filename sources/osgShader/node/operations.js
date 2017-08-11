@@ -31,6 +31,25 @@ MACROUTILS.createPrototypeObject(
 
         operator: '+',
 
+        _getFirstVariableCast: function() {
+            var variable = this._inputs[0].getVariable();
+            var inType = this._inputs[0].getType();
+            var outType = this._outputs.getType();
+
+            if (outType === inType) return variable;
+
+            // upcast float
+            if (inType === 'float') return outType + '(' + variable + ')';
+
+            // downcast vector
+            if (outType === 'vec3') return variable + '.rgb';
+            if (outType === 'vec2') return variable + '.rg';
+            if (outType === 'float') return variable + '.r';
+
+            Notify.error('Mismatch type : ' + outType + ' with ' + inType + ', ' + variable);
+            return variable;
+        },
+
         computeShader: function() {
             // force inputs type to be all the same from the output
             var outputType = this._outputs.getType();
@@ -40,12 +59,17 @@ MACROUTILS.createPrototypeObject(
             else if (outputType === 'vec3') addType = '.rgb';
             else if (outputType === 'vec2') addType = '.rg';
 
-            var str = this._outputs.getVariable() + ' = ' + this._inputs[0].getVariable() + addType;
+            var firstVariable = this._getFirstVariableCast();
+            var str = this._outputs.getVariable() + ' = ' + firstVariable;
+
             for (var i = 1, l = this._inputs.length; i < l; i++) {
                 var input = this._inputs[i];
                 str += this.operator + input.getVariable();
-                // special var case that doesn't need any postfix
-                if (input.getType() !== 'float') str += addType;
+
+                var inType = input.getType();
+                if (inType !== 'float' && inType !== outputType) {
+                    str += addType;
+                }
             }
             str += ';';
             return str;
