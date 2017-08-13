@@ -97,7 +97,7 @@ module.exports = function() {
             assert.equal(state.getStateSetStackSize(), 1, 'check stateSet stack length');
             var program = state.getLastProgramApplied();
             assert.notEqual(program, undefined, 'check last program applied');
-            assert.equal(state._programAttribute.values.length, 0, 'check program stack length');
+            assert.equal(state._programAttribute._length, 0, 'check program stack length');
 
             // check that texture 0 is applied only once
             assert.equal(textureBindCall.get(1), 1, 'check that texture 0 is applied only once');

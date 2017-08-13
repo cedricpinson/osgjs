@@ -59,7 +59,7 @@ ShaderGenerator.prototype = {
             var attributeStack = _attributeArray[type];
             if (!attributeStack) continue;
 
-            var attribute = attributeStack.lastApplied;
+            var attribute = attributeStack._lastApplied;
 
             if (!attribute || this.filterAttributeTypes(attribute)) continue;
 
@@ -79,10 +79,10 @@ ShaderGenerator.prototype = {
             var type = cacheType[i];
             var attributeStack = state._attributeArray[type];
             if (attributeStack) {
-                var attribute = attributeStack.lastApplied;
+                var attribute = attributeStack._lastApplied;
                 if (!attribute || this.filterAttributeTypes(attribute)) continue;
 
-                hash += attributeStack.lastApplied.getHash();
+                hash += attributeStack._lastApplied.getHash();
             }
         }
 
@@ -103,7 +103,7 @@ ShaderGenerator.prototype = {
                 var type = cacheType[i];
                 var attributeStack = textureUnit[type];
                 if (attributeStack) {
-                    var attribute = attributeStack.lastApplied;
+                    var attribute = attributeStack._lastApplied;
 
                     if (
                         !attribute ||
@@ -142,7 +142,7 @@ ShaderGenerator.prototype = {
                 var attributeStack = _attributeArrayForUnit[type];
                 if (!attributeStack) continue;
 
-                var attribute = attributeStack.lastApplied;
+                var attribute = attributeStack._lastApplied;
                 if (!attribute || this.filterAttributeTypes(attribute) || attribute.isTextureNull())
                     continue;
 

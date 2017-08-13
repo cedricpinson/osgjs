@@ -6,7 +6,8 @@ var Notify = require('osg/notify');
 var Object = require('osg/Object');
 var Program = require('osg/Program');
 var StateAttribute = require('osg/StateAttribute');
-var Stack = require('osg/Stack');
+var StackPool = require('osg/StackPool');
+var StackObjectPairPool = require('osg/StackObjectPairPool');
 var Uniform = require('osg/Uniform');
 var MACROUTILS = require('osg/Utils');
 var WebGLCaps = require('osg/WebGLCaps');
@@ -76,8 +77,8 @@ var State = function(shaderGeneratorProxy) {
     this._currentVAO = null;
     this._currentIndexVBO = null;
 
-    this._stateSets = new Stack();
-    this._shaderGeneratorNames = new Stack();
+    this._stateSets = new StackPool();
+    this._shaderGeneratorNames = new StackObjectPairPool();
     this._uniforms = {};
 
     this._textureAttributeArrayList = [];
@@ -91,8 +92,8 @@ var State = function(shaderGeneratorProxy) {
     this._modelViewNormalMatrix = Uniform.createMatrix3(mat3.create(), 'uModelViewNormalMatrix');
 
     // track uniform for color array enabled
-    var arrayColorEnable = new Stack();
-    arrayColorEnable.globalDefault = Uniform.createFloat1(0.0, 'uArrayColorEnabled');
+    var arrayColorEnable = new StackObjectPairPool();
+    arrayColorEnable._globalDefault = Uniform.createFloat1(0.0, 'uArrayColorEnabled');
 
     this._uniforms.ArrayColorEnabled = arrayColorEnable;
 
@@ -154,19 +155,15 @@ MACROUTILS.createPrototypeObject(
 
         pushCheckOverride: function(stack, object, maskValue) {
             var result = this._evaluateOverrideObjectOnStack(stack, object, maskValue);
-            var objectPair;
-
             // override and protected case
-            if (result !== object) objectPair = this.getObjectPair(result, stack.back.value);
-            else objectPair = this.getObjectPair(object, maskValue);
-
-            stack.push(objectPair);
+            if (result !== object) stack.push(result, stack._back.value);
+            else stack.push(object, maskValue);
         },
 
         _evaluateOverrideObjectOnStack: function(stack, object, maskValue) {
-            var back = stack.back;
+            var back = stack._back;
             // object can be a Uniform, an Attribute, or a shader generator name
-            if (stack.values.length === 0) {
+            if (stack._length === 0) {
                 return object;
             } else if (
                 back.value & StateAttribute.OVERRIDE &&
@@ -217,7 +214,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         getStateSetStackSize: function() {
-            return this._stateSets.values.length;
+            return this._stateSets._length;
         },
 
         insertStateSet: (function() {
@@ -227,7 +224,7 @@ MACROUTILS.createPrototypeObject(
                 tmpStack.length = 0;
                 var length = this.getStateSetStackSize();
                 while (length > pos) {
-                    tmpStack.push(this._stateSets.back);
+                    tmpStack.push(this._stateSets._back);
                     this.popStateSet();
                     length--;
                 }
@@ -254,7 +251,7 @@ MACROUTILS.createPrototypeObject(
 
                 // record the StateSet above the one we intend to remove
                 while (length - 1 > pos) {
-                    tmpStack.push(this._stateSets.back);
+                    tmpStack.push(this._stateSets._back);
                     this.popStateSet();
                     length--;
                 }
@@ -361,8 +358,7 @@ MACROUTILS.createPrototypeObject(
             var stateSetProgramPair = stateset._attributeArray[this._programType];
 
             if (
-                (programStack.values.length !== 0 &&
-                    programStack.back.value !== StateAttribute.OFF) ||
+                (programStack._length !== 0 && programStack._back.value !== StateAttribute.OFF) ||
                 (stateSetProgramPair && stateSetProgramPair.getValue() !== StateAttribute.OFF)
             )
                 return undefined;
@@ -379,8 +375,8 @@ MACROUTILS.createPrototypeObject(
                     stateSetGenerator,
                     maskValue
                 );
-            } else if (generatorStack.values.length) {
-                generator = generatorStack.back.object;
+            } else if (generatorStack._length) {
+                generator = generatorStack._back.object;
             }
 
             // no custom program look into the stack of ShaderGenerator name
@@ -404,7 +400,7 @@ MACROUTILS.createPrototypeObject(
 
                 var hasStateAttributeStack = attributeStack !== undefined;
                 var hasStateAttributeStackChanged =
-                    hasStateAttributeStack && attributeStack.changed;
+                    hasStateAttributeStack && attributeStack._changed;
 
                 if (!stateSetAttributePair && !hasStateAttributeStackChanged) continue;
 
@@ -418,7 +414,7 @@ MACROUTILS.createPrototypeObject(
                         attributeId,
                         stateSetAttribute.cloneType()
                     );
-                    attributeStack.changed = true;
+                    attributeStack._changed = true;
                     this._applyAttributeStack(stateSetAttribute, attributeStack);
                 } else if (stateSetAttribute) {
                     var maskValue = stateSetAttributePair.getValue();
@@ -430,19 +426,19 @@ MACROUTILS.createPrototypeObject(
                     if (attribute !== stateSetAttribute) {
                         // override
 
-                        if (attributeStack.changed) {
+                        if (attributeStack._changed) {
                             this._applyAttributeStack(attribute, attributeStack);
-                            attributeStack.changed = false;
+                            attributeStack._changed = false;
                         }
                     } else if (this._applyAttributeStack(attribute, attributeStack)) {
-                        attributeStack.changed = true;
+                        attributeStack._changed = true;
                     }
-                } else if (attributeStack.values.length) {
-                    attributeStack.changed = false;
-                    this._applyAttributeStack(attributeStack.back.object, attributeStack);
+                } else if (attributeStack._length) {
+                    attributeStack._changed = false;
+                    this._applyAttributeStack(attributeStack._back.object, attributeStack);
                 } else {
-                    attributeStack.changed = false;
-                    this._applyAttributeStack(attributeStack.globalDefault, attributeStack);
+                    attributeStack._changed = false;
+                    this._applyAttributeStack(attributeStack._globalDefault, attributeStack);
                 }
             }
         },
@@ -490,7 +486,7 @@ MACROUTILS.createPrototypeObject(
                         : undefined;
                     var hasStateAttributeStack = attributeStack !== undefined;
                     var hasStateAttributeStackChanged =
-                        hasStateAttributeStack && attributeStack.changed;
+                        hasStateAttributeStack && attributeStack._changed;
                     var attribute;
 
                     if (!stateSetAttributePair && !hasStateAttributeStackChanged) continue;
@@ -506,7 +502,7 @@ MACROUTILS.createPrototypeObject(
                             attributeId,
                             attribute.cloneType()
                         );
-                        attributeStack.changed = true;
+                        attributeStack._changed = true;
                         this._applyTextureAttribute(textureUnit, attribute, attributeStack);
                     } else if (stateSetAttribute) {
                         var maskValue = stateSetAttributePair.getValue();
@@ -518,27 +514,27 @@ MACROUTILS.createPrototypeObject(
                         if (attribute !== stateSetAttribute) {
                             // override
 
-                            if (attributeStack.changed) {
+                            if (attributeStack._changed) {
                                 this._applyTextureAttribute(textureUnit, attribute, attributeStack);
-                                attributeStack.changed = false;
+                                attributeStack._changed = false;
                             }
                         } else if (
                             this._applyTextureAttribute(textureUnit, attribute, attributeStack)
                         ) {
-                            attributeStack.changed = true;
+                            attributeStack._changed = true;
                         }
-                    } else if (attributeStack.values.length) {
-                        attributeStack.changed = false;
+                    } else if (attributeStack._length) {
+                        attributeStack._changed = false;
                         this._applyTextureAttribute(
                             textureUnit,
-                            attributeStack.back.object,
+                            attributeStack._back.object,
                             attributeStack
                         );
                     } else {
-                        attributeStack.changed = false;
+                        attributeStack._changed = false;
                         this._applyTextureAttribute(
                             textureUnit,
-                            attributeStack.globalDefault,
+                            attributeStack._globalDefault,
                             attributeStack
                         );
                     }
@@ -587,13 +583,13 @@ MACROUTILS.createPrototypeObject(
         },
 
         popAllStateSets: function() {
-            while (this._stateSets.values.length) {
+            while (this._stateSets._length) {
                 this.popStateSet();
             }
         },
 
         popStateSet: function() {
-            if (!this._stateSets.values.length) return;
+            if (!this._stateSets._length) return;
 
             var stateset = this._stateSets.pop();
 
@@ -628,8 +624,8 @@ MACROUTILS.createPrototypeObject(
         },
 
         _createAttributeStack: function(_attributeArray, index, globalDefault) {
-            var attributeStack = new Stack();
-            attributeStack.globalDefault = globalDefault;
+            var attributeStack = new StackObjectPairPool();
+            attributeStack._globalDefault = globalDefault;
 
             _attributeArray[index] = attributeStack;
 
@@ -648,8 +644,8 @@ MACROUTILS.createPrototypeObject(
                     attribute.cloneType()
                 );
             }
-            attributeStack.lastApplied = attribute;
-            attributeStack.changed = true;
+            attributeStack._lastApplied = attribute;
+            attributeStack._changed = true;
         },
 
         applyAttribute: function(attribute) {
@@ -664,23 +660,23 @@ MACROUTILS.createPrototypeObject(
                     attribute.cloneType()
                 );
 
-            attributeStack.changed = true;
+            attributeStack._changed = true;
             this._applyAttributeStack(attribute, attributeStack);
         },
 
         _applyAttributeStack: function(attribute, attributeStack) {
-            if (attributeStack.lastApplied === attribute) return false;
+            if (attributeStack._lastApplied === attribute) return false;
 
             if (attribute.apply) attribute.apply(this);
 
-            attributeStack.lastApplied = attribute;
+            attributeStack._lastApplied = attribute;
             return true;
         },
 
         _applyTextureAttribute: function(unit, attribute, attributeStack) {
-            if (attributeStack.lastApplied === attribute) return false;
+            if (attributeStack._lastApplied === attribute) return false;
 
-            attributeStack.lastApplied = attribute;
+            attributeStack._lastApplied = attribute;
 
             if (!attribute.apply) return true;
 
@@ -705,12 +701,12 @@ MACROUTILS.createPrototypeObject(
                     attribute.cloneType()
                 );
 
-            attributeStack.changed = true;
+            attributeStack._changed = true;
             this._applyTextureAttribute(unit, attribute, attributeStack);
         },
 
         getLastProgramApplied: function() {
-            return this._programAttribute.lastApplied;
+            return this._programAttribute._lastApplied;
         },
 
         applyDefault: function() {
@@ -729,29 +725,20 @@ MACROUTILS.createPrototypeObject(
                 if (!attributeStack) continue;
 
                 var attribute;
-                if (attributeStack.values.length) attribute = attributeStack.back.object;
-                else attribute = attributeStack.globalDefault;
+                if (attributeStack._length) attribute = attributeStack._back.object;
+                else attribute = attributeStack._globalDefault;
 
-                if (!attributeStack.changed) continue;
+                if (!attributeStack._changed) continue;
 
-                if (attributeStack.lastApplied !== attribute) {
+                if (attributeStack._lastApplied !== attribute) {
                     if (attribute.apply) attribute.apply(this);
 
-                    attributeStack.lastApplied = attribute;
+                    attributeStack._lastApplied = attribute;
                 }
 
-                attributeStack.changed = false;
+                attributeStack._changed = false;
             }
         },
-
-        getObjectPair: (function() {
-            return function(object, value) {
-                return {
-                    value: value,
-                    object: object
-                };
-            };
-        })(),
 
         pushUniformsList: function(uniformMap, stateSetUniformMap) {
             /*jshint bitwise: false */
@@ -796,21 +783,21 @@ MACROUTILS.createPrototypeObject(
                     if (!attributeStack) continue;
 
                     var attribute;
-                    if (attributeStack.values.length) attribute = attributeStack.back.object;
-                    else attribute = attributeStack.globalDefault;
+                    if (attributeStack._length) attribute = attributeStack._back.object;
+                    else attribute = attributeStack._globalDefault;
 
-                    if (!attributeStack.changed) continue;
+                    if (!attributeStack._changed) continue;
 
                     // if the the stack has changed but the last applied attribute is the same
                     // then we dont need to apply it again
-                    if (attributeStack.lastApplied !== attribute) {
+                    if (attributeStack._lastApplied !== attribute) {
                         gl.activeTexture(gl.TEXTURE0 + textureUnit);
                         attribute.apply(this, textureUnit);
 
-                        attributeStack.lastApplied = attribute;
+                        attributeStack._lastApplied = attribute;
                     }
 
-                    attributeStack.changed = false;
+                    attributeStack._changed = false;
                 }
             }
         },
@@ -821,7 +808,7 @@ MACROUTILS.createPrototypeObject(
             if (_attributeArray[index] === undefined) {
                 this._createAttributeStack(_attributeArray, index, attribute);
             } else {
-                _attributeArray[index].globalDefault = attribute;
+                _attributeArray[index]._globalDefault = attribute;
             }
         },
 
@@ -829,7 +816,7 @@ MACROUTILS.createPrototypeObject(
             var _attributeArray = this._attributeArray;
             var index = MACROUTILS.getIdFromTypeMember(typeMember);
             if (index === undefined) return undefined;
-            return _attributeArray[index] ? _attributeArray[index].globalDefault : undefined;
+            return _attributeArray[index] ? _attributeArray[index]._globalDefault : undefined;
         },
 
         setGlobalDefaultTextureAttribute: function(unit, attribute) {
@@ -839,7 +826,7 @@ MACROUTILS.createPrototypeObject(
             if (_attributeArray[index] === undefined) {
                 this._createAttributeStack(_attributeArray, index, attribute);
             } else {
-                _attributeArray[index].globalDefault = attribute;
+                _attributeArray[index]._globalDefault = attribute;
             }
         },
 
@@ -847,7 +834,7 @@ MACROUTILS.createPrototypeObject(
             var _attributeArray = this.getOrCreateTextureAttributeArray(unit);
             var index = MACROUTILS.getTextureIdFromTypeMember(typeMember);
             if (index === undefined) return undefined;
-            return _attributeArray[index] ? _attributeArray[index].globalDefault : undefined;
+            return _attributeArray[index] ? _attributeArray[index]._globalDefault : undefined;
         },
 
         getOrCreateTextureAttributeArray: function(unit) {
@@ -871,7 +858,7 @@ MACROUTILS.createPrototypeObject(
                 }
 
                 this.pushCheckOverride(attributeStack, attribute, attributePair.getValue());
-                attributeStack.changed = true;
+                attributeStack._changed = true;
             }
         },
 
@@ -881,7 +868,7 @@ MACROUTILS.createPrototypeObject(
                 var attributeStack = _attributeArray[index];
 
                 attributeStack.pop();
-                attributeStack.changed = true;
+                attributeStack._changed = true;
             }
         },
 
@@ -909,7 +896,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         enableVertexColor: function() {
-            var program = this._programAttribute.lastApplied;
+            var program = this._programAttribute._lastApplied;
 
             if (
                 !program.getUniformsCache().uArrayColorEnabled ||
@@ -918,7 +905,7 @@ MACROUTILS.createPrototypeObject(
                 return; // no color uniform or attribute used, exit
 
             // update uniform
-            var uniform = this._uniforms.ArrayColorEnabled.globalDefault;
+            var uniform = this._uniforms.ArrayColorEnabled._globalDefault;
 
             var previousColorEnabled = this._previousColorAttribPair[program.getInstanceID()];
 
@@ -933,7 +920,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         disableVertexColor: function() {
-            var program = this._programAttribute.lastApplied;
+            var program = this._programAttribute._lastApplied;
 
             if (
                 !program.getUniformsCache().uArrayColorEnabled ||
@@ -942,7 +929,7 @@ MACROUTILS.createPrototypeObject(
                 return; // no color uniform or attribute used, exit
 
             // update uniform
-            var uniform = this._uniforms.ArrayColorEnabled.globalDefault;
+            var uniform = this._uniforms.ArrayColorEnabled._globalDefault;
 
             var previousColorEnabled = this._previousColorAttribPair[program.getInstanceID()];
 
@@ -1055,7 +1042,7 @@ MACROUTILS.createPrototypeObject(
                     }
 
                     // we just need the uniform list and not the attribute itself
-                    var attribute = attributeStack.globalDefault;
+                    var attribute = attributeStack._globalDefault;
                     if (attribute.getOrCreateUniforms === undefined) {
                         continue;
                     }
@@ -1087,7 +1074,7 @@ MACROUTILS.createPrototypeObject(
                         continue;
                     }
                     // we just need the uniform list and not the attribute itself
-                    var attribute = attributeStack.globalDefault;
+                    var attribute = attributeStack._globalDefault;
                     if (attribute.getOrCreateUniforms === undefined) {
                         continue;
                     }
@@ -1171,10 +1158,10 @@ MACROUTILS.createPrototypeObject(
                                 maskValue
                             );
                         else uniform = stateSetUniform;
-                    } else if (uniformStack.values.length) {
-                        uniform = uniformStack.back.object;
+                    } else if (uniformStack._length) {
+                        uniform = uniformStack._back.object;
                     } else {
-                        uniform = uniformStack.globalDefault;
+                        uniform = uniformStack._globalDefault;
                     }
 
                     uniform.apply(this._graphicContext, location);
@@ -1264,7 +1251,7 @@ MACROUTILS.createPrototypeObject(
                     name = foreignUniformKeys[i];
                     var uniStack = uniformMapStack[name];
                     if (uniStack) {
-                        uniform = uniStack.globalDefault;
+                        uniform = uniStack._globalDefault;
                         cacheData = this._copyUniformEntry(uniform);
                         cache.push(cacheData);
                     }
@@ -1382,10 +1369,10 @@ MACROUTILS.createPrototypeObject(
                         stateSetUniform,
                         maskValue
                     );
-                } else if (uniformStack.values.length) {
-                    uniform = uniformStack.back.object;
+                } else if (uniformStack._length) {
+                    uniform = uniformStack._back.object;
                 } else {
-                    uniform = uniformStack.globalDefault;
+                    uniform = uniformStack._globalDefault;
                     this._checkErrorUniform(uniformName);
                 }
 
@@ -1402,15 +1389,15 @@ MACROUTILS.createPrototypeObject(
 
         // Use to detect changes in RenderLeaf between call to avoid to applyStateSet
         _setStateSetsDrawID: function(id) {
-            var values = this._stateSets.values;
-            for (var i = 0, nbStateSets = values.length; i < nbStateSets; i++) {
+            var values = this._stateSets._values;
+            for (var i = 0, nbStateSets = this._stateSets._length; i < nbStateSets; i++) {
                 values[i].setDrawID(id);
             }
         },
 
         _stateSetStackChanged: function(id, nbLast) {
-            var values = this._stateSets.values;
-            var nbStateSets = values.length;
+            var values = this._stateSets._values;
+            var nbStateSets = this._stateSets._length;
             if (nbLast !== nbStateSets) return true;
 
             for (var i = 0; i < nbStateSets; i++) {
