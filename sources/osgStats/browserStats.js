@@ -15,9 +15,12 @@ var size = function(v) {
 };
 
 var update = function(stats) {
-    var usedJSHeapSize = size(memory.usedJSHeapSize);
-    var totalJSHeapSize = size(memory.totalJSHeapSize);
-
+    var usedJSHeapSize = 0;
+    var totalJSHeapSize = 0;
+    if (memory) {
+        usedJSHeapSize = size(memory.usedJSHeapSize);
+        totalJSHeapSize = size(memory.totalJSHeapSize);
+    }
     stats.getCounter('browserMemory').set(usedJSHeapSize);
     stats.getCounter('browserMemoryTotal').set(totalJSHeapSize);
 };

@@ -10,6 +10,7 @@ var Counter = function(config) {
     this._averageValue = 0;
     this._time = 0;
     this._avgMs = 0;
+    this._graph = !!config.graph;
     if (config.average) {
         this._avgMs = config.avgMs ? config.avgMs : 1000;
     }

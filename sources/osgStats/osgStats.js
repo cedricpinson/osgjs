@@ -1,6 +1,6 @@
 var osgStats = {
     Stats: require('osgStats/Stats'),
-    Buffer: require('osgStats/Buffer'),
+    BufferCharacter: require('osgStats/BufferCharacter'),
     TextGenerator: require('osgStats/TextGenerator'),
     Counter: require('osgStats/Counter'),
     defaultStats: require('osgStats/defaultStats'),

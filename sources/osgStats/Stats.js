@@ -11,9 +11,48 @@ var Shader = require('osg/Shader');
 var Transform = require('osg/Transform');
 var Texture = require('osg/Texture');
 var mat4 = require('osg/glMatrix').mat4;
-var Buffer = require('osgStats/Buffer');
+var BufferCharacter = require('osgStats/BufferCharacter');
+var BufferGraph = require('osgStats/BufferGraph');
 var Counter = require('osgStats/Counter');
 var TextGenerator = require('osgStats/TextGenerator');
+
+var MaxGraphValue = 120;
+var Graph = function() {
+    this._values = new Float32Array(MaxGraphValue);
+    this._index = 0;
+    this._maxValue = 0.0;
+};
+Graph.prototype = {
+    addValue: function(value) {
+        var index = this._index;
+        this._maxValue = value > this._maxValue ? value : this._maxValue;
+        this._maxValue *= 0.99;
+        this._values[index] = value / (this._maxValue * 1.1);
+        this._index = (this._index + 1) % MaxGraphValue;
+    },
+    computeMax: function() {
+        return this.computeMedian();
+        this._maxValue = 0.0;
+        for (var i = 0; i < MaxGraphValue; i++) {
+            var value = this._values[i];
+            this._maxValue = value > this._maxValue ? value : this._maxValue;
+        }
+    },
+    computeRunningMean: function(average, value, index) {
+        var mean = (average + (index - 1) + value) / index;
+        return mean * 2.0;
+    },
+    computeMovingMean: function(average, value, alpha) {
+        var mean = alpha * value + (1.0 - alpha) * average;
+        return mean * 2.0;
+    },
+    computeMedian: function() {
+        var sortedArray = this._inputs.sort();
+        var median = sortedArray[MaxGraphValue / 2];
+        var max = median * 2.0;
+        return max;
+    }
+};
 
 var Stats = function(viewport) {
     this._captionsBuffer = undefined;
@@ -96,13 +135,13 @@ MACROUTILS.createPrototypeObject(Stats, {
     getNode: function() {
         return this._node;
     },
-    setShowFilter: function(arrayOfGroupName) {
+    setShowFilter: function(groupNamesArray) {
         this._dirtyCaptions = true;
-        if (!arrayOfGroupName) {
+        if (!groupNamesArray) {
             this._displayFilter.length = 0;
             return;
         }
-        this._displayFilter = arrayOfGroupName.slice();
+        this._displayFilter = groupNamesArray.slice();
     },
     setFontSize: function(size) {
         this._characterDisplayHeight = size;
@@ -111,8 +150,10 @@ MACROUTILS.createPrototypeObject(Stats, {
     },
     _init: function(viewport) {
         // 3D init
-        this._captionsBuffer = new Buffer(512);
-        this._valuesBuffer = new Buffer(128, BufferArray.DYNAMIC_DRAW);
+        this._captionsBuffer = new BufferCharacter(512);
+        this._valuesBuffer = new BufferCharacter(128, BufferArray.DYNAMIC_DRAW);
+        this._graphesBuffer = new BufferGraph(MaxGraphValue * 200);
+        this._historyGraph = {};
 
         this._viewport = viewport;
         var camera = new Camera();
@@ -131,6 +172,7 @@ MACROUTILS.createPrototypeObject(Stats, {
                 this._dirtyCaptions = true;
                 node.addChild(this._captionsBuffer.getGeometry());
                 node.addChild(this._valuesBuffer.getGeometry());
+                node.addChild(this._graphesBuffer.getGeometry());
                 texture.setImage(canvas);
                 this.setFontSize(this._characterDisplayHeight);
             }.bind(this)
@@ -162,9 +204,13 @@ MACROUTILS.createPrototypeObject(Stats, {
                 'uniform sampler2D Texture0;',
 
                 'void main(void) {',
-                '  vec4 color = texture2D( Texture0, vTexCoord0.xy);',
+                '  vec4 color;',
+                '  if ( vTexCoord0.x <= -1.0 ) {',
+                '     color = vec4(1.0,0.0,0.0,1.0);',
+                '  } else {',
+                '     color = texture2D( Texture0, vTexCoord0.xy);',
+                '  }',
                 '  gl_FragColor = color;',
-                '  //gl_FragColor = vec4(1.0,0.0,1.0,1.0);',
                 '}'
             ].join('\n');
 
@@ -175,11 +221,11 @@ MACROUTILS.createPrototypeObject(Stats, {
         })();
 
         node.getOrCreateStateSet().setAttributeAndModes(program);
-        node.getOrCreateStateSet().setAttributeAndModes(new CullFace(0));
+        node.getOrCreateStateSet().setAttributeAndModes(new CullFace(CullFace.DISABLE));
         node
             .getOrCreateStateSet()
             .setAttributeAndModes(new BlendFunc('SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA'));
-        node.getOrCreateStateSet().setAttributeAndModes(new Depth(0));
+        node.getOrCreateStateSet().setAttributeAndModes(new Depth(Depth.DISABLE));
         node.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
     },
     _generateCaptions: function() {
@@ -224,15 +270,47 @@ MACROUTILS.createPrototypeObject(Stats, {
             }
             textCursor[1] -= characterHeight;
         }
-
         buffer.update();
     },
+
+    _generateGraph: function(graph, initialX, y) {
+        var buffer = this._graphesBuffer;
+        var vertexes = buffer._vertexes;
+        var uvs = buffer._uvs;
+        var nbPoints = buffer._nbPoints;
+        var height = this._text.getCharacterHeight() * this._fontFactor - 2.0;
+        for (var i = 0; i < MaxGraphValue; i++) {
+            var graphIndex = (graph._index + i) % MaxGraphValue;
+            var graphValue = graph._values[graphIndex];
+
+            var bufferIndex = (nbPoints + i) * 2;
+            var vertexIndex = bufferIndex * 3;
+            var uvIndex = bufferIndex * 2;
+
+            var value = graphValue;
+            if (value > 1.0) value = 1.0;
+            value *= height;
+            if (value < 1.0) value = 1.0;
+            vertexes[vertexIndex] = initialX + i * 2;
+            vertexes[vertexIndex + 1] = y;
+
+            vertexes[vertexIndex + 3] = initialX + i * 2;
+            vertexes[vertexIndex + 4] = y + value;
+
+            uvs[uvIndex + 0] = -1.0;
+            uvs[uvIndex + 2] = -1.0;
+        }
+        buffer._nbPoints += MaxGraphValue;
+    },
+
     _generateValues: function() {
-        var initialX = this._labelMaxWidth + 2 * this._text.getCharacterWidth() * this._fontFactor;
+        var characterWidth = this._text.getCharacterWidth();
+        var initialX = this._labelMaxWidth + 2 * characterWidth * this._fontFactor;
         var buffer = this._valuesBuffer;
         var characterHeight = this._text.getCharacterHeight() * this._fontFactor;
         var textCursor = [initialX, this._viewport.height() - characterHeight, 0];
         buffer.reset();
+        this._graphesBuffer.reset();
 
         for (var i = 0; i < this._groups.length; i++) {
             var group = this._groups[i];
@@ -261,12 +339,29 @@ MACROUTILS.createPrototypeObject(Stats, {
                 }
 
                 this._text.generateText(textCursor, text, buffer, this._fontFactor);
+
+                if (counter._graph) {
+                    if (!this._historyGraph[counterName]) {
+                        this._historyGraph[counterName] = new Graph();
+                    }
+
+                    this._historyGraph[counterName].addValue(value);
+
+                    var graphOffsetX = characterWidth * 6 * this._fontFactor;
+                    this._generateGraph(
+                        this._historyGraph[counterName],
+                        initialX + graphOffsetX,
+                        textCursor[1]
+                    );
+                }
+
                 textCursor[0] = initialX;
                 textCursor[1] -= characterHeight;
             }
             textCursor[1] -= characterHeight;
         }
 
+        this._graphesBuffer.update();
         buffer.update();
     },
     _checkViewportChanged: function() {

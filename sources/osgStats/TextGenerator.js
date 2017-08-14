@@ -2,6 +2,8 @@ var MACROUTILS = require('osg/Utils');
 var P = require('bluebird');
 var notify = require('osg/notify');
 
+var DefaultFont = 'Courier New';
+
 var determineFontHeight = function(fontStyle) {
     var body = document.getElementsByTagName('body')[0];
     var dummy = document.createElement('div');
@@ -15,7 +17,7 @@ var determineFontHeight = function(fontStyle) {
 };
 
 var loadFont = function(fontFamily) {
-    return new P(function(resolve) {
+    return new P(function(resolve, reject) {
         window.WebFontConfig = {
             google: {
                 families: [fontFamily + ':200']
@@ -23,21 +25,23 @@ var loadFont = function(fontFamily) {
             active: function() {
                 resolve(fontFamily);
             },
-            inactive: function() {
-                resolve('Courier New');
+            inactive: function(error) {
+                reject('loadFont error:' + error);
             }
         };
         var wf = document.createElement('script'),
             s = document.scripts[0];
         wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
         wf.async = true;
+        wf.onerror = function() {
+            reject();
+        };
         s.parentNode.insertBefore(wf, s);
     });
 };
 
 var TextGenerator = function() {
     this._canvas = undefined;
-    this._texture = undefined;
     this._characterHeight = 0;
     this._characterWidth = 0;
     this._fontSize = 32;
@@ -165,16 +169,19 @@ MACROUTILS.createPrototypeObject(TextGenerator, {
             );
         }
         return canvas;
-
-        // var dom = $('body');
-        // dom.append(canvas);
     },
     _createCanvas: function() {
-        this._promise = loadFont(this._fontFamily).then(
-            function(fontFamily) {
-                return this._fillCanvas(fontFamily, this._fontSize);
-            }.bind(this)
-        );
+        this._promise = loadFont(this._fontFamily)
+            .then(
+                function(fontFamily) {
+                    return this._fillCanvas(fontFamily, this._fontSize);
+                }.bind(this)
+            )
+            .catch(
+                function() {
+                    return this._fillCanvas(DefaultFont, this._fontSize);
+                }.bind(this)
+            );
     }
 });
 

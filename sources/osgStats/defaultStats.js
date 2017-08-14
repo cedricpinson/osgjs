@@ -2,11 +2,14 @@ var values = {
     frame: {
         caption: 'Total frame time',
         over: 16,
-        average: true
+        average: true,
+        graph: true,
+        max: 4
     },
     stats: {
         caption: 'stats',
-        below: 30
+        over: 1,
+        graph: true
     },
     fps: {
         caption: 'Framerate (FPS)',
@@ -20,19 +23,24 @@ var values = {
     },
     update: {
         caption: 'update',
-        average: true
+        average: true,
+        graph: true
     },
     cull: {
         caption: 'cull',
-        average: true
+        average: true,
+        graph: true,
+        max: 16
     },
     render: {
         caption: 'render',
-        average: true
+        average: true,
+        graph: true
     },
     glframe: {
         caption: 'glframe',
-        average: true
+        average: true,
+        graph: true
     },
 
     textureused: {
@@ -84,6 +92,7 @@ var groups = [
     {
         name: 'frameBudget',
         caption: 'Frame Budget',
+        base: 'frame',
         values: ['frame', 'update', 'cull', 'render', 'glframe', 'stats']
     },
     {
