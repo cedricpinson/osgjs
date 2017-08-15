@@ -49,7 +49,7 @@ var TextGenerator = function() {
     this._characterFirstCode = ' '.charCodeAt();
     this._characterLastCode = 'z'.charCodeAt();
     this._characterSizeUV = 0;
-
+    this._backgroundColor = 'rgba(0,0,0,0.0)';
     this._createCanvas();
 };
 
@@ -66,6 +66,47 @@ MACROUTILS.createPrototypeObject(TextGenerator, {
     getCharacterUV: function(characterCode) {
         var index = characterCode - this._characterFirstCode;
         return index * this._characterSizeUV;
+    },
+    generateBackground: function(buffer, x, y, w, h) {
+        var nbCharacters = buffer._nbCharacters;
+        var vertexes = buffer._vertexes;
+        var uvs = buffer._uvs;
+
+        buffer._nbCharacters += 1;
+        var i = nbCharacters * 4 * 3;
+
+        vertexes[i++] = x;
+        vertexes[i++] = y;
+        vertexes[i++] = 0.0;
+
+        var x1 = x + w;
+        var y1 = y + h;
+
+        vertexes[i++] = x;
+        vertexes[i++] = y1;
+        vertexes[i++] = 0.0;
+
+        vertexes[i++] = x1;
+        vertexes[i++] = y1;
+        vertexes[i++] = 0.0;
+
+        vertexes[i++] = x1;
+        vertexes[i++] = y;
+        vertexes[i++] = 0.0;
+
+        i = nbCharacters * 4 * 2;
+
+        uvs[i++] = 0.0;
+        uvs[i++] = -10.0;
+
+        uvs[i++] = 0.0;
+        uvs[i++] = -10.0;
+
+        uvs[i++] = 0.0;
+        uvs[i++] = -10.0;
+
+        uvs[i++] = 0.0;
+        uvs[i++] = -10.0;
     },
     generateCharacter: function(currentPosition, characterCode, buffer, sizeFactor) {
         var nbCharacters = buffer._nbCharacters;
@@ -160,13 +201,11 @@ MACROUTILS.createPrototypeObject(TextGenerator, {
         ctx.font = font;
         ctx.textBaseline = 'middle';
         ctx.fillStyle = 'rgb(255,255,255)';
-
         for (var i = this._characterFirstCode, j = 0; i <= this._characterLastCode; i++, j++) {
-            ctx.fillText(
-                String.fromCharCode(i),
-                j * this._characterWidth,
-                this._characterHeight / 2
-            );
+            var code = String.fromCharCode(i);
+            var x = j * this._characterWidth;
+            var y = this._characterHeight / 2;
+            ctx.fillText(code, x, y);
         }
         return canvas;
     },

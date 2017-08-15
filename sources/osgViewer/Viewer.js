@@ -246,20 +246,11 @@ MACROUTILS.createPrototypeObject(
                 return;
             }
 
-            this._stats = new Stats(this.getCamera().getViewport());
+            this._stats = new Stats(this.getCamera().getViewport(), options);
             this._stats.addConfig(defaultStats);
             this._stats.addConfig(glStats);
             this._stats.addConfig(browserStats);
 
-            var statsGroupList = options.getString('statsFilter');
-            if (statsGroupList) {
-                var filterList = statsGroupList.split(';');
-                this._stats.setShowFilter(filterList);
-            }
-            var statsFontSize = options.getNumber('statsFontSize');
-            if (statsFontSize !== undefined) {
-                this._stats.setFontSize(statsFontSize);
-            }
             this.getCamera().addChild(this._stats.getNode());
 
             timerGPU.setCallback(this.callbackTimerGPU.bind(this));

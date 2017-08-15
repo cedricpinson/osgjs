@@ -54,7 +54,7 @@ Graph.prototype = {
     }
 };
 
-var Stats = function(viewport) {
+var Stats = function(viewport, options) {
     this._captionsBuffer = undefined;
     this._valuesBuffer = undefined;
 
@@ -85,18 +85,28 @@ var Stats = function(viewport) {
     this._characterDisplayHeight = 32.0;
 
     this._displayFilter = [];
-    this._init(viewport);
+
+    this._backgroundWidth = 0;
+    this._backgroundHeight = 0;
+
+    this._init(viewport, options);
 };
 
 MACROUTILS.createPrototypeObject(Stats, {
     getCounter: function(name) {
+        if (!this._counters[name]) {
+            this._counters[name] = new Counter({
+                caption: name,
+                average: true
+            });
+        }
+
         return this._counters[name];
     },
     addConfig: function(config) {
         for (var valueName in config.values) {
             if (this._counters[valueName]) {
-                notify.error('Counter ' + valueName + ' already exist');
-                return;
+                notify.warn('Counter ' + valueName + ' already exist, overring it');
             }
             var valueConfig = config.values[valueName];
             var counter = new Counter(valueConfig);
@@ -105,7 +115,13 @@ MACROUTILS.createPrototypeObject(Stats, {
 
         if (config.groups) {
             for (var i = 0; i < config.groups.length; i++) {
-                this._groups.push(config.groups[i]);
+                var groupConfig = config.groups[i];
+                var group = {
+                    name: groupConfig.name ? groupConfig.name : groupConfig.caption,
+                    caption: groupConfig.caption,
+                    values: groupConfig.values
+                };
+                this._groups.push(group);
             }
         }
 
@@ -148,7 +164,7 @@ MACROUTILS.createPrototypeObject(Stats, {
         this._fontFactor = this._characterDisplayHeight / this._text.getCharacterHeight();
         this._dirtyCaptions = true;
     },
-    _init: function(viewport) {
+    _init: function(viewport, options) {
         // 3D init
         this._captionsBuffer = new BufferCharacter(512);
         this._valuesBuffer = new BufferCharacter(128, BufferArray.DYNAMIC_DRAW);
@@ -158,14 +174,26 @@ MACROUTILS.createPrototypeObject(Stats, {
         this._viewport = viewport;
         var camera = new Camera();
 
-        camera.setRenderOrder(Camera.NESTED_RENDER, 0);
+        camera.setRenderOrder(Camera.POST_RENDER, 0);
         camera.setReferenceFrame(Transform.ABSOLUTE_RF);
+        camera.setClearMask(0x0); // dont clear anything
         var node = new Node();
         camera.addChild(node);
         camera.setName('osgStats');
         this._node = camera;
 
         this._text = new TextGenerator();
+
+        if (options) {
+            var statsGroupList = options.getString('statsFilter');
+            if (statsGroupList) {
+                var filterList = statsGroupList.split(';');
+                this.setShowFilter(filterList);
+            }
+            var statsFontSize = options.getNumber('statsFontSize');
+            if (statsFontSize !== undefined) this._characterDisplayHeight = statsFontSize;
+        }
+
         var texture = new Texture();
         this._text.getCanvas().then(
             function(canvas) {
@@ -205,7 +233,9 @@ MACROUTILS.createPrototypeObject(Stats, {
 
                 'void main(void) {',
                 '  vec4 color;',
-                '  if ( vTexCoord0.x <= -1.0 ) {',
+                '  if ( vTexCoord0.y <= -10.0 ) {',
+                '     color = vec4(0.0,0.0,0.0,0.5);',
+                '  } else if ( vTexCoord0.x <= -1.0 ) {',
                 '     color = vec4(1.0,0.0,0.0,1.0);',
                 '  } else {',
                 '     color = texture2D( Texture0, vTexCoord0.xy);',
@@ -228,6 +258,7 @@ MACROUTILS.createPrototypeObject(Stats, {
         node.getOrCreateStateSet().setAttributeAndModes(new Depth(Depth.DISABLE));
         node.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
     },
+    _generateBackground: function() {},
     _generateCaptions: function() {
         var initialX = 0;
         var buffer = this._captionsBuffer;
@@ -235,6 +266,15 @@ MACROUTILS.createPrototypeObject(Stats, {
         var textCursor = [initialX, this._viewport.height() - characterHeight, 0];
         this._labelMaxWidth = 0;
         buffer.reset();
+
+        // generate background
+        this._text.generateBackground(
+            this._captionsBuffer,
+            0,
+            this._viewport.height() - this._backgroundHeight,
+            this._backgroundWidth,
+            this._backgroundHeight
+        );
 
         for (var i = 0; i < this._groups.length; i++) {
             var group = this._groups[i];
@@ -305,13 +345,14 @@ MACROUTILS.createPrototypeObject(Stats, {
 
     _generateValues: function() {
         var characterWidth = this._text.getCharacterWidth();
-        var initialX = this._labelMaxWidth + 2 * characterWidth * this._fontFactor;
+        var valuesOffsetX = this._labelMaxWidth + 2 * characterWidth * this._fontFactor;
+        var graphOffsetX = characterWidth * 6 * this._fontFactor;
         var buffer = this._valuesBuffer;
         var characterHeight = this._text.getCharacterHeight() * this._fontFactor;
-        var textCursor = [initialX, this._viewport.height() - characterHeight, 0];
+        var textCursor = [valuesOffsetX, this._viewport.height() - characterHeight, 0];
         buffer.reset();
         this._graphesBuffer.reset();
-
+        var hasGraph = false;
         for (var i = 0; i < this._groups.length; i++) {
             var group = this._groups[i];
             var groupName = group.name;
@@ -322,7 +363,7 @@ MACROUTILS.createPrototypeObject(Stats, {
             )
                 continue;
 
-            textCursor[0] = initialX;
+            textCursor[0] = valuesOffsetX;
             textCursor[1] -= this._lineFactor * characterHeight;
 
             for (var j = 0; j < group.values.length; j++) {
@@ -341,24 +382,35 @@ MACROUTILS.createPrototypeObject(Stats, {
                 this._text.generateText(textCursor, text, buffer, this._fontFactor);
 
                 if (counter._graph) {
+                    hasGraph = true;
                     if (!this._historyGraph[counterName]) {
                         this._historyGraph[counterName] = new Graph();
                     }
 
                     this._historyGraph[counterName].addValue(value);
 
-                    var graphOffsetX = characterWidth * 6 * this._fontFactor;
                     this._generateGraph(
                         this._historyGraph[counterName],
-                        initialX + graphOffsetX,
+                        valuesOffsetX + graphOffsetX,
                         textCursor[1]
                     );
                 }
 
-                textCursor[0] = initialX;
+                textCursor[0] = valuesOffsetX;
                 textCursor[1] -= characterHeight;
             }
             textCursor[1] -= characterHeight;
+        }
+
+        var totalWidth = valuesOffsetX + graphOffsetX;
+
+        if (hasGraph) totalWidth += MaxGraphValue * 2 + 1;
+        var totalHeight = this._viewport.height() - textCursor[1] - 2 * characterHeight;
+
+        if (this._backgroundWidth !== totalWidth || this._backgroundHeight !== totalHeight) {
+            this._backgroundWidth = totalWidth;
+            this._backgroundHeight = totalHeight;
+            this._dirtyCaptions = true;
         }
 
         this._graphesBuffer.update();

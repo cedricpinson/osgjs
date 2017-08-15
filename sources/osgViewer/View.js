@@ -253,7 +253,10 @@ View.prototype = {
         var children = this._camera.getChildren();
         var statsNode = undefined;
         for (var i = 0, l = children.length; i < l; i++) {
-            if (children[i].getName() === 'osgStats') statsNode = children[i];
+            if (children[i].getName() === 'osgStats') {
+                statsNode = children[i];
+                break;
+            }
         }
         this._camera.removeChildren();
         this._camera.addChild(node);
