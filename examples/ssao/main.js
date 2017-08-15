@@ -143,7 +143,7 @@
             this._modelsMap.default = group;
         },
 
-        getRstatsOptions: function() {
+        getStatsConfig: function() {
             var values = {};
             var passNames = [];
             for (var i = 1; i <= MAX_MIP_LEVEL; ++i) {
@@ -171,7 +171,8 @@
             var group = [
                 {
                     caption: 'SSAO Postprocess',
-                    values: passNames
+                    values: passNames,
+                    name: 'ssao'
                 }
             ];
 
@@ -183,11 +184,11 @@
 
         createViewer: function() {
             this._canvas = document.getElementById('View');
-            this._viewer = new osgViewer.Viewer(this._canvas, {
-                rstats: this.getRstatsOptions()
-            });
+            this._viewer = new osgViewer.Viewer(this._canvas);
             this._viewer.init();
-
+            if (this._viewer.getViewerStats()) {
+                this._viewer.getViewerStats().addConfig(this.getStatsConfig());
+            }
             this._viewer.setupManipulator();
             this._viewer.run();
 
