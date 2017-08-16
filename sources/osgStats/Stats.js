@@ -195,16 +195,13 @@ MACROUTILS.createPrototypeObject(Stats, {
         }
 
         var texture = new Texture();
-        this._text.getCanvas().then(
-            function(canvas) {
-                this._dirtyCaptions = true;
-                node.addChild(this._captionsBuffer.getGeometry());
-                node.addChild(this._valuesBuffer.getGeometry());
-                node.addChild(this._graphesBuffer.getGeometry());
-                texture.setImage(canvas);
-                this.setFontSize(this._characterDisplayHeight);
-            }.bind(this)
-        );
+        this._text.setFontSize(this._characterDisplayHeight);
+        var canvas = this._text.getCanvas();
+        this._dirtyCaptions = true;
+        node.addChild(this._captionsBuffer.getGeometry());
+        node.addChild(this._valuesBuffer.getGeometry());
+        node.addChild(this._graphesBuffer.getGeometry());
+        texture.setImage(canvas);
 
         var program = (function() {
             var vertexshader = [
