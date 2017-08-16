@@ -1,8 +1,5 @@
 var MACROUTILS = require('osg/Utils');
-var P = require('bluebird');
 var notify = require('osg/notify');
-
-var DefaultFont = 'Courier New';
 
 var determineFontHeight = function(fontStyle) {
     var body = document.getElementsByTagName('body')[0];
@@ -16,44 +13,22 @@ var determineFontHeight = function(fontStyle) {
     return result;
 };
 
-var loadFont = function(fontFamily) {
-    return new P(function(resolve, reject) {
-        window.WebFontConfig = {
-            google: {
-                families: [fontFamily + ':200']
-            },
-            active: function() {
-                resolve(fontFamily);
-            },
-            inactive: function(error) {
-                reject('loadFont error:' + error);
-            }
-        };
-        var wf = document.createElement('script'),
-            s = document.scripts[0];
-        wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
-        wf.async = true;
-        wf.onerror = function() {
-            reject();
-        };
-        s.parentNode.insertBefore(wf, s);
-    });
-};
-
 var TextGenerator = function() {
     this._canvas = undefined;
     this._characterHeight = 0;
     this._characterWidth = 0;
     this._fontSize = 32;
-    this._fontFamily = 'Source Code Pro';
+    this._fontFamily = 'monospace';
     this._characterFirstCode = ' '.charCodeAt();
     this._characterLastCode = 'z'.charCodeAt();
     this._characterSizeUV = 0;
     this._backgroundColor = 'rgba(0,0,0,0.0)';
-    this._createCanvas();
 };
 
 MACROUTILS.createPrototypeObject(TextGenerator, {
+    setFontSize: function(size) {
+        this._fontSize = size;
+    },
     getCharacterWidth: function() {
         return this._characterWidth;
     },
@@ -61,7 +36,7 @@ MACROUTILS.createPrototypeObject(TextGenerator, {
         return this._characterHeight;
     },
     getCanvas: function() {
-        return this._promise;
+        return this._fillCanvas(this._fontFamily, this._fontSize);
     },
     getCharacterUV: function(characterCode) {
         var index = characterCode - this._characterFirstCode;
@@ -156,7 +131,7 @@ MACROUTILS.createPrototypeObject(TextGenerator, {
         var size = text.length;
         if (buffer._nbCharacters + size >= buffer._maxCharacters) {
             buffer.resize(buffer._maxCharacters * 2);
-            console.log('resize buffer to ' + buffer._maxCharacters * 2);
+            notify.info('resize buffer to ' + buffer._maxCharacters * 2);
         }
         for (var i = 0; i < size; i++) {
             var characterCode = text.charCodeAt(i);
@@ -208,19 +183,6 @@ MACROUTILS.createPrototypeObject(TextGenerator, {
             ctx.fillText(code, x, y);
         }
         return canvas;
-    },
-    _createCanvas: function() {
-        this._promise = loadFont(this._fontFamily)
-            .then(
-                function(fontFamily) {
-                    return this._fillCanvas(fontFamily, this._fontSize);
-                }.bind(this)
-            )
-            .catch(
-                function() {
-                    return this._fillCanvas(DefaultFont, this._fontSize);
-                }.bind(this)
-            );
     }
 });
 
