@@ -1,16 +1,9 @@
 'use strict';
 
-var osgPool = require('osgUtil/osgPool');
-require('osg/StateGraph');
 var Timer = require('osg/Timer');
 var Notify = require('osg/notify');
 
 var Utils = {};
-
-Utils.init = function() {
-    var StateGraphClass = require('osg/StateGraph');
-    osgPool.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool(StateGraphClass).grow(50);
-};
 
 Utils.extend = function() {
     // Save a reference to some core methods

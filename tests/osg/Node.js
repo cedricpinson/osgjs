@@ -1,6 +1,8 @@
 'use strict';
 var assert = require('chai').assert;
 var Node = require('osg/Node');
+var PooledResource = require('osg/PooledResource');
+var mat4 = require('osg/glMatrix').mat4;
 
 module.exports = function() {
     test('Node', function() {
@@ -33,7 +35,9 @@ module.exports = function() {
             'boundingSphereComputed must be true if a child call dirtyBound'
         );
 
-        var matrixes = n1.getWorldMatrices();
+        var matrixGenerator = new PooledResource(mat4.create);
+        var functorMatrix = matrixGenerator.getOrCreateObject.bind(matrixGenerator);
+        var matrixes = n1.getWorldMatrices(undefined, functorMatrix);
         assert.isOk(
             matrixes.length === 1 &&
                 matrixes[0][0] === 1.0 &&

@@ -5,6 +5,7 @@ var Program = require('osg/Program');
 var Shader = require('osg/Shader');
 var Compiler = require('osgShader/Compiler');
 var ShaderProcessor = require('osgShader/ShaderProcessor');
+var PooledArray = require('osg/PooledArray');
 
 var ShaderGenerator = function() {
     this._cache = {};
@@ -237,8 +238,6 @@ ShaderGenerator.prototype = {
     },
 
     getOrCreateProgram: (function() {
-        // TODO: double check GC impact of this stack
-        // TODO: find a way to get a hash dirty/cache on stateAttribute
         var textureAttributes = [];
         var attributes = [];
 

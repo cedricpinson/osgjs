@@ -5,6 +5,7 @@ var FrameBufferObject = require('osg/FrameBufferObject');
 var Notify = require('osg/notify');
 var RenderBin = require('osg/RenderBin');
 var vec4 = require('osg/glMatrix').vec4;
+var PooledResource = require('osg/PooledResource');
 
 /**
  * From OpenSceneGraph http://www.openscenegraph.org
@@ -18,145 +19,156 @@ var vec4 = require('osg/glMatrix').vec4;
  */
 var RenderStage = function() {
     RenderBin.call(this);
-    this.clearColor = vec4.create();
-    this.preRenderList = [];
-    this.postRenderList = [];
+    this._clearColor = vec4.create();
+    this._clearDepth = undefined;
+    this._clearMask = undefined;
+    this._camera = undefined;
+    this._viewport = undefined;
+    this._preRenderList = [];
+    this._postRenderList = [];
     // calling prototype to make sure
     // we call renderstage and not renderbin init
     RenderStage.prototype.init.call(this);
 };
+
+var createRenderStageOrder = function() {
+    return {
+        renderStage: null,
+        order: null
+    };
+};
+
+var pooledRenderStageOrder = new PooledResource(createRenderStageOrder);
 
 MACROUTILS.createPrototypeObject(
     RenderStage,
     MACROUTILS.objectInherit(RenderBin.prototype, {
         init: function() {
             RenderBin.prototype.init.call(this);
-            this.positionedAttribute.length = 0;
-            this.clearDepth = 1.0;
-            vec4.set(this.clearColor, 0.0, 0.0, 0.0, 1.0);
+            this._clearDepth = 1.0;
+            vec4.set(this._clearColor, 0.0, 0.0, 0.0, 1.0);
             /*jshint bitwise: false */
-            this.clearMask = Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT;
+            this._clearMask = Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT;
             /*jshint bitwise: true */
-            this.camera = undefined;
-            this.viewport = undefined;
-            this.preRenderList.length = 0;
-            this.postRenderList.length = 0;
+            this._camera = undefined;
+            this._viewport = undefined;
             this._renderStage = this;
-
+            RenderStage.prototype._initInternal.call(this);
             return this;
         },
 
+        _initInternal: function() {
+            this._preRenderList.length = 0;
+            this._postRenderList.length = 0;
+        },
+
         reset: function() {
+            pooledRenderStageOrder.reset();
             RenderBin.prototype.reset.call(this);
-            this.preRenderList.length = 0;
-            this.postRenderList.length = 0;
+            RenderStage.prototype._initInternal.call(this);
         },
 
         setClearDepth: function(depth) {
-            this.clearDepth = depth;
+            this._clearDepth = depth;
         },
 
         getClearDepth: function() {
-            return this.clearDepth;
+            return this._clearDepth;
         },
 
         setClearColor: function(color) {
-            vec4.copy(this.clearColor, color);
+            vec4.copy(this._clearColor, color);
         },
 
         getClearColor: function() {
-            return this.clearColor;
+            return this._clearColor;
         },
 
         setClearMask: function(mask) {
-            this.clearMask = mask;
+            this._clearMask = mask;
         },
 
         getClearMask: function() {
-            return this.clearMask;
+            return this._clearMask;
         },
 
         setViewport: function(vp) {
-            this.viewport = vp;
+            this._viewport = vp;
         },
 
         getViewport: function() {
-            return this.viewport;
+            return this._viewport;
         },
 
         setCamera: function(camera) {
-            this.camera = camera;
+            this._camera = camera;
         },
 
         getCamera: function() {
-            return this.camera;
-        },
-
-        getPositionedAttribute: function() {
-            return this.positionedAttribute;
+            return this._camera;
         },
 
         getPreRenderStageList: function() {
-            return this.preRenderList;
+            return this._preRenderList;
         },
 
         getPostRenderStageList: function() {
-            return this.postRenderList;
+            return this._postRenderList;
         },
 
         addPreRenderStage: function(rs, order) {
-            for (var i = 0, l = this.preRenderList.length; i < l; i++) {
-                var render = this.preRenderList[i];
+            for (var i = 0, l = this._preRenderList.length; i < l; i++) {
+                var render = this._preRenderList[i];
                 if (order < render.order) {
                     break;
                 }
             }
-            if (i < this.preRenderList.length) {
-                this.preRenderList = this.preRenderList.splice(i, 0, {
-                    order: order,
-                    renderStage: rs
-                });
+
+            var renderStageOrder = pooledRenderStageOrder.getOrCreateObject();
+            if (i < this._preRenderList.length) {
+                renderStageOrder.order = order;
+                renderStageOrder.renderStage = rs;
+                this._preRenderList = this._preRenderList.splice(i, 0, renderStageOrder);
             } else {
-                this.preRenderList.push({
-                    order: order,
-                    renderStage: rs
-                });
+                renderStageOrder.order = order;
+                renderStageOrder.renderStage = rs;
+                this._preRenderList.push(renderStageOrder);
             }
         },
 
         addPostRenderStage: function(rs, order) {
-            for (var i = 0, l = this.postRenderList.length; i < l; i++) {
-                var render = this.postRenderList[i];
+            for (var i = 0, l = this._postRenderList.length; i < l; i++) {
+                var render = this._postRenderList[i];
                 if (order < render.order) {
                     break;
                 }
             }
-            if (i < this.postRenderList.length) {
-                this.postRenderList = this.postRenderList.splice(i, 0, {
-                    order: order,
-                    renderStage: rs
-                });
+
+            var renderStageOrder = pooledRenderStageOrder.getOrCreateObject();
+            if (i < this._postRenderList.length) {
+                renderStageOrder.order = order;
+                renderStageOrder.renderStage = rs;
+                this._postRenderList = this._postRenderList.splice(i, 0, renderStageOrder);
             } else {
-                this.postRenderList.push({
-                    order: order,
-                    renderStage: rs
-                });
+                renderStageOrder.order = order;
+                renderStageOrder.renderStage = rs;
+                this._postRenderList.push(renderStageOrder);
             }
         },
 
         drawPreRenderStages: function(state, previousRenderLeaf) {
             var previousLeaf = previousRenderLeaf;
-            for (var i = 0, l = this.preRenderList.length; i < l; ++i) {
-                var sg = this.preRenderList[i].renderStage;
+            for (var i = 0, l = this._preRenderList.length; i < l; ++i) {
+                var sg = this._preRenderList[i].renderStage;
                 previousLeaf = sg.draw(state, previousLeaf);
             }
             return previousLeaf;
         },
 
         draw: function(state, previousRenderLeaf) {
-            if (this.camera && this.camera.getInitialDrawCallback()) {
+            if (this._camera && this._camera.getInitialDrawCallback()) {
                 // if we have a camera with a final callback invoke it.
-                this.camera.getInitialDrawCallback()(state);
+                this._camera.getInitialDrawCallback()(state);
             }
 
             var previousLeaf = this.drawPreRenderStages(state, previousRenderLeaf);
@@ -165,30 +177,30 @@ MACROUTILS.createPrototypeObject(
 
             previousLeaf = this.drawPostRenderStages(state, previousLeaf);
 
-            if (this.camera && this.camera.getFinalDrawCallback()) {
+            if (this._camera && this._camera.getFinalDrawCallback()) {
                 // if we have a camera with a final callback invoke it.
-                this.camera.getFinalDrawCallback()(state);
+                this._camera.getFinalDrawCallback()(state);
             }
 
             return previousLeaf;
         },
 
         sort: function() {
-            for (var i = 0, l = this.preRenderList.length; i < l; ++i) {
-                this.preRenderList[i].renderStage.sort();
+            for (var i = 0, l = this._preRenderList.length; i < l; ++i) {
+                this._preRenderList[i].renderStage.sort();
             }
 
             RenderBin.prototype.sort.call(this);
 
-            for (var j = 0, k = this.postRenderList.length; j < k; ++j) {
-                this.postRenderList[j].renderStage.sort();
+            for (var j = 0, k = this._postRenderList.length; j < k; ++j) {
+                this._postRenderList[j].renderStage.sort();
             }
         },
 
         drawPostRenderStages: function(state, previousRenderLeaf) {
             var previousLeaf = previousRenderLeaf;
-            for (var i = 0, l = this.postRenderList.length; i < l; ++i) {
-                var sg = this.postRenderList[i].renderStage;
+            for (var i = 0, l = this._postRenderList.length; i < l; ++i) {
+                var sg = this._postRenderList[i].renderStage;
                 previousLeaf = sg.draw(state, previousLeaf);
             }
             return previousLeaf;
@@ -196,20 +208,20 @@ MACROUTILS.createPrototypeObject(
 
         applyCamera: function(state) {
             var gl = state.getGraphicContext();
-            if (this.camera === undefined) {
+            if (this._camera === undefined) {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 return;
             }
-            var viewport = this.camera.getViewport();
-            var fbo = this.camera.frameBufferObject;
+            var viewport = this._camera.getViewport();
+            var fbo = this._camera.frameBufferObject;
 
             if (!fbo) {
                 fbo = new FrameBufferObject();
-                this.camera.frameBufferObject = fbo;
+                this._camera.frameBufferObject = fbo;
             }
 
             if (fbo.isDirty()) {
-                var attachments = this.camera.getAttachments();
+                var attachments = this._camera.getAttachments();
 
                 // framebuffer texture and renderbuffer must be same dimension
                 // otherwise framebuffer is incomplete
@@ -259,31 +271,31 @@ MACROUTILS.createPrototypeObject(
             this.applyCamera(state);
 
             // projection clipping
-            if (this.viewport === undefined) {
+            if (this._viewport === undefined) {
                 Notify.log('RenderStage does not have a valid viewport');
             }
-            state.applyAttribute(this.viewport);
+            state.applyAttribute(this._viewport);
 
             /*jshint bitwise: false */
-            if (this.clearMask !== 0x0) {
-                if (this.clearMask & gl.COLOR_BUFFER_BIT) {
+            if (this._clearMask !== 0x0) {
+                if (this._clearMask & gl.COLOR_BUFFER_BIT) {
                     gl.clearColor(
-                        this.clearColor[0],
-                        this.clearColor[1],
-                        this.clearColor[2],
-                        this.clearColor[3]
+                        this._clearColor[0],
+                        this._clearColor[1],
+                        this._clearColor[2],
+                        this._clearColor[3]
                     );
                 }
-                if (this.clearMask & gl.DEPTH_BUFFER_BIT) {
+                if (this._clearMask & gl.DEPTH_BUFFER_BIT) {
                     gl.depthMask(true);
-                    gl.clearDepth(this.clearDepth);
+                    gl.clearDepth(this._clearDepth);
                 }
                 /*jshint bitwise: true */
-                gl.clear(this.clearMask);
+                gl.clear(this._clearMask);
             }
 
-            if (this.positionedAttribute.length !== 0) {
-                this.applyPositionedAttribute(state, this.positionedAttribute);
+            if (this._positionedAttribute.length !== 0) {
+                this.applyPositionedAttribute(state, this._positionedAttribute);
             }
 
             var previousLeaf = RenderBin.prototype.drawImplementation.call(

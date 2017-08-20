@@ -77,10 +77,6 @@ var Viewer = function(canvas, userOptions, error) {
 
     if (!gl) throw 'No WebGL implementation found';
 
-    // this MACROUTILS.init(); should be removed and replace by something
-    // more natural
-    MACROUTILS.init();
-
     this.initDeviceEvents(options, canvas);
     this.initRun(options);
     this._updateVisitor = new UpdateVisitor();

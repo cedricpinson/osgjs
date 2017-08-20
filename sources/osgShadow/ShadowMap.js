@@ -734,13 +734,17 @@ MACROUTILS.createPrototypeObject(
             var positionedAttribute = cullVisitor.getCurrentRenderBin().getPositionedAttribute();
 
             var lightMatrix;
-            positionedAttribute.find(function(element) {
-                if (element.length > 0 && element[1] === light) {
-                    lightMatrix = element[0];
-                    return true;
+            var positionedAttributeElements = positionedAttribute.getArray();
+            for (var i = 0; i < positionedAttribute.length; i++) {
+                var pa = positionedAttributeElements[i];
+                var attribute = pa[1];
+                var matrix = pa[0];
+                if (attribute === light) {
+                    lightMatrix = matrix;
+                    break;
                 }
-                return false;
-            });
+            }
+
             if (lightMatrix === undefined) {
                 Notify.warn('light isnt inside children of shadowedScene Node');
                 this._emptyCasterScene = true;

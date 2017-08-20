@@ -2,9 +2,9 @@
 var mat4 = require('osg/glMatrix').mat4;
 var TransformEnums = require('osg/transformEnums');
 
-var computeLocalToWorld = function(nodePath, ignoreCameras, userMatrix) {
+var computeLocalToWorld = function(nodePath, ignoreCameras, userMatrix, nodePathIndex) {
     var ignoreCamera = ignoreCameras;
-
+    var nodePathLength = nodePathIndex !== undefined ? nodePathIndex : nodePath.length;
     if (ignoreCamera === undefined) ignoreCamera = true;
 
     var matrix = userMatrix || mat4.create();
@@ -12,7 +12,7 @@ var computeLocalToWorld = function(nodePath, ignoreCameras, userMatrix) {
     var j = 0;
 
     if (ignoreCamera) {
-        for (j = nodePath.length - 1; j >= 0; j--) {
+        for (j = nodePathLength - 1; j >= 0; j--) {
             var camera = nodePath[j];
 
             if (
@@ -30,7 +30,7 @@ var computeLocalToWorld = function(nodePath, ignoreCameras, userMatrix) {
         j += 1;
     }
 
-    for (var i = j, l = nodePath.length; i < l; i++) {
+    for (var i = j, l = nodePathLength; i < l; i++) {
         var node = nodePath[i];
 
         if (node.computeLocalToWorldMatrix) {

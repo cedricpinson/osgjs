@@ -10,7 +10,6 @@ var MatrixTransform = require('osg/MatrixTransform');
 var AutoTransform = require('osg/AutoTransform');
 var Projection = require('osg/Projection');
 var LightSource = require('osg/LightSource');
-var osgPool = require('osgUtil/osgPool');
 var cullVisitorHelper = require('osg/cullVisitorHelper');
 var Geometry = require('osg/Geometry');
 var RenderLeaf = require('osg/RenderLeaf');
@@ -27,6 +26,17 @@ var Skeleton = require('osgAnimation/Skeleton');
 var RigGeometry = require('osgAnimation/RigGeometry');
 var Bone = require('osgAnimation/Bone');
 var MorphGeometry = require('osgAnimation/MorphGeometry');
+var PooledArray = require('osg/PooledArray');
+var PooledResource = require('osg/PooledResource');
+
+var createRenderLeaf = function() {
+    return new RenderLeaf();
+};
+
+var createCullSettings = function() {
+    return new CullSettings();
+};
+
 /**
  * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
  * @class CullVisitor
@@ -52,15 +62,13 @@ var CullVisitor = function() {
     this._bbCornerNear = ~this._bbCornerFar & 7;
     /*jshint bitwise: true */
 
-    this._reserveLeafStack = [new RenderLeaf()];
-    this._reserveLeafStackCurrent = 0;
+    this._pooledLeaf = new PooledResource(createRenderLeaf);
 
-    this._reserveRenderStageStacks = {};
+    this._pooledRenderStages = {};
 
-    this._reserveCullSettingsStack = [new CullSettings()];
-    this._reserveCullSettingsStackCurrent = 0;
+    this._pooledCullSettings = new PooledResource(createCullSettings);
 
-    this._renderBinStack = [];
+    this._renderBinStack = new PooledArray();
     this.visitorType = NodeVisitor.CULL_VISITOR;
 
     this._identityMatrix = mat4.create();
@@ -175,20 +183,15 @@ MACROUTILS.createPrototypeObject(
 
             reset: function() {
                 CullStack.prototype.reset.call(this);
-                // Reset the stack before reseting the current leaf index.
-                // Reseting elements and refilling them later is faster than create new elements
-                // That's the reason to have a leafStack, see http://jsperf.com/refill/2
-                this.resetRenderLeafStack();
-                this._reserveLeafStackCurrent = 0;
 
-                this.resetCullSettingsStack();
-                this._reserveCullSettingsStackCurrent = 0;
+                this._pooledLeaf.reset();
+                this._pooledCullSettings.reset();
 
                 // renderstage / renderbin pools
-                for (var key in this._reserveRenderStageStacks) {
-                    this._reserveRenderStageStacks[key].reset();
+                for (var key in this._pooledRenderStages) {
+                    this._pooledRenderStages[key].reset();
                 }
-                RenderBin.resetStack();
+                RenderBin.reset();
 
                 this._computedNear = Number.POSITIVE_INFINITY;
                 this._computedFar = Number.NEGATIVE_INFINITY;
@@ -206,7 +209,7 @@ MACROUTILS.createPrototypeObject(
             // in osg you can push 0, in this case an identity matrix will be loaded
             addPositionedAttribute: function(matrix, attribute) {
                 var m = matrix ? matrix : this._identityMatrix;
-                this._currentRenderBin.getStage().positionedAttribute.push([m, attribute]);
+                this._currentRenderBin.getStage().addPositionAttribute(m, attribute);
             },
 
             pushStateSet: function(stateset) {
@@ -222,13 +225,13 @@ MACROUTILS.createPrototypeObject(
             },
 
             /** Pop the top state set and hence associated state group.
-         * Move the current state group to the parent of the popped
-         * state group.
-         */
+             * Move the current state group to the parent of the popped
+             * state group.
+             */
             popStateSet: function() {
                 var currentStateGraph = this._currentStateGraph;
                 var stateset = currentStateGraph.getStateSet();
-                this._currentStateGraph = currentStateGraph.parent;
+                this._currentStateGraph = currentStateGraph.getParent();
                 if (stateset.getBinName() !== undefined) {
                     var renderBinStack = this._renderBinStack;
                     if (renderBinStack.length === 0) {
@@ -375,49 +378,21 @@ MACROUTILS.createPrototypeObject(
                 this.applyFunctionArray[node.nodeTypeID].call(this, node);
             },
 
+            createOrReuseRenderLeaf: function() {
+                return this._pooledLeaf.getOrCreateObject();
+            },
+
             createOrReuseRenderStage: function(classInstance) {
                 var type = !classInstance ? 'RenderStage' : classInstance.className();
-                var classCtor = !classInstance ? RenderStage : classInstance.constructor;
 
-                var stack;
-                if (this._reserveRenderStageStacks[type]) {
-                    stack = this._reserveRenderStageStacks[type];
-                } else {
-                    stack = new osgPool.OsgObjectMemoryStack(classCtor);
-                    this._reserveRenderStageStacks[type] = stack;
+                if (!this._pooledRenderStages[type]) {
+                    var classCtor = !classInstance ? RenderStage : classInstance.constructor;
+                    var createRenderStage = function() {
+                        return new classCtor();
+                    };
+                    this._pooledRenderStages[type] = new PooledResource(createRenderStage);
                 }
-                return stack.get().init();
-            },
-
-            createOrReuseRenderLeaf: function() {
-                var l = this._reserveLeafStack[this._reserveLeafStackCurrent++];
-                if (this._reserveLeafStackCurrent === this._reserveLeafStack.length) {
-                    this._reserveLeafStack.push(new RenderLeaf());
-                }
-                return l;
-            },
-
-            resetRenderLeafStack: function() {
-                for (var i = 0, j = this._reserveLeafStackCurrent; i <= j; i++) {
-                    this._reserveLeafStack[i].reset();
-                }
-            },
-
-            createOrReuseCullSettings: function() {
-                var l = this._reserveCullSettingsStack[this._reserveCullSettingsStackCurrent++];
-
-                if (
-                    this._reserveCullSettingsStackCurrent === this._reserveCullSettingsStack.length
-                ) {
-                    this._reserveCullSettingsStack.push(new CullSettings());
-                }
-                return l;
-            },
-
-            resetCullSettingsStack: function() {
-                for (var i = 0, j = this._reserveCullSettingsStackCurrent; i <= j; i++) {
-                    this._reserveCullSettingsStack[i].reset();
-                }
+                return this._pooledRenderStages[type].getOrCreateObject().init();
             },
 
             // function call after the push state in the geometry apply function
@@ -460,8 +435,8 @@ MACROUTILS.createPrototypeObject(
             },
 
             pushLeaf: function(node, depth) {
-                var leafs = this._currentStateGraph.leafs;
-                if (leafs.length === 0) {
+                var leafs = this._currentStateGraph.getLeafs();
+                if (!leafs.length) {
                     this._currentRenderBin.addStateGraph(this._currentStateGraph);
                 }
 
@@ -494,8 +469,8 @@ var cameraApply = function(camera) {
     var stateset = camera.getStateSet();
     if (stateset) this.pushStateSet(stateset);
 
-    var modelview = this._reservedMatrixStack.get();
-    var projection = this._reservedMatrixStack.get();
+    var modelview = this._pooledMatrix.getOrCreateObject();
+    var projection = this._pooledMatrix.getOrCreateObject();
 
     if (camera.getReferenceFrame() === TransformEnums.RELATIVE_RF) {
         var lastProjectionMatrix = this.getCurrentProjectionMatrix();
@@ -513,10 +488,8 @@ var cameraApply = function(camera) {
     var previousZnear = this._computedNear;
     var previousZfar = this._computedFar;
 
-    // save cullSettings
-    // TODO Perf: why it's not a stack
-    // and is pollutin  GC ?
-    var previousCullsettings = this.createOrReuseCullSettings();
+    var previousCullsettings = this._pooledCullSettings.getOrCreateObject();
+    previousCullsettings.reset();
     previousCullsettings.setCullSettings(this);
 
     this._computedNear = Number.POSITIVE_INFINITY;
@@ -607,7 +580,7 @@ var matrixTransformApply = function(node) {
     // push the culling mode.
     this.pushCurrentMask();
 
-    var matrix = this._reservedMatrixStack.get();
+    var matrix = this._pooledMatrix.getOrCreateObject();
     var lastMatrixStack = this.getCurrentModelViewMatrix();
     mat4.copy(matrix, lastMatrixStack);
     node.computeLocalToWorldMatrix(matrix);
@@ -631,7 +604,7 @@ var projectionApply = function(node) {
     this._numProjection++;
 
     var lastMatrixStack = this.getCurrentProjectionMatrix();
-    var matrix = this._reservedMatrixStack.get();
+    var matrix = this._pooledMatrix.getOrCreateObject();
     mat4.mul(matrix, lastMatrixStack, node.getProjectionMatrix());
     this.pushProjectionMatrix(matrix);
 

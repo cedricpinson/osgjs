@@ -2,7 +2,8 @@
 var MACROUTILS = require('osg/Utils');
 var NodeVisitor = require('osg/NodeVisitor');
 var mat4 = require('osg/glMatrix').mat4;
-var MatrixMemoryPool = require('osg/MatrixMemoryPool');
+var PooledResource = require('osg/PooledResource');
+var PooledArray = require('osg/PooledArray');
 var TransformEnums = require('osg/transformEnums');
 
 var IntersectionVisitor = function() {
@@ -10,10 +11,12 @@ var IntersectionVisitor = function() {
     // We could need to use a stack of intersectors in case we want
     // to use several intersectors. Right now we use only one.
     this._intersector = undefined;
-    this._projectionStack = [mat4.IDENTITY];
-    this._modelStack = [mat4.IDENTITY];
-    this._viewStack = [mat4.IDENTITY];
-    this._windowStack = [mat4.IDENTITY];
+
+    this._projectionStack = new PooledArray();
+    this._modelStack = new PooledArray();
+    this._viewStack = new PooledArray();
+    this._windowStack = new PooledArray();
+    this._pooledMatrix = new PooledResource(mat4.create);
 
     this.reset();
 };
@@ -22,7 +25,16 @@ MACROUTILS.createPrototypeObject(
     IntersectionVisitor,
     MACROUTILS.objectInherit(NodeVisitor.prototype, {
         reset: function() {
-            IntersectionVisitor._reservedMatrixStack.reset();
+            this._pooledMatrix.reset();
+            this._viewStack.reset();
+            this._modelStack.reset();
+            this._projectionStack.reset();
+            this._windowStack.reset();
+
+            this._viewStack.push(mat4.IDENTITY);
+            this._modelStack.push(mat4.IDENTITY);
+            this._projectionStack.push(mat4.IDENTITY);
+            this._windowStack.push(mat4.IDENTITY);
         },
         setIntersector: function(intersector) {
             this._intersector = intersector;
@@ -35,9 +47,7 @@ MACROUTILS.createPrototypeObject(
             this._modelStack.push(matrix);
         },
         getModelMatrix: function() {
-            return this._modelStack.length
-                ? this._modelStack[this._modelStack.length - 1]
-                : undefined;
+            return this._modelStack.back();
         },
         popModelMatrix: function() {
             return this._modelStack.pop();
@@ -47,7 +57,7 @@ MACROUTILS.createPrototypeObject(
             this._viewStack.push(matrix);
         },
         getViewMatrix: function() {
-            return this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
+            return this._viewStack.back();
         },
         popViewMatrix: function() {
             return this._viewStack.pop();
@@ -57,9 +67,7 @@ MACROUTILS.createPrototypeObject(
             this._projectionStack.push(matrix);
         },
         getProjectionMatrix: function() {
-            return this._projectionStack.length
-                ? this._projectionStack[this._projectionStack.length - 1]
-                : undefined;
+            return this._projectionStack.back();
         },
         popProjectionMatrix: function() {
             return this._projectionStack.pop();
@@ -70,13 +78,11 @@ MACROUTILS.createPrototypeObject(
         },
         pushWindowMatrixUsingViewport: function(viewport) {
             this._windowStack.push(
-                viewport.computeWindowMatrix(IntersectionVisitor._reservedMatrixStack.get())
+                viewport.computeWindowMatrix(this._pooledMatrix.getOrCreateObject())
             );
         },
         getWindowMatrix: function() {
-            return this._windowStack.length
-                ? this._windowStack[this._windowStack.length - 1]
-                : undefined;
+            return this._windowStack.back();
         },
         popWindowMatrix: function() {
             return this._windowStack.pop();
@@ -91,10 +97,10 @@ MACROUTILS.createPrototypeObject(
             var mat = mat4.create64();
 
             return function() {
-                mat4.copy(mat, this.getWindowMatrix() || mat4.IDENTITY);
-                mat4.mul(mat, mat, this.getProjectionMatrix() || mat4.IDENTITY);
-                mat4.mul(mat, mat, this.getViewMatrix() || mat4.IDENTITY);
-                mat4.mul(mat, mat, this.getModelMatrix() || mat4.IDENTITY);
+                mat4.copy(mat, this.getWindowMatrix());
+                mat4.mul(mat, mat, this.getProjectionMatrix());
+                mat4.mul(mat, mat, this.getViewMatrix());
+                mat4.mul(mat, mat, this.getModelMatrix());
 
                 return mat;
             };
@@ -136,13 +142,13 @@ MACROUTILS.createPrototypeObject(
             ) {
                 // relative
                 projection = mat4.mul(
-                    IntersectionVisitor._reservedMatrixStack.get(),
+                    this._pooledMatrix.getOrCreateObject(),
                     this.getProjectionMatrix(),
                     camera.getProjectionMatrix()
                 );
                 view = this.getViewMatrix();
                 model = mat4.mul(
-                    IntersectionVisitor._reservedMatrixStack.get(),
+                    this._pooledMatrix.getOrCreateObject(),
                     this.getModelMatrix(),
                     camera.getViewMatrix()
                 );
@@ -150,7 +156,7 @@ MACROUTILS.createPrototypeObject(
                 // absolute
                 projection = camera.getProjectionMatrix();
                 view = camera.getViewMatrix();
-                model = mat4.identity(IntersectionVisitor._reservedMatrixStack.get());
+                model = mat4.identity(this._pooledMatrix.getOrCreateObject());
             }
 
             this.pushProjectionMatrix(projection);
@@ -190,14 +196,11 @@ MACROUTILS.createPrototypeObject(
             if (!this.enter(node)) return;
             // Accumulate Transform
             if (node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF) {
-                var matrix = IntersectionVisitor._reservedMatrixStack.get();
+                var matrix = this._pooledMatrix.getOrCreateObject();
                 this.pushViewMatrix(mat4.identity(matrix));
                 this.pushModelMatrix(node.getMatrix());
             } else if (this._modelStack.length > 0) {
-                var m = mat4.copy(
-                    IntersectionVisitor._reservedMatrixStack.get(),
-                    this.getModelMatrix()
-                );
+                var m = mat4.copy(this._pooledMatrix.getOrCreateObject(), this.getModelMatrix());
                 mat4.mul(m, m, node.getMatrix());
                 this.pushModelMatrix(m);
             } else {
@@ -216,7 +219,5 @@ MACROUTILS.createPrototypeObject(
     'osgUtil',
     'IntersectionVisitor'
 );
-
-IntersectionVisitor._reservedMatrixStack = new MatrixMemoryPool();
 
 module.exports = IntersectionVisitor;
