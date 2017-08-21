@@ -16,9 +16,16 @@ var Counter = function(config) {
     if (config.average) {
         this._avgMs = config.avgMs ? config.avgMs : 1000;
     }
+    this._display = false;
 };
 
 MACROUTILS.createPrototypeObject(Counter, {
+    isDisplayable: function() {
+        return this._display;
+    },
+    setDisplayable: function(boolean) {
+        this._display = boolean;
+    },
     getOver: function() {
         return this._over;
     },
@@ -51,6 +58,7 @@ MACROUTILS.createPrototypeObject(Counter, {
         }
     },
     start: function() {
+        this._display = true;
         this._time = performance.now();
     },
     end: function() {
@@ -58,6 +66,7 @@ MACROUTILS.createPrototypeObject(Counter, {
         this.average(this._value);
     },
     set: function(value) {
+        this._display = true;
         this._value = value;
         this.average(value);
     },

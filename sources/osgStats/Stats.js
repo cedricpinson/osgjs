@@ -86,7 +86,7 @@ var Stats = function(viewport, options) {
     this._counters = {};
     this._groups = [];
     this._updates = [];
-
+    this._displayableCounters = {};
     this._x = 0;
     this._y = 0;
     this._width = 0;
@@ -154,7 +154,8 @@ MACROUTILS.createPrototypeObject(Stats, {
         }
         this._dirtyValues = true;
 
-        if (this._checkViewportChanged()) this._dirtyCaptions = true;
+        if (this._checkViewportChanged() || this._checkCounterDisplayableChanged())
+            this._dirtyCaptions = true;
 
         if (this._dirtyCaptions) {
             this._bufferStats.resetCaptions();
@@ -261,7 +262,7 @@ MACROUTILS.createPrototypeObject(Stats, {
             for (var j = 0; j < group.values.length; j++) {
                 var counterName = group.values[j];
                 var counter = this._counters[counterName];
-                if (!counter) continue;
+                if (!counter || !counter.isDisplayable()) continue;
 
                 var text = counter._caption;
                 textWidth = this._bufferStats.generateText(
@@ -299,7 +300,7 @@ MACROUTILS.createPrototypeObject(Stats, {
             for (var j = 0; j < group.values.length; j++) {
                 var counterName = group.values[j];
                 var counter = this._counters[counterName];
-                if (!counter) continue;
+                if (!counter || !counter.isDisplayable()) continue;
 
                 var value = counter.getAverageMs() ? counter.getAverageValue() : counter.getValue();
                 var text;
@@ -356,6 +357,17 @@ MACROUTILS.createPrototypeObject(Stats, {
 
         this._bufferStats.graphsEnd();
         this._bufferStats.update();
+    },
+    _checkCounterDisplayableChanged: function() {
+        var changed = false;
+        for (var key in this._counters) {
+            var counter = this._counters[key];
+            if (this._displayableCounters[key] !== counter.isDisplayable()) {
+                this._displayableCounters[key] = counter.isDisplayable();
+                changed = true;
+            }
+        }
+        return changed;
     },
     _checkViewportChanged: function() {
         var x = this._viewport.x();
