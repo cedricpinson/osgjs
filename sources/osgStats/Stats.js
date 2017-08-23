@@ -1,5 +1,4 @@
 var MACROUTILS = require('osg/Utils');
-var notify = require('osg/notify');
 var BlendFunc = require('osg/BlendFunc');
 var Camera = require('osg/Camera');
 var CullFace = require('osg/CullFace');
@@ -73,9 +72,6 @@ var Stats = function(viewport, options) {
     this._dirtyCaptions = true;
     this._dirtyValues = true;
 
-    this._counters = undefined;
-    this._groups = undefined;
-
     this._labelMaxWidth = 0;
     this._viewport = viewport;
 
@@ -84,7 +80,7 @@ var Stats = function(viewport, options) {
     this._offsetGroup = undefined;
 
     this._counters = {};
-    this._groups = [];
+    this._groups = {};
     this._updates = [];
     this._displayableCounters = {};
     this._x = 0;
@@ -124,9 +120,6 @@ MACROUTILS.createPrototypeObject(Stats, {
         if (config.init && !config.init()) return;
 
         for (var valueName in config.values) {
-            if (this._counters[valueName]) {
-                notify.warn('Counter ' + valueName + ' already exist, overring it');
-            }
             var valueConfig = config.values[valueName];
             var counter = new Counter(valueConfig);
             this._counters[valueName] = counter;
@@ -136,11 +129,12 @@ MACROUTILS.createPrototypeObject(Stats, {
             for (var i = 0; i < config.groups.length; i++) {
                 var groupConfig = config.groups[i];
                 var group = {
-                    name: groupConfig.name ? groupConfig.name : groupConfig.caption,
                     caption: groupConfig.caption,
                     values: groupConfig.values
                 };
-                this._groups.push(group);
+
+                var name = groupConfig.name ? groupConfig.name : groupConfig.caption;
+                this._groups[name] = group;
             }
         }
 
@@ -242,11 +236,10 @@ MACROUTILS.createPrototypeObject(Stats, {
         );
 
         var filters = this._displayFilter;
-        for (var i = 0; i < this._groups.length; i++) {
-            var group = this._groups[i];
-            var groupName = group.name;
+        for (var groupName in this._groups) {
             if (groupName && filters.length && filters.indexOf(groupName) === -1) continue;
 
+            var group = this._groups[groupName];
             var groupText = '--- ' + group.caption + ' ---';
             var textWidth = this._bufferStats.generateText(
                 textCursorX,
@@ -289,11 +282,10 @@ MACROUTILS.createPrototypeObject(Stats, {
         var textCursorY = this._viewport.height() - characterHeight;
 
         var filters = this._displayFilter;
-        for (var i = 0; i < this._groups.length; i++) {
-            var group = this._groups[i];
-            var groupName = group.name;
+        for (var groupName in this._groups) {
             if (groupName && filters.length && filters.indexOf(groupName) === -1) continue;
 
+            var group = this._groups[groupName];
             textCursorX = valuesOffsetX;
             textCursorY -= this._lineFactor * characterHeight;
 
