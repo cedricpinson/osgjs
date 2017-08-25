@@ -1,7 +1,6 @@
 // jshint ignore: start
 
 'use strict';
-var Notify = require('osg/notify');
 
 /*
  ** Copyright (c) 2012 The Khronos Group Inc.
