@@ -27,9 +27,6 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
     setManipulator: function(manipulator) {
         this._manipulator = manipulator;
     },
-    setDimensionMask: function(dimMask) {
-        this._dimensionMask = dimMask;
-    },
 
     mousemove: function(ev) {
         if (this._buttonup === true) {
