@@ -98,6 +98,20 @@ MACROUTILS.createPrototypeObject(
     'ExpiredPagedLODVisitor'
 );
 
+// Helper functions to avoid undesired memory allocation
+var sortByTimeStamp = function(r1, r2) {
+    return r2._timeStamp - r1._timeStamp;
+};
+var sortByPriority = function(r1, r2) {
+    // Ask for newer requests first.
+    var value = r1._timeStamp - r2._timeStamp;
+    // Ask for the greater priority if the timestamp is the same.
+    if (value === 0) {
+        value = r1._priority - r2._priority;
+    }
+    return value;
+};
+
 /**
  * Database paging class which manages the loading of files
  * and synchronizing of loaded models with the main scene graph.
@@ -121,6 +135,10 @@ var DatabasePager = function() {
     // here we set 75 as we need to be more strict with memory in a browser
     // This value can be setted using setTargetMaximumNumberOfPageLOD method.
     this._targetMaximumNumberOfPagedLOD = 75;
+    // Helper variables to avoid memory allocation, not for user access
+    this._elapsedTime = 0;
+    this._beginTime = 0;
+    this._availableTime = 0;
 };
 
 var DatabaseRequest = function() {
@@ -223,9 +241,7 @@ MACROUTILS.createPrototypeObject(
             // Prune the list of database requests.
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
-            this._pendingNodes.sort(function(r1, r2) {
-                return r2._timeStamp - r1._timeStamp;
-            });
+            this._pendingNodes.sort(sortByTimeStamp);
 
             for (var i = 0; i < this._pendingNodes.length; i++) {
                 if (elapsedTime > availableTime) return 0.0;
@@ -286,15 +302,7 @@ MACROUTILS.createPrototypeObject(
         takeRequests: function() {
             if (this._pendingRequests.length) {
                 var numRequests = Math.min(this._maxRequestsPerFrame, this._pendingRequests.length);
-                this._pendingRequests.sort(function(r1, r2) {
-                    // Ask for newer requests first.
-                    var value = r1._timeStamp - r2._timeStamp;
-                    // Ask for the greater priority if the timestamp is the same.
-                    if (value === 0) {
-                        value = r1._priority - r2._priority;
-                    }
-                    return value;
-                });
+                this._pendingRequests.sort(sortByPriority);
                 for (var i = 0; i < numRequests; i++) {
                     this._downloadingRequestsNumber++;
                     this.processRequest(this._pendingRequests.shift());
@@ -355,29 +363,29 @@ MACROUTILS.createPrototypeObject(
         },
 
         releaseGLExpiredSubgraphs: function(availableTime) {
+            this._availableTime = availableTime;
             if (!this._childrenToRemoveList.size || availableTime <= 0.0) return 0.0;
             // We need to test if we have time to flush
-            var elapsedTime = 0.0;
-            var beginTime = Timer.instance().tick();
-            var that = this;
+            this._elapsedTime = 0.0;
+            this._beginTime = Timer.instance().tick();
+            this._childrenToRemoveList.forEach(this._releaseExpiredSubgraphs, this);
+            this._availableTime -= this._elapsedTime;
+            return this._availableTime;
+        },
 
-            this._childrenToRemoveList.forEach(function(node) {
-                // If we don't have more time, break the loop.
-                if (elapsedTime > availableTime) return;
-                that._childrenToRemoveList.delete(node);
-                node.accept(that._releaseVisitor);
-                node.removeChildren();
-                node = null;
-                elapsedTime = Timer.instance().deltaS(beginTime, Timer.instance().tick());
-            });
-
-            availableTime -= elapsedTime;
-            return availableTime;
+        // function to avoid memory allocation in forEach
+        _releaseExpiredSubgraphs: function(node) {
+            // If we don't have more time, break the loop.
+            if (this._elapsedTime > this._availableTime) return;
+            this._childrenToRemoveList.delete(node);
+            node.accept(this._releaseVisitor);
+            node.removeChildren();
+            node = null;
+            this._elapsedTime = Timer.instance().deltaS(this._beginTime, Timer.instance().tick());
         },
 
         removeExpiredSubgraphs: function(frameStamp, availableTime) {
             if (frameStamp.getFrameNumber() === 0) return 0.0;
-
             var numToPrune = this._activePagedLODList.size - this._targetMaximumNumberOfPagedLOD;
             var expiryTime = frameStamp.getSimulationTime() - 0.1;
             var expiryFrame = frameStamp.getFrameNumber() - 1;
