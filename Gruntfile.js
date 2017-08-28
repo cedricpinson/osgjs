@@ -64,7 +64,6 @@ var gruntTasks = {};
 // ## Top-level configurations
 //
 (function() {
-    // to finish https://github.com/sketchfab/showwebgl/blob/f5028b774ab47c976461807eab522b302edc1e2b/Gruntfile.js
     gruntTasks.eslint = {
         options: {
             configFile: eslintConfigFilename
@@ -92,7 +91,6 @@ var gruntTasks = {};
 //
 (function() {
     var webpack = require('webpack');
-    // var ExtractTextPlugin = require( 'extract-text-webpack-plugin' );
 
     var targets = {
         build: {
@@ -403,6 +401,31 @@ function buildPrettierOptions(grunt) {
                     dest: path.join(BUILD_PATH, 'web/builds/')
                 }
             ]
+        },
+        bundles: {
+            files: [
+                {
+                    expand: true,
+                    src: 'builds/dist/OSG.min.js',
+                    rename: function() {
+                        return 'builds/dist/OSG.js'; // The function must return a string with the complete destination
+                    }
+                },
+                {
+                    expand: true,
+                    src: 'builds/dist/tests.min.js',
+                    rename: function() {
+                        return 'builds/dist/tests.js'; // The function must return a string with the complete destination
+                    }
+                },
+                {
+                    expand: true,
+                    src: 'builds/dist/benchmarks.min.js',
+                    rename: function() {
+                        return 'builds/dist/benchmarks.js'; // The function must return a string with the complete destination
+                    }
+                }
+            ]
         }
     };
 })();
@@ -456,7 +479,7 @@ module.exports = function(grunt) {
     grunt.registerTask('benchmarks', ['execute:bench']);
 
     grunt.registerTask('build', ['webpack:build']);
-    grunt.registerTask('build-release', ['webpack:buildrelease']);
+    grunt.registerTask('build-release', ['webpack:buildrelease', 'copy:bundles']);
     grunt.registerTask('build-debug', ['webpack:builddebug']);
 
     grunt.registerTask('docs', ['plato', 'documentation:default']);
