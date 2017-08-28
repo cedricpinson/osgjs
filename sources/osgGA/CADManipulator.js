@@ -33,7 +33,7 @@ var CADManipulator = function() {
     this._lineSegmentIntersector = new LineSegmentIntersector();
     this._polytopeIntersector = undefined;
     this._usePolytopeIntersector = false;
-    this._dimensionMask = intersectionEnums.ALL_PRIMITIVES;
+    this._primitiveMask = intersectionEnums.ALL_PRIMITIVES;
     this.init();
 };
 
@@ -325,7 +325,7 @@ MACROUTILS.createPrototypeObject(
                 this._polytopeIntersector.setIntersectionLimit(
                     intersectionEnums.LIMIT_ONE_PER_DRAWABLE
                 );
-                this._polytopeIntersector.setDimensionMask(
+                this._polytopeIntersector.setPrimitiveMask(
                     intersectionEnums.POINT_PRIMITIVES | intersectionEnums.LINE_PRIMITIVES
                 );
             }
@@ -463,7 +463,7 @@ MACROUTILS.createPrototypeObject(
                 this._pan.setHeight(height);
 
                 var point, matrix;
-                if ((this._dimensionMask & intersectionEnums.TRIANGLE_PRIMITIVES) !== 0) {
+                if ((this._primitiveMask & intersectionEnums.TRIANGLE_PRIMITIVES) !== 0) {
                     hits = viewer.computeIntersections(pos[0], pos[1]);
 
                     if (hits.length > 0) {
