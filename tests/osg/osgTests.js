@@ -31,7 +31,7 @@ var TextureManager = require('tests/osg/TextureManager');
 var UpdateVisitor = require('tests/osg/UpdateVisitor');
 var Uniform = require('tests/osg/Uniform');
 var Utils = require('tests/osg/Utils');
-var PrimitiveFunctor = require('tests/osg/PrimitiveFunctor');
+var primitiveFunctor = require('tests/osg/primitiveFunctor');
 var WebGLCaps = require('tests/osg/WebGLCaps');
 
 module.exports = function() {
@@ -67,6 +67,6 @@ module.exports = function() {
     UpdateVisitor();
     Uniform();
     Utils();
-    PrimitiveFunctor();
+    primitiveFunctor();
     WebGLCaps();
 };

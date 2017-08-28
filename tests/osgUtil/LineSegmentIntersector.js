@@ -23,37 +23,37 @@ module.exports = function() {
         // start right on the edge
         lsi.set(vec3.fromValues(2.0, 2.0, 0.0), vec3.fromValues(-1.0, 2.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(lsi.intersects(bs), 'hit success');
+        assert.isOk(lsi.intersectBoundingSphere(bs), 'hit success');
 
         // end right on edge
         lsi.set(vec3.fromValues(2.0, 0.0, 0.0), vec3.fromValues(4.0, 0.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(lsi.intersects(bs), 'hit success');
+        assert.isOk(lsi.intersectBoundingSphere(bs), 'hit success');
 
         // line right on edge
         lsi.set(vec3.fromValues(2.0, 0.0, 0.0), vec3.fromValues(4.0, 0.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(lsi.intersects(bs), 'hit success');
+        assert.isOk(lsi.intersectBoundingSphere(bs), 'hit success');
 
         lsi.set(vec3.fromValues(2.0, 0.0, 0.0), vec3.fromValues(3.0, 1.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(lsi.intersects(bs), 'hit success');
+        assert.isOk(lsi.intersectBoundingSphere(bs), 'hit success');
 
         lsi.set(vec3.fromValues(0.0, 2.0, 0.0), vec3.fromValues(1.9, 2.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(!lsi.intersects(bs), 'hit failed');
+        assert.isOk(!lsi.intersectBoundingSphere(bs), 'hit failed');
 
         lsi.set(vec3.fromValues(0.0, 2.0, 0.0), vec3.fromValues(2.1, 2.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(lsi.intersects(bs), 'hit success');
+        assert.isOk(lsi.intersectBoundingSphere(bs), 'hit success');
 
         lsi.set(vec3.fromValues(5.0, 1.0, 0.0), vec3.fromValues(6.0, 0.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(lsi.intersects(bs), 'hit success');
+        assert.isOk(lsi.intersectBoundingSphere(bs), 'hit success');
 
         lsi.set(vec3.fromValues(1.0, 1.0, 0.0), vec3.fromValues(2.0, 3.0, 0.0));
         lsi.setCurrentTransformation(mat4.create());
-        assert.isOk(!lsi.intersects(bs), 'hit failed');
+        assert.isOk(!lsi.intersectBoundingSphere(bs), 'hit failed');
     });
 
     test('LineSegmentIntersector with 2 branches', function() {

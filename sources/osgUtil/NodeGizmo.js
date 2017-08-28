@@ -79,9 +79,9 @@ MACROUTILS.createPrototypeObject(
                 return false;
             };
         })(),
-        intersect: function() {
-            return false;
-        }
+        intersectTriangle: function() {},
+        intersectLine: function() {},
+        intersectPoint: function() {}
     }),
     'osgUtil',
     'LineCustomIntersector'

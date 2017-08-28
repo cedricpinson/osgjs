@@ -6,25 +6,20 @@ var DrawArrays = require('osg/DrawArrays');
 
 /**
  * PrimitiveIndexFunctor emulates the TemplatePrimitiveIndexFunctor class in OSG and can
- * be used to get access to the indices that compose the things drawn by osgjs.
- * Feed it with a callback that will be called for geometry.
- * The callback must be a closure and have the next structure:
+ * be used to get access to the vertices that compose the things drawn by osgjs.
  *
- * var myCallback = function(  ) {
- *     return {
- *          operatorPoint : function ( i ) { }, // Do your point operations here
- *          operatorLine : function ( i1, i2 ){ }, // Do you line operations here
- *          operatorTriangle : function ( i1, i2, i3 ) { } // Do your triangle operations here
- *      }
+ * You have to feed it with an object that references 3 callbacks :
+ *
+ * var myObject = {
+ *     operatorPoint : function ( v ) { }, // Do your point operations here
+ *     operatorLine : function ( v1, v2 ){ }, // Do you line operations here
+ *     operatorTriangle : function ( v1, v2, v3 ) { } // Do your triangle operations here
  * };
+ *
  */
-var PrimitiveIndexFunctor = function(geom, cb) {
-    this._geom = geom;
-    this._cb = cb;
-};
 
-var functorDrawElements = (PrimitiveIndexFunctor.functorDrawElements = []);
-var functorDrawArrays = (PrimitiveIndexFunctor.functorDrawArrays = []);
+var functorDrawElements = [];
+var functorDrawArrays = [];
 
 functorDrawElements[primitiveSet.TRIANGLES] = function(offset, count, indexes, cb) {
     var end = offset + count;
@@ -120,37 +115,33 @@ functorDrawArrays[primitiveSet.LINE_LOOP] = function(first, count, cb) {
     cb.operatorLine(first + count - 1, first);
 };
 
-PrimitiveIndexFunctor.prototype = {
-    apply: function() {
-        var geom = this._geom;
-        var primitives = geom.getPrimitiveSetList();
-        if (!primitives) return;
+var primitiveIndexFunctor = function(geom, cb) {
+    var primitives = geom.getPrimitiveSetList();
+    if (!primitives) return;
 
-        var cb = this._cb();
-        var cbFunctor;
+    var cbFunctor;
 
-        var nbPrimitives = primitives.length;
-        for (var i = 0; i < nbPrimitives; i++) {
-            var primitive = primitives[i];
-            if (primitive instanceof DrawElements) {
-                cbFunctor = functorDrawElements[primitive.getMode()];
-                if (cbFunctor) {
-                    var indexes = primitive.indices.getElements();
-                    cbFunctor(
-                        primitive.getFirst() / indexes.BYTES_PER_ELEMENT,
-                        primitive.getCount(),
-                        indexes,
-                        cb
-                    );
-                }
-            } else if (primitive instanceof DrawArrays) {
-                cbFunctor = functorDrawArrays[primitive.getMode()];
-                if (cbFunctor) {
-                    cbFunctor(primitive.getFirst(), primitive.getCount(), cb);
-                }
+    var nbPrimitives = primitives.length;
+    for (var i = 0; i < nbPrimitives; i++) {
+        var primitive = primitives[i];
+        if (primitive instanceof DrawElements) {
+            cbFunctor = functorDrawElements[primitive.getMode()];
+            if (cbFunctor) {
+                var indexes = primitive.indices.getElements();
+                cbFunctor(
+                    primitive.getFirst() / indexes.BYTES_PER_ELEMENT,
+                    primitive.getCount(),
+                    indexes,
+                    cb
+                );
+            }
+        } else if (primitive instanceof DrawArrays) {
+            cbFunctor = functorDrawArrays[primitive.getMode()];
+            if (cbFunctor) {
+                cbFunctor(primitive.getFirst(), primitive.getCount(), cb);
             }
         }
     }
 };
 
-module.exports = PrimitiveIndexFunctor;
+module.exports = primitiveIndexFunctor;

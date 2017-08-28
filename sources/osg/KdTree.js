@@ -1,8 +1,9 @@
 'use strict';
+
 var MACROUTILS = require('osg/Utils');
 var vec3 = require('osg/glMatrix').vec3;
 var BoundingBox = require('osg/BoundingBox');
-var PrimitiveIndexFunctor = require('osg/PrimitiveIndexFunctor');
+var primitiveIndexFunctor = require('osg/primitiveIndexFunctor');
 var primitiveSet = require('osg/primitiveSet');
 var notify = require('osg/notify');
 
@@ -55,28 +56,20 @@ var InfoCollector = function() {
 
 InfoCollector.prototype = {
     apply: function(node) {
-        if (!node.getAttributes().Vertex) {
-            return;
-        }
-        var self = this;
-        // The callback must be defined as a closure
-        /* jshint asi: true */
-        var cb = function() {
-            return {
-                // We need to count also the index spent in numVertices per primite
-                operatorPoint: function() {
-                    self._numVertexIndices += 2;
-                },
-                operatorLine: function() {
-                    self._numVertexIndices += 3;
-                },
-                operatorTriangle: function() {
-                    self._numVertexIndices += 4;
-                }
-            };
-        };
-        var pf = new PrimitiveIndexFunctor(node, cb);
-        pf.apply();
+        if (!node.getAttributes().Vertex) return;
+        primitiveIndexFunctor(node, this);
+    },
+
+    operatorPoint: function() {
+        this._numVertexIndices += 2;
+    },
+
+    operatorLine: function() {
+        this._numVertexIndices += 3;
+    },
+
+    operatorTriangle: function() {
+        this._numVertexIndices += 4;
     }
 };
 
@@ -86,7 +79,12 @@ var PrimitiveIndicesCollector = function(buildKdTree) {
 };
 
 PrimitiveIndicesCollector.prototype = {
-    buildKdTreePoint: function(i0) {
+    apply: function(node) {
+        if (!node.getAttributes().Vertex) return;
+        primitiveIndexFunctor(node, this);
+    },
+
+    operatorPoint: function(i0) {
         var vertices = this._buildKdTree._kdTree.getVertices();
         var iv = i0 * 3;
         this._buildKdTree._kdTree.addPoint(i0);
@@ -99,7 +97,7 @@ PrimitiveIndicesCollector.prototype = {
         this._numIndices++;
     },
 
-    buildKdTreeLine: function(i0, i1) {
+    operatorLine: function(i0, i1) {
         if (i0 === i1) return;
         var vertices = this._buildKdTree._kdTree.getVertices();
         var iv0 = i0 * 3;
@@ -136,7 +134,7 @@ PrimitiveIndicesCollector.prototype = {
         this._numIndices++;
     },
 
-    buildKdTreeTriangle: function(i0, i1, i2) {
+    operatorTriangle: function(i0, i1, i2) {
         if (i0 === i1 || i0 === i2 || i1 === i2) return;
 
         var vertices = this._buildKdTree._kdTree.getVertices();
@@ -177,30 +175,6 @@ PrimitiveIndicesCollector.prototype = {
         centers[idCenter + 2] = (minz + maxz) * 0.5;
 
         this._numIndices++;
-    },
-
-    apply: function(node) {
-        if (!node.getAttributes().Vertex) {
-            return;
-        }
-        var self = this;
-        // The callback must be defined as a closure
-        /* jshint asi: true */
-        var cb = function() {
-            return {
-                operatorPoint: function(i0) {
-                    self.buildKdTreePoint(i0);
-                },
-                operatorLine: function(i1, i2) {
-                    self.buildKdTreeLine(i1, i2);
-                },
-                operatorTriangle: function(i1, i2, i3) {
-                    self.buildKdTreeTriangle(i1, i2, i3);
-                }
-            };
-        };
-        var pf = new PrimitiveIndexFunctor(node, cb);
-        pf.apply();
     }
 };
 
@@ -545,52 +519,42 @@ MACROUTILS.createPrototypeObject(
             return buildTree.build(options, geom);
         },
 
+        _intersectFunctor: function(functor, node) {
+            // treat as a leaf
+            var istart = -node._first - 1;
+            var iend = istart + node._second;
+            var vIds = this._vertexIndices;
+
+            functor.setVertices(this._vertices);
+            functor.setPrimitiveIndex(istart);
+
+            for (var i = istart; i < iend; ++i) {
+                var pIndex = this._primitiveIndices[i];
+                var numVertices = vIds[pIndex++];
+
+                if (numVertices === 3) {
+                    functor.operatorTriangle(vIds[pIndex], vIds[pIndex + 1], vIds[pIndex + 2]);
+                } else if (numVertices === 2) {
+                    functor.operatorLine(vIds[pIndex], vIds[pIndex + 1]);
+                } else if (numVertices === 1) {
+                    functor.operatorPoint(vIds[pIndex]);
+                } else {
+                    notify.error('KdTree::intersect() unsupported vertices count :' + numVertices);
+                }
+            }
+        },
+
         intersect: function(functor, node) {
             if (node._first < 0) {
-                // treat as a leaf
-                var istart = -node._first - 1;
-                var iend = istart + node._second;
-                var vertexIndices = this._vertexIndices;
-                for (var i = istart; i < iend; ++i) {
-                    var primitiveIndex = this._primitiveIndices[i];
-                    var numVertices = vertexIndices[primitiveIndex++];
-                    switch (numVertices) {
-                        case 1:
-                            functor.intersectPoint(
-                                this._vertices,
-                                i,
-                                vertexIndices[primitiveIndex]
-                            );
-                            break;
-                        case 2:
-                            functor.intersectLine(
-                                this._vertices,
-                                i,
-                                vertexIndices[primitiveIndex],
-                                vertexIndices[primitiveIndex + 1]
-                            );
-                            break;
-                        case 3:
-                            functor.intersectTriangle(
-                                this._vertices,
-                                i,
-                                vertexIndices[primitiveIndex],
-                                vertexIndices[primitiveIndex + 1],
-                                vertexIndices[primitiveIndex + 2]
-                            );
-                            break;
-                        default:
-                            notify.warn(
-                                'Warning: KdTree::intersect() encounted unsupported primitive size of ' +
-                                    numVertices
-                            );
-                            break;
-                    }
-                }
-            } else if (functor.enter(node._bb)) {
+                this._intersectFunctor(functor, node);
+                return;
+            }
+
+            if (functor.enter(node._bb)) {
                 if (node._first > 0) {
                     this.intersect(functor, this._kdNodes[node._first]);
                 }
+
                 if (node._second > 0) {
                     this.intersect(functor, this._kdNodes[node._second]);
                 }
@@ -598,44 +562,27 @@ MACROUTILS.createPrototypeObject(
             }
         },
         intersectLineSegment: function(functor, node, ls, le) {
-            var first = node._first;
-            var second = node._second;
-            var vertices = this._vertices;
-            if (first < 0) {
-                // treat as a leaf
-                var istart = -node._first - 1;
-                var iend = istart + node._second;
-                var vertexIndices = this._vertexIndices;
-                for (var i = istart; i < iend; ++i) {
-                    var primitiveIndex = this._primitiveIndices[i];
-                    primitiveIndex++;
-                    functor.intersectTriangle(
-                        vertices,
-                        i,
-                        vertexIndices[primitiveIndex],
-                        vertexIndices[primitiveIndex + 1],
-                        vertexIndices[primitiveIndex + 2]
-                    );
-                }
-            } else {
-                var s = node._nodeRayStart;
-                var e = node._nodeRayEnd;
+            if (node._first < 0) {
+                this._intersectFunctor(functor, node);
+                return;
+            }
+
+            var s = node._nodeRayStart;
+            var e = node._nodeRayEnd;
+            vec3.copy(s, ls);
+            vec3.copy(e, le);
+            var kNodes = this._kdNodes;
+            var kNode;
+            if (node._first > 0) {
+                kNode = kNodes[node._first];
+                if (functor.enter(kNode._bb, s, e)) this.intersectLineSegment(functor, kNode, s, e);
+            }
+
+            if (node._second > 0) {
                 vec3.copy(s, ls);
                 vec3.copy(e, le);
-                var kNodes = this._kdNodes;
-                var kNode;
-                if (first > 0) {
-                    kNode = kNodes[node._first];
-                    if (functor.enter(kNode._bb, s, e))
-                        this.intersectLineSegment(functor, kNode, s, e);
-                }
-                if (second > 0) {
-                    vec3.copy(s, ls);
-                    vec3.copy(e, le);
-                    kNode = kNodes[node._second];
-                    if (functor.enter(kNode._bb, s, e))
-                        this.intersectLineSegment(functor, kNode, s, e);
-                }
+                kNode = kNodes[node._second];
+                if (functor.enter(kNode._bb, s, e)) this.intersectLineSegment(functor, kNode, s, e);
             }
         }
     },

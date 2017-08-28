@@ -2,7 +2,7 @@
 var assert = require('chai').assert;
 var MACROUTILS = require('osg/Utils');
 require('tests/mockup/mockup');
-var PrimitiveFunctor = require('osg/PrimitiveFunctor');
+var primitiveFunctor = require('osg/primitiveFunctor');
 var primitiveSet = require('osg/primitiveSet');
 var DrawElements = require('osg/DrawElements');
 var DrawArrays = require('osg/DrawArrays');
@@ -65,23 +65,20 @@ module.exports = function() {
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
-        var cb = function() {
-            return {
-                operatorPoint: function(v) {
-                    vectors.push(v[0]);
-                    vectors.push(v[1]);
-                    vectors.push(v[2]);
-                }
-            };
+        var cb = {
+            operatorPoint: function(v) {
+                vectors.push(v[0]);
+                vectors.push(v[1]);
+                vectors.push(v[2]);
+            }
         };
-        var pf = new PrimitiveFunctor(node, cb, vertices);
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
         assert.equalVector(vertices, vectors, 0.00001);
         // Test DrawElements
         node = createGeometry(primitiveSet.POINTS, 1);
-        pf = new PrimitiveFunctor(node, cb, vertices);
         vectors = [];
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
+
         assert.isOk(vectors[0] === -2.0, 'Vectors[ 0 ] should be -2 and result is ' + vectors[0]);
         assert.isOk(vectors[1] === 2.0, 'Vectors[ 1 ] should be 2 and result is ' + vectors[1]);
         assert.isOk(vectors[2] === 0.0, 'Vectors[ 2 ] should be 0 and result is ' + vectors[2]);
@@ -99,24 +96,20 @@ module.exports = function() {
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
-        var cb = function() {
-            return {
-                operatorLine: function(v1, v2) {
-                    vectors.push(v1);
-                    vectors.push(v2);
-                }
-            };
+        var cb = {
+            operatorLine: function(v1, v2) {
+                vectors.push(v1);
+                vectors.push(v2);
+            }
         };
-        var pf = new PrimitiveFunctor(node, cb, vertices);
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
         assert.equalVector(vectors[0], [0, 0, 0]);
         assert.equalVector(vectors[1], [2, 2, 0]);
         // Test DrawElements
         node = createGeometry(primitiveSet.LINES, 1);
-        pf = new PrimitiveFunctor(node, cb, vertices);
-
         vectors = [];
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
+
         assert.equalVector(vectors[0], [-2.0, 2.0, 0]);
         assert.equalVector(vectors[1], [0, 0, 0]);
     });
@@ -127,26 +120,22 @@ module.exports = function() {
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
-        var cb = function() {
-            return {
-                operatorLine: function(v1, v2) {
-                    vectors.push(vec3.clone(v1));
-                    vectors.push(vec3.clone(v2));
-                }
-            };
+        var cb = {
+            operatorLine: function(v1, v2) {
+                vectors.push(vec3.clone(v1));
+                vectors.push(vec3.clone(v2));
+            }
         };
-        var pf = new PrimitiveFunctor(node, cb, vertices);
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
         assert.equalVector(vectors[0], [0, 0, 0]);
         assert.equalVector(vectors[1], [2, 2, 0]);
         assert.equalVector(vectors[2], [2, 2, 0]);
         assert.equalVector(vectors[3], [-2, 2, 0]);
         // Test DrawElements
         node = createGeometry(primitiveSet.LINE_STRIP, 1);
-        pf = new PrimitiveFunctor(node, cb, vertices);
-
         vectors = [];
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
+
         assert.equalVector(vectors[0], [-2.0, 2.0, 0]);
         assert.equalVector(vectors[1], [0, 0, 0]);
         assert.equalVector(vectors[2], [0, 0, 0]);
@@ -159,16 +148,13 @@ module.exports = function() {
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
-        var cb = function() {
-            return {
-                operatorLine: function(v1, v2) {
-                    vectors.push(vec3.clone(v1));
-                    vectors.push(vec3.clone(v2));
-                }
-            };
+        var cb = {
+            operatorLine: function(v1, v2) {
+                vectors.push(vec3.clone(v1));
+                vectors.push(vec3.clone(v2));
+            }
         };
-        var pf = new PrimitiveFunctor(node, cb, vertices);
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
         assert.equalVector(vectors[0], [0, 0, 0]);
         assert.equalVector(vectors[1], [2, 2, 0]);
         assert.equalVector(vectors[2], [2, 2, 0]);
@@ -177,10 +163,9 @@ module.exports = function() {
         assert.equalVector(vectors[5], [0, 0, 0]);
         // Test DrawElements
         node = createGeometry(primitiveSet.LINE_LOOP, 1);
-        pf = new PrimitiveFunctor(node, cb, vertices);
-
         vectors = [];
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
+
         assert.equalVector(vectors[0], [-2.0, 2.0, 0]);
         assert.equalVector(vectors[1], [0, 0, 0]);
         assert.equalVector(vectors[2], [0, 0, 0]);
@@ -195,26 +180,22 @@ module.exports = function() {
         var vertices = node.getAttributes().Vertex.getElements();
         // The callback must be defined as a closure
         var vectors = [];
-        var cb = function() {
-            return {
-                operatorTriangle: function(v1, v2, v3) {
-                    vectors.push(vec3.clone(v1));
-                    vectors.push(vec3.clone(v2));
-                    vectors.push(vec3.clone(v3));
-                }
-            };
+        var cb = {
+            operatorTriangle: function(v1, v2, v3) {
+                vectors.push(vec3.clone(v1));
+                vectors.push(vec3.clone(v2));
+                vectors.push(vec3.clone(v3));
+            }
         };
-        var pf = new PrimitiveFunctor(node, cb, vertices);
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
         assert.equalVector(vectors[0], [0, 0, 0]);
         assert.equalVector(vectors[1], [2, 2, 0]);
         assert.equalVector(vectors[2], [-2, 2, 0]);
         // Test DrawElements
         node = createGeometry(primitiveSet.TRIANGLES, 1);
-        pf = new PrimitiveFunctor(node, cb, vertices);
-
         vectors = [];
-        pf.apply();
+        primitiveFunctor(node, cb, vertices);
+
         assert.equalVector(vectors[0], [-2.0, 2.0, 0]);
         assert.equalVector(vectors[1], [0, 0, 0]);
         assert.equalVector(vectors[2], [2.0, 2.0, 0]);

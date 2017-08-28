@@ -7,30 +7,19 @@ var DrawArrays = require('osg/DrawArrays');
 /**
  * PrimitiveFunctor emulates the TemplatePrimitiveFunctor class in OSG and can
  * be used to get access to the vertices that compose the things drawn by osgjs.
- * Feed it with a callback that will be called for geometry.
- * The callback must be a closure and have the next structure:
  *
- * var myCallback = function(  ) {
- *     return {
- *          operatorPoint : function ( v ) { }, // Do your point operations here
- *          operatorLine : function ( v1, v2 ){ }, // Do you line operations here
- *          operatorTriangle : function ( v1, v2, v3 ) { } // Do your triangle operations here
- *      }
+ * You have to feed it with an object that references 3 callbacks :
+ *
+ * var myObject = {
+ *     operatorPoint : function ( v ) { }, // Do your point operations here
+ *     operatorLine : function ( v1, v2 ){ }, // Do you line operations here
+ *     operatorTriangle : function ( v1, v2, v3 ) { } // Do your triangle operations here
  * };
  *
- * Important Note: You should take into account that you are accesing the actual vertices of the primitive
- * you might want to do a copy of these values in your callback to avoid to modify the primitive geometry
- *  @class PrimitiveFunctor
  */
 
-var PrimitiveFunctor = function(geom, cb, vertices) {
-    this._geom = geom;
-    this._cb = cb;
-    this._vertices = vertices;
-};
-
-var functorDrawElements = (PrimitiveFunctor.functorDrawElements = []);
-var functorDrawArrays = (PrimitiveFunctor.functorDrawArrays = []);
+var functorDrawElements = [];
+var functorDrawArrays = [];
 
 functorDrawElements[primitiveSet.POINTS] = (function() {
     var v = vec3.create();
@@ -335,39 +324,34 @@ functorDrawArrays[primitiveSet.TRIANGLE_FAN] = (function() {
     };
 })();
 
-PrimitiveFunctor.prototype = {
-    apply: function() {
-        var geom = this._geom;
-        var primitives = geom.getPrimitiveSetList();
-        if (!primitives) return;
+var primitiveFunctor = function(geom, cb, vertices) {
+    var primitives = geom.getPrimitiveSetList();
+    if (!primitives) return;
 
-        var cb = this._cb();
-        var cbFunctor;
-        var vertices = this._vertices;
+    var cbFunctor;
 
-        var nbPrimitives = primitives.length;
-        for (var i = 0; i < nbPrimitives; i++) {
-            var primitive = primitives[i];
-            if (primitive instanceof DrawElements) {
-                cbFunctor = functorDrawElements[primitive.getMode()];
-                if (cbFunctor) {
-                    var indexes = primitive.indices.getElements();
-                    cbFunctor(
-                        primitive.getFirst() / indexes.BYTES_PER_ELEMENT,
-                        primitive.getCount(),
-                        indexes,
-                        cb,
-                        vertices
-                    );
-                }
-            } else if (primitive instanceof DrawArrays) {
-                cbFunctor = functorDrawArrays[primitive.getMode()];
-                if (cbFunctor) {
-                    cbFunctor(primitive.getFirst(), primitive.getCount(), cb, vertices);
-                }
+    var nbPrimitives = primitives.length;
+    for (var i = 0; i < nbPrimitives; i++) {
+        var primitive = primitives[i];
+        if (primitive instanceof DrawElements) {
+            cbFunctor = functorDrawElements[primitive.getMode()];
+            if (cbFunctor) {
+                var indexes = primitive.indices.getElements();
+                cbFunctor(
+                    primitive.getFirst() / indexes.BYTES_PER_ELEMENT,
+                    primitive.getCount(),
+                    indexes,
+                    cb,
+                    vertices
+                );
+            }
+        } else if (primitive instanceof DrawArrays) {
+            cbFunctor = functorDrawArrays[primitive.getMode()];
+            if (cbFunctor) {
+                cbFunctor(primitive.getFirst(), primitive.getCount(), cb, vertices);
             }
         }
     }
 };
 
-module.exports = PrimitiveFunctor;
+module.exports = primitiveFunctor;

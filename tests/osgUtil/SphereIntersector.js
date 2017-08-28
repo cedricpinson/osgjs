@@ -21,17 +21,17 @@ module.exports = function() {
         // testing the same sphere
         spi.set(vec3.fromValues(0.0, 0.0, 0.0), 2.0);
         spi.setCurrentTransformation(mat4.create());
-        assert.isOk(spi.intersects(bs), 'hit success');
+        assert.isOk(spi.intersectBoundingSphere(bs), 'hit success');
 
         // moving a bit also should hit
         spi.set(vec3.fromValues(2.0, 2.0, 0.0), 2.0);
         spi.setCurrentTransformation(mat4.create());
-        assert.isOk(spi.intersects(bs), 'hit success');
+        assert.isOk(spi.intersectBoundingSphere(bs), 'hit success');
 
         // This should fail
         spi.set(vec3.fromValues(3.0, 3.0, 0.0), 1.0);
         spi.setCurrentTransformation(mat4.create());
-        assert.isOk(!spi.intersects(bs), 'hit failed');
+        assert.isOk(!spi.intersectBoundingSphere(bs), 'hit failed');
     });
 
     test('SphereIntersector with 2 branches', function() {

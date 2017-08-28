@@ -1,44 +1,38 @@
 'use strict';
+
 var MACROUTILS = require('osg/Utils');
 var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
-var LineSegmentIntersectFunctor = require('osgUtil/LineSegmentIntersectFunctor');
+var IntersectFunctor = require('osgUtil/IntersectFunctor');
 
-// implicitly match with TriangleLineSegment intersection
-var SphereIntersection = function(i1, i2, i3, r1, r2, r3) {
-    this._primitiveIndex = undefined;
-    this._ratio = 0;
-    this._maxDistance = 0;
-    this._nodePath = undefined;
-    this._drawable = undefined;
-    this._matrix = undefined;
-    this._localIntersectionPoint = undefined;
-    this._localIntersectionNormal = undefined;
-    this._numIntersectionPoints = 0;
-    this._zone = undefined;
+var SphereIntersection = function() {
+    IntersectFunctor.Intersection.call(this);
 
-    this._i1 = i1;
-    this._i2 = i2;
-    this._i3 = i3;
+    this._localIntersectionNormal = vec3.clone(vec3.ONE);
 
-    this._r1 = r1;
-    this._r2 = r2;
-    this._r3 = r3;
+    // index of vertex
+    this._i1 = -1;
+    this._i2 = -1;
+    this._i3 = -1;
+
+    // barycentric coordinates
+    this._r1 = 0.0;
+    this._r2 = 0.0;
+    this._r3 = 0.0;
 };
 
 var SphereIntersectFunctor = function() {
-    LineSegmentIntersectFunctor.apply(this);
+    IntersectFunctor.apply(this);
+
     this._center = undefined;
-    this._radius = 0;
+    this._radius = 0.0;
 };
 
 MACROUTILS.createPrototypeObject(
     SphereIntersectFunctor,
-    MACROUTILS.objectInherit(LineSegmentIntersectFunctor.prototype, {
-        set: function(center, radius, settings) {
+    MACROUTILS.objectInherit(IntersectFunctor.prototype, {
+        set: function(center, radius) {
             this._center = center;
             this._radius = radius;
-            this._settings = settings;
         },
 
         enter: function(bbox) {
@@ -72,21 +66,21 @@ MACROUTILS.createPrototypeObject(
         //
         // from http://www.geometrictools.com/Source/Distance3D.html#PointPlanar
         // js : https://github.com/stephomi/sculptgl/blob/master/src/math3d/Geometry.js#L89
-        intersect: (function() {
+        intersectTriangle: (function() {
             var edge1 = vec3.create();
             var edge2 = vec3.create();
             var diff = vec3.create();
-            return function(v1, v2, v3, i1, i2, i3) {
-                if (this._settings._limitOneIntersection && this._hit) return;
+            return function(v0, v1, v2, i0, i1, i2) {
+                if (this._limitOneIntersection && this._hit) return;
                 // sphere is a 'volume' here (so if the triangle is inside the ball it will intersects)
 
-                vec3.sub(edge1, v2, v1);
-                vec3.sub(edge2, v3, v1);
+                vec3.sub(edge1, v1, v0);
+                vec3.sub(edge2, v2, v0);
                 var a00 = vec3.sqrLen(edge1);
                 var a01 = vec3.dot(edge1, edge2);
                 var a11 = vec3.sqrLen(edge2);
 
-                vec3.sub(diff, v1, this._center);
+                vec3.sub(diff, v0, this._center);
                 var b0 = vec3.dot(diff, edge1);
                 var b1 = vec3.dot(diff, edge2);
                 var c = vec3.sqrLen(diff);
@@ -266,36 +260,32 @@ MACROUTILS.createPrototypeObject(
 
                 if (sqrDistance > this._radius * this._radius) return;
 
-                var closest = vec3.create();
-                if (closest) {
-                    closest[0] = v1[0] + s * edge1[0] + t * edge2[0];
-                    closest[1] = v1[1] + s * edge1[1] + t * edge2[1];
-                    closest[2] = v1[2] + s * edge1[2] + t * edge2[2];
-                }
-
                 var normal = vec3.create();
-                vec3.cross(normal, edge1, edge2);
-                vec3.normalize(normal, normal);
 
-                var intersection = new SphereIntersection(i1, i2, i3, 1 - s - t, s, t);
-                intersection._ratio = Math.sqrt(sqrDistance);
-                intersection._matrix = mat4.clone(
-                    this._settings._intersectionVisitor.getModelMatrix()
-                );
-                intersection._nodePath = this._settings._intersectionVisitor.getNodePath().slice();
-                intersection._drawable = this._settings._drawable;
-                intersection._primitiveIndex = this._primitiveIndex;
-                intersection._localIntersectionPoint = closest;
-                intersection._localIntersectionNormal = normal;
+                var intersection = this.initIntersection(new SphereIntersection());
+                intersection._i1 = i0;
+                intersection._i2 = i1;
+                intersection._i3 = i2;
+
+                intersection._r1 = 1 - s - t;
+                intersection._r2 = s;
+                intersection._r3 = t;
+
+                // inter = v0 + edge1 * s + edge2 * t
+                var inter = intersection._localIntersectionPoint;
+                vec3.scaleAndAdd(inter, vec3.scaleAndAdd(inter, v0, edge1, s), edge2, t);
+
+                // normal
+                vec3.cross(intersection._localIntersectionNormal, edge1, edge2);
+                vec3.normalize(normal, intersection._localIntersectionNormal);
+
+                intersection._ratio = Math.sqrt(sqrDistance) / this._radius;
                 intersection._zone = zone;
-
-                this._settings._sphereIntersector.getIntersections().push(intersection);
-                this._hit = true;
             };
         })()
     }),
     'osgUtil',
-    'TriangleSphereIntersector'
+    'SphereIntersectFunctor'
 );
 
 module.exports = SphereIntersectFunctor;
