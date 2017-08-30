@@ -23,11 +23,67 @@ OrbitManipulatorHammerController.prototype = {
         this._transformStarted = false;
         this._dragStarted = false;
 
+        this._cbPanStart = this.panStart.bind(this);
+        this._cbPanMove = this.panMove.bind(this);
+        this._cbPanEnd = this.panEnd.bind(this);
+
+        this._cbPinchStart = this.pinchStart.bind(this);
+        this._cbPinchEnd = this.pinchEnd.bind(this);
+        this._cbPinchInOut = this.pinchInOut.bind(this);
+
         this._isValid = true;
     },
 
     setValid: function(valid) {
+        if (valid === this._isValid) return;
         this._isValid = valid;
+        // if validity change during a drag/transform
+        this._transformStarted = false;
+        this._dragStarterd = false;
+    },
+
+    getPanStartBind: function() {
+        return this._cbPanStart;
+    },
+
+    getPanMoveBind: function() {
+        return this._cbPanMove;
+    },
+
+    getPanEndBind: function() {
+        return this._cbPanEnd;
+    },
+
+    getPinchEndBind: function() {
+        return this._cbPinchEnd;
+    },
+
+    _setListeners: function() {
+        var hammer = this._eventProxy;
+
+        // Set a minimal thresold on pinch event, to be detected after pan
+        hammer.get('pinch').set({
+            threshold: 0.1
+        });
+        // Let the pan be detected with two fingers.
+        // 2 => pan, 1 -> rotate
+        hammer.get('pan').set({
+            threshold: 0,
+            pointers: 0
+        });
+        hammer.get('pinch').recognizeWith(hammer.get('pan'));
+
+        hammer.on('panstart ', this._cbPanStart);
+        hammer.on('panmove', this._cbPanMove);
+        hammer.on('panend', this._cbPanEnd);
+
+        hammer.on('pinchend', this._cbPinchEnd);
+        hammer.on('pinchstart', this._cbPinchStart);
+        hammer.on('pinchin pinchout', this._cbPinchInOut);
+
+        // if validity change during a drag/tranform
+        this._transformStarted = false;
+        this._dragStarterd = false;
     },
 
     setEventProxy: function(hammer) {
@@ -36,31 +92,7 @@ OrbitManipulatorHammerController.prototype = {
         }
 
         this._eventProxy = hammer;
-
-        // Set a minimal thresold on pinch event, to be detected after pan
-        hammer.get('pinch').set({
-            threshold: 0.1
-        });
-        // Let the pan be detected with two fingers.
-        hammer.get('pan').set({
-            threshold: 0,
-            pointers: 0
-        });
-        hammer.get('pinch').recognizeWith(hammer.get('pan'));
-
-        this._cbPanStart = this.panStart.bind(this);
-        this._cbPanMove = this.panMove.bind(this);
-        this._cbPanEnd = this.panEnd.bind(this);
-        this._cbPinchStart = this.pinchStart.bind(this);
-        this._cbPinchEnd = this.pinchEnd.bind(this);
-        this._cbPinchInOut = this.pinchInOut.bind(this);
-
-        hammer.on('panstart ', this._cbPanStart);
-        hammer.on('panmove', this._cbPanMove);
-        hammer.on('panend', this._cbPanEnd);
-        hammer.on('pinchstart', this._cbPinchStart);
-        hammer.on('pinchend', this._cbPinchEnd);
-        hammer.on('pinchin pinchout', this._cbPinchInOut);
+        if (this._manipulator) this._setListeners();
     },
 
     _computeTouches: function(event) {
@@ -69,16 +101,13 @@ OrbitManipulatorHammerController.prototype = {
     },
 
     panStart: function(event) {
-        if (!this._isValid) return;
-
-        var manipulator = this._manipulator;
-        if (!manipulator || this._transformStarted || event.pointerType === 'mouse') {
+        if (!this._isValid || this._transformStarted || event.pointerType === 'mouse') {
             return;
         }
 
         this._dragStarted = true;
+        var manipulator = this._manipulator;
         this._nbPointerLast = this._computeTouches(event);
-
         if (this._nbPointerLast === 2) {
             var panInterpolator = manipulator.getPanInterpolator();
             panInterpolator.reset();
@@ -95,13 +124,11 @@ OrbitManipulatorHammerController.prototype = {
     },
 
     panMove: function(event) {
-        if (!this._isValid) return;
-
-        var manipulator = this._manipulator;
-        if (!manipulator || !this._dragStarted || event.pointerType === 'mouse') {
+        if (!this._isValid || !this._dragStarted || event.pointerType === 'mouse') {
             return;
         }
 
+        var manipulator = this._manipulator;
         var nbPointers = this._computeTouches(event);
         // prevent sudden big changes in the event.center variables
         if (this._nbPointerLast !== nbPointers) {
@@ -125,49 +152,28 @@ OrbitManipulatorHammerController.prototype = {
     },
 
     panEnd: function(event) {
-        if (!this._isValid) return;
-
-        var manipulator = this._manipulator;
-        if (!manipulator || !this._dragStarted || event.pointerType === 'mouse') {
-            return;
-        }
-
+        if (!this._isValid || !this._dragStarted || event.pointerType === 'mouse') return;
         this._dragStarted = false;
     },
 
     pinchStart: function(event) {
-        if (!this._isValid) return;
-
-        var manipulator = this._manipulator;
-        if (!manipulator || event.pointerType === 'mouse') {
-            return;
-        }
+        if (!this._isValid || event.pointerType === 'mouse') return;
 
         this._transformStarted = true;
-
         this._lastScale = event.scale;
-        manipulator.getZoomInterpolator().reset();
-        manipulator.getZoomInterpolator().set(this._lastScale);
+        var zoomInterpolator = this._manipulator.getZoomInterpolator();
+        zoomInterpolator.reset();
+        zoomInterpolator.set(this._lastScale);
         event.preventDefault();
     },
 
     pinchEnd: function(event) {
-        if (!this._isValid) return;
-
-        if (event.pointerType === 'mouse') {
-            return;
-        }
-
+        if (!this._isValid || event.pointerType === 'mouse') return;
         this._transformStarted = false;
     },
 
     pinchInOut: function(event) {
-        if (!this._isValid) return;
-
-        var manipulator = this._manipulator;
-        if (!manipulator || !this._transformStarted || event.pointerType === 'mouse') {
-            return;
-        }
+        if (!this._isValid || !this._transformStarted || event.pointerType === 'mouse') return;
 
         // make the dezoom faster (because the manipulator dezoom/dezoom distance speed is adaptive)
         var zoomFactor = event.scale > this._lastScale ? this._zoomFactor : this._zoomFactor * 3.0;
@@ -180,12 +186,13 @@ OrbitManipulatorHammerController.prototype = {
         var scale = (event.scale - this._lastScale) * zoomFactor;
         this._lastScale = event.scale;
 
-        var zoomInterpolator = manipulator.getZoomInterpolator();
+        var zoomInterpolator = this._manipulator.getZoomInterpolator();
         zoomInterpolator.setTarget(zoomInterpolator.getTarget()[0] - scale);
     },
 
-    removeEventProxy: function(proxy) {
-        if (!proxy || !this._eventProxy) return;
+    removeEventProxy: function(eventProxy) {
+        var proxy = eventProxy || this._eventProxy;
+        if (!proxy) return;
 
         proxy.off('panstart ', this._cbPanStart);
         proxy.off('panmove', this._cbPanMove);
@@ -197,6 +204,7 @@ OrbitManipulatorHammerController.prototype = {
 
     setManipulator: function(manipulator) {
         this._manipulator = manipulator;
+        if (this._eventProxy) this._setListeners();
     }
 };
 module.exports = OrbitManipulatorHammerController;

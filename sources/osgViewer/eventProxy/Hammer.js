@@ -18,34 +18,22 @@ HammerController.prototype = {
         return this._enable;
     },
 
+    getHammer: function() {
+        return this._hammer;
+    },
+
     init: function(options) {
-        /* eslint-disable camelcase */
-        var deviceOptions = {
-            prevent_default: true,
-            drag_max_touches: 2,
-            transform_min_scale: 0.08,
-            transform_min_rotation: 180,
-            transform_always_block: true,
-            hold: false,
-            release: false,
-            swipe: false,
-            tap: false
-        };
-        /* eslint-enable camelcase */
-
         this._eventNode = options.eventNode;
-
         if (this._eventNode) {
-            this._hammer = new Hammer(this._eventNode, deviceOptions);
+            this._hammer = new Hammer.Manager(this._eventNode);
 
-            if (options.getBoolean('scrollwheel') === false)
-                this._hammer.get('pinch').set({
-                    enable: false
-                });
-            else
-                this._hammer.get('pinch').set({
-                    enable: true
-                });
+            // defaults: { event: 'pan', pointers: 1, direction: Hammer.DIRECTION_HORIZONTAL, threshold: 10 }
+            this._hammer.add(new Hammer.Pan());
+
+            if (options.getBoolean('scrollwheel')) {
+                //defaults: { event: 'pinch', pointers: 2, threshold: 0 }
+                this._hammer.add(new Hammer.Pinch());
+            }
         }
     },
 
