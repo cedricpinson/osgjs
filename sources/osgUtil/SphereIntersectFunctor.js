@@ -55,6 +55,50 @@ MACROUTILS.createPrototypeObject(
             return dmin <= r2;
         },
 
+        intersectPoint: function(v0, i0) {
+            var sqrDistance = vec3.sqrDist(v0, this._center);
+            if (sqrDistance > this._radius * this._radius) return;
+
+            var intersection = this.initIntersection(new SphereIntersection());
+            intersection._i1 = i0;
+            intersection._r1 = 1.0;
+            vec3.copy(intersection._localIntersectionPoint, v0);
+            intersection._ratio = Math.sqrt(sqrDistance) / this._radius;
+        },
+
+        intersectLine: (function() {
+            var tmp = vec3.create();
+            var dir = vec3.create();
+
+            return function(v0, v1, p0, p1) {
+                // https://www.geometrictools.com/GTEngine/Include/Mathematics/GteDistPointSegment.h
+                vec3.sub(tmp, this._center, v0);
+                vec3.sub(dir, v1, v0);
+                // compute ratio (projection on line)
+                var r = vec3.dot(tmp, dir) / vec3.sqrLen(dir);
+
+                // compute distance to segment
+                var distToSegmentSqr = 1.0;
+                if (r < 0.0) distToSegmentSqr = vec3.sqrLen(tmp);
+                else if (r > 1.0) distToSegmentSqr = vec3.sqrDist(this._center, v1);
+                else distToSegmentSqr = vec3.sqrLen(vec3.scaleAndAdd(tmp, tmp, dir, -r));
+
+                if (distToSegmentSqr > this._radius * this._radius) {
+                    return;
+                }
+
+                var intersection = this.initIntersection(new SphereIntersection());
+                intersection._i1 = p0;
+                intersection._i2 = p1;
+
+                intersection._r1 = 1.0 - r;
+                intersection._r2 = r;
+
+                vec3.scaleAndAdd(intersection._localIntersectionPoint, v0, dir, r);
+                intersection._ratio = Math.sqrt(distToSegmentSqr) / this._radius;
+            };
+        })(),
+
         //
         // \2|
         //  \|
@@ -254,9 +298,6 @@ MACROUTILS.createPrototypeObject(
                         }
                     }
                 }
-
-                // Account for numerical round-off error.
-                if (sqrDistance < 0.0) sqrDistance = 0.0;
 
                 if (sqrDistance > this._radius * this._radius) return;
 
