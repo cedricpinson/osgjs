@@ -234,7 +234,7 @@ MACROUTILS.createPrototypeObject(
                 this._currentStateGraph = currentStateGraph.getParent();
                 if (stateset.getBinName() !== undefined) {
                     var renderBinStack = this._renderBinStack;
-                    if (renderBinStack.length === 0) {
+                    if (renderBinStack.getLength() === 0) {
                         this._currentRenderBin = this._currentRenderBin.getStage();
                     } else {
                         this._currentRenderBin = renderBinStack.pop();
@@ -436,7 +436,7 @@ MACROUTILS.createPrototypeObject(
 
             pushLeaf: function(node, depth) {
                 var leafs = this._currentStateGraph.getLeafs();
-                if (!leafs.length) {
+                if (!leafs.getLength()) {
                     this._currentRenderBin.addStateGraph(this._currentStateGraph);
                 }
 

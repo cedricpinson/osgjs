@@ -5,8 +5,6 @@ var Program = require('osg/Program');
 var Shader = require('osg/Shader');
 var Compiler = require('osgShader/Compiler');
 var ShaderProcessor = require('osgShader/ShaderProcessor');
-var PooledArray = require('osg/PooledArray');
-
 var ShaderGenerator = function() {
     this._cache = {};
 

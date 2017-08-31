@@ -79,7 +79,7 @@ MACROUTILS.createPrototypeObject(
             // active camera in absolute reference
 
             // if no index the camera inverse is the root with an fake id
-            if (!this._cameraIndexStack.length) return this._cameraMatrixInverseRoot;
+            if (!this._cameraIndexStack.getLength()) return this._cameraMatrixInverseRoot;
 
             var idx = this._cameraIndexStack.back();
 
@@ -113,7 +113,7 @@ MACROUTILS.createPrototypeObject(
             // Improvment could be to cache more things
             // and / or use this method only if the shader use it
             var modelViewMatrixStackArray = this._modelViewMatrixStack.getArray();
-            if (!this._cameraIndexStack.length) return modelViewMatrixStackArray[0];
+            if (!this._cameraIndexStack.getLength()) return modelViewMatrixStackArray[0];
 
             // also we could keep the index of the current to avoid lenght-1 at each access
             // it's implemented in osg like that:
@@ -122,7 +122,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         getViewport: function() {
-            if (this._viewportStack.length === 0) {
+            if (this._viewportStack.getLength() === 0) {
                 return undefined;
             }
             return this._viewportStack.back();
@@ -315,7 +315,9 @@ MACROUTILS.createPrototypeObject(
                         np[index].getReferenceFrame() === TransformEnums.ABSOLUTE_RF
                     ) {
                         this._cameraIndexStack.push(index);
-                        this._cameraModelViewIndexStack.push(this._modelViewMatrixStack.length);
+                        this._cameraModelViewIndexStack.push(
+                            this._modelViewMatrixStack.getLength()
+                        );
                     }
                 }
 
@@ -338,14 +340,14 @@ MACROUTILS.createPrototypeObject(
                 // if same index it's a camera and we have to pop it
                 var np = this.getNodePath();
                 var index = np.length - 1;
-                if (this._cameraIndexStack.length && index === this._cameraIndexStack.back()) {
+                if (this._cameraIndexStack.getLength() && index === this._cameraIndexStack.back()) {
                     this._cameraIndexStack.pop();
                     this._cameraModelViewIndexStack.pop();
                 }
 
                 this._modelViewMatrixStack.pop();
 
-                if (this._modelViewMatrixStack.length !== 0) {
+                if (this._modelViewMatrixStack.getLength()) {
                     this.getLookVectorLocal(lookVector);
                 } else {
                     vec3.set(lookVector, 0.0, 0.0, -1.0);

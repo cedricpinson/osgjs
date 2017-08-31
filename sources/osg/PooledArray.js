@@ -2,37 +2,40 @@
 
 var PooledArray = function() {
     this._pool = [];
-    this.length = 0;
+    this._length = 0;
 };
 
 PooledArray.prototype = {
     clean: function() {
-        this.length = 0;
+        this._length = 0;
         this._pool.length = 0;
     },
     reset: function() {
-        this.length = 0;
+        this._length = 0;
+    },
+    getLength: function() {
+        return this._length;
     },
     getArray: function() {
         return this._pool;
     },
     back: function() {
-        return this._pool[this.length - 1];
+        return this._pool[this._length - 1];
     },
     pop: function() {
-        this.length--;
-        return this._pool[this.length];
+        this._length--;
+        return this._pool[this._length];
     },
     push: function(value) {
-        if (this.length === this._pool.length) {
+        if (this._length === this._pool.length) {
             this._pool.push(value);
         } else {
-            this._pool[this.length] = value;
+            this._pool[this._length] = value;
         }
-        this.length++;
+        this._length++;
     },
     forEach: function(func) {
-        for (var i = 0; i < this.length; i++) func(this._pool[i]);
+        for (var i = 0; i < this._length; i++) func(this._pool[i]);
     }
 };
 

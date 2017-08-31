@@ -214,7 +214,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         getStateSetStackSize: function() {
-            return this._stateSets.length;
+            return this._stateSets.getLength();
         },
 
         insertStateSet: (function() {
@@ -231,7 +231,7 @@ MACROUTILS.createPrototypeObject(
 
                 this.pushStateSet(stateSet);
 
-                for (var i = tmpStack.length - 1; i >= 0; i--) {
+                for (var i = tmpStack._length - 1; i >= 0; i--) {
                     this.pushStateSet(tmpStackArray[i]);
                 }
             };
@@ -260,7 +260,7 @@ MACROUTILS.createPrototypeObject(
                 this.popStateSet();
 
                 // push back the original ones that were above the remove StateSet
-                for (var i = tmpStack.length - 1; i >= 0; i--) {
+                for (var i = tmpStack._length - 1; i >= 0; i--) {
                     this.pushStateSet(tmpStackArray[i]);
                 }
             };
@@ -583,13 +583,13 @@ MACROUTILS.createPrototypeObject(
         },
 
         popAllStateSets: function() {
-            while (this._stateSets.length) {
+            while (this._stateSets._length) {
                 this.popStateSet();
             }
         },
 
         popStateSet: function() {
-            if (!this._stateSets.length) return;
+            if (!this._stateSets._length) return;
 
             var stateset = this._stateSets.pop();
 

@@ -125,13 +125,11 @@ MACROUTILS.createPrototypeObject(
             }
 
             var renderStageOrder = pooledRenderStageOrder.getOrCreateObject();
+            renderStageOrder.order = order;
+            renderStageOrder.renderStage = rs;
             if (i < this._preRenderList.length) {
-                renderStageOrder.order = order;
-                renderStageOrder.renderStage = rs;
                 this._preRenderList = this._preRenderList.splice(i, 0, renderStageOrder);
             } else {
-                renderStageOrder.order = order;
-                renderStageOrder.renderStage = rs;
                 this._preRenderList.push(renderStageOrder);
             }
         },
@@ -145,13 +143,11 @@ MACROUTILS.createPrototypeObject(
             }
 
             var renderStageOrder = pooledRenderStageOrder.getOrCreateObject();
+            renderStageOrder.order = order;
+            renderStageOrder.renderStage = rs;
             if (i < this._postRenderList.length) {
-                renderStageOrder.order = order;
-                renderStageOrder.renderStage = rs;
                 this._postRenderList = this._postRenderList.splice(i, 0, renderStageOrder);
             } else {
-                renderStageOrder.order = order;
-                renderStageOrder.renderStage = rs;
                 this._postRenderList.push(renderStageOrder);
             }
         },
@@ -294,7 +290,7 @@ MACROUTILS.createPrototypeObject(
                 gl.clear(this._clearMask);
             }
 
-            if (this._positionedAttribute.length !== 0) {
+            if (this._positionedAttribute.getLength() !== 0) {
                 this.applyPositionedAttribute(state, this._positionedAttribute);
             }
 

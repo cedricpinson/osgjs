@@ -9,7 +9,7 @@ var PooledMap = function() {
 PooledMap.prototype = {
     reset: function() {
         var array = this._keys.getArray();
-        var arrayLength = this._keys.length;
+        var arrayLength = this._keys.getLength();
         for (var i = 0; i < arrayLength; i++) {
             var key = array[i];
             this._map[key] = undefined;
@@ -31,7 +31,7 @@ PooledMap.prototype = {
     },
     forEach: function(func) {
         var array = this._keys.getArray();
-        var arrayLength = this._keys.length;
+        var arrayLength = this._keys.getLength();
         for (var i = 0; i < arrayLength; i++) {
             var key = array[i];
             func(key, this._map[key]);

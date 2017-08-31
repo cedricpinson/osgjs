@@ -85,7 +85,7 @@ MACROUTILS.createPrototypeObject(
 
         setAndTransformProvidingInverse: function(pt, matrix) {
             this._referenceVertexList = pt._referenceVertexList;
-            var polytopBackIndex = this._maskStack.length - 1;
+            var polytopBackIndex = this._maskStack.getLength() - 1;
             var resultMask = pt._maskStack[polytopBackIndex];
             if (resultMask === 0) {
                 this._maskStack.getArray()[polytopBackIndex] = 0;

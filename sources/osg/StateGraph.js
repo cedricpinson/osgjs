@@ -89,7 +89,7 @@ StateGraph.moveStateGraph = (function() {
                 sgNew = sgNew._parent;
             } while (sgNew);
 
-            for (i = stack.length - 1, l = 0; i >= l; --i) {
+            for (i = stack._length - 1, l = 0; i >= l; --i) {
                 state.pushStateSet(stackArray[i]);
             }
             return;
@@ -144,7 +144,7 @@ StateGraph.moveStateGraph = (function() {
             sgNew = sgNew._parent;
         }
 
-        for (i = stack.length - 1, l = 0; i >= l; --i) {
+        for (i = stack._length - 1, l = 0; i >= l; --i) {
             state.pushStateSet(stackArray[i]);
         }
     };

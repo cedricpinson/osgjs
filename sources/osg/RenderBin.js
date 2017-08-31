@@ -119,10 +119,12 @@ MACROUTILS.createPrototypeObject(
             var detectedNaN = false;
 
             var stateGraphList = this._stateGraphList.getArray();
-            for (var i = 0, l = this._stateGraphList.length; i < l; i++) {
+            var stateGraphListLength = this._stateGraphList.getLength();
+            for (var i = 0; i < stateGraphListLength; i++) {
                 var leafs = stateGraphList[i]._leafs;
                 var leafsArray = leafs.getArray();
-                for (var j = 0, k = leafs.length; j < k; j++) {
+                var leafsArrayLength = leafs.getLength();
+                for (var j = 0; j < leafsArrayLength; j++) {
                     var leaf = leafsArray[j];
                     if (osgMath.isNaN(leaf._depth)) {
                         detectedNaN = true;
@@ -176,7 +178,8 @@ MACROUTILS.createPrototypeObject(
             var binsKeys = this._bins.getKeys();
             var binsMap = this._bins.getMap();
             var binsKeysArray = binsKeys.getArray();
-            for (var i = 0, l = binsKeys.length; i < l; i++) {
+            var binsKeysArrayLength = binsKeys.getLength();
+            for (var i = 0; i < binsKeysArrayLength; i++) {
                 var keyBin = binsKeysArray[i];
                 binsMap[keyBin].sort();
             }
@@ -238,7 +241,8 @@ MACROUTILS.createPrototypeObject(
         applyPositionedAttribute: function(state, positionedAttributes) {
             // the idea is to set uniform 'globally' in uniform map.
             var elements = positionedAttributes.getArray();
-            for (var index = 0, l = positionedAttributes.length; index < l; index++) {
+            var length = positionedAttributes.getLength();
+            for (var index = 0, l = length; index < l; index++) {
                 var element = elements[index];
                 // add or set uniforms in state
                 var stateAttribute = element[1];
@@ -257,8 +261,9 @@ MACROUTILS.createPrototypeObject(
 
             var bins = this._bins.getMap();
             var binsKeys = this._bins.getKeys();
+            var binsKeysLength = binsKeys.getLength();
             var binsKeysArray = binsKeys.getArray();
-            for (var i = 0, l = binsKeys.length; i < l; i++) {
+            for (var i = 0; i < binsKeysLength; i++) {
                 var keyBin = binsKeysArray[i];
                 binsArray.push(bins[keyBin]);
             }
@@ -290,7 +295,7 @@ MACROUTILS.createPrototypeObject(
 
         drawLeafs: function(state, previousRenderLeaf) {
             var stateList = this._stateGraphList.getArray();
-            var stateListLength = this._stateGraphList.length;
+            var stateListLength = this._stateGraphList.getLength();
             var leafs = this._leafs;
             var previousLeaf = previousRenderLeaf;
             var leaf;
@@ -306,7 +311,8 @@ MACROUTILS.createPrototypeObject(
             for (var i = 0, l = stateListLength; i < l; i++) {
                 var sg = stateList[i];
                 var leafArray = sg._leafs.getArray();
-                for (var j = 0, ll = sg._leafs.length; j < ll; j++) {
+                var leafArrayLength = sg._leafs.getLength();
+                for (var j = 0; j < leafArrayLength; j++) {
                     leaf = leafArray[j];
                     leaf.render(state, previousLeaf);
                     previousLeaf = leaf;

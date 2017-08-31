@@ -199,7 +199,7 @@ MACROUTILS.createPrototypeObject(
                 var matrix = this._pooledMatrix.getOrCreateObject();
                 this.pushViewMatrix(mat4.identity(matrix));
                 this.pushModelMatrix(node.getMatrix());
-            } else if (this._modelStack.length > 0) {
+            } else if (this._modelStack.getLength() > 0) {
                 var m = mat4.copy(this._pooledMatrix.getOrCreateObject(), this.getModelMatrix());
                 mat4.mul(m, m, node.getMatrix());
                 this.pushModelMatrix(m);

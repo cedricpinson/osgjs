@@ -29,7 +29,8 @@ module.exports = function() {
             var materialStack =
                 state._attributeArray[Utils.getOrCreateStateAttributeTypeMemberIndex(material)];
             assert.isOk(
-                materialStack[materialStack.length - 1] === materialStack[materialStack.length - 2],
+                materialStack[materialStack.getLength() - 1] ===
+                    materialStack[materialStack.getLength() - 2],
                 'check Override in state'
             );
         })();
@@ -97,7 +98,7 @@ module.exports = function() {
             assert.equal(state.getStateSetStackSize(), 1, 'check stateSet stack length');
             var program = state.getLastProgramApplied();
             assert.notEqual(program, undefined, 'check last program applied');
-            assert.equal(state._programAttribute._length, 0, 'check program stack length');
+            assert.equal(state._programAttribute.getLength(), 0, 'check program stack length');
 
             // check that texture 0 is applied only once
             assert.equal(textureBindCall.get(1), 1, 'check that texture 0 is applied only once');
