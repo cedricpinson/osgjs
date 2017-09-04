@@ -311,6 +311,7 @@ MACROUTILS.createPrototypeNode(
 
             child.removeParent(this);
             children.splice(id, 1);
+            this.dirtyBound();
 
             if (
                 child.getNumChildrenRequiringUpdateTraversal() > 0 ||
