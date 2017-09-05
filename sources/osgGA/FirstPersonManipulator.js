@@ -84,7 +84,11 @@ MACROUTILS.createPrototypeObject(
             this._controllerList = {};
             FirstPersonManipulator.ControllerList.forEach(function(value) {
                 if (FirstPersonManipulator[value] !== undefined) {
-                    self._controllerList[value] = new FirstPersonManipulator[value](self);
+                    if (self._controllerList[value]) {
+                        self._controllerList[value].init();
+                    } else {
+                        self._controllerList[value] = new FirstPersonManipulator[value](self);
+                    }
                 }
             });
         },

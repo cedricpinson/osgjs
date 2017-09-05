@@ -155,7 +155,11 @@ MACROUTILS.createPrototypeObject(
 
             CADManipulator.ControllerList.forEach(function(value) {
                 if (CADManipulator[value] !== undefined) {
-                    self._controllerList[value] = new CADManipulator[value](self);
+                    if (self._controllerList[value]) {
+                        self._controllerList[value].init();
+                    } else {
+                        self._controllerList[value] = new CADManipulator[value](self);
+                    }
                 }
             });
         },
