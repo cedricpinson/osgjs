@@ -10,20 +10,28 @@ var LineSegmentIntersector = function() {
     Intersector.call(this);
 
     this._start = vec3.create();
-    this._end = vec3.create();
-
     this._iStart = vec3.create();
+
+    this._end = vec3.create();
     this._iEnd = vec3.create();
+
+    // only used for lines and points
+    this._threshold = 0.0;
+    this._iThreshold = 0.0;
 };
 
 MACROUTILS.createPrototypeObject(
     LineSegmentIntersector,
     MACROUTILS.objectInherit(Intersector.prototype, {
-        set: function(start, end) {
+        set: function(start, end, threshold) {
             vec3.copy(this._start, start);
             vec3.copy(this._iStart, start);
             vec3.copy(this._end, end);
             vec3.copy(this._iEnd, end);
+
+            if (threshold !== undefined) {
+                this._threshold = this._iThreshold = threshold;
+            }
         },
 
         setStart: function(start) {
@@ -88,7 +96,7 @@ MACROUTILS.createPrototypeObject(
                 functor.setIntersectionVisitor(iv);
                 functor.setIntersector(this);
 
-                functor.set(this._iStart, this._iEnd);
+                functor.set(this._iStart, this._iEnd, this._iThreshold);
 
                 var kdtree = node.getShape();
                 if (kdtree) {
@@ -96,7 +104,8 @@ MACROUTILS.createPrototypeObject(
                         functor,
                         kdtree.getNodes()[0],
                         this._iStart,
-                        this._iEnd
+                        this._iEnd,
+                        this._iThreshold
                     );
                     return;
                 } else {
@@ -115,6 +124,14 @@ MACROUTILS.createPrototypeObject(
         setCurrentTransformation: function(matrix) {
             mat4.invert(matrix, matrix);
 
+            if (this._threshold > 0.0) {
+                var tmp = this._iStart;
+                mat4.getScale(tmp, matrix);
+                var x = tmp[0];
+                var y = tmp[1];
+                var z = tmp[2];
+                this._iThreshold = this._threshold * (x > y ? (x > z ? x : z) : y > z ? y : z);
+            }
             vec3.transformMat4(this._iStart, this._start, matrix);
             vec3.transformMat4(this._iEnd, this._end, matrix);
         }
