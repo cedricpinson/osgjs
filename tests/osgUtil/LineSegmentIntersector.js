@@ -5,8 +5,12 @@ var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
 var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
 var KdTreeBuilder = require('osg/KdTreeBuilder');
 var BoundingSphere = require('osg/BoundingSphere');
-var Camera = require('osg/Camera');
+var Node = require('osg/Node');
+var Geometry = require('osg/Geometry');
+var BufferArray = require('osg/BufferArray');
+var DrawArrays = require('osg/DrawArrays');
 var Viewport = require('osg/Viewport');
+var primitiveSet = require('osg/primitiveSet');
 var mat4 = require('osg/glMatrix').mat4;
 var vec3 = require('osg/glMatrix').vec3;
 var MatrixTransform = require('osg/MatrixTransform');
@@ -56,72 +60,104 @@ module.exports = function() {
         assert.isOk(!lsi.intersectBoundingSphere(bs), 'hit failed');
     });
 
+    // quad center at (0, 0, 0) with dege 0.5
+    // lines is grid with same center and 6 lines
+    // points are : one in (0, 0, 0) and the other on picking path
+    // picking is (0.1, 0.3, -0.5/+0.5) with threshold 0.15
+
+    var createSceneGeometry = function() {
+        var scene = new Node();
+        var cx, cy, cz, wx, wy, wz, hx, hy, hz;
+        cx = cy = -0.5;
+        wx = hy = 1.0;
+        cz = wy = wz = hx = hz = 0.0;
+        var tris = Shape.createTexturedQuadGeometry(cx, cy, cz, wx, wy, wz, hx, hy, hz, 1.0, 1.0);
+        var lines = Shape.createGridGeometry(cx, cy, cz, wx, wy, wz, hx, hy, hz, 1, 1);
+
+        var points = new Geometry();
+        var pverts = new Float32Array([0.0, 0.0, 0.0, 0.1, 0.3, 0.0]);
+        points.getAttributes().Vertex = new BufferArray(BufferArray.ARRAY_BUFFER, pverts, 3);
+        points.getPrimitives().push(new DrawArrays(primitiveSet.POINTS, 0, 2));
+
+        scene.addChild(tris);
+        scene.addChild(lines);
+        scene.addChild(points);
+
+        return scene;
+    };
+
     test('LineSegmentIntersector with 2 branches', function() {
         // right branch should be picked
         // left branch shouldn't be picked
         //
-        // MatrixTransform  (-10 -10 -10)
-        //     /    \
-        //    |     MatrixTransform (10 10 10)
-        //     \   /
-        //     Scene
+        //  scene
+        //   |
+        //  tr1 (5 0 0)
+        //   |  \
+        //   |  tr2 (-5 0 0)
+        //   |  /
+        // scene geom
 
-        var camera = new Camera();
-        camera.setViewport(new Viewport());
-        camera.setViewMatrix(
-            mat4.lookAt(
-                mat4.create(),
-                vec3.fromValues(0.0, 0.0, -10.0),
-                vec3.create(),
-                vec3.fromValues(0.0, 1.0, 0.0)
-            )
-        );
-        camera.setProjectionMatrix(
-            mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800.0 / 600.0, 0.1, 1000.0)
-        );
-
-        var scene = Shape.createTexturedQuadGeometry(
-            -0.5,
-            -0.5,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0
-        );
+        var rootScene = new Node();
+        var sceneGeom = createSceneGeometry();
 
         var tr1 = new MatrixTransform();
         mat4.fromTranslation(tr1.getMatrix(), [5.0, 0.0, 0.0]);
-        tr1.addChild(scene);
 
-        var mrot = new MatrixTransform();
-        mat4.fromTranslation(mrot.getMatrix(), [-5.0, 0.0, 0.0]);
-        mrot.addChild(tr1);
-        mrot.addChild(scene);
+        var tr2 = new MatrixTransform();
+        mat4.fromTranslation(tr2.getMatrix(), [-5.0, 0.0, 0.0]);
 
-        camera.addChild(mrot);
+        rootScene.addChild(tr1);
+        tr1.addChild(sceneGeom);
+        tr1.addChild(tr2);
+        tr2.addChild(sceneGeom);
 
         var lsi = new LineSegmentIntersector();
-        lsi.set(vec3.fromValues(420, 300, 0.0), vec3.fromValues(420, 300, 1.0));
+        lsi.set(vec3.fromValues(0.1, 0.3, -0.5), vec3.fromValues(0.1, 0.3, 0.5), 0.15);
         var iv = new IntersectionVisitor();
         iv.setIntersector(lsi);
-        camera.accept(iv);
-        assert.isOk(
-            lsi._intersections.length === 1,
-            'Hits should be 1 and result is ' + lsi._intersections.length
-        );
-        assert.isOk(
-            lsi._intersections[0]._nodePath.length === 4,
-            'NodePath should be 4 and result is ' + lsi._intersections[0]._nodePath.length
-        );
+
+        var testPick = function() {
+            lsi.reset();
+            iv.reset();
+            rootScene.accept(iv);
+
+            var inters = lsi._intersections;
+            assert.isOk(inters.length === 3, 'Hits should be 3 and result is ' + inters.length);
+
+            var npath = inters[0]._nodePath;
+            assert.isOk(npath.length === 5, 'NodePath should be 5 and result is ' + npath.length);
+
+            var points = [];
+            var triangles = [];
+            var lines = [];
+            for (var i = 0; i < inters.length; ++i) {
+                var int = inters[i];
+                if (int._i3 >= 0) triangles.push(int);
+                else if (int._i2 >= 0) lines.push(int);
+                else if (int._i1 >= 0) points.push(int);
+            }
+
+            var one = points.length === 1 && lines.length === 1 && triangles.length === 1;
+            assert.isOk(one, 'Check pick primitive');
+
+            assert.equalVector(points[0]._localIntersectionPoint, [0.1, 0.3, 0]);
+            assert.equalVector(lines[0]._localIntersectionPoint, [0.1, 0.3, 0]);
+            assert.equalVector(triangles[0]._localIntersectionPoint, [0.1, 0.3, 0]);
+        };
+
+        testPick();
+
+        // with kd tree
+        var treeBuilder = new KdTreeBuilder({ _targetNumTrianglesPerLeaf: 0 });
+        treeBuilder.apply(rootScene);
+
+        testPick();
     });
 
-    test('LineSegmentIntersector without kdtree and camera', function() {
-        var camera = new Camera();
+    test('LineSegmentIntersector with mockup scene and computeIntersections', function() {
+        var view = new View();
+        var camera = view.getCamera();
         camera.setViewport(new Viewport());
         camera.setViewMatrix(
             mat4.lookAt(
@@ -135,145 +171,19 @@ module.exports = function() {
             mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 1000.0)
         );
 
-        var scene = Shape.createTexturedQuadGeometry(
-            -0.5,
-            -0.5,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0
-        );
-        camera.addChild(scene);
-        var lsi = new LineSegmentIntersector();
-        lsi.set(vec3.fromValues(400, 300, 0.0), vec3.fromValues(420, 300, 1.0));
-        var iv = new IntersectionVisitor();
-        iv.setIntersector(lsi);
-        camera.accept(iv);
-        assert.isOk(
-            lsi._intersections.length === 1,
-            'Hits should be 1 and result is ' + lsi._intersections.length
-        );
-        assert.isOk(
-            lsi._intersections[0]._nodePath.length === 2,
-            'NodePath should be 2 and result is ' + lsi._intersections[0]._nodePath.length
-        );
-    });
-
-    test('LineSegmentIntersector without kdtree', function() {
-        var view = new View();
-        view.getCamera().setViewport(new Viewport());
-        view
-            .getCamera()
-            .setViewMatrix(
-                mat4.lookAt(
-                    mat4.create(),
-                    vec3.fromValues(0.0, 0.0, -10),
-                    vec3.create(),
-                    vec3.fromValues(0.0, 1.0, 0.0)
-                )
-            );
-        view
-            .getCamera()
-            .setProjectionMatrix(
-                mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 1000.0)
-            );
-
         // TODO it uses the old sync parseSceneGraphDeprecated
-        var quad = ReaderParser.parseSceneGraph(mockup.getScene());
-        view.setSceneData(quad);
+        var scene = ReaderParser.parseSceneGraph(mockup.getScene());
+        view.setSceneData(scene);
 
+        // no kd tree
         var result = view.computeIntersections(400, 300);
         assert.isOk(result.length === 1, 'Hits should be 1 and result is ' + result.length);
-    });
 
-    test('LineSegmentIntersector with kdtree and camera', function() {
-        // This test will never work with kdtree
-        var camera = new Camera();
-        camera.setViewport(new Viewport());
-        camera.setViewMatrix(
-            mat4.lookAt(
-                mat4.create(),
-                vec3.fromValues(0.0, 0.0, -10),
-                vec3.create(),
-                vec3.fromValues(0.0, 1.0, 0.0)
-            )
-        );
-        camera.setProjectionMatrix(
-            mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 1000.0)
-        );
-
-        var scene = Shape.createTexturedQuadGeometry(
-            -0.5,
-            -0.5,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0
-        );
-        camera.addChild(scene);
-        var treeBuilder = new KdTreeBuilder({
-            _numVerticesProcessed: 0.0,
-            _targetNumTrianglesPerLeaf: 1,
-            _maxNumLevels: 20
-        });
+        // with kd tree
+        var treeBuilder = new KdTreeBuilder({ _targetNumTrianglesPerLeaf: 0 });
         treeBuilder.apply(scene);
 
-        var lsi = new LineSegmentIntersector();
-        lsi.set(vec3.fromValues(400, 300, 0.0), vec3.fromValues(420, 300, 1.0));
-        var iv = new IntersectionVisitor();
-        iv.setIntersector(lsi);
-        camera.accept(iv);
-        assert.isOk(
-            lsi._intersections.length === 1,
-            'Intersections should be 1 and result is ' + lsi._intersections.length
-        );
-        assert.isOk(
-            lsi._intersections[0]._nodePath.length === 2,
-            'NodePath should be 2 and result is ' + lsi._intersections[0]._nodePath.length
-        );
-    });
-
-    test('LineSegmentIntersector with kdtree', function() {
-        var view = new View();
-        view.getCamera().setViewport(new Viewport());
-        view
-            .getCamera()
-            .setViewMatrix(
-                mat4.lookAt(
-                    mat4.create(),
-                    vec3.fromValues(0.0, 0.0, -10.0),
-                    vec3.create(),
-                    vec3.fromValues(0.0, 1.0, 0.0)
-                )
-            );
-        view
-            .getCamera()
-            .setProjectionMatrix(
-                mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 1000.0)
-            );
-
-        // TODO it uses the old sync parseSceneGraphDeprecated
-        var root = ReaderParser.parseSceneGraph(mockup.getScene());
-        view.setSceneData(root);
-
-        var treeBuilder = new KdTreeBuilder({
-            _numVerticesProcessed: 0.0,
-            _targetNumTrianglesPerLeaf: 50,
-            _maxNumLevels: 20
-        });
-        treeBuilder.apply(root);
-
-        var result = view.computeIntersections(400, 300);
+        result = view.computeIntersections(400, 300);
         assert.isOk(result.length === 1, 'Hits should be 1 and result is ' + result.length);
     });
 };
