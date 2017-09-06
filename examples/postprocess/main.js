@@ -63,7 +63,7 @@
             this.rebuildGUI('passthrough.json');
         },
 
-        insertRandomMatrixTransform: function(parent, geom) {
+        createRandomMatrixTransform: function() {
             var trans = osg.vec3.create();
             trans[0] = Math.random() - 0.5;
             trans[1] = Math.random() - 0.5;
@@ -84,40 +84,26 @@
 
             var mt = new osg.MatrixTransform();
             var mat = mt.getMatrix();
-            osg.mat4.fromRotationTranslationScaleOrigin(mat, rot, trans, scale, osg.vec3.ZERO);
-
-            parent.addChild(mt);
-            mt.addChild(geom);
+            osg.mat4.fromRotationTranslationScale(mat, rot, trans, scale);
 
             return mt;
         },
 
-        createSceneGeometryGroup: function() {
-            var group = new osg.MatrixTransform();
-            group.setName('group');
-
-            var sphereProxy = new osg.Node();
-            var quadProxy = new osg.Node();
-
-            group.addChild(sphereProxy);
-            group.addChild(quadProxy);
-
-            var texture = new osg.Texture();
-            osgDB.readImageURL('../media/textures/trees.jpeg').then(function(image) {
-                texture.setImage(image);
-                quadProxy.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
-            });
+        createRandomPrimitives: function() {
+            var primitives = new osg.MatrixTransform();
 
             var i = 0;
             for (i = 0; i < 100; ++i) {
                 var geom;
                 if (i < 50) {
                     geom = osg.createTexturedSphereGeometry(1.0, 32, 32);
-                    this.insertRandomMatrixTransform(sphereProxy, geom);
                 } else {
                     geom = osg.createTexturedBoxGeometry();
-                    this.insertRandomMatrixTransform(sphereProxy, geom);
                 }
+
+                var randMT = this.createRandomMatrixTransform();
+                primitives.addChild(randMT);
+                randMT.addChild(geom);
 
                 // random color
                 var mat = new osg.Material();
@@ -129,15 +115,48 @@
                 osg.vec3.lerp(diff, diff, osg.vec3.ONE, 0.5);
             }
 
+            // rotate primitives
             var axis = osg.vec3.fromValues(0.4, 0.6, 0.8);
             osg.vec3.normalize(axis, axis);
-            group.addUpdateCallback({
+            primitives.addUpdateCallback({
                 update: function(node) {
                     var matrix = node.getMatrix();
                     osg.mat4.rotate(matrix, matrix, 0.005, axis);
                 }
             });
 
+            return primitives;
+        },
+
+        createTexturedQuad: function() {
+            // add static quad with texture
+            var quad = osg.createTexturedQuadGeometry(-0.5, 0, -0.5, 1, 0, 0, 0, 0, 1);
+            var stQuad = quad.getOrCreateStateSet();
+
+            // texture + no light
+            var texture = new osg.Texture();
+            texture.setMinFilter(osg.Texture.LINEAR_MIPMAP_LINEAR);
+            texture.setMagFilter(osg.Texture.LINEAR);
+            stQuad.setTextureAttributeAndModes(0, texture);
+            stQuad.setAttribute(new osg.CullFace(osg.CullFace.DISABLE));
+            stQuad.setAttributeAndModes(new osg.Light(0, true));
+            osgDB.readImageURL('../media/textures/trees.jpeg').then(texture.setImage.bind(texture));
+
+            // offset on right
+            var mtTexQuad = new osg.MatrixTransform();
+            mtTexQuad.addChild(quad);
+            var fac = 30;
+            var texMat = mtTexQuad.getMatrix();
+            osg.mat4.translate(texMat, texMat, osg.vec3.fromValues(fac, 0.0, 0));
+            osg.mat4.scale(texMat, texMat, osg.vec3.fromValues(fac, fac, fac));
+
+            return mtTexQuad;
+        },
+
+        createSceneGeometryGroup: function() {
+            var group = new osg.Node();
+            group.addChild(this.createRandomPrimitives());
+            group.addChild(this.createTexturedQuad());
             return group;
         },
 
@@ -325,21 +344,27 @@
 
             if (name === 'vignette.json') {
                 var uLensRadius = st.getUniform('uLensRadius');
+                var lensArray = uLensRadius.getInternalArray();
 
                 var vignette = {
-                    innerRadius: uLensRadius.getInternalArray()[1],
-                    outerRadius: uLensRadius.getInternalArray()[0]
+                    outerRadius: lensArray[0],
+                    innerRadius: lensArray[1]
                 };
 
-                var innerCtrl = folder.add(vignette, 'innerRadius', 0, 1);
                 var outerCtrl = folder.add(vignette, 'outerRadius', 0, 1);
+                var innerCtrl = folder.add(vignette, 'innerRadius', 0, 1);
 
-                innerCtrl.onChange(function(value) {
-                    uLensRadius.getInternalArray()[1] = value;
+                var eps = 0.01;
+                outerCtrl.onChange(function(value) {
+                    lensArray[0] = value;
+                    if (value <= lensArray[1]) 
+                        innerCtrl.setValue(value - eps);
                 });
 
-                outerCtrl.onChange(function(value) {
-                    uLensRadius.getInternalArray()[0] = value;
+                innerCtrl.onChange(function(value) {
+                    lensArray[1] = value;
+                    if (value >= lensArray[0]) 
+                        outerCtrl.setValue(value + eps);
                 });
             } else if (name === 'colorCorrection.json') {
                 var colorCorrectionParams = {
@@ -411,25 +436,40 @@
             // dat.GUI doesn't have an easy way to add elements into the combobox
             // so we just rebuild the whole GUI
             this.rebuildGUI(this._currentComposer);
-        }
-    };
+        },
 
-    var dragOverEvent = function(evt) {
-        evt.stopPropagation();
-        evt.preventDefault();
-        evt.dataTransfer.dropEffect = 'copy';
-    };
+        addContent: function(files, fileContents) {
+            var shaders = {};
 
-    var dropEvent = function(evt) {
-        evt.stopPropagation();
-        evt.preventDefault();
+            for (var i = 0; i < fileContents.length; i++) {
+                var name = files[i].name;
+                var content = fileContents[i];
 
-        var files = evt.dataTransfer.files;
-        if (files.length) {
+                if (name.indexOf('.json') !== -1) {
+                    this.addComposerConfig(name, content);
+                } else {
+                    shaders[name] = content;
+                }
+            }
+
+            this._shaderProcessor.addShaders(shaders);
+        },
+
+        dragOverEvent: function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.dataTransfer.dropEffect = 'copy';
+        },
+
+        dropEvent: function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+
+            var files = evt.dataTransfer.files;
+            if (!files.length) return;
+
             var promises = [];
-
-            var i;
-            for (i = 0; i < files.length; i++) {
+            for (var i = 0; i < files.length; i++) {
                 var file = files[i];
 
                 if (file.name.indexOf('.json') === -1 && file.name.indexOf('.glsl') === -1) {
@@ -443,36 +483,50 @@
                 );
             }
 
-            var example = this;
+            P.all(promises).then(this.addContent.bind(this, files));
+        },
 
-            P.all(promises).then(function(fileContents) {
-                var shaders = {};
+        loadXHR: function(url) {
+            var split = url.split('/');
+            var shaderName = split[split.length - 1];
 
-                for (i = 0; i < fileContents.length; i++) {
-                    var name = files[i].name;
-                    var content = fileContents[i];
-
-                    if (name.indexOf('.json') !== -1) {
-                        example.addComposerConfig(name, content);
-                    } else {
-                        shaders[name] = content;
-                    }
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.responseType = 'text';
+            xhr.onload = function() {
+                if (xhr.status !== 200 && (!xhr.response || !xhr.response.byteLength)) {
+                    return;
                 }
 
-                example._shaderProcessor.addShaders(shaders);
-            });
+                this.addContent([{ name: shaderName }], [xhr.responseText]);
+            }.bind(this);
+            xhr.send(null);
         }
     };
 
-    window.addEventListener(
-        'load',
-        function() {
-            var example = new Example();
-            example.run();
+    var initExample = function() {
+        var example = new Example();
+        example.run();
 
-            window.addEventListener('dragover', dragOverEvent.bind(example), false);
-            window.addEventListener('drop', dropEvent.bind(example), false);
-        },
-        true
-    );
+        window.addEventListener('dragover', example.dragOverEvent.bind(example), false);
+        window.addEventListener('drop', example.dropEvent.bind(example), false);
+
+        example.loadXHR('shaders/blackAndWhite.json');
+        example.loadXHR('shaders/blackAndWhite.glsl');
+
+        example.loadXHR('shaders/colorBalance.json');
+        example.loadXHR('shaders/colorBalance.glsl');
+        example.loadXHR('shaders/colorBalanceLUT.glsl');
+
+        example.loadXHR('shaders/colorCorrection.json');
+        example.loadXHR('shaders/colorCorrection.glsl');
+
+        // necessary for both colorBalance and colorCorrection
+        example.loadXHR('shaders/sampleLUT.glsl');
+
+        example.loadXHR('shaders/vignette.json');
+        example.loadXHR('shaders/vignette.glsl');
+    };
+
+    window.addEventListener('load', initExample, true);
 })();
