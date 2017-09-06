@@ -63,16 +63,90 @@
             this.rebuildGUI('passthrough.json');
         },
 
-        createCamera: function(width, height, texture) {
+        insertRandomMatrixTransform: function(parent, geom) {
+            var trans = osg.vec3.create();
+            trans[0] = Math.random() - 0.5;
+            trans[1] = Math.random() - 0.5;
+            trans[2] = Math.random() - 0.5;
+            osg.vec3.scale(trans, trans, 20.0);
+
+            var scale = osg.vec3.create();
+            scale[0] = Math.random() + 1.0;
+            scale[1] = Math.random() + 1.0;
+            scale[2] = Math.random() + 1.0;
+
+            var rot = osg.quat.create();
+            rot[0] = Math.random() - 0.5;
+            rot[1] = Math.random() - 0.5;
+            rot[2] = Math.random() - 0.5;
+            rot[3] = Math.random() - 0.5;
+            osg.quat.normalize(rot, rot);
+
+            var mt = new osg.MatrixTransform();
+            var mat = mt.getMatrix();
+            osg.mat4.fromRotationTranslationScaleOrigin(mat, rot, trans, scale, osg.vec3.ZERO);
+
+            parent.addChild(mt);
+            mt.addChild(geom);
+
+            return mt;
+        },
+
+        createSceneGeometryGroup: function() {
+            var group = new osg.MatrixTransform();
+            group.setName('group');
+
+            var sphereProxy = new osg.Node();
+            var quadProxy = new osg.Node();
+
+            group.addChild(sphereProxy);
+            group.addChild(quadProxy);
+
+            var texture = new osg.Texture();
+            osgDB.readImageURL('../media/textures/trees.jpeg').then(function(image) {
+                texture.setImage(image);
+                quadProxy.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
+            });
+
+            var i = 0;
+            for (i = 0; i < 100; ++i) {
+                var geom;
+                if (i < 50) {
+                    geom = osg.createTexturedSphereGeometry(1.0, 32, 32);
+                    this.insertRandomMatrixTransform(sphereProxy, geom);
+                } else {
+                    geom = osg.createTexturedBoxGeometry();
+                    this.insertRandomMatrixTransform(sphereProxy, geom);
+                }
+
+                // random color
+                var mat = new osg.Material();
+                geom.getOrCreateStateSet().setAttribute(mat);
+                var diff = mat.getDiffuse();
+                diff[0] = Math.random();
+                diff[1] = Math.random();
+                diff[2] = Math.random();
+                osg.vec3.lerp(diff, diff, osg.vec3.ONE, 0.5);
+            }
+
+            var axis = osg.vec3.fromValues(0.4, 0.6, 0.8);
+            osg.vec3.normalize(axis, axis);
+            group.addUpdateCallback({
+                update: function(node) {
+                    var matrix = node.getMatrix();
+                    osg.mat4.rotate(matrix, matrix, 0.005, axis);
+                }
+            });
+
+            return group;
+        },
+
+        createCamera: function(texture) {
             var camera = new osg.Camera();
             camera.setName('MainCamera');
 
-            camera.setViewport(new osg.Viewport(0, 0, width, height));
-
             camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
             camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture);
-
-            camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
 
             camera.attachRenderBuffer(
                 osg.FrameBufferObject.DEPTH_ATTACHMENT,
@@ -136,48 +210,47 @@
             this._composer = this.createComposer('ComposerPostProcess', width, height);
             this.rebuildComposer('passthrough.json');
 
-            var rttCamera = this.createCamera(
-                width,
-                height,
-                this._composer.getInternalTexture('TextureColor')
-            );
-
-            rttCamera.setName('DepthCamera');
-
-            //TODO: wut?
-            // setClampProjectionMatrixCallback mandatory to update matrices
-            // copy first projection = first frame bug
-            // not copy first camera means nothing draw
-            // ssao copies proj but not camera
-            osg.mat4.copy(rttCamera.getViewMatrix(), viewer.getCamera().getViewMatrix());
-
-            rttCamera.setClampProjectionMatrixCallback(function() {
-                osg.mat4.copy(rttCamera.getViewMatrix(), viewer.getCamera().getViewMatrix());
-                osg.mat4.copy(
-                    rttCamera.getProjectionMatrix(),
-                    viewer.getCamera().getProjectionMatrix()
-                );
-            });
-
-            this._camera = rttCamera;
-
-            var texture = new osg.Texture();
-            var quad = osg.createTexturedFullScreenFakeQuadGeometry();
-
-            osgDB.readImageURL('../media/textures/trees.jpeg').then(function(image) {
-                texture.setImage(image);
-                quad.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
-            });
+            var sceneTexture = this._composer.getInternalTexture('TextureColor');
+            this._camera = this.createCamera(sceneTexture);
 
             this.loadLutTextures();
 
-            this._camera.addChild(quad);
+            this._camera.addChild(this.createSceneGeometryGroup());
 
             var rootNode = new osg.Node();
-            rootNode.addChild(rttCamera);
+            rootNode.addChild(this._camera);
             rootNode.addChild(this._composer);
 
+            // resize stuff
+            this._canvasWidth = width;
+            this._canvasHeight = height;
+            rootNode.addUpdateCallback(this);
+
             return rootNode;
+        },
+
+        update: function() {
+            var viewer = this._viewer;
+            var width = viewer.getCanvasWidth();
+            var height = viewer.getCanvasHeight();
+
+            if (width !== this._canvasWidth || height !== this._canvasHeight) {
+                this._canvasWidth = width;
+                this._canvasHeight = height;
+                this._composer.resize(width, height);
+
+                // reset attachment and redo them (because of render buffer)
+                // camera should have a resize attachments function for helper
+                this._camera.resetAttachments();
+                var texture = this._composer.getInternalTexture('TextureColor');
+                this._camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture);
+                this._camera.attachRenderBuffer(
+                    osg.FrameBufferObject.DEPTH_ATTACHMENT,
+                    osg.FrameBufferObject.DEPTH_COMPONENT16
+                );
+            }
+
+            return true;
         },
 
         rebuildComposer: function(fileName) {
