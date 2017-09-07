@@ -21,6 +21,8 @@ var ShadowTexture = function() {
     this._mapSize = vec4.create();
     this._renderSize = vec4.create();
     this._lightNumber = -1; // default for a valid cloneType
+    this._dirtyHash = true;
+    this._hash = '';
 };
 
 ShadowTexture.uniforms = {};
@@ -31,12 +33,16 @@ MACROUTILS.createPrototypeStateAttribute(
         cloneType: function() {
             return new ShadowTexture();
         },
+
         hasLightNumber: function(lightNum) {
             return this._lightNumber === lightNum;
         },
+
         setLightNumber: function(lun) {
             this._lightNumber = lun;
+            this._dirtyHash = true;
         },
+
         getLightNumber: function() {
             return this._lightNumber;
         },
@@ -44,6 +50,11 @@ MACROUTILS.createPrototypeStateAttribute(
         getUniformName: function(name) {
             var prefix = 'Shadow_' + this.getType() + this._lightNumber.toString();
             return 'u' + prefix + '_' + name;
+        },
+
+        setInternalFormatType: function(value) {
+            Texture.prototype.setInternalFormatType.call(this, value);
+            this._dirtyHash = true;
         },
 
         getOrCreateUniforms: function(unit) {
@@ -73,6 +84,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
             return obj.uniforms[unit];
         },
+
         setViewMatrix: function(viewMatrix) {
             this._viewMatrix = viewMatrix;
         },
@@ -115,10 +127,14 @@ MACROUTILS.createPrototypeStateAttribute(
         },
 
         getHash: function() {
-            return this._computeHash();
+            if (!this._dirtyHash) return this._hash;
+
+            this._hash = this._computeInternalHash();
+            this._dirtyHash = false;
+            return this._hash;
         },
 
-        _computeHash: function() {
+        _computeInternalHash: function() {
             return this.getTypeMember() + '_' + this._lightNumber + '_' + this._type;
         }
     }),
