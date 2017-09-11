@@ -312,12 +312,12 @@ osgAnimationWrapper.BasicAnimationManager = function(input, manager) {
     var animPromises = [];
 
     for (var i = 0, l = jsonObj.Animations.length; i < l; i++) {
-        var prim = input.setJSON(jsonObj.Animations[i]).readObject();
-        if (prim.isRejected()) {
+        var promiseAnimation = input.setJSON(jsonObj.Animations[i]).readObject();
+        if (promiseAnimation.isRejected()) {
             Notify.warn('An Animation failed on the parsing!');
             continue;
         }
-        animPromises.push(prim);
+        animPromises.push(promiseAnimation);
     }
 
     return P.all(animPromises).then(function(animations) {
@@ -336,7 +336,12 @@ osgAnimationWrapper.UpdateMatrixTransform = function(input, umt) {
     var promiseArray = [];
     var i, l;
     for (i = 0, l = jsonObj.StackedTransforms.length; i < l; i++) {
-        promiseArray.push(input.setJSON(jsonObj.StackedTransforms[i]).readObject());
+        var promiseStacked = input.setJSON(jsonObj.StackedTransforms[i]).readObject();
+        if (promiseStacked.isRejected()) {
+            Notify.warn('A stacked transforms failed on the parsing!');
+            continue;
+        }
+        promiseArray.push(promiseStacked);
     }
 
     // when UpdateMatrixTransform is ready
@@ -434,10 +439,8 @@ osgAnimationWrapper.Skeleton = osgWrapper.MatrixTransform;
 osgAnimationWrapper.RigGeometry = function(input, rigGeom) {
     var jsonObj = input.getJSON();
 
-    if (
-        !jsonObj.SourceGeometry // check boneMap
-    )
-        return P.reject();
+    // check boneMap
+    if (!jsonObj.SourceGeometry) return P.reject();
 
     if (!jsonObj.BoneMap) Notify.warn('No boneMap found in a RigGeometry !');
 
