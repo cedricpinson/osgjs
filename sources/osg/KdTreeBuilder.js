@@ -5,14 +5,20 @@ var KdTree = require('osg/KdTree');
 
 var KdTreeBuilder = function(options) {
     NodeVisitor.call(this);
-    this._buildOptions =
-        options !== undefined
-            ? options
-            : {
-                  _numVerticesProcessed: 0,
-                  _targetNumTrianglesPerLeaf: 50,
-                  _maxNumLevels: 20
-              };
+    this._buildOptions = {
+        _numVerticesProcessed: 0,
+        _targetNumTrianglesPerLeaf: 50,
+        _maxNumLevels: 20
+    };
+
+    if (!options) return;
+
+    // merge options
+    var perLeaf = options._targetNumTrianglesPerLeaf;
+    var maxLevel = options._maxNumLevels;
+
+    if (perLeaf !== undefined) this._buildOptions._targetNumTrianglesPerLeaf = perLeaf;
+    if (maxLevel !== undefined) this._buildOptions._maxNumLevels = maxLevel;
 };
 
 MACROUTILS.createPrototypeObject(

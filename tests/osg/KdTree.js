@@ -9,10 +9,8 @@ var primitiveSet = require('osg/primitiveSet');
 var BufferArray = require('osg/BufferArray');
 var Geometry = require('osg/Geometry');
 var KdTree = require('osg/KdTree');
-var LineSegmentIntersectFunctor = require('osgUtil/LineSegmentIntersectFunctor');
 var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
 var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var SphereIntersectFunctor = require('osgUtil/SphereIntersectFunctor');
 var SphereIntersector = require('osgUtil/SphereIntersector');
 
 module.exports = function() {
@@ -241,58 +239,56 @@ module.exports = function() {
         // FIXME: Need to reimplement this tests, as intersectRay and intersectSphere
         // does not exist anymore.
 
+        var interVisitor = new IntersectionVisitor();
         var lsi = new LineSegmentIntersector();
-        var lsif = new LineSegmentIntersectFunctor();
-        var iv = new IntersectionVisitor();
-        iv.setIntersector(lsi);
+        interVisitor.setIntersector(lsi);
 
-        var settings = {};
-        settings._lineSegIntersector = lsi;
-        settings._intersectionVisitor = iv;
-        settings._geometry = geomTotal;
-        settings._vertices = geomTotal.getVertexAttributeList();
-        settings._limitOneIntersection = false;
-        lsif.set(start, end, settings);
+        // test ray intersection 1
+        lsi.set(start, end);
+        geomTotal.accept(interVisitor);
 
-        kdTree.intersectLineSegment(lsif, kdTree.getNodes()[0], start, end);
         var hits = lsi.getIntersections();
-        // test ray intersection
-
         assert.isOk(
             hits.length === nbPrimitives,
             ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length
         );
+
         var result = [0.4, 0.2, 0];
         var dir = vec3.sub(vec3.create(), end, start);
         var found = vec3.add(vec3.create(), start, vec3.scale(vec3.create(), dir, hits[0]._ratio));
         assert.equalVector(found, result, 1e-4);
+
+        // test ray intersection 2
+        interVisitor.reset();
         lsi.reset();
         var v1 = vec3.fromValues(1.5, 0.2, -0.5);
         var v2 = vec3.fromValues(1.5, 0.2, 0.5);
-        lsif.set(v1, v2, settings);
-        kdTree.intersectLineSegment(lsif, kdTree.getNodes()[0], v1, v2);
+        lsi.set(v1, v2);
+        geomTotal.accept(interVisitor);
+
         hits = lsi.getIntersections();
         assert.isOk(hits.length === 0, ' Hits should be 0 ' + hits.length);
 
-        // test sphere intersection
+        // test sphere intersection 1
         // sphere center in on vertex 1 (see ascii art on top of the file)
-
+        interVisitor.reset();
         var spi = new SphereIntersector();
-        var spif = new SphereIntersectFunctor();
-        settings._sphereIntersector = spi;
+        interVisitor.setIntersector(spi);
+        spi.set(vec3.fromValues(0, 0, 0), Math.SQRT1_2 - 0.01);
+        geomTotal.accept(interVisitor);
 
-        spif.set(vec3.fromValues(0, 0, 0), Math.SQRT1_2 - 0.01, settings);
-
-        kdTree.intersect(spif, kdTree.getNodes()[0]);
         hits = spi.getIntersections();
         assert.isOk(
             hits.length === nbPrimitives,
             ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length
         );
 
+        // test sphere intersection 2
+        interVisitor.reset();
         spi.reset();
-        spif.set(vec3.fromValues(0, 0, 0), Math.SQRT1_2 + 0.02, settings);
-        kdTree.intersect(spif, kdTree.getNodes()[0]);
+        spi.set(vec3.fromValues(0, 0, 0), Math.SQRT1_2 + 0.02);
+        geomTotal.accept(interVisitor);
+
         var nbTriangles = nbPrimitives * 2; // the geometries are quad only
         hits = spi.getIntersections();
         assert.isOk(

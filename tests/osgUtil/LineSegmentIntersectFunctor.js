@@ -11,7 +11,7 @@ var BufferArray = require('osg/BufferArray');
 var Geometry = require('osg/Geometry');
 
 module.exports = function() {
-    test('LineSegmentIntersectFunctor', function() {
+    test('LineSegmentIntersectFunctor - check primitive type', function() {
         var checkPrimitive = function(geom, msg) {
             var lsi = new LineSegmentIntersector();
             var iv = new IntersectionVisitor();

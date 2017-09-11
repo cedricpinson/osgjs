@@ -1,16 +1,20 @@
 'use strict';
 var assert = require('chai').assert;
-require('tests/mockup/mockup');
+var mockup = require('tests/mockup/mockup');
 var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
 var SphereIntersector = require('osgUtil/SphereIntersector');
 var KdTreeBuilder = require('osg/KdTreeBuilder');
 var BoundingSphere = require('osg/BoundingSphere');
-var Camera = require('osg/Camera');
-var Viewport = require('osg/Viewport');
+var Node = require('osg/Node');
+var Geometry = require('osg/Geometry');
+var BufferArray = require('osg/BufferArray');
+var DrawArrays = require('osg/DrawArrays');
+var primitiveSet = require('osg/primitiveSet');
 var mat4 = require('osg/glMatrix').mat4;
 var vec3 = require('osg/glMatrix').vec3;
 var MatrixTransform = require('osg/MatrixTransform');
 var Shape = require('osg/shape');
+var ReaderParser = require('osgDB/readerParser');
 
 module.exports = function() {
     test('SphereIntersector simple test', function() {
@@ -21,189 +25,149 @@ module.exports = function() {
         // testing the same sphere
         spi.set(vec3.fromValues(0.0, 0.0, 0.0), 2.0);
         spi.setCurrentTransformation(mat4.create());
-        assert.isOk(spi.intersects(bs), 'hit success');
+        assert.isOk(spi.intersectBoundingSphere(bs), 'hit success');
 
         // moving a bit also should hit
         spi.set(vec3.fromValues(2.0, 2.0, 0.0), 2.0);
         spi.setCurrentTransformation(mat4.create());
-        assert.isOk(spi.intersects(bs), 'hit success');
+        assert.isOk(spi.intersectBoundingSphere(bs), 'hit success');
 
         // This should fail
         spi.set(vec3.fromValues(3.0, 3.0, 0.0), 1.0);
         spi.setCurrentTransformation(mat4.create());
-        assert.isOk(!spi.intersects(bs), 'hit failed');
+        assert.isOk(!spi.intersectBoundingSphere(bs), 'hit failed');
     });
+
+    // quad center at (0, 0, 0) with dege 0.5
+    // lines is grid with same center and 6 lines
+    // points are : one in (0, 0, 0) and the other on picking path
+    // picking is (0.1, 0.3, 0) with radius 0.15
+
+    var createSceneGeometry = function() {
+        var scene = new Node();
+        var cx, cy, cz, wx, wy, wz, hx, hy, hz;
+        cx = cy = -0.5;
+        wx = hy = 1.0;
+        cz = wy = wz = hx = hz = 0.0;
+        var tris = Shape.createTexturedQuadGeometry(cx, cy, cz, wx, wy, wz, hx, hy, hz, 1.0, 1.0);
+        var lines = Shape.createGridGeometry(cx, cy, cz, wx, wy, wz, hx, hy, hz, 1, 1);
+
+        var points = new Geometry();
+        var pverts = new Float32Array([0.0, 0.0, 0.0, 0.1, 0.3, 0.0]);
+        points.getAttributes().Vertex = new BufferArray(BufferArray.ARRAY_BUFFER, pverts, 3);
+        points.getPrimitives().push(new DrawArrays(primitiveSet.POINTS, 0, 2));
+
+        scene.addChild(tris);
+        scene.addChild(lines);
+        scene.addChild(points);
+
+        return scene;
+    };
 
     test('SphereIntersector with 2 branches', function() {
         // right branch should be picked
         // left branch shouldn't be picked
         //
-        // MatrixTransform  (-10 -10 -10)
-        //     /    \
-        //    |     MatrixTransform (10 10 10)
-        //     \   /
-        //     Scene
+        //  scene
+        //   |
+        //  tr1 (5 0 0)
+        //   |  \
+        //   |  tr2 (-5 0 0)
+        //   |  /
+        // scene geom
 
-        var camera = new Camera();
-        camera.setViewport(new Viewport());
-        camera.setViewMatrix(
-            mat4.lookAt(
-                mat4.create(),
-                vec3.fromValues(0.0, 0.0, -10.0),
-                vec3.create(),
-                vec3.fromValues(0.0, 1.0, 0.0)
-            )
-        );
-        camera.setProjectionMatrix(
-            mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800.0 / 600.0, 0.1, 1000.0)
-        );
-
-        var scene = Shape.createTexturedQuadGeometry(
-            -0.5,
-            -0.5,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0
-        );
+        var rootScene = new Node();
+        var sceneGeom = createSceneGeometry();
 
         var tr1 = new MatrixTransform();
         mat4.fromTranslation(tr1.getMatrix(), [5.0, 0.0, 0.0]);
-        tr1.addChild(scene);
 
-        var mrot = new MatrixTransform();
-        mat4.fromTranslation(mrot.getMatrix(), [-5.0, 0.0, 0.0]);
-        mrot.addChild(tr1);
-        mrot.addChild(scene);
+        var tr2 = new MatrixTransform();
+        mat4.fromTranslation(tr2.getMatrix(), [-5.0, 0.0, 0.0]);
 
-        camera.addChild(mrot);
+        rootScene.addChild(tr1);
+        tr1.addChild(sceneGeom);
+        tr1.addChild(tr2);
+        tr2.addChild(sceneGeom);
 
-        var spi = new SphereIntersector();
-        spi.set(vec3.fromValues(420, 300, 0.5), 0.1);
+        var lsi = new SphereIntersector();
+        lsi.set(vec3.fromValues(0.1, 0.3, 0.0), 0.15);
         var iv = new IntersectionVisitor();
-        iv.setIntersector(spi);
-        camera.accept(iv);
-        // we hit the right branch
-        assert.isOk(
-            spi._intersections.length === 2,
-            'Hits should be 2 and result is ' + spi._intersections.length
-        );
-        assert.isOk(
-            spi._intersections[0]._nodePath.length === 4,
-            'NodePath should be 4 and result is ' + spi._intersections[0]._nodePath.length
-        );
+        iv.setIntersector(lsi);
 
-        // Bigger sphere we should intersect both branches
-        spi = new SphereIntersector();
-        spi.set(vec3.fromValues(420, 300, 0.5), 0.5);
-        iv = new IntersectionVisitor();
-        iv.setIntersector(spi);
-        camera.accept(iv);
-        assert.isOk(
-            spi._intersections.length === 4,
-            'Hits should be 2 and result is ' + spi._intersections.length
-        );
-        assert.isOk(
-            spi._intersections[3]._nodePath.length === 3,
-            'NodePath should be 3 and result is ' + spi._intersections[3]._nodePath.length
-        );
+        var testPick = function() {
+            lsi.reset();
+            iv.reset();
+            rootScene.accept(iv);
+
+            // no kd tree
+            var inters = lsi._intersections;
+            assert.isOk(inters.length === 3, 'Hits should be 3 and result is ' + inters.length);
+
+            var npath = inters[0]._nodePath;
+            assert.isOk(npath.length === 5, 'NodePath should be 5 and result is ' + npath.length);
+
+            var prims = { point: 0, line: 0, triangle: 0 };
+            for (var i = 0; i < inters.length; ++i) {
+                if (inters[i]._i3 >= 0) prims.triangle++;
+                else if (inters[i]._i2 >= 0) prims.line++;
+                else if (inters[i]._i1 >= 0) prims.point++;
+            }
+
+            var one = prims.point === 1 && prims.line === 1 && prims.triangle === 1;
+            assert.isOk(one, 'Check pick primitive');
+        };
+
+        testPick();
+
+        // with kd tree
+        var treeBuilder = new KdTreeBuilder({ _targetNumTrianglesPerLeaf: 0 });
+        treeBuilder.apply(rootScene);
+
+        testPick();
     });
 
-    test('SphereIntersector without kdtree and camera', function() {
-        var camera = new Camera();
-        camera.setViewport(new Viewport());
-        camera.setViewMatrix(
-            mat4.lookAt(
-                mat4.create(),
-                vec3.fromValues(0.0, 0.0, -10),
-                vec3.create(),
-                vec3.fromValues(0.0, 1.0, 0.0)
-            )
-        );
-        camera.setProjectionMatrix(
-            mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 1000.0)
-        );
+    test('SphereIntersector with mockup scene', function() {
+        // mockup scene is a sphere centered in 0 with radius ~50
+        var rootScene = ReaderParser.parseSceneGraph(mockup.getScene());
 
-        var scene = Shape.createTexturedQuadGeometry(
-            -0.5,
-            -0.5,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0
-        );
-        camera.addChild(scene);
-        var spi = new SphereIntersector();
-        spi.set(vec3.fromValues(400, 300, 0.5), 0.1);
+        var lsi = new SphereIntersector();
+        lsi.set(vec3.fromValues(100, 0, 0), 100.0);
         var iv = new IntersectionVisitor();
-        iv.setIntersector(spi);
-        camera.accept(iv);
-        assert.isOk(
-            spi._intersections.length === 2,
-            'Hits should be 1 and result is ' + spi._intersections.length
-        );
-        assert.isOk(
-            spi._intersections[0]._nodePath.length === 2,
-            'NodePath should be 2 and result is ' + spi._intersections[0]._nodePath.length
-        );
-    });
+        iv.setIntersector(lsi);
 
-    test('SphereIntersector with kdtree, no camera', function() {
-        var scene = Shape.createTexturedQuadGeometry(
-            -0.5,
-            -0.5,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0
-        );
-        var treeBuilder = new KdTreeBuilder({
-            _numVerticesProcessed: 0.0,
-            _targetNumTrianglesPerLeaf: 1,
-            _maxNumLevels: 20
-        });
-        treeBuilder.apply(scene);
+        var testPick = function() {
+            lsi.reset();
+            iv.reset();
+            rootScene.accept(iv);
 
-        var spi = new SphereIntersector();
-        spi.set(vec3.fromValues(-0.5, -0.5, 0.0), 0.1);
-        var iv = new IntersectionVisitor();
-        iv.setIntersector(spi);
-        scene.accept(iv);
-        assert.isOk(
-            spi._intersections.length === 1,
-            'Intersections should be 1 and result is ' + spi._intersections.length
-        );
-        assert.isOk(
-            spi._intersections[0]._nodePath.length === 1,
-            'NodePath should be 1 and result is ' + spi._intersections[0]._nodePath.length
-        );
-        // Move the sphere so we hit both triangles
-        spi.set(vec3.fromValues(0.0, 0.0, 0.0), 0.1);
-        iv = new IntersectionVisitor();
-        iv.setIntersector(spi);
-        scene.accept(iv);
-        assert.isOk(
-            spi._intersections.length === 2,
-            'Intersections should be 2 and result is ' + spi._intersections.length
-        );
-        assert.isOk(
-            spi._intersections[0]._nodePath.length === 1,
-            'NodePath should be 2 and result is ' + spi._intersections[0]._nodePath.length
-        );
+            // no kd tree
+            var inters = lsi._intersections;
+            assert.isOk(inters.length === 670, 'Hits should be 670 and result is ' + inters.length);
+
+            var npath = inters[0]._nodePath;
+            assert.isOk(npath.length === 5, 'NodePath should be 5 and result is ' + npath.length);
+
+            var points = [];
+            var triangles = [];
+            var lines = [];
+            for (var i = 0; i < inters.length; ++i) {
+                var int = inters[i];
+                if (int._i3 >= 0) triangles.push(int);
+                else if (int._i2 >= 0) lines.push(int);
+                else if (int._i1 >= 0) points.push(int);
+            }
+
+            var one = points.length === 0 && lines.length === 0 && triangles.length === 670;
+            assert.isOk(one, 'Check pick primitive');
+        };
+
+        testPick();
+
+        // with kd tree
+        var treeBuilder = new KdTreeBuilder({ _targetNumTrianglesPerLeaf: 0 });
+        treeBuilder.apply(rootScene);
+
+        testPick();
     });
 };
