@@ -54,6 +54,14 @@ module.exports = function() {
             n.isCullingActive() === true,
             'culling should be enabled because all of the children have their culling active'
         );
+
+        // Test bounding after remove child
+        n.getBound(); // make sure bound is computed
+        n.removeChild(n1);
+        assert.isOk(
+            n._boundingSphereComputed === false,
+            'boundingSphereComputed must be false after removing a child'
+        );
     });
 
     test('Node.getNumChildrenRequiringUpdateTraversal', function() {
