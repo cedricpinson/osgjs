@@ -338,7 +338,7 @@ var CompilerFragment = {
         return undefined;
     },
 
-    _getShadowFromLightNum: function(array, lightNum) {
+    _getShadowReceiveAttributeFromLightNum: function(array, lightNum) {
         // array is shadow textures or shadow receive attributes
         for (var i = 0; i < array.length; i++) {
             var shadow = array[i];
@@ -348,25 +348,38 @@ var CompilerFragment = {
         }
     },
 
-    getInputsFromShadow: function(shadowReceive, shadowTexture, lighted) {
+    _getShadowTextureFromLightNum: function(array, lightNum) {
+        // array is shadow textures or shadow receive attributes
+        for (var i = 0; i < array.length; i++) {
+            var shadow = array[i];
+            if (shadow && shadow.hasLightNumber(lightNum)) {
+                return shadow;
+            }
+        }
+    },
+
+    getInputsFromShadow: function(shadowReceive, shadowTexture, lighted, lightNum) {
         var shadowUniforms = shadowReceive.getOrCreateUniforms();
         var tUnit = this._shadowsTextures.indexOf(shadowTexture);
         var textureUniforms = shadowTexture.getOrCreateUniforms(tUnit);
 
+        var suffix = shadowReceive.getAtlas() ? '_' + lightNum : '';
         var inputs = {
             lighted: lighted,
             normalWorld: this.getOrCreateNormalizedFrontModelNormal(),
             vertexWorld: this.getOrCreateVarying('vec3', 'vModelVertex'),
             shadowTexture: this.getOrCreateSampler('sampler2D', 'Texture' + tUnit),
-            shadowSize: this.getOrCreateUniform(textureUniforms.RenderSize),
-            shadowProjectionMatrix: this.getOrCreateUniform(textureUniforms.ProjectionMatrix),
-            shadowViewMatrix: this.getOrCreateUniform(textureUniforms.ViewMatrix),
-            shadowDepthRange: this.getOrCreateUniform(textureUniforms.DepthRange),
+            shadowSize: this.getOrCreateUniform(textureUniforms['RenderSize']),
+            shadowProjectionMatrix: this.getOrCreateUniform(
+                textureUniforms['ProjectionMatrix' + suffix]
+            ),
+            shadowViewMatrix: this.getOrCreateUniform(textureUniforms['ViewMatrix' + suffix]),
+            shadowDepthRange: this.getOrCreateUniform(textureUniforms['DepthRange' + suffix]),
             shadowBias: this.getOrCreateUniform(shadowUniforms.bias)
         };
 
         if (shadowReceive.getAtlas())
-            inputs.atlasSize = this.getOrCreateUniform(textureUniforms.MapSize);
+            inputs.atlasSize = this.getOrCreateUniform(textureUniforms['MapSize' + suffix]);
         if (shadowReceive.getNormalBias())
             inputs.normalBias = this.getOrCreateUniform(shadowUniforms.normalBias);
 
@@ -383,18 +396,18 @@ var CompilerFragment = {
     },
 
     hasLightShadow: function(lightNum) {
-        var shadowTexture = this._getShadowFromLightNum(this._shadowsTextures, lightNum);
-        var shadowReceive = this._getShadowFromLightNum(this._shadows, lightNum);
+        var shadowTexture = this._getShadowTextureFromLightNum(this._shadowsTextures, lightNum);
+        var shadowReceive = this._getShadowReceiveAttributeFromLightNum(this._shadows, lightNum);
         return !!shadowTexture && !!shadowReceive;
     },
 
     createShadowingLight: function(light, lighted) {
         var lightNum = light.getLightNumber();
-        var shadowTexture = this._getShadowFromLightNum(this._shadowsTextures, lightNum);
-        var shadowReceive = this._getShadowFromLightNum(this._shadows, lightNum);
+        var shadowTexture = this._getShadowTextureFromLightNum(this._shadowsTextures, lightNum);
+        var shadowReceive = this._getShadowReceiveAttributeFromLightNum(this._shadows, lightNum);
         if (!shadowTexture || !shadowReceive) return undefined;
 
-        var inputs = this.getInputsFromShadow(shadowReceive, shadowTexture, lighted);
+        var inputs = this.getInputsFromShadow(shadowReceive, shadowTexture, lighted, lightNum);
 
         var shadowedOutput = this.createVariable('float');
         var outputs = {

@@ -620,7 +620,7 @@
             for (l = 0; l < this._lights.length; l++) this._lights[l].setEnabled(false);
 
             if (this._lights.length !== numLights) {
-                var lightScale = 1.0 / (numLights + 4);
+                var lightScale = 0.45 / (numLights + 4);
 
                 var group = this._viewer.getSceneData();
 
@@ -628,8 +628,11 @@
 
                 // remove all lights
                 while (l--) {
-                    this._lightAndShadowScene.removeShadowTechnique(this._shadowTechnique[l]);
-
+                    if (this._config.atlas) {
+                        this._shadowMapAtlas.removeShadowMap(this._shadowTechnique[l]);
+                    } else {
+                        this._lightAndShadowScene.removeShadowTechnique(this._shadowTechnique[l]);
+                    }
                     group.removeChild(this._lightsMatrix[l]);
                     group.removeChild(this._debugLights[l]);
                 }
@@ -714,7 +717,7 @@
                 var l = this._lights.length;
                 while (l--) {
                     var shadowSettings = this._shadowSettings[l];
-                    shadowSettings.setTextureType(texType);
+                    if (shadowSettings) shadowSettings.setTextureType(texType);
                 }
                 this._previousTextureType = this._config.textureType;
             }
@@ -726,7 +729,9 @@
             if (this._previousTextureSize !== mapsize) {
                 var l = this._lights.length;
                 while (l--) {
-                    this._shadowSettings[l].setTextureSize(mapsize);
+                    if (this._shadowSettings[l]) {
+                        this._shadowSettings[l].setTextureSize(mapsize);
+                    }
                 }
                 this._previousTextureSize = mapsize;
             }
@@ -748,6 +753,9 @@
          * with a single callback for all ui user changes
          */
         updateShadow: function() {
+            if (this._config.atlas && this._config.lightNum > 3) {
+                this._config.lightNum = 4;
+            }
             this.updateShadowStatic();
 
             this.updateLightsAmbient();
@@ -763,13 +771,16 @@
 
             var l, numLights;
             numLights = this._config.lightNum;
+
             l = numLights;
             while (l--) {
                 var shadowSettings = this._shadowSettings[l];
 
-                shadowSettings.bias = this._config.bias;
-                shadowSettings.normalBias = this._config.normalBias;
-                shadowSettings.kernelSizePCF = this._config.kernelSizePCF;
+                if (shadowSettings) {
+                    shadowSettings.bias = this._config.bias;
+                    shadowSettings.normalBias = this._config.normalBias;
+                    shadowSettings.kernelSizePCF = this._config.kernelSizePCF;
+                }
             }
 
             var shadowMap;
@@ -1126,6 +1137,7 @@
             var shadowMap;
             if (this._config.atlas) {
                 shadowMap = this._shadowMapAtlas.addLight(light);
+                //this._shadowMapAtlas.addShadowMap();
             } else {
                 // need to set lightSource rather than light pos
                 // as there is no link in Light to get current Matrix.
@@ -1206,7 +1218,7 @@
             this._config.camera = this._viewer.getCamera();
 
             var numLights = this._config.lightNum;
-            var lightScale = 1.0 / numLights - 1e-4;
+            var lightScale = 0.45 / numLights - 1e-4;
 
             var k;
             if (this._config.atlas) {

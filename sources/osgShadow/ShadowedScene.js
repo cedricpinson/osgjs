@@ -198,7 +198,6 @@ MACROUTILS.createPrototypeNode(
 
                     return;
                 }
-
                 var bbox = this._computeBoundsVisitor.getBoundingBox();
 
                 // HERE we get the shadowedScene Current World Matrix
