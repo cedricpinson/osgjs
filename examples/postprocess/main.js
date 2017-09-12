@@ -14,30 +14,19 @@
     var P = window.P;
 
     var Example = function() {
+        this._rotateSpeed = 0.00025;
+        this._showGeometry = true;
+        this._showQuad = true;
+
+        // composer node
+        this._cameraColor = undefined;
+        this._cameraDepth = undefined;
         this._composer = undefined;
-        this._shaderProcessor = undefined;
-        this._camera = undefined;
 
-        this._composerConfigNames = ['passthrough.json'];
+        this._composerConfigNames = [];
         this._composerConfigFiles = {};
-        this._composerConfigFiles['passthrough.json'] = [
-            {
-                func: 'passthrough',
-                textures: ['%last'],
-                out: { name: '%next' }
-            }
-        ];
-
-        var shaders = {};
-        shaders['passthrough.glsl'] =
-            'vec4 passthrough() { return vec4(TEXTURE_2D_TextureInput(gTexCoord).rgb,1.0);}';
-
         this._shaderProcessor = new osgShader.ShaderProcessor();
-        this._shaderProcessor.addShaders(shaders);
-
-        this._params = {
-            composer: this._composerConfigNames[0]
-        };
+        this._params = { composer: 'passthrough.json' };
 
         this._lutTextureNames = [
             'ue4_neutralLUT.png',
@@ -47,7 +36,6 @@
             '3strip.jpg',
             'wtf.jpg'
         ];
-
         this._lutTextures = {};
     };
 
@@ -63,12 +51,62 @@
             this.rebuildGUI('passthrough.json');
         },
 
+        createPassthrough: function() {
+            // add passtrough effect
+            var str =
+                'vec4 passthrough() { return vec4(TEXTURE_2D_TextureInput(gTexCoord).rgb, 1.0);}';
+            var json = { func: 'passthrough', textures: ['%last'], out: { name: '%next' } };
+
+            this.addPostProcessEffect([{ name: 'passthrough.json' }], [json]);
+            this.addPostProcessEffect([{ name: 'passthrough.glsl' }], [str]);
+        },
+
+        createScene: function() {
+            this._scene = this.createSceneGeometryGroup();
+
+            this._composer = this.createComposer();
+            this.createPassthrough();
+            this.rebuildComposer('passthrough.json');
+
+            this._cameraDepth = this.createCameraDepth();
+            this._cameraColor = this.createCameraColor();
+
+            this.loadLutTextures();
+
+            this._cameraDepth.addChild(this._scene);
+            this._cameraColor.addChild(this._scene);
+
+            this._rootNode = new osg.Node();
+            this._rootNode.addChild(this._cameraDepth);
+            this._rootNode.addChild(this._cameraColor);
+            this._rootNode.addChild(this._composer);
+
+            // resize stuff
+            this._canvasWidth = this._viewer.getCanvasWidth();
+            this._canvasHeight = this._viewer.getCanvasHeight();
+            this._rootNode.addUpdateCallback(this);
+
+            // for ssao : correct near/far and projection matrix
+            this.bindProjectionUpdateCallback(this._cameraDepth);
+
+            // lequal everywhere
+            var override = osg.StateAttribute.OVERRIDE;
+            var lequal = new osg.Depth(osg.Depth.LEQUAL, 0.0, 1.0, true);
+            this._cameraColor.getOrCreateStateSet().setAttributeAndModes(lequal, override);
+            this._cameraDepth.getOrCreateStateSet().setAttributeAndModes(lequal, override);
+
+            var rootSt = this._rootNode.getOrCreateStateSet();
+            rootSt.addUniform(osg.Uniform.createFloat2(osg.vec2.fromValues(0.0, 1.0), 'uNearFar'));
+
+            return this._rootNode;
+        },
+
         createRandomMatrixTransform: function() {
             var trans = osg.vec3.create();
             trans[0] = Math.random() - 0.5;
             trans[1] = Math.random() - 0.5;
             trans[2] = Math.random() - 0.5;
-            osg.vec3.scale(trans, trans, 20.0);
+            osg.vec3.scale(trans, trans, 10.0);
 
             var scale = osg.vec3.create();
             scale[0] = Math.random() + 1.0;
@@ -115,16 +153,6 @@
                 osg.vec3.lerp(diff, diff, osg.vec3.ONE, 0.5);
             }
 
-            // rotate primitives
-            var axis = osg.vec3.fromValues(0.4, 0.6, 0.8);
-            osg.vec3.normalize(axis, axis);
-            primitives.addUpdateCallback({
-                update: function(node) {
-                    var matrix = node.getMatrix();
-                    osg.mat4.rotate(matrix, matrix, 0.005, axis);
-                }
-            });
-
             return primitives;
         },
 
@@ -145,7 +173,7 @@
             // offset on right
             var mtTexQuad = new osg.MatrixTransform();
             mtTexQuad.addChild(quad);
-            var fac = 30;
+            var fac = 13.0;
             var texMat = mtTexQuad.getMatrix();
             osg.mat4.translate(texMat, texMat, osg.vec3.fromValues(fac, 0.0, 0));
             osg.mat4.scale(texMat, texMat, osg.vec3.fromValues(fac, fac, fac));
@@ -155,14 +183,121 @@
 
         createSceneGeometryGroup: function() {
             var group = new osg.Node();
-            group.addChild(this.createRandomPrimitives());
-            group.addChild(this.createTexturedQuad());
+            var primitives = this.createRandomPrimitives();
+            group.addChild(primitives);
+
+            var quad = this.createTexturedQuad();
+            group.addChild(quad);
+
+            // rotate primitives
+            var axis = osg.vec3.fromValues(0.4, 0.6, 0.8);
+            osg.vec3.normalize(axis, axis);
+
+            var self = this;
+            group.addUpdateCallback({
+                update: function() {
+                    var matrix = primitives.getMatrix();
+                    osg.mat4.rotate(matrix, matrix, self._rotateSpeed, axis);
+
+                    primitives.setNodeMask(self._showGeometry ? ~0x0 : 0x0);
+                    quad.setNodeMask(self._showQuad ? ~0x0 : 0x0);
+
+                    return true;
+                }
+            });
+
             return group;
         },
 
-        createCamera: function(texture) {
+        getOrCreateDepthShader: function() {
+            if (this._depthShader) return this._depthShader;
+
+            var vertexshader = [
+                ' #ifdef GL_ES',
+                ' precision highp float;',
+                ' #endif',
+                '',
+                ' attribute vec3 Vertex;',
+                '',
+                ' uniform mat4 uModelViewMatrix;',
+                ' uniform mat4 uProjectionMatrix;',
+                '',
+                ' varying vec4 vViewVertex;',
+                '',
+                ' void main( void ) {',
+                ' vViewVertex = uModelViewMatrix * vec4( Vertex, 1.0);',
+                ' gl_Position = uProjectionMatrix * vViewVertex;',
+                ' }'
+            ].join('\n');
+
+            var fragmentshader = [
+                ' #ifdef GL_ES',
+                ' precision highp float;',
+                ' #endif',
+                '',
+                ' uniform vec2 uNearFar;',
+                '',
+                ' varying vec4 vViewVertex;',
+                '',
+                ' vec4 encodeFloatRGBA( float v ) {',
+                '    vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;',
+                '    enc = fract(enc);',
+                '    enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);',
+                '    return enc;',
+                ' }',
+                '',
+                ' void main( void ) {',
+                '    gl_FragColor = encodeFloatRGBA((-vViewVertex.z * vViewVertex.w - uNearFar.x) / (uNearFar.y - uNearFar.x));',
+                ' }'
+            ].join('\n');
+
+            this._depthShader = new osg.Program(
+                new osg.Shader(osg.Shader.VERTEX_SHADER, vertexshader),
+                new osg.Shader(osg.Shader.FRAGMENT_SHADER, fragmentshader)
+            );
+
+            return this._depthShader;
+        },
+
+        bindProjectionUpdateCallback: function(camera) {
+            var self = this;
+            camera.setClampProjectionMatrixCallback(function(m, near, far, nearFarRatio) {
+                this.clampProjectionMatrix(m, near, far, nearFarRatio);
+
+                osg.mat4.copy(self._viewer.getCamera().getProjectionMatrix(), m);
+
+                if (self._params.composer === 'ssao.json') {
+                    self.updateSsao(near, far);
+                }
+            });
+        },
+
+        updateSsao: function(near, far) {
+            if (near > far) return;
+
+            var rootSt = this._rootNode.getOrCreateStateSet();
+            var nearFar = rootSt.getUniform('uNearFar').getInternalArray();
+            nearFar[0] = near;
+            nearFar[1] = far;
+
+            var camera = this._viewer.getCamera();
+            var vp = camera.getViewport();
+            var projMat = camera.getProjectionMatrix();
+
+            var vFov = projMat[15] === 1 ? 1.0 : 2.0 / projMat[5];
+            var scale = -2.0 * Math.tan(vFov * 0.5);
+            var st = this._composer.getOrCreateStateSet();
+            st.getUniform('uSsaoProjectionScale').setFloat(vp.height() / scale);
+
+            var projectionInfo = st.getUniform('uSsaoProjectionInfo').getInternalArray();
+            projectionInfo[0] = -2.0 / (vp.width() * projMat[0]);
+            projectionInfo[1] = -2.0 / (vp.height() * projMat[5]);
+            projectionInfo[2] = (1.0 - projMat[8]) / projMat[0];
+            projectionInfo[3] = (1.0 - projMat[9]) / projMat[5];
+        },
+
+        _createCameraRtt: function(texture) {
             var camera = new osg.Camera();
-            camera.setName('MainCamera');
 
             camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
             camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture);
@@ -172,7 +307,26 @@
                 osg.FrameBufferObject.DEPTH_COMPONENT16
             );
 
+            return camera;
+        },
+
+        createCameraColor: function() {
+            var texture = this._composer.getInternalTexture('TextureColor');
+            var camera = this._createCameraRtt(texture);
+            camera.setName('CameraColor');
             camera.setClearColor([0.5, 0.5, 0.5, 1.0]);
+            return camera;
+        },
+
+        createCameraDepth: function() {
+            var texture = this._composer.getInternalTexture('TextureDepth');
+            var camera = this._createCameraRtt(texture);
+            camera.setName('CameraDepth');
+            camera.setClearColor([1.0, 1.0, 1.0, 1.0]);
+
+            // depth shader
+            var dst = camera.getOrCreateStateSet();
+            dst.setAttributeAndModes(this.getOrCreateDepthShader(), osg.StateAttribute.OVERRIDE);
             return camera;
         },
 
@@ -184,12 +338,24 @@
                 rgbm: false
             });
 
+            this._composer.addInternalTexture({
+                name: 'TextureDepth',
+                filter: 'nearest',
+                immuable: true,
+                srgb: false,
+                rgbm: false
+            });
+
             this._composer.setInputTexture('TextureColor');
         },
 
-        createComposer: function(name, width, height) {
+        createComposer: function() {
+            var viewer = this._viewer;
+            var width = viewer.getCanvasWidth();
+            var height = viewer.getCanvasHeight();
+
             var composer = new osgUtil.ComposerPostProcess();
-            composer.setName(name);
+            composer.setName('ComposerPostProcess');
             composer.setScreenSize(width, height);
             composer.setShaderProcessor(this._shaderProcessor);
 
@@ -221,31 +387,16 @@
             });
         },
 
-        createScene: function() {
-            var viewer = this._viewer;
-            var width = viewer.getCanvasWidth();
-            var height = viewer.getCanvasHeight();
-
-            this._composer = this.createComposer('ComposerPostProcess', width, height);
-            this.rebuildComposer('passthrough.json');
-
-            var sceneTexture = this._composer.getInternalTexture('TextureColor');
-            this._camera = this.createCamera(sceneTexture);
-
-            this.loadLutTextures();
-
-            this._camera.addChild(this.createSceneGeometryGroup());
-
-            var rootNode = new osg.Node();
-            rootNode.addChild(this._camera);
-            rootNode.addChild(this._composer);
-
-            // resize stuff
-            this._canvasWidth = width;
-            this._canvasHeight = height;
-            rootNode.addUpdateCallback(this);
-
-            return rootNode;
+        _resetCameraAttachements: function(camera) {
+            var texture = camera.getAttachments()[osg.FrameBufferObject.COLOR_ATTACHMENT0].texture;
+            // reset attachment and redo them (because of render buffer)
+            // camera should have a resize attachments function for helper
+            camera.resetAttachments();
+            camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture);
+            camera.attachRenderBuffer(
+                osg.FrameBufferObject.DEPTH_ATTACHMENT,
+                osg.FrameBufferObject.DEPTH_COMPONENT16
+            );
         },
 
         update: function() {
@@ -258,15 +409,8 @@
                 this._canvasHeight = height;
                 this._composer.resize(width, height);
 
-                // reset attachment and redo them (because of render buffer)
-                // camera should have a resize attachments function for helper
-                this._camera.resetAttachments();
-                var texture = this._composer.getInternalTexture('TextureColor');
-                this._camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture);
-                this._camera.attachRenderBuffer(
-                    osg.FrameBufferObject.DEPTH_ATTACHMENT,
-                    osg.FrameBufferObject.DEPTH_COMPONENT16
-                );
+                this._resetCameraAttachements(this._cameraColor);
+                this._resetCameraAttachements(this._cameraDepth);
             }
 
             return true;
@@ -291,35 +435,41 @@
 
             var configFile = this._composerConfigFiles[fileName];
 
-            var passes =
-                fileName === 'passthrough.json' ? configFile : JSON.parse(configFile).passes;
+            var isPassthrough = fileName === 'passthrough.json';
+            var passes = isPassthrough ? configFile : JSON.parse(configFile).passes;
 
             composer.build(passes);
 
+            var vec2 = osg.vec2;
+            var Uniform = osg.Uniform;
+            var radius = this._scene.getBound().radius();
+            this._uniforms = {
+                // vignette
+                uLensRadius: Uniform.createFloat2(vec2.fromValues(0.8, 0.25), 'uLensRadius'),
+
+                // color curve
+                uRedControl1: Uniform.createFloat2(vec2.fromValues(0.25, 0.25), 'uRedControl1'),
+                uRedControl2: Uniform.createFloat2(vec2.fromValues(0.75, 0.75), 'uRedControl2'),
+                uGreenControl1: Uniform.createFloat2(vec2.fromValues(0.25, 0.5), 'uGreenControl1'),
+                uGreenControl2: Uniform.createFloat2(vec2.fromValues(0.5, 0.75), 'uGreenControl2'),
+                uBlueControl1: Uniform.createFloat2(vec2.fromValues(0.25, 0.75), 'uBlueControl1'),
+                uBlueControl2: Uniform.createFloat2(vec2.fromValues(0.5, 0.875), 'uBlueControl2'),
+
+                // ssao
+                uSsaoRadius: Uniform.createFloat(radius * 0.06, 'uSsaoRadius'),
+                uSsaoBias: Uniform.createFloat(radius * 0.005, 'uSsaoBias'),
+                uSsaoIntensity: Uniform.createFloat(0.3, 'uSsaoIntensity'),
+                uSsaoCrispness: Uniform.createFloat(0.2, 'uSsaoCrispness'),
+                uSsaoProjectionInfo: Uniform.createFloat4('uSsaoProjectionInfo'),
+                uSsaoProjectionScale: Uniform.createFloat(1.0, 'uSsaoProjectionScale'),
+                uSsaoOnly: Uniform.createInt(1, 'uSsaoOnly'),
+                uSsaoMipmap: Uniform.createInt(1, 'uSsaoMipmap')
+            };
+
             var st = this._composer.getOrCreateStateSet();
-            st.addUniform(osg.Uniform.createFloat2(osg.vec2.fromValues(0.8, 0.25), 'uLensRadius'));
-
-            st.addUniform(
-                osg.Uniform.createFloat2(osg.vec2.fromValues(0.25, 0.25), 'uRedControl1')
-            );
-
-            st.addUniform(
-                osg.Uniform.createFloat2(osg.vec2.fromValues(0.75, 0.75), 'uRedControl2')
-            );
-
-            st.addUniform(
-                osg.Uniform.createFloat2(osg.vec2.fromValues(0.25, 0.5), 'uGreenControl1')
-            );
-            st.addUniform(
-                osg.Uniform.createFloat2(osg.vec2.fromValues(0.5, 0.75), 'uGreenControl2')
-            );
-
-            st.addUniform(
-                osg.Uniform.createFloat2(osg.vec2.fromValues(0.25, 0.75), 'uBlueControl1')
-            );
-            st.addUniform(
-                osg.Uniform.createFloat2(osg.vec2.fromValues(0.5, 0.875), 'uBlueControl2')
-            );
+            for (var unif in this._uniforms) {
+                st.addUniform(this._uniforms[unif]);
+            }
         },
 
         rebuildGUI: function(name) {
@@ -327,10 +477,17 @@
                 this._gui.destroy();
             }
 
+            var self = this;
             this._gui = new window.dat.GUI();
 
             var cb = this._gui.add(this._params, 'composer', this._composerConfigNames).listen();
-            var self = this;
+
+            var radius = this._scene.getBound().radius();
+            var uniforms = this._uniforms;
+
+            this._gui.add(this, '_rotateSpeed', 0.0, 0.01).name('Rotate speed');
+            this._gui.add(this, '_showQuad').name('Show quad');
+            this._gui.add(this, '_showGeometry').name('Show geometry');
 
             cb.onFinishChange(function(value) {
                 self.rebuildComposer(value);
@@ -357,14 +514,12 @@
                 var eps = 0.01;
                 outerCtrl.onChange(function(value) {
                     lensArray[0] = value;
-                    if (value <= lensArray[1]) 
-                        innerCtrl.setValue(value - eps);
+                    if (value <= lensArray[1]) innerCtrl.setValue(value - eps);
                 });
 
                 innerCtrl.onChange(function(value) {
                     lensArray[1] = value;
-                    if (value >= lensArray[0]) 
-                        outerCtrl.setValue(value + eps);
+                    if (value >= lensArray[0]) outerCtrl.setValue(value + eps);
                 });
             } else if (name === 'colorCorrection.json') {
                 var colorCorrectionParams = {
@@ -381,52 +536,57 @@
                     );
                 });
             } else if (name === 'colorBalance.json') {
-                var uRedControl1 = st.getUniform('uRedControl1');
-                var uRedControl2 = st.getUniform('uRedControl2');
-                var uGreenControl1 = st.getUniform('uGreenControl1');
-                var uGreenControl2 = st.getUniform('uGreenControl2');
-                var uBlueControl1 = st.getUniform('uBlueControl1');
-                var uBlueControl2 = st.getUniform('uBlueControl2');
+                var r1array = uniforms.uRedControl1.getInternalArray();
+                var r2array = uniforms.uRedControl2.getInternalArray();
+                folder.add(r1array, 0, 0, 1).name('Red pt-1 x');
+                folder.add(r1array, 1, 0, 1).name('Red pt-1 y');
+                folder.add(r2array, 0, 0, 1).name('Red pt-2 x');
+                folder.add(r2array, 1, 0, 1).name('Red pt-2 y');
 
-                var colorBalanceParams = {
-                    r1x: uRedControl1.getInternalArray()[0],
-                    r1y: uRedControl1.getInternalArray()[1],
-                    r2x: uRedControl2.getInternalArray()[0],
-                    r2y: uRedControl2.getInternalArray()[1],
-                    g1x: uGreenControl1.getInternalArray()[0],
-                    g1y: uGreenControl1.getInternalArray()[1],
-                    g2x: uGreenControl2.getInternalArray()[0],
-                    g2y: uGreenControl2.getInternalArray()[1],
-                    b1x: uBlueControl1.getInternalArray()[0],
-                    b1y: uBlueControl1.getInternalArray()[1],
-                    b2x: uBlueControl2.getInternalArray()[0],
-                    b2y: uBlueControl2.getInternalArray()[1]
-                };
+                var g1array = uniforms.uGreenControl1.getInternalArray();
+                var g2array = uniforms.uGreenControl2.getInternalArray();
+                folder.add(g1array, 0, 0, 1).name('Green pt-1 x');
+                folder.add(g1array, 1, 0, 1).name('Green pt-1 y');
+                folder.add(g2array, 0, 0, 1).name('Green pt-2 x');
+                folder.add(g2array, 1, 0, 1).name('Green pt-2 y');
 
-                this.addWidget(folder, colorBalanceParams, 'r1x', uRedControl1, 0);
-                this.addWidget(folder, colorBalanceParams, 'r1y', uRedControl1, 1);
-                this.addWidget(folder, colorBalanceParams, 'r2x', uRedControl2, 0);
-                this.addWidget(folder, colorBalanceParams, 'r2y', uRedControl2, 1);
+                var b1array = uniforms.uBlueControl1.getInternalArray();
+                var b2array = uniforms.uBlueControl2.getInternalArray();
+                folder.add(b1array, 0, 0, 1).name('Blue pt-1 x');
+                folder.add(b1array, 1, 0, 1).name('Blue pt-1 y');
+                folder.add(b2array, 0, 0, 1).name('Blue pt-2 x');
+                folder.add(b2array, 1, 0, 1).name('Blue pt-2 y');
+            } else if (name === 'ssao.json') {
+                folder.add(uniforms.uSsaoIntensity.getInternalArray(), 0, 0, 1).name('Intensity');
+                folder
+                    .add(uniforms.uSsaoRadius.getInternalArray(), 0, 0.01 * radius, 0.1 * radius)
+                    .name('Radius');
 
-                this.addWidget(folder, colorBalanceParams, 'g1x', uGreenControl1, 0);
-                this.addWidget(folder, colorBalanceParams, 'g1y', uGreenControl1, 1);
-                this.addWidget(folder, colorBalanceParams, 'g2x', uGreenControl2, 0);
-                this.addWidget(folder, colorBalanceParams, 'g2y', uGreenControl2, 1);
+                folder
+                    .add(uniforms.uSsaoBias.getInternalArray(), 0, 0.002 * radius, 0.01 * radius)
+                    .name('Bias');
 
-                this.addWidget(folder, colorBalanceParams, 'b1x', uBlueControl1, 0);
-                this.addWidget(folder, colorBalanceParams, 'b1y', uBlueControl1, 1);
-                this.addWidget(folder, colorBalanceParams, 'b2x', uBlueControl2, 0);
-                this.addWidget(folder, colorBalanceParams, 'b2y', uBlueControl2, 1);
+                folder
+                    .add(uniforms.uSsaoCrispness.getInternalArray(), 0, 0.0, 1.0)
+                    .name('Crispness');
+
+                var only = uniforms.uSsaoOnly.getInternalArray();
+                folder
+                    .add({ bool: only[0] ? true : false }, 'bool')
+                    .name('Ssao only')
+                    .onChange(function(bool) {
+                        only[0] = bool ? 1 : 0;
+                    });
+
+                var mip = uniforms.uSsaoMipmap.getInternalArray();
+                folder
+                    .add({ bool: mip[0] ? true : false }, 'bool')
+                    .name('Use mipmap')
+                    .onChange(function(bool) {
+                        mip[0] = bool ? 1 : 0;
+                    });
             }
-
             this._currentComposer = name;
-        },
-
-        addWidget: function(folder, params, nameParam, uniform, index) {
-            var ctrl = folder.add(params, nameParam, 0.0, 1.0);
-            ctrl.onChange(function(value) {
-                uniform.getInternalArray()[index] = value;
-            });
         },
 
         addComposerConfig: function(name, content) {
@@ -438,7 +598,7 @@
             this.rebuildGUI(this._currentComposer);
         },
 
-        addContent: function(files, fileContents) {
+        addPostProcessEffect: function(files, fileContents) {
             var shaders = {};
 
             for (var i = 0; i < fileContents.length; i++) {
@@ -498,7 +658,7 @@
                     return;
                 }
 
-                this.addContent([{ name: shaderName }], [xhr.responseText]);
+                this.addPostProcessEffect([{ name: shaderName }], [xhr.responseText]);
             }.bind(this);
             xhr.send(null);
         }
@@ -526,6 +686,10 @@
 
         example.loadXHR('shaders/vignette.json');
         example.loadXHR('shaders/vignette.glsl');
+
+        example.loadXHR('shaders/ssao.json');
+        example.loadXHR('shaders/ssaoExtract.glsl');
+        example.loadXHR('shaders/ssaoBlur.glsl');
     };
 
     window.addEventListener('load', initExample, true);

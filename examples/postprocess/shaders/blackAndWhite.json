@@ -3,9 +3,7 @@
 		{
 			"func": "blackAndWhite",
 			"textures": "%last",
-			"out": {
-				"name": "%next"
-			},
+			"out": { "name": "%next" },
 			"collapsible": true
 		}
 	]

@@ -1,12 +1,10 @@
 {
-	"passes": [
-		{
-			"func": "colorCorrection",
-			"textures": ["%last", "TextureLut"],
-			"out": {
-				"name": "%next"
-			},
-			"collapsible": true
-		}
-	]
+    "passes": [
+        {
+            "func": "colorCorrection",
+            "textures": ["%last", "TextureLut"],
+            "out": { "name": "%next" },
+            "collapsible": true
+        }
+    ]
 }

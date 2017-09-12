@@ -3,25 +3,12 @@
 		{
 			"func": "colorBalanceLUT",
 			"textures": [],
-			"out": {
-				"name": "TextureLUT",
-				"divisor": -1.0,
-				"width": 256,
-				"height": 16
-			}
+			"out": { "name": "TextureLUT", "divisor": -1.0, "width": 256, "height": 16 }
 		},
 		{
 			"func": "colorBalance",
-			"textures": [
-				"%last",
-				{
-					"name": "TextureLUT",
-					"filter": "linear"
-				}
-			],
-			"out": {
-				"name": "%next"
-			}
+			"textures": ["%last", { "name": "TextureLUT", "filter": "linear" }],
+			"out": { "name": "%next" }
 		}
 	]
 }

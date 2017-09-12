@@ -1,0 +1,57 @@
+{
+    "passes": [
+        {
+            "func": "passthrough",
+            "textures": [{ "name": "TextureDepth", "uniformName": "TextureInput" }],
+            "out": { "name": "TextureDepth1", "divisor": 2, "filter": "linear" }
+        },
+        {
+            "func": "passthrough",
+            "textures": [{ "name": "TextureDepth1", "uniformName": "TextureInput" }],
+            "out": { "name": "TextureDepth2", "divisor": 4, "filter": "linear" }
+        },
+        {
+            "func": "passthrough",
+            "textures": [{ "name": "TextureDepth2", "uniformName": "TextureInput" }],
+            "out": { "name": "TextureDepth3", "divisor": 8, "filter": "linear" }
+        },
+        {
+            "func": "passthrough",
+            "textures": [{ "name": "TextureDepth3", "uniformName": "TextureInput" }],
+            "out": { "name": "TextureDepth4", "divisor": 16, "filter": "linear" }
+        },
+        {
+            "func": "passthrough",
+            "textures": [{ "name": "TextureDepth4", "uniformName": "TextureInput" }],
+            "out": { "name": "TextureDepth5", "divisor": 32, "filter": "linear" }
+        },
+        {
+            "func": "ssaoExtract",
+            "header": [["#extension GL_OES_standard_derivatives : enable"]],
+            "textures": [
+                "TextureDepth",
+                "TextureDepth1",
+                "TextureDepth2",
+                "TextureDepth3",
+                "TextureDepth4",
+                "TextureDepth5"
+            ],
+            "out": { "name": "TextureSsaoExtract", "filter": "linear" }
+        },
+        {
+            "func": { "name": "ssaoBlurH", "file": "ssaoBlur.glsl" },
+            "header": "#define SSAO_BLUR_H",
+            "textures": [{ "name": "TextureSsaoExtract", "uniformName": "TextureBlurInput" }],
+            "out": { "name": "TextureSsaoBlurH", "filter": "nearest" }
+        },
+        {
+            "func": { "name": "ssaoBlurV", "file": "ssaoBlur.glsl" },
+            "header": "#define SSAO_BLUR_V",
+            "textures": [
+                { "name": "%last", "filter": "linear" },
+                { "name": "TextureSsaoBlurH", "uniformName": "TextureBlurInput" }
+            ],
+            "out": { "name": "%next" }
+        }
+    ]
+}
