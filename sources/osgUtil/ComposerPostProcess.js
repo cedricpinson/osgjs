@@ -35,7 +35,7 @@ composer.setInputTexture( 'color' );
 
 var passes = [];
 passes.push({
-    func: { name: 'func', 'file.glsl' },
+    func: { name: 'func', file: 'file.glsl' },
 
     // %last and %next can be seen as stack operators, each %next pushes a texture on the stack while %last takes the top of the stack
     // it allows more flexibility when the user want to change the order of the passes withoug having to change the inputs/outputs/filtering/colorspaces of the other passes
