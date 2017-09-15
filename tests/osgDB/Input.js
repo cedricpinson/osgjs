@@ -52,12 +52,6 @@ module.exports = function() {
         var input = new Input();
         var url = 'error-404';
 
-        var image = input.readImageURL(url, {
-            imageCrossOrigin: 'Anonymous'
-        });
-        assert.isOk(image instanceof Image, 'no promise : returned an Image');
-        // assert.isOk(image.src.substr(-9) !== url, 'no promise : used fallback image');  // FIXME: make readImageURL return a proxy osgImage
-
         input
             .readImageURL('error-404', {
                 imageCrossOrigin: 'Anonymous',
@@ -364,14 +358,13 @@ module.exports = function() {
             var buffers = {};
 
             var createVertexAttribute = function(name, jsonAttribute) {
-                var defer = P.defer();
-                arraysPromise.push(defer.promise);
                 var promise = input.setJSON(jsonAttribute).readBufferArray();
+                arraysPromise.push(promise);
                 promise.then(function(buffer) {
                     if (buffer !== undefined) {
                         buffers[name] = buffer;
                     }
-                    defer.resolve(buffer);
+                    return buffer;
                 });
             };
 

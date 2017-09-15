@@ -232,7 +232,6 @@
                     });
                 }
             }
-            //osg.setNotifyLevel( osg.ERROR );
 
             var graphDebug = window.graphDebug;
             graphDebug.reset();
@@ -240,7 +239,6 @@
                 graphDebug.createGraph(root);
             }
         });
-
         return root;
     };
 

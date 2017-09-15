@@ -52,38 +52,36 @@
 
             var url = sound.url;
             var self = this;
-            var defer = P.defer();
+            return new P(function(resolve, reject) {
+                SC.get(
+                    '/resolve',
+                    {
+                        url: url
+                    },
+                    function(soundCloudResult) {
+                        if (soundCloudResult.errors) {
+                            var errors = '';
+                            for (var i = 0; i < soundCloudResult.errors.length; i++) {
+                                errors += soundCloudResult.errors[i]['error_message'] + '\n';
+                            }
 
-            SC.get(
-                '/resolve',
-                {
-                    url: url
-                },
-                function(soundCloudResult) {
-                    if (soundCloudResult.errors) {
-                        var errors = '';
-                        for (var i = 0; i < soundCloudResult.errors.length; i++) {
-                            errors += soundCloudResult.errors[i]['error_message'] + '\n';
+                            reject(errors);
+                        } else {
+                            var soundCloudURL =
+                                soundCloudResult['stream_url'] + '?client_id=' + SoundCloudID;
+                            osg.log('stream ' + soundCloudURL + ' ready');
+
+                            var soundUpdateCallback = self._soundManager.create3DSound(
+                                audio,
+                                soundCloudURL
+                            );
+                            sound.sound = soundUpdateCallback;
+
+                            resolve(sound);
                         }
-
-                        defer.reject(errors);
-                    } else {
-                        var soundCloudURL =
-                            soundCloudResult['stream_url'] + '?client_id=' + SoundCloudID;
-                        osg.log('stream ' + soundCloudURL + ' ready');
-
-                        var soundUpdateCallback = self._soundManager.create3DSound(
-                            audio,
-                            soundCloudURL
-                        );
-                        sound.sound = soundUpdateCallback;
-
-                        defer.resolve(sound);
                     }
-                }
-            );
-
-            return defer.promise;
+                );
+            });
         },
 
         run: function() {

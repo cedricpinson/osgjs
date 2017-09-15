@@ -818,7 +818,6 @@ ReaderWriterGLTF.prototype = {
     }),
 
     readNodeURL: function(url, options) {
-        var defer = P.defer();
         var self = this;
 
         this.init();
@@ -834,10 +833,9 @@ ReaderWriterGLTF.prototype = {
         this._localPath = index === -1 ? '' : url.substr(0, index + 1);
         // Else it is a usual XHR request
         var filePromise = requestFile(url);
-        filePromise.then(function(file) {
-            defer.resolve(self.readJSON(file));
+        return filePromise.then(function(file) {
+            return self.readJSON(file);
         });
-        return defer.promise;
     },
 
     readJSON: P.method(function(glTFFile, url) {

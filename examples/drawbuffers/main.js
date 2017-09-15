@@ -1,8 +1,6 @@
 (function() {
     'use strict';
 
-    // globals
-    var P = window.P;
     // various osg shortcuts
     var OSG = window.OSG;
     var osg = OSG.osg;
@@ -100,17 +98,18 @@
         },
 
         createRTTScene: function() {
-            var defer = P.defer();
             var that = this;
-            osgDB.readNodeURL('../media/models/material-test/file.osgjs').then(function(node) {
-                //root.addChild( node );
-                var stateSet = node.getOrCreateStateSet();
-                stateSet.setAttributeAndModes(that.generateProgram());
-                that._viewer.getManipulator().setTarget(node.getBoundingSphere().center());
-                that._viewer.getManipulator().setDistance(node.getBoundingSphere().radius() * 2.0);
-                defer.resolve(node);
-            });
-            return defer.promise;
+            return osgDB
+                .readNodeURL('../media/models/material-test/file.osgjs')
+                .then(function(node) {
+                    var stateSet = node.getOrCreateStateSet();
+                    stateSet.setAttributeAndModes(that.generateProgram());
+                    that._viewer.getManipulator().setTarget(node.getBoundingSphere().center());
+                    that._viewer
+                        .getManipulator()
+                        .setDistance(node.getBoundingSphere().radius() * 2.0);
+                    return node;
+                });
         },
 
         generateProgram: function() {

@@ -1,6 +1,5 @@
 'use strict';
 var assert = require('chai').assert;
-var P = require('bluebird');
 var DatabasePager = require('osgDB/DatabasePager');
 var PagedLOD = require('osg/PagedLOD');
 var Node = require('osg/Node');
@@ -9,12 +8,10 @@ var Notify = require('osg/notify');
 
 module.exports = function() {
     var dbpager = new DatabasePager();
-    // Modify the processRequest Method to add a defer variable to test it easily.
+    // Modify the processRequest
     dbpager.processRequest = function(dbrequest) {
         this._loading = true;
         var that = this;
-        // This defer variable is here only to be able to do unitary testing
-        var defer = P.defer();
         // Check if the request is valid;
         if (dbrequest._groupExpired) {
             //Notify.log( 'DatabasePager::processRequest() Request expired.' );
@@ -25,24 +22,23 @@ module.exports = function() {
 
         // Load from function
         if (dbrequest._function !== undefined) {
-            this.loadNodeFromFunction(dbrequest._function, dbrequest._group).then(function(child) {
+            return this.loadNodeFromFunction(dbrequest._function, dbrequest._group).then(function(
+                child
+            ) {
                 that._downloadingRequestsNumber--;
                 dbrequest._loadedModel = child;
                 that._pendingNodes.push(dbrequest);
                 that._loading = false;
-                defer.resolve();
             });
         } else if (dbrequest._url !== '') {
             // Load from URL
-            this.loadNodeFromURL(dbrequest._url).then(function(child) {
+            return this.loadNodeFromURL(dbrequest._url).then(function(child) {
                 that._downloadingRequestsNumber--;
                 dbrequest._loadedModel = child;
                 that._pendingNodes.push(dbrequest);
                 that._loading = false;
-                defer.resolve();
             });
         }
-        return defer.promise;
     };
 
     test('DatabasePager.requestNodeFile', function(done) {

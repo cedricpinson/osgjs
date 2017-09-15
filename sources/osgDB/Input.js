@@ -137,35 +137,32 @@ Input.prototype = {
         return new scope();
     },
 
-    fetchImage: function(image, url, options, defer) {
+    fetchImage: function(image, url, options) {
         var checkInlineImage = 'data:image/';
         // crossOrigin does not work for inline data image
         var isInlineImage = url.substring(0, checkInlineImage.length) === checkInlineImage;
         var img = new window.Image();
-        img.onerror = function() {
-            Notify.warn('warning use white texture as fallback instead of ' + url);
-            image.setImage(Input.imageFallback);
-            if (defer) {
-                defer.resolve(image);
-            }
-        };
-
-        if (!isInlineImage && options.imageCrossOrigin) {
-            img.crossOrigin = options.imageCrossOrigin;
-        }
-
-        img.onload = function() {
-            if (defer) {
-                if (options.imageOnload) options.imageOnload.call(image);
-                defer.resolve(image);
-            } else if (options.imageOnload) options.imageOnload.call(image);
-        };
 
         image.setURL(url);
         image.setImage(img);
-
         img.src = url;
-        return image;
+
+        return new P(function(resolve) {
+            img.onerror = function() {
+                Notify.warn('warning use white texture as fallback instead of ' + url);
+                image.setImage(Input.imageFallback);
+                resolve(image);
+            };
+
+            if (!isInlineImage && options.imageCrossOrigin) {
+                img.crossOrigin = options.imageCrossOrigin;
+            }
+
+            img.onload = function() {
+                if (options.imageOnload) options.imageOnload.call(image);
+                resolve(image);
+            };
+        });
     },
 
     readImageURL: function(url, options) {
@@ -188,16 +185,8 @@ Input.prototype = {
         }
 
         var image = new Image();
-        if (options.imageLoadingUsePromise !== true) {
-            return this.fetchImage(image, url, options);
-        }
-
-        var defer = P.defer();
-        this.fetchImage(image, url, options, defer);
-
-        return defer.promise;
+        return this.fetchImage(image, url, options);
     },
-
     readNodeURL: function(url, opt) {
         var options = opt;
         if (options === undefined) {
@@ -213,101 +202,99 @@ Input.prototype = {
             return options.readNodeURL.call(this, url, options);
         }
         url = this.computeURL(url);
+        var that = this;
+        return new P(function(resolve, reject) {
+            // copy because we are going to modify it to have relative prefix to load assets
+            options = MACROUTILS.objectMix({}, options);
 
-        var defer = P.defer();
-
-        // copy because we are going to modify it to have relative prefix to load assets
-        options = MACROUTILS.objectMix({}, options);
-
-        // automatic prefix if non specfied
-        if (!!!options.prefixURL) {
-            var prefix = this.getPrefixURL();
-            var index = url.lastIndexOf('/');
-            if (index !== -1) {
-                prefix = url.substring(0, index + 1);
-            }
-            options.prefixURL = prefix;
-        }
-
-        var self = this;
-
-        var ReaderParser = require('osgDB/readerParser');
-
-        var readSceneGraph = function(data) {
-            ReaderParser.parseSceneGraph(data, options)
-                .then(function(child) {
-                    defer.resolve(child);
-                    Notify.log('loaded ' + url);
-                })
-                .catch(defer.reject.bind(defer));
-        };
-
-        var ungzipFile = function(arrayBuffer) {
-            function pad(n) {
-                return n.length < 2 ? '0' + n : n;
-            }
-
-            function uintToString(uintArray) {
-                var str = '';
-                for (var i = 0, len = uintArray.length; i < len; ++i) {
-                    str += '%' + pad(uintArray[i].toString(16));
+            // automatic prefix if non specfied
+            if (!!!options.prefixURL) {
+                var prefix = that.getPrefixURL();
+                var index = url.lastIndexOf('/');
+                if (index !== -1) {
+                    prefix = url.substring(0, index + 1);
                 }
-                str = decodeURIComponent(str);
-                return str;
+                options.prefixURL = prefix;
             }
 
-            var unpacked = arrayBuffer;
-            if (zlib.isGunzipBuffer(arrayBuffer)) {
-                unpacked = zlib.gunzip(arrayBuffer);
-            }
+            var ReaderParser = require('osgDB/readerParser');
 
-            var typedArray = new Uint8Array(unpacked);
-            var str = uintToString(typedArray);
-            return str;
-        };
-        MACROUTILS.time('osgjs.metric:Input.readNodeURL', Notify.INFO);
-        // try to get the file as responseText to parse JSON
-        var fileTextPromise = self.requestFile(url);
-        fileTextPromise
-            .then(function(str) {
-                var data;
-                try {
-                    data = JSON.parse(str);
-                } catch (error) {
-                    // can't parse try with ungzip code path
-
-                    Notify.error('cant parse url ' + url + ' try to gunzip');
-                }
-                // we have the json, read it
-                if (data) return readSceneGraph(data);
-
-                // no data try with gunzip
-                var fileGzipPromise = self.requestFile(url, {
-                    responseType: 'arraybuffer'
-                });
-                fileGzipPromise
-                    .then(function(file) {
-                        var strUnzip = ungzipFile(file);
-                        data = JSON.parse(strUnzip);
-                        readSceneGraph(data);
+            var readSceneGraph = function(data) {
+                return ReaderParser.parseSceneGraph(data, options)
+                    .then(function(child) {
+                        resolve(child);
+                        Notify.log('loaded ' + url);
                     })
-                    .catch(function(status) {
-                        Notify.error('cant read file ' + url + ' status ' + status);
-                        defer.reject();
+                    .catch(function() {
+                        reject();
                     });
+            };
 
-                return true;
-            })
-            .catch(function(status) {
-                Notify.error('cant get file ' + url + ' status ' + status);
-                defer.reject();
-            })
-            .finally(function() {
-                // Stop the timer
-                MACROUTILS.timeEnd('osgjs.metric:Input.readNodeURL');
-            });
+            var ungzipFile = function(arrayBuffer) {
+                function pad(n) {
+                    return n.length < 2 ? '0' + n : n;
+                }
 
-        return defer.promise;
+                function uintToString(uintArray) {
+                    var str = '';
+                    for (var i = 0, len = uintArray.length; i < len; ++i) {
+                        str += '%' + pad(uintArray[i].toString(16));
+                    }
+                    str = decodeURIComponent(str);
+                    return str;
+                }
+
+                var unpacked = arrayBuffer;
+                if (zlib.isGunzipBuffer(arrayBuffer)) {
+                    unpacked = zlib.gunzip(arrayBuffer);
+                }
+
+                var typedArray = new Uint8Array(unpacked);
+                var str = uintToString(typedArray);
+                return str;
+            };
+            MACROUTILS.time('osgjs.metric:Input.readNodeURL', Notify.INFO);
+            // try to get the file as responseText to parse JSON
+            var fileTextPromise = that.requestFile(url);
+            fileTextPromise
+                .then(function(str) {
+                    var data;
+                    try {
+                        data = JSON.parse(str);
+                    } catch (error) {
+                        // can't parse try with ungzip code path
+
+                        Notify.error('cant parse url ' + url + ' try to gunzip');
+                    }
+                    // we have the json, read it
+                    if (data) return readSceneGraph(data);
+
+                    // no data try with gunzip
+                    var fileGzipPromise = that.requestFile(url, {
+                        responseType: 'arraybuffer'
+                    });
+                    fileGzipPromise
+                        .then(function(file) {
+                            var strUnzip = ungzipFile(file);
+                            data = JSON.parse(strUnzip);
+                            readSceneGraph(data);
+                        })
+                        .catch(function(status) {
+                            Notify.error('cant read file ' + url + ' status ' + status);
+                            reject();
+                        });
+
+                    return true;
+                })
+                .catch(function(status) {
+                    Notify.error('cant get file ' + url + ' status ' + status);
+                    reject();
+                })
+                .finally(function() {
+                    // Stop the timer
+                    MACROUTILS.timeEnd('osgjs.metric:Input.readNodeURL');
+                });
+        });
     },
 
     _unzipTypedArray: function(binary) {
@@ -345,21 +332,21 @@ Input.prototype = {
         if (this._identifierMap[url] !== undefined) {
             return this._identifierMap[url];
         }
-        var defer = P.defer();
+        var that = this;
+        this._identifierMap[url] = new P(function(resolve) {
+            var filePromise = that.requestFile(url, {
+                responseType: 'arraybuffer',
+                progress: that._defaultOptions.progressXHRCallback
+            });
 
-        var filePromise = this.requestFile(url, {
-            responseType: 'arraybuffer',
-            progress: this._defaultOptions.progressXHRCallback
+            filePromise.then(
+                function(file) {
+                    resolve(that._unzipTypedArray(file));
+                }.bind(that)
+            );
         });
 
-        this._identifierMap[url] = defer.promise;
-        filePromise.then(
-            function(file) {
-                defer.resolve(this._unzipTypedArray(file));
-            }.bind(this)
-        );
-
-        return defer.promise;
+        return this._identifierMap[url];
     },
 
     initializeBufferArray: function(vb, type, buf, options) {
@@ -368,8 +355,8 @@ Input.prototype = {
             return options.initializeBufferArray.call(this, vb, type, buf);
 
         var url = vb.File;
-        var defer = P.defer();
-        this.readBinaryArrayURL(url)
+
+        return this.readBinaryArrayURL(url)
             .then(function(array) {
                 var typedArray;
                 // manage endianness
@@ -413,12 +400,12 @@ Input.prototype = {
                 }
 
                 buf.setElements(typedArray);
-                defer.resolve(buf);
+                return buf;
             })
-            .catch(function() {
-                Notify.warn("Can't read binary array URL");
+            .catch(function(error) {
+                Notify.warn("Can't read binary array URL: " + error);
+                P.reject();
             });
-        return defer.promise;
     },
 
     readBufferArray: function(options) {
@@ -501,93 +488,95 @@ Input.prototype = {
         var uniqueID;
         var osgjsObject;
 
-        var defer = P.defer();
-        var obj, mode, first, count;
-        var drawElementPrimitive =
-            jsonObj.DrawElementUShort ||
-            jsonObj.DrawElementUByte ||
-            jsonObj.DrawElementUInt ||
-            jsonObj.DrawElementsUShort ||
-            jsonObj.DrawElementsUByte ||
-            jsonObj.DrawElementsUInt ||
-            undefined;
-        if (drawElementPrimitive) {
-            uniqueID = drawElementPrimitive.UniqueID;
-            if (uniqueID !== undefined) {
-                osgjsObject = this._identifierMap[uniqueID];
-                if (osgjsObject !== undefined) {
-                    return osgjsObject;
+        var that = this;
+        var promise = new P(function(resolve) {
+            var obj, mode, first, count;
+            var drawElementPrimitive =
+                jsonObj.DrawElementUShort ||
+                jsonObj.DrawElementUByte ||
+                jsonObj.DrawElementUInt ||
+                jsonObj.DrawElementsUShort ||
+                jsonObj.DrawElementsUByte ||
+                jsonObj.DrawElementsUInt ||
+                undefined;
+            if (drawElementPrimitive) {
+                uniqueID = drawElementPrimitive.UniqueID;
+                if (uniqueID !== undefined) {
+                    osgjsObject = that._identifierMap[uniqueID];
+                    if (osgjsObject !== undefined) {
+                        return osgjsObject;
+                    }
                 }
-            }
 
-            var jsonArray = drawElementPrimitive.Indices;
-            var prevJson = jsonObj;
+                var jsonArray = drawElementPrimitive.Indices;
+                var prevJson = jsonObj;
 
-            mode = drawElementPrimitive.Mode;
-            if (!mode) {
-                mode = primitiveSet.TRIANGLES;
-            } else {
-                mode = primitiveSet[mode];
-            }
-            obj = new DrawElements(mode);
-
-            this.setJSON(jsonArray);
-            this.readBufferArray()
-                .then(function(array) {
-                    obj.setIndices(array);
-                    defer.resolve(obj);
-                })
-                .catch(function() {
-                    Notify.warn('Error buffer array');
-                });
-            this.setJSON(prevJson);
-        }
-
-        var drawArrayPrimitive = jsonObj.DrawArray || jsonObj.DrawArrays;
-        if (drawArrayPrimitive) {
-            uniqueID = drawArrayPrimitive.UniqueID;
-            if (uniqueID !== undefined) {
-                osgjsObject = this._identifierMap[uniqueID];
-                if (osgjsObject !== undefined) {
-                    return osgjsObject;
+                mode = drawElementPrimitive.Mode;
+                if (!mode) {
+                    mode = primitiveSet.TRIANGLES;
+                } else {
+                    mode = primitiveSet[mode];
                 }
+                obj = new DrawElements(mode);
+
+                that.setJSON(jsonArray);
+                that
+                    .readBufferArray()
+                    .then(function(array) {
+                        obj.setIndices(array);
+                        resolve(obj);
+                    })
+                    .catch(function() {
+                        Notify.warn('Error buffer array');
+                    });
+                that.setJSON(prevJson);
             }
 
-            mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
-            first =
-                drawArrayPrimitive.First !== undefined
-                    ? drawArrayPrimitive.First
-                    : drawArrayPrimitive.first;
-            count =
-                drawArrayPrimitive.Count !== undefined
-                    ? drawArrayPrimitive.Count
-                    : drawArrayPrimitive.count;
-            var drawArray = new DrawArrays(primitiveSet[mode], first, count);
-            defer.resolve(drawArray);
-        }
-
-        var drawArrayLengthsPrimitive = jsonObj.DrawArrayLengths || undefined;
-        if (drawArrayLengthsPrimitive) {
-            uniqueID = drawArrayLengthsPrimitive.UniqueID;
-            if (uniqueID !== undefined) {
-                osgjsObject = this._identifierMap[uniqueID];
-                if (osgjsObject !== undefined) {
-                    return osgjsObject;
+            var drawArrayPrimitive = jsonObj.DrawArray || jsonObj.DrawArrays;
+            if (drawArrayPrimitive) {
+                uniqueID = drawArrayPrimitive.UniqueID;
+                if (uniqueID !== undefined) {
+                    osgjsObject = that._identifierMap[uniqueID];
+                    if (osgjsObject !== undefined) {
+                        resolve(osgjsObject);
+                    }
                 }
+
+                mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
+                first =
+                    drawArrayPrimitive.First !== undefined
+                        ? drawArrayPrimitive.First
+                        : drawArrayPrimitive.first;
+                count =
+                    drawArrayPrimitive.Count !== undefined
+                        ? drawArrayPrimitive.Count
+                        : drawArrayPrimitive.count;
+                var drawArray = new DrawArrays(primitiveSet[mode], first, count);
+                resolve(drawArray);
             }
 
-            mode = drawArrayLengthsPrimitive.Mode;
-            first = drawArrayLengthsPrimitive.First;
-            var array = drawArrayLengthsPrimitive.ArrayLengths;
-            var drawArrayLengths = new DrawArrayLengths(primitiveSet[mode], first, array);
-            defer.resolve(drawArrayLengths);
-        }
+            var drawArrayLengthsPrimitive = jsonObj.DrawArrayLengths || undefined;
+            if (drawArrayLengthsPrimitive) {
+                uniqueID = drawArrayLengthsPrimitive.UniqueID;
+                if (uniqueID !== undefined) {
+                    osgjsObject = that._identifierMap[uniqueID];
+                    if (osgjsObject !== undefined) {
+                        return osgjsObject;
+                    }
+                }
 
+                mode = drawArrayLengthsPrimitive.Mode;
+                first = drawArrayLengthsPrimitive.First;
+                var array = drawArrayLengthsPrimitive.ArrayLengths;
+                var drawArrayLengths = new DrawArrayLengths(primitiveSet[mode], first, array);
+                resolve(drawArrayLengths);
+            }
+        });
         if (uniqueID !== undefined) {
-            this._identifierMap[uniqueID] = defer.promise;
+            this._identifierMap[uniqueID] = promise;
         }
 
-        return defer.promise;
+        return promise;
     },
 
     readObject: function() {

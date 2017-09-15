@@ -20,48 +20,47 @@ var glStats = require('osgStats/glStats');
 var browserStats = require('osgStats/browserStats');
 
 var getGLSLOptimizer = function() {
-    var deferOptimizeGLSL = P.defer();
-    window.deferOptimizeGLSL = deferOptimizeGLSL;
+    return new P(function(resolve, reject) {
+        window.deferOptimizeGLSL = resolve;
+        var mod = [
+            '        var Module = {',
+            '            preRun: [],',
+            '            postRun: [ function () {',
+            '                var func = Module.cwrap( "optimize_glsl", "string", [ "string", "number", "number" ] );',
+            '                window.deferOptimizeGLSL( func );',
+            '            } ],',
+            '            print: function ( text ) {',
+            '                Notify.debug( text );',
+            '            },',
+            '            printErr: function ( text ) {',
+            '                Notify.debug( text );',
+            '            },',
+            '            setStatus: function ( text ) {',
+            '                Notify.debug( text );',
+            '            },',
+            '            totalDependencies: 0,',
+            '            monitorRunDependencies: function ( left ) {',
+            '                this.totalDependencies = Math.max( this.totalDependencies, left );',
+            '                Module.setStatus( left ? "GLSL optimizer preparing... (" + ( this.totalDependencies - left ) + "/" + this.totalDependencies + ")" : "All downloads complete." );',
+            '            },',
+            '            memoryInitializerPrefixURL: "https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/"',
+            '        };'
+        ].join('\n');
 
-    var mod = [
-        '        var Module = {',
-        '            preRun: [],',
-        '            postRun: [ function () {',
-        '                var func = Module.cwrap( "optimize_glsl", "string", [ "string", "number", "number" ] );',
-        '                window.deferOptimizeGLSL.resolve( func );',
-        '            } ],',
-        '            print: function ( text ) {',
-        '                Notify.debug( text );',
-        '            },',
-        '            printErr: function ( text ) {',
-        '                Notify.debug( text );',
-        '            },',
-        '            setStatus: function ( text ) {',
-        '                Notify.debug( text );',
-        '            },',
-        '            totalDependencies: 0,',
-        '            monitorRunDependencies: function ( left ) {',
-        '                this.totalDependencies = Math.max( this.totalDependencies, left );',
-        '                Module.setStatus( left ? "GLSL optimizer preparing... (" + ( this.totalDependencies - left ) + "/" + this.totalDependencies + ")" : "All downloads complete." );',
-        '            },',
-        '            memoryInitializerPrefixURL: "https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/"',
-        '        };'
-    ].join('\n');
-
-    Notify.log('try to load glsl optimizer');
-    var url = 'https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/glsl-optimizer.js';
-    var promise = requestFile(url);
-    promise
-        .then(function(script) {
-            /*jshint evil: true */
-            eval(mod + script);
-            /*jshint evil: false */
-        })
-        .catch(function() {
-            deferOptimizeGLSL.reject();
-        });
-
-    return deferOptimizeGLSL.promise;
+        Notify.log('try to load glsl optimizer');
+        var url =
+            'https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/glsl-optimizer.js';
+        var promise = requestFile(url);
+        promise
+            .then(function(script) {
+                /*jshint evil: true */
+                eval(mod + script);
+                /*jshint evil: false */
+            })
+            .catch(function() {
+                reject();
+            });
+    });
 };
 
 var Viewer = function(canvas, userOptions, error) {
