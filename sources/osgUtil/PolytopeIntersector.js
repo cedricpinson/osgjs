@@ -65,7 +65,7 @@ MACROUTILS.createPrototypeObject(
             ]);
         },
 
-        intersectBoundingSphere: function(bbox) {
+        intersectBoundingBox: function(bbox) {
             return this._iPolytope.containsBoundingBox(bbox);
         },
 
