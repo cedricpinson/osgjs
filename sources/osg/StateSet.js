@@ -12,6 +12,7 @@ var MACROUTILS = require('osg/Utils');
  * Indeed, this practice is recommended whenever possible,
  * as this minimizes expensive state changes in the graphics pipeline.
  */
+
 var StateSet = function() {
     Object.call(this);
 
@@ -127,25 +128,19 @@ MACROUTILS.createPrototypeObject(
         },
 
         getTextureAttribute: function(unit, typeMember) {
-            if (this._textureAttributeArrayList[unit] === undefined) return undefined;
-
             var index = MACROUTILS.getTextureIdFromTypeMember(typeMember);
-            if (index === undefined) return undefined;
+            if (index === undefined || !this._hasTextureAttribute(unit, index)) return undefined;
 
             var textureArray = this._textureAttributeArrayList[unit];
             if (textureArray[index]) return textureArray[index].getAttribute();
-
             return undefined;
         },
 
         removeTextureAttribute: function(unit, typeMember) {
-            if (this._textureAttributeArrayList[unit] === undefined) return;
-
             var index = MACROUTILS.getTextureIdFromTypeMember(typeMember);
-            if (index === undefined) return;
+            if (index === undefined || !this._hasTextureAttribute(unit, index)) return;
 
             var textureArray = this._textureAttributeArrayList[unit];
-            if (textureArray[index] === undefined) return;
 
             textureArray[index] = undefined;
             this._computeValidTextureUnit();
@@ -153,7 +148,7 @@ MACROUTILS.createPrototypeObject(
 
         getAttribute: function(typeMember) {
             var index = MACROUTILS.getIdFromTypeMember(typeMember);
-            if (index === undefined || !this._attributeArray[index]) return undefined;
+            if (index === undefined || !this._hasAttribute(index)) return undefined;
 
             return this._attributeArray[index].getAttribute();
         },
@@ -171,6 +166,8 @@ MACROUTILS.createPrototypeObject(
         // TODO: check if it's an attribute type or a attribute to remove it
         removeAttribute: function(typeMember) {
             var index = MACROUTILS.getIdFromTypeMember(typeMember);
+            if (!this._hasAttribute(index)) return;
+
             this._attributeArray[index] = undefined;
             this._computeValidAttribute();
         },
@@ -294,16 +291,15 @@ MACROUTILS.createPrototypeObject(
 
         // for internal use, you should not call it directly
         _setTextureAttribute: function(unit, attributePair) {
-            var textureAttributeArrayList = this._textureAttributeArrayList;
-            if (textureAttributeArrayList[unit] === undefined) {
-                textureAttributeArrayList[unit] = [];
-            }
+            MACROUTILS.makeDenseArray(unit, this._textureAttributeArrayList);
+            if (!this._textureAttributeArrayList[unit]) this._textureAttributeArrayList[unit] = [];
 
             var index = MACROUTILS.getOrCreateTextureStateAttributeTypeMemberIndex(
                 attributePair.getAttribute()
             );
-            textureAttributeArrayList[unit][index] = attributePair;
+            MACROUTILS.makeDenseArray(index, this._textureAttributeArrayList[unit]);
 
+            this._textureAttributeArrayList[unit][index] = attributePair;
             this._computeValidTextureUnit();
         },
 
@@ -328,7 +324,6 @@ MACROUTILS.createPrototypeObject(
                 if (hasValidAttribute) this._activeTextureAttributeUnit.push(i);
             }
         },
-
         _computeValidAttribute: function() {
             this._activeAttribute.length = 0;
             var attributeArray = this._attributeArray;
@@ -336,14 +331,27 @@ MACROUTILS.createPrototypeObject(
                 if (attributeArray[i]) this._activeAttribute.push(i);
             }
         },
-
         // for internal use, you should not call it directly
         _setAttribute: function(attributePair) {
             var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(
                 attributePair.getAttribute()
             );
+            MACROUTILS.makeDenseArray(index, this._attributeArray);
             this._attributeArray[index] = attributePair;
             this._computeValidAttribute();
+        },
+        _hasAttribute: function(typeIndex) {
+            if (typeIndex >= this._attributeArray.length) return false;
+            return !!this._attributeArray[typeIndex];
+        },
+        _hasTextureAttribute: function(unit, typeIndex) {
+            if (
+                unit >= this._textureAttributeArrayList.length ||
+                !this._textureAttributeArrayList[unit]
+            )
+                return false;
+            if (typeIndex >= this._textureAttributeArrayList[unit].length) return false;
+            return !!this._textureAttributeArrayList[unit][typeIndex];
         }
     }),
     'osg',
