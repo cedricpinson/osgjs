@@ -17,6 +17,10 @@ PooledResource.prototype = {
     reset: function() {
         this._length = 0;
     },
+    /**
+     * Creates or returns an existing object.
+     * The returned object could contain invalid data from previous object values. User is responsible to reset/init the returned object for its (re)use.
+     */
     getOrCreateObject: function() {
         var obj;
         if (this._length === this._pool.length) {

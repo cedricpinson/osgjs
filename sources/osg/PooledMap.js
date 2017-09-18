@@ -16,6 +16,10 @@ PooledMap.prototype = {
         }
         this._keys.reset();
     },
+    /**
+     * Set a key value
+     * you have to check that the key does not exist before otherwise you could hit performance hit when calling reset/forEach
+     */
     set: function(key, value) {
         this._keys.push(key);
         this._map[key] = value;
