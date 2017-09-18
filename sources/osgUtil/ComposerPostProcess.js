@@ -13,6 +13,7 @@ var Program = require('osg/Program');
 var Shader = require('osg/Shader');
 var Shape = require('osg/shape');
 var TransformEnums = require('osg/transformEnums');
+var ShaderProcessor = require('osgShader/ShaderProcessor');
 
 /*
 This class creates a post-processing pipeline based on an user-defined list of passes and .glsl files.
@@ -120,7 +121,7 @@ var ComposerPostProcess = function() {
 
     this._screenWidth = this._screenHeight = 0;
 
-    this._shaderProcessor = undefined;
+    this._shaderProcessor = ShaderProcessor();
 
     this._feedbackData = {};
 
