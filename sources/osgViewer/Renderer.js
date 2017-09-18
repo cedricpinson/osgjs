@@ -105,7 +105,11 @@ MACROUTILS.createPrototypeObject(
 
             // this part of code should be called for each view
             // right now, we dont support multi view
+
+            // reset all stateGraph per frame
+            StateGraph.reset();
             this._stateGraph.clean();
+
             this._renderStage.reset();
 
             this._cullVisitor.reset();

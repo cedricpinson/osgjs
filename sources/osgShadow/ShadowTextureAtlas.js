@@ -25,6 +25,8 @@ var ShadowTextureAtlas = function() {
     this._depthRanges = [];
     this._mapSizes = [];
     this._renderSize = vec4.create();
+    this._dirtyHash = true;
+    this._hash = '';
 };
 
 ShadowTextureAtlas.uniforms = {};
@@ -47,11 +49,17 @@ MACROUTILS.createPrototypeStateAttribute(
 
         setLightNumberArray: function(lightNumberArray) {
             this._lightNumberArray = lightNumberArray;
+            this._dirtyHash = true;
         },
 
         getUniformName: function(lightNumber, name) {
             var prefix = 'Shadow_' + this.getType() + lightNumber.toString();
             return 'u' + prefix + '_' + name;
+        },
+
+        setInternalFormatType: function(value) {
+            Texture.prototype.setInternalFormatType.call(this, value);
+            this._dirtyHash = true;
         },
 
         createUniforms: function(lightNumber, uniforms) {
@@ -156,13 +164,21 @@ MACROUTILS.createPrototypeStateAttribute(
             this.dirty();
         },
 
-        getHash: function() {
+        _computeInternalHash: function() {
             var hash = this.getTypeMember();
             for (var i = 0, l = this._lightNumberArray.length; i < l; i++) {
                 hash += '_' + this._lightNumberArray[i];
             }
             hash += '_' + this._type;
             return hash;
+        },
+
+        getHash: function() {
+            if (!this._dirtyHash) return this._hash;
+
+            this._hash = this._computeInternalHash();
+            this._dirtyHash = false;
+            return this._hash;
         }
     }),
     'osgShadow',

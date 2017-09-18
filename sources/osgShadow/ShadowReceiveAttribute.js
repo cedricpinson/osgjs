@@ -34,6 +34,9 @@ var ShadowReceiveAttribute = function(lightNum, disable) {
 
     this._enable = !disable;
     this._isAtlasTexture = false;
+
+    this._dirtyHash = true;
+    this._hash = '';
 };
 
 ShadowReceiveAttribute.uniforms = {};
@@ -88,10 +91,12 @@ MACROUTILS.createPrototypeStateAttribute(
 
         setKernelSizePCF: function(v) {
             this._kernelSizePCF = v;
+            this._dirtyHash = true;
         },
 
         setPrecision: function(precision) {
             this._precision = precision;
+            this._dirtyHash = true;
         },
 
         getPrecision: function() {
@@ -100,6 +105,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
         setLightNumber: function(lightNum) {
             this._lightNumber = lightNum;
+            this._dirtyHash = true;
         },
 
         getOrCreateUniforms: function() {
@@ -163,10 +169,14 @@ MACROUTILS.createPrototypeStateAttribute(
         },
 
         getHash: function() {
-            return this._computeHash();
+            if (!this._dirtyHash) return this._hash;
+
+            this._hash = this._computeInternalHash();
+            this._dirtyHash = false;
+            return this._hash;
         },
 
-        _computeHash: function() {
+        _computeInternalHash: function() {
             return this.getTypeMember() + '_' + this.getKernelSizePCF();
         }
     }),

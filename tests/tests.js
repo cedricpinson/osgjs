@@ -1,4 +1,4 @@
-var OSG = require('OSG');
+require('OSG');
 
 var osg = require('tests/osg/osgTests');
 var osgAnimation = require('tests/osgAnimation/osgAnimationTests');
@@ -10,9 +10,6 @@ var osgShader = require('tests/osgShader/osgShaderTests');
 var osgShadow = require('tests/osgShadow/osgShadowTests');
 var osgText = require('tests/osgText/osgTextTests');
 var osgWrappers = require('tests/osgWrappers/osgWrappersTests');
-
-// hack because of osgPool
-OSG.osg.init();
 
 suite('osgWrappers');
 osgWrappers();

@@ -7,6 +7,8 @@ var ShadowCastAttribute = function(disable, shadowReceiveAttribute) {
     StateAttribute.call(this);
     this._enable = !disable;
     this._shadowReceiveAttribute = shadowReceiveAttribute;
+    this._dirtyHash = true;
+    this._hash = '';
 };
 
 MACROUTILS.createPrototypeStateAttribute(
@@ -16,7 +18,6 @@ MACROUTILS.createPrototypeStateAttribute(
         cloneType: function() {
             return new ShadowCastAttribute(true);
         },
-        //
         setReceiveAttribute: function(shadowReceiveAttribute) {
             this._shadowReceiveAttribute = shadowReceiveAttribute;
         },
@@ -26,11 +27,19 @@ MACROUTILS.createPrototypeStateAttribute(
         getDefines: function() {
             return this._shadowReceiveAttribute.getDefines();
         },
-        _computeHash: function() {
+        _computeInternalHash: function() {
             return 'ShadowCast' + this._enable + this._shadowReceiveAttribute.getPrecision();
         },
         getHash: function() {
-            return this._computeHash();
+            var receiveAttributeDirty = false;
+            if (this._shadowReceiveAttribute && this._shadowReceiveAttribute._dirtyHash)
+                this._receiveAttributeDirty = true;
+
+            if (!this._dirtyHash && !receiveAttributeDirty) return this._hash;
+
+            this._hash = this._computeInternalHash();
+            this._dirtyHash = false;
+            return this._hash;
         },
         // need a isEnabled to let the ShaderGenerator to filter
         // StateAttribute from the shader compilation

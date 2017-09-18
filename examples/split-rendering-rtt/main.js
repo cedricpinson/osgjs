@@ -75,16 +75,12 @@
         },
 
         sortBinArray: function() {
-            var binsKeys = window.Object.keys(this._bins);
-            var bins = this._bins;
-
             var binsArray = this._binArraySorted;
             binsArray.length = 0;
 
-            for (var i = 0, l = binsKeys.length; i < l; i++) {
-                var k = binsKeys[i];
-                binsArray.push(bins[k]);
-            }
+            this._bins.forEach(function(key, bin) {
+                binsArray.push(bin);
+            });
 
             binsArray.sort(sortBin);
         },
@@ -242,7 +238,7 @@
         clearCameraColorDepth: function(gl) {
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
             gl.depthMask(true);
-            gl.clearDepth(this.clearDepth);
+            gl.clearDepth(this.getClearDepth());
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         },
 
@@ -288,9 +284,10 @@
             var fbo = this.getCamera().frameBufferObject;
             if (!fbo) this.createCamera2RTT(state);
 
-            if (this.viewport === undefined) osg.log('RenderStage does not have a valid viewport');
+            if (this.getViewport() === undefined)
+                osg.log('RenderStage does not have a valid viewport');
 
-            state.applyAttribute(this.viewport);
+            state.applyAttribute(this.getViewport());
 
             // clear transparency
             this.useTransparencyRTT(state);
@@ -300,8 +297,8 @@
             this.useOpaqueRTT(state);
             this.clearCameraColor(gl);
 
-            if (this.positionedAttribute.length !== 0) {
-                this.applyPositionedAttribute(state, this.positionedAttribute);
+            if (this._positionedAttribute.length !== 0) {
+                this.applyPositionedAttribute(state, this._positionedAttribute);
             }
 
             this.sortBinArray();

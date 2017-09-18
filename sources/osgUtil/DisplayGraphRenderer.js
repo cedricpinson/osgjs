@@ -74,9 +74,11 @@ DisplayGraphRenderer.prototype = {
 
         // register bins
         var bins = rb._bins;
-        for (var binKey in bins) {
-            this.apply(bins[binKey]);
-        }
+        bins.forEach(
+            function(key, bin) {
+                this.apply(bin);
+            }.bind(this)
+        );
 
         // register fine grained leafs
         if (rb._leafs.length) {
@@ -85,14 +87,23 @@ DisplayGraphRenderer.prototype = {
             }
         }
 
-        // register coarse grained leafs
-        for (var k = 0, nk = rb.stateGraphList.length; k < nk; k++) {
-            var sg = rb.stateGraphList[k];
-            this.createNodeAndSetID(childID, sg);
+        var self = this;
+        var context = {};
+
+        var leafFunction = function(leaf) {
+            self.createNodeAndSetID(this.stateGraphID, leaf);
+        }.bind(context);
+
+        var stateGraphFunction = function(sg) {
+            self.createNodeAndSetID(childID, sg);
             var stateGraphID = sg._instanceID;
-            for (var l = 0, nl = sg.leafs.length; l < nl; l++)
-                this.createNodeAndSetID(stateGraphID, sg.leafs[l]);
-        }
+            var leafsPool = sg.getLeafs();
+            context.stateGraphID = stateGraphID;
+            leafsPool.forEach(leafFunction);
+        };
+        // register coarse grained leafs
+        var stateGraphList = rb.getStateGraphList();
+        stateGraphList.forEach(stateGraphFunction);
 
         // no parent no link
         if (this._renderBinStack.length < 2) return;
@@ -151,7 +162,7 @@ DisplayGraphRenderer.prototype = {
         var instanceID = node._instanceID;
         var className = 'StateGraph';
         var label = className + ' ( ' + node._instanceID + ' )';
-        label += '\n' + node.leafs.length + ' leafs';
+        label += '\n' + node._leafs._length + ' leafs';
 
         this._selectables.set(instanceID.toString(), node);
         g.addNode(instanceID, {
@@ -204,8 +215,7 @@ DisplayGraphRenderer.prototype = {
             // detect if RenderLeaf
             if (node._geometry && node._depth !== undefined) {
                 this.generateRenderLeaf(g, node);
-            } else if (node.depth !== undefined && node.leafs && node.children) {
-                // it's StateGraph
+            } else if (node.className() === 'StateGraph') {
                 this.generateStateGraph(g, node);
             } else if (node.className() === 'RenderStage') {
                 this.generateRenderStage(g, node);

@@ -316,7 +316,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 this._internalFormat = undefined;
                 this._dirtyMipmap = true;
                 this._textureTarget = Texture.TEXTURE_2D;
-                this._type = Texture.UNSIGNED_BYTE;
+                this.setInternalFormatType(Texture.UNSIGNED_BYTE);
                 this._isCompressed = false;
 
                 this._flipY = true;

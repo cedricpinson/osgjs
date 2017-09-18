@@ -10,6 +10,9 @@ var StackObjectPairPool = function() {
 };
 
 StackObjectPairPool.prototype = {
+    getLength: function() {
+        return this._length;
+    },
     push: function(object, value) {
         var objectPair;
         if (this._length === this._values.length) {

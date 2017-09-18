@@ -6,7 +6,7 @@ var BoundingSphere = require('osg/BoundingSphere');
 var StateSet = require('osg/StateSet');
 var NodeVisitor = require('osg/NodeVisitor');
 var mat4 = require('osg/glMatrix').mat4;
-var MatrixMemoryPool = require('osg/MatrixMemoryPool');
+var PooledResource = require('osg/PooledResource');
 var ComputeMatrixFromNodePath = require('osg/computeMatrixFromNodePath');
 var TransformEnums = require('osg/transformEnums');
 
@@ -39,10 +39,10 @@ var Node = function() {
     this._tmpBox = new BoundingBox();
 };
 
-Node._reservedMatrixStack = new MatrixMemoryPool();
+var pooledMatrix = new PooledResource(mat4.create);
 var nodeGetMat = function() {
-    var mat = Node._reservedMatrixStack.get.bind(Node._reservedMatrixStack);
-    return mat4.identity(mat);
+    var matrix = pooledMatrix.getOrCreateObject();
+    return mat4.identity(matrix);
 };
 
 /** @lends Node.prototype */
@@ -459,7 +459,7 @@ MACROUTILS.createPrototypeNode(
                 mat4.copy(matrix, matrixList[0]);
             }
 
-            Node._reservedMatrixStack.reset();
+            pooledMatrix.reset();
             return matrix;
         },
 
