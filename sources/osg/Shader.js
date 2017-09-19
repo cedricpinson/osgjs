@@ -66,6 +66,13 @@ Shader.flushAllDeletedGLShaders = function(gl) {
     return;
 };
 
+Shader.onLostContext = function(gl) {
+    if (!Shader._sDeletedGLShaderCache.has(gl)) return;
+    var deleteList = Shader._sDeletedGLShaderCache.get(gl);
+    deleteList.length = 0;
+    return;
+};
+
 MACROUTILS.createPrototypeObject(
     Shader,
     MACROUTILS.objectInherit(GLObject.prototype, {
@@ -199,7 +206,11 @@ MACROUTILS.createPrototypeObject(
         releaseGLObjects: function() {
             if (this._gl !== undefined) {
                 Shader.deleteGLShader(this._gl, this.shader);
+                GLObject.removeObject(this._gl, this);
             }
+            this.invalidate();
+        },
+        invalidate: function() {
             this.shader = undefined;
         }
     }),

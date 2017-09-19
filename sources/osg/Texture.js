@@ -265,6 +265,11 @@ MACROUTILS.createPrototypeStateAttribute(
                 return new Texture();
             },
 
+            invalidate: function() {
+                this._textureObject = undefined;
+                this.dirty();
+            },
+
             dirty: function() {
                 this._dirty = true;
             },
@@ -379,7 +384,9 @@ MACROUTILS.createPrototypeStateAttribute(
             },
 
             init: function(state) {
-                if (!this._gl) this.setGraphicContext(state.getGraphicContext());
+                if (!this._gl) {
+                    this.setGraphicContext(state.getGraphicContext());
+                }
 
                 if (!this._textureObject) {
                     this._textureObject = Texture.getTextureManager(this._gl).generateTextureObject(
@@ -426,8 +433,9 @@ MACROUTILS.createPrototypeStateAttribute(
                     this._gl !== undefined
                 ) {
                     Texture.getTextureManager(this._gl).releaseTextureObject(this._textureObject);
+                    GLObject.removeObject(this._gl, this);
                 }
-                this._textureObject = undefined;
+                this.invalidate();
             },
 
             getWrapT: function() {
@@ -793,6 +801,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 if (this._dirtyTextureObject) {
                     this.releaseGLObjects();
                     this._dirtyTextureObject = false;
+                    this.setGraphicContext(gl);
                 }
 
                 if (this._textureObject !== undefined && !this.isDirty()) {

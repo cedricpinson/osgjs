@@ -30,6 +30,21 @@ MACROUTILS.createPrototypeStateAttribute(
             this._flipY = false;
         },
 
+        invalidate: function() {
+            Texture.prototype.invalidate.call(this);
+            for (
+                var i = Texture.TEXTURE_CUBE_MAP_POSITIVE_X;
+                i < Texture.TEXTURE_CUBE_MAP_POSITIVE_X + 6;
+                i++
+            ) {
+                var faceImage = this._images[i];
+                if (this._images[Texture.TEXTURE_CUBE_MAP_POSITIVE_X].getImage()) {
+                    faceImage.dirty();
+                }
+            }
+            this.dirty();
+        },
+
         cloneType: function() {
             return new TextureCubeMap();
         },
@@ -240,7 +255,10 @@ MACROUTILS.createPrototypeStateAttribute(
         apply: function(state) {
             var gl = state.getGraphicContext();
             // if need to release the texture
-            if (this._dirtyTextureObject) this.releaseGLObjects();
+            if (this._dirtyTextureObject) {
+                this.releaseGLObjects();
+                this.setGraphicContext(gl);
+            }
 
             if (this._textureObject !== undefined && !this.isDirty()) {
                 this._textureObject.bind(gl);

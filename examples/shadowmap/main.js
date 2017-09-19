@@ -1322,6 +1322,11 @@
             this.updateShadow();
             if (this._viewer.getViewerStats())
                 this._viewer.getViewerStats().addConfig(this.getStatsConfig());
+
+            this._viewer.setContextLostCallback(function() {
+                osg.log('lostContext');
+                return true;
+            });
         }
     });
 

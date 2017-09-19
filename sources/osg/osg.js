@@ -76,6 +76,7 @@ var Scissor = require('osg/Scissor');
 var TransformEnums = require('osg/transformEnums');
 var Timer = require('osg/Timer');
 var TimerGPU = require('osg/TimerGPU');
+var VertexArrayObject = require('osg/VertexArrayObject');
 var WebGLCaps = require('osg/WebGLCaps');
 
 var osg = {};
@@ -155,7 +156,7 @@ osg.Uniform = Uniform;
 osg.UpdateVisitor = UpdateVisitor;
 MACROUTILS.objectMix(osg, MACROUTILS);
 osg.Viewport = Viewport;
-
+osg.VertexArrayObject = VertexArrayObject;
 var glm = require('osg/glMatrix');
 osg.vec2 = glm.vec2;
 osg.vec3 = glm.vec3;

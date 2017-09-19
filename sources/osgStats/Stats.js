@@ -142,6 +142,15 @@ MACROUTILS.createPrototypeObject(Stats, {
             this._updates.push(config.update);
         }
     },
+    reset: function() {
+        this._bufferStats.resetCaptions();
+        this._bufferStats.resetValues();
+
+        this._dirtyCaptions = true;
+        this._dirtyValue = true;
+
+        this._bufferStats.resize(this._bufferStats._maxNbVertexes);
+    },
     update: function() {
         for (var i = 0; i < this._updates.length; i++) {
             this._updates[i](this);

@@ -4,7 +4,7 @@ var Node = require('osg/Node');
 var WebGLCaps = require('osg/WebGLCaps');
 var DrawElements = require('osg/DrawElements');
 var BufferArrayProxy = require('osg/BufferArrayProxy');
-
+var VertexArrayObject = require('osg/VertexArrayObject');
 /**
  * Geometry manage array and primitives to draw a geometry.
  * @class Geometry
@@ -63,7 +63,7 @@ MACROUTILS.createPrototypeNode(
 
             for (var prgID in this._vao) {
                 if (this._vao[prgID]) {
-                    this._glContext.deleteVertexArray(this._vao[prgID]);
+                    this._vao[prgID].releaseGLObjects();
                     this._vao[prgID] = undefined;
                 }
             }
@@ -254,7 +254,8 @@ MACROUTILS.createPrototypeNode(
                     state.clearVertexAttribCache();
 
                     var gl = state.getGraphicContext();
-                    var vao = gl.createVertexArray();
+                    var vao = new VertexArrayObject(gl);
+                    vao.create(gl);
                     state.setVertexArrayObject(vao);
                     this._vao[prgID] = vao;
 
@@ -323,7 +324,17 @@ MACROUTILS.createPrototypeNode(
 
             var cachedDraw = this._cacheDrawCall[prgID];
 
-            if (this._useVAO && !this._vao[prgID]) state.setVertexArrayObject(null);
+            if (this._useVAO) {
+                if (!this._vao[prgID]) {
+                    state.setVertexArrayObject(null);
+                } else {
+                    if (this._vao[prgID].isDirty()) {
+                        // need vertex array recreation
+                        // ie: lost context
+                        cachedDraw = undefined;
+                    }
+                }
+            }
 
             if (cachedDraw) {
                 cachedDraw.call(this, state);

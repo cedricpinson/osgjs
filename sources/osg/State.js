@@ -134,6 +134,18 @@ var State = function(shaderGeneratorProxy) {
 MACROUTILS.createPrototypeObject(
     State,
     MACROUTILS.objectInherit(Object.prototype, {
+        resetCaches: function() {
+            this._currentVAO = null;
+            this._currentIndexVBO = null;
+
+            this._previousColorAttribPair = {};
+            this._vertexAttribMap = {};
+            this._vertexAttribMap._disable = [];
+            this._vertexAttribMap._keys = [];
+
+            this._programCommonUniformsCache = {};
+        },
+
         getCacheUniformsApplyRenderLeaf: function() {
             return this._programCommonUniformsCache;
         },
@@ -974,20 +986,23 @@ MACROUTILS.createPrototypeObject(
      *  if was already binded
      */
         setVertexArrayObject: function(vao) {
-            if (this._currentVAO !== vao) {
-                this._graphicContext.bindVertexArray(vao);
-                this._currentVAO = vao;
+            if (this._currentVAO === vao) return false;
 
+            this._currentVAO = vao;
+
+            if (vao) {
+                vao.bind(this._graphicContext);
+            } else {
                 // disable cache to force a re enable of array
-                if (!vao) this.clearVertexAttribCache();
-
-                // disable currentIndexVBO to force to bind indexArray from Geometry
-                // if there is a change of vao
-                this._currentIndexVBO = undefined;
-
-                return true;
+                this._graphicContext.bindVertexArray(null);
+                this.clearVertexAttribCache();
             }
-            return false;
+
+            // disable currentIndexVBO to force to bind indexArray from Geometry
+            // if there is a change of vao
+            this._currentIndexVBO = undefined;
+
+            return true;
         },
 
         setVertexAttribArray: function(attrib, array, normalize) {

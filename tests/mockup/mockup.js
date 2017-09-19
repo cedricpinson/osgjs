@@ -131,6 +131,7 @@ var createFakeRenderer = function() {
         renderbufferStorage: function() {},
         framebufferRenderbuffer: function() {},
         clear: function() {},
+        getQuery: function() {},
         viewport: function() {},
         cullFace: function() {},
         texImage2D: function() {},

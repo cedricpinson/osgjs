@@ -17,6 +17,7 @@ var FrameBufferObject = function() {
     this._fbo = undefined;
     this._rbo = undefined;
     this._attachments = [];
+    this._buffers = [];
     this._dirty = true;
     this._hasMRT = WebglCaps.instance().getWebGLExtension('WEBGL_draw_buffers');
 };
@@ -43,12 +44,12 @@ FrameBufferObject.flushDeletedGLFrameBuffers = function(gl, availableTime) {
     if (availableTime <= 0.0) return availableTime;
 
     if (!FrameBufferObject._sDeletedGLFrameBufferCache.has(gl)) return availableTime;
+    var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get(gl);
+    if (deleteList.length === 0) return availableTime;
 
     var elapsedTime = 0.0;
     var beginTime = Timer.instance().tick();
-    var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get(gl);
     var numBuffers = deleteList.length;
-
     for (var i = numBuffers - 1; i >= 0 && elapsedTime < availableTime; i--) {
         gl.deleteFramebuffer(deleteList[i]);
         deleteList.splice(i, 1);
@@ -60,10 +61,9 @@ FrameBufferObject.flushDeletedGLFrameBuffers = function(gl, availableTime) {
 
 FrameBufferObject.flushAllDeletedGLFrameBuffers = function(gl) {
     if (!FrameBufferObject._sDeletedGLFrameBufferCache.has(gl)) return;
-
     var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get(gl);
+    if (deleteList.length === 0) return;
     var numBuffers = deleteList.length;
-
     for (var i = numBuffers - 1; i >= 0; i--) {
         gl.deleteFramebuffer(deleteList[i]);
         deleteList.splice(i, 1);
@@ -99,7 +99,6 @@ FrameBufferObject.flushDeletedGLRenderBuffers = function(gl, availableTime) {
         deleteList.splice(i, 1);
         elapsedTime = Timer.instance().deltaS(beginTime, Timer.instance().tick());
     }
-
     return availableTime - elapsedTime;
 };
 
@@ -115,6 +114,18 @@ FrameBufferObject.flushAllDeletedGLRenderBuffers = function(gl) {
     }
 };
 
+FrameBufferObject.onLostContext = function(gl) {
+    if (!FrameBufferObject._sDeletedGLFrameBufferCache.has(gl)) return;
+
+    var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get(gl);
+    deleteList.length = 0;
+
+    if (!FrameBufferObject._sDeletedGLRenderBufferCache.has(gl)) return;
+
+    deleteList = FrameBufferObject._sDeletedGLRenderBufferCache.get(gl);
+    deleteList.length = 0;
+};
+
 /** @lends FrameBufferObject.prototype */
 MACROUTILS.createPrototypeStateAttribute(
     FrameBufferObject,
@@ -127,7 +138,26 @@ MACROUTILS.createPrototypeStateAttribute(
                 return new FrameBufferObject();
             },
 
+            invalidate: function() {
+                if (this._rbo && this._attachments) {
+                    for (var i = 0, l = this._attachments.length; i < l; ++i) {
+                        var attachment = this._attachments[i];
+                        // shared renderbuffer object between camera
+                        // must still be set to null as it's webgl object
+                        // apply will reshare it when creating it.
+                        if (!attachment.texture) {
+                            attachment.renderBufferObject = undefined;
+                        }
+                    }
+                    this._rbo = undefined;
+                }
+                this._fbo = undefined;
+                this._buffers.length = 0;
+                this._dirty = true;
+            },
+
             dirty: function() {
+                this._buffers.length = 0;
                 this._dirty = true;
             },
 
@@ -139,6 +169,19 @@ MACROUTILS.createPrototypeStateAttribute(
                 this._attachments.push(attachment);
             },
 
+            getAttachment: function(attachmentType) {
+                if (!this._attachments) return;
+                for (var i = 0, l = this._attachments.length; i < l; ++i) {
+                    var attachment = this._attachments[i];
+                    // shared renderbuffer object between camera
+                    // must still be set to null as it's webgl object
+                    // apply will reshare it when creating it.
+                    if (attachment.attachment === attachmentType) {
+                        return attachment;
+                    }
+                }
+                return;
+            },
             releaseGLObjects: function() {
                 if (this._fbo !== undefined && this._gl !== undefined) {
                     FrameBufferObject.deleteGLFrameBuffer(this._gl, this._fbo);
@@ -148,7 +191,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 if (this._rbo !== undefined && this._gl !== undefined) {
                     FrameBufferObject.deleteGLRenderBuffer(this._gl, this._rbo);
                 }
-                this._rbo = undefined;
+                this.invalidate();
             },
 
             _reportFrameBufferError: function(code) {
@@ -177,6 +220,10 @@ MACROUTILS.createPrototypeStateAttribute(
 
             getFrameBufferObject: function() {
                 return this._fbo;
+            },
+
+            getRenderBufferObject: function() {
+                return this._rbo;
             },
 
             createFrameBufferObject: function(state) {
@@ -309,7 +356,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 this.bindFrameBufferObject();
 
                 // Check extDrawBuffers extension
-                var bufs = this._hasMRT ? [] : undefined;
+                var bufs = this._hasMRT ? this._buffers : undefined;
                 var hasRenderBuffer = false;
 
                 for (var i = 0, l = attachments.length; i < l; ++i) {
@@ -321,12 +368,19 @@ MACROUTILS.createPrototypeStateAttribute(
                             this.releaseGLObjects();
                             return;
                         }
-
-                        this._rbo = this.createRenderBuffer(
-                            attachment.format,
-                            attachment.width,
-                            attachment.height
-                        );
+                        if (attachment.renderBufferObject) {
+                            // shared renderbuffer object between camera
+                            // ie: early-z
+                            this._rbo = attachment.renderBufferObject;
+                        } else {
+                            this._rbo = this.createRenderBuffer(
+                                attachment.format,
+                                attachment.width,
+                                attachment.height
+                            );
+                            // necessary for shared attachment between camera
+                            attachment.renderBufferObject = this._rbo;
+                        }
                         this.framebufferRenderBuffer(attachment.attachment, this._rbo);
                         hasRenderBuffer = true;
                     } else {
@@ -342,7 +396,8 @@ MACROUTILS.createPrototypeStateAttribute(
                         if (
                             this._hasMRT &&
                             attachment.attachment >= gl.COLOR_ATTACHMENT0 &&
-                            attachment.attachment <= gl.COLOR_ATTACHMENT15
+                            attachment.attachment <= gl.COLOR_ATTACHMENT15 &&
+                            bufs.indexOf(attachment.attachment) === -1
                         ) {
                             bufs.push(attachment.attachment);
                         }
@@ -361,7 +416,9 @@ MACROUTILS.createPrototypeStateAttribute(
                     }
                 }
 
-                if (bufs && bufs.length > 0) gl.drawBuffers(bufs);
+                if (bufs && bufs.length > 0) {
+                    gl.drawBuffers(bufs);
+                }
 
                 this.checkStatus();
 

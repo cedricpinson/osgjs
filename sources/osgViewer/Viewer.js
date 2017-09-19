@@ -7,6 +7,12 @@ var Timer = require('osg/Timer');
 var TimerGPU = require('osg/TimerGPU');
 var UpdateVisitor = require('osg/UpdateVisitor');
 var MACROUTILS = require('osg/Utils');
+var GLObject = require('osg/GLObject');
+var FrameBufferObject = require('osg/FrameBufferObject');
+var BufferArray = require('osg/BufferArray');
+var VertexArrayObject = require('osg/VertexArrayObject');
+var Shader = require('osg/Shader');
+var Program = require('osg/Program');
 var Texture = require('osg/Texture');
 var OrbitManipulator = require('osgGA/OrbitManipulator');
 var EventProxy = require('osgViewer/eventProxy/eventProxy');
@@ -70,6 +76,9 @@ var Viewer = function(canvas, userOptions, error) {
     this._stats = undefined;
     this._done = false;
     this._runPromise = P.resolve();
+    // keep reference so that you still have it
+    // when gl context is lost
+    this._canvas = canvas;
 
     var options = this.initOptions(userOptions);
     var gl = this.initWebGLContext(canvas, options, error);
@@ -85,8 +94,10 @@ var Viewer = function(canvas, userOptions, error) {
 
     this._hmd = null;
     this._requestAnimationFrame = window.requestAnimationFrame.bind(window);
-
+    this._options = options;
     this._contextLost = false;
+    this._forceRestoreContext = true;
+    this.renderBinded = this.render.bind(this);
 };
 
 MACROUTILS.createPrototypeObject(
@@ -111,6 +122,7 @@ MACROUTILS.createPrototypeObject(
                 eventsBackend.Hammer.eventNode =
                     eventsBackend.Hammer.eventNode || defaultMouseEventNode;
             }
+
             // gamepad
             eventsBackend.GamePad = eventsBackend.GamePad || {};
 
@@ -144,15 +156,19 @@ MACROUTILS.createPrototypeObject(
             if (options.get('SimulateWebGLLostContext')) {
                 canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
                 canvas.loseContextInNCalls(options.get('SimulateWebGLLostContext'));
+                this._canvas = canvas;
             }
 
             var gl = WebGLUtils.setupWebGL(canvas, options, error);
 
+            //www.khronos.org/registry/webgl/specs/latest/1.0/#WEBGLCONTEXTEVENT
             canvas.addEventListener(
                 'webglcontextlost',
                 function(event) {
                     this.contextLost();
-                    event.preventDefault();
+                    if (this._forceRestoreContext !== false) {
+                        event.preventDefault();
+                    }
                 }.bind(this),
                 false
             );
@@ -177,7 +193,6 @@ MACROUTILS.createPrototypeObject(
 
         initRun: function(options) {
             if (options.getBoolean('GLSLOptimizer') === true) {
-                var Shader = require('osg/Shader');
                 Shader.enableGLSLOptimizer = true;
 
                 this._runPromise = getGLSLOptimizer();
@@ -194,31 +209,76 @@ MACROUTILS.createPrototypeObject(
             }
         },
 
-        setContextLostCallback: function(cb) {
-            this._contextLostCallback = cb;
+        // allow user to acknowledge the context lost
+        // (display a message, etc.)
+        // - callback return false: no attempt to restore
+        setContextLostCallback: function(callback) {
+            this._contextLostCallback = callback;
             // just in case callback registration
             // happens after the context lost
             if (this._contextLost) {
-                cb();
+                this._forceRestoreContext = callback();
             }
+        },
+
+        setContextRestoreCallback: function(callback) {
+            this._contextRestoreCallback = callback;
         },
 
         contextLost: function() {
             Notify.log('webgl context lost');
             if (this._contextLostCallback) {
-                this._contextLostCallback();
+                this._forceRestoreContext = this._contextLostCallback();
             }
             this._contextLost = true;
             window.cancelAnimationFrame(this._requestID);
         },
 
         contextRestored: function() {
-            Notify.log('webgl context restored, but not supported - reload the page');
-            // Supporting it implies to have
-            // reloaded all your resources:
-            // textures, vertex/index buffers, shaders, frame buffers
-            // so only set it back if you happen to have restored the context
-            // this._contextLost = false;
+            if (this._forceRestoreContext === false) {
+                Notify.log('webgl context restore not supported - please reload the page - ');
+                return;
+            }
+            // restore is already async
+            // https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+            this.restoreContext();
+            Notify.log('webgl context restored');
+        },
+
+        restoreContext: function() {
+            var gl = this.getGraphicContext();
+
+            Shader.onLostContext(gl);
+            Program.onLostContext(gl);
+            BufferArray.onLostContext(gl);
+            VertexArrayObject.onLostContext(gl);
+            FrameBufferObject.onLostContext(gl);
+            Texture.getTextureManager(gl).onLostContext(gl);
+
+            GLObject.onLostContext(gl);
+
+            this.getCamera().getRenderer().getState().resetCaches();
+
+            // if it's a different GPU, different webglcaps
+            this.initWebGLCaps(gl, true);
+            this.setGraphicContext(gl);
+
+            // different GPU caps means different timer caps
+            TimerGPU.instance(this.getGraphicContext(), true);
+            if (this._stats) {
+                // stats geometries needs special care
+                this._stats.reset();
+            }
+
+            // ready to draw again
+            this._contextLost = false;
+            this._requestRedraw = true;
+
+            // Warn users context has been restored
+            if (this._contextRestoreCallback) {
+                this._contextRestoreCallback(gl);
+            }
+            this._runImplementation();
         },
 
         init: function() {
@@ -424,18 +484,15 @@ MACROUTILS.createPrototypeObject(
             return this._done;
         },
 
+        render: function() {
+            if (!this.done()) {
+                this._requestID = this._requestAnimationFrame(this.renderBinded, this._canvas);
+                this.frame();
+            }
+        },
+
         _runImplementation: function() {
-            var self = this;
-            var render = function() {
-                if (!self.done()) {
-                    self._requestID = self._requestAnimationFrame(
-                        render,
-                        self.getGraphicContext().canvas
-                    );
-                    self.frame();
-                }
-            };
-            render();
+            this.render();
         },
 
         run: function() {

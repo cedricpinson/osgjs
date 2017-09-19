@@ -227,7 +227,7 @@ if (!window.requestAnimationFrame) {
 }
 
 if (!window.cancelRequestAnimFrame) {
-    window.cancelRequestAnimFrame = (function() {
+    window.cancelAnimationFrame = (function() {
         return (
             window.cancelAnimationFrame ||
             window.webkitCancelRequestAnimationFrame ||
