@@ -3,17 +3,16 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgShader = OSG.osgShader;
     var osgUtil = OSG.osgUtil;
     var ExampleOSGJS = window.ExampleOSGJS;
 
     var composeFragmentShader = [
-        osgUtil.Composer.Filter.defaultFragmentShaderHeader,
-        'uniform sampler2D Texture1;',
-        'void main (void)',
+        'vec4 blend ()',
         '{',
-        '  vec4 transp = texture2D(Texture1, vTexCoord0 );',
-        '  vec4 opaque = texture2D(Texture0, vTexCoord0 );',
-        '  gl_FragColor = opaque * (1.0 - transp.a) + transp.rgba;',
+        '  vec4 transp = TEXTURE_2D_TextureTransparent( gTexCoord );',
+        '  vec4 opaque = TEXTURE_2D_TextureOpaque( gTexCoord );',
+        '  return opaque * (1.0 - transp.a) + transp.rgba;',
         '}'
     ].join('\n');
 
@@ -362,12 +361,12 @@
 
             // camera RTT
             var opaque = this.createTextureRTT(
-                'mainSceneOpaque',
+                'TextureOpaque',
                 osg.Texture.NEAREST,
                 osg.Texture.UNSIGNED_BYTE
             );
             var transparent = this.createTextureRTT(
-                'mainSceneTransparent',
+                'TextureTransparent',
                 osg.Texture.NEAREST,
                 osg.Texture.UNSIGNED_BYTE
             );
@@ -394,21 +393,30 @@
             scene.addChild(model0);
             scene.addChild(model1);
 
-            // create textured quad with the texture rtt
-            // var cameraScreen = this.createCamera( opaque );
-            // this._root.addChild( cameraScreen );
-
             // composer
-            var composer = new osgUtil.Composer();
-            var blendPass = new osgUtil.Composer.Filter.Custom(composeFragmentShader, {
-                Texture1: transparent,
-                Texture0: opaque
-            });
+            var composer = new osgUtil.ComposerPostProcess();
+            composer.setName('ComposerPostProcess');
+            var width = this._viewer.getCanvasWidth();
+            var height = this._viewer.getCanvasHeight();
+            composer.setScreenSize(width, height);
 
-            blendPass.getOrCreateStateSet().setTextureAttributeAndModes(1, transparent);
-            blendPass.getOrCreateStateSet().setTextureAttributeAndModes(0, opaque);
-            composer.addPass(blendPass);
-            composer.renderToScreen(this._canvas.width, this._canvas.height);
+            this._shaderProcessor = new osgShader.ShaderProcessor();
+            this._shaderProcessor.addShaders({ 'blend.glsl': composeFragmentShader });
+            composer.setShaderProcessor(this._shaderProcessor);
+
+            composer.addExternalTexture('TextureOpaque', opaque);
+            composer.addExternalTexture('TextureTransparent', transparent);
+
+            var passes = {
+                func: 'blend',
+                textures: [
+                    { name: 'TextureTransparent', filter: 'linear', texture: transparent },
+                    { name: 'TextureOpaque', filter: 'linear', texture: opaque }
+                ],
+                out: { name: '%next' }
+            };
+
+            composer.build(passes);
 
             this._root.addChild(composer);
 
