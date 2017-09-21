@@ -37,13 +37,7 @@ utils.createPrototypeStateAttribute(
         },
 
         apply: function(state) {
-            var gl = state.getGraphicContext();
-            if (this._mode === CullFace.DISABLE) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-                gl.cullFace(this._mode);
-            }
+            state.applyCullFace(this);
         }
     }),
     'osg',
