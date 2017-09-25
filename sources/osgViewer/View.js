@@ -8,6 +8,7 @@ var mat4 = require('osg/glMatrix').mat4;
 var Texture = require('osg/Texture');
 var Program = require('osg/Program');
 var Shader = require('osg/Shader');
+var Scissor = require('osg/Scissor');
 var vec3 = require('osg/glMatrix').vec3;
 var Viewport = require('osg/Viewport');
 var WebGLCaps = require('osg/WebGLCaps');
@@ -155,6 +156,7 @@ View.prototype = {
         var ratio = width / height;
 
         this._camera.setViewport(new Viewport(0, 0, width, height));
+        this._camera.setScissor(new Scissor());
 
         this._camera.setGraphicContext(this.getGraphicContext());
         mat4.lookAt(
