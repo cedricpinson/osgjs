@@ -9,7 +9,8 @@ var OptionsDefault = {
     enableFrustumCulling: false,
     stats: false, // display canvas with stats for the viewer
     scrollwheel: true,
-    webgl2: false
+    webgl2: false,
+    powerPreference: 'high-performance'
 };
 
 var Options = function() {

@@ -33,7 +33,10 @@ MACROUTILS.createPrototypeStateAttribute(
         cloneType: function() {
             return new ShadowTexture();
         },
-
+        invalidate: function() {
+            Texture.prototype.invalidate.call(this);
+            this.dirty();
+        },
         hasLightNumber: function(lightNum) {
             return this._lightNumber === lightNum;
         },

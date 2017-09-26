@@ -16,57 +16,61 @@ queries, that way you can track a particular of gl command for examples
 
 var TimerGPU = function(gl) {
     this._enabled = false;
-
-    if (gl) {
-        var ext = WebGLCaps.instance(gl).getDisjointTimerQuery();
-        if (!ext) return this;
-
-        // webgl1 to webgl2
-        if (!gl.getQueryParameter) gl.getQueryParameter = ext.getQueryObjectEXT.bind(ext);
-
-        // https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/extensions/ext-disjoint-timer-query.html#L102
-        // run the page if strange results
-        // to validate you gpu/browser has correct gpu queries support
-        this._hasTimeElapsed = gl.getQuery(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30;
-        this._hasTimeStamp = gl.getQuery(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30;
-
-        if (!this._hasTimeElapsed && !this._hasTimeStamp) {
-            return this;
-        }
-
-        // no timestamp means not start/end absolute time
-        // which means each start must be followed by a end
-        // BEFORE any other start (of other queryID)
-        if (!this._hasTimeStamp) Notify.debug('Warning: do not use interleaved GPU query');
-
-        this._ext = ext;
-        this._gl = gl;
-        this._enabled = true;
-    }
-
-    this._frameAverageCount = 10;
-
-    this._glQueries = [];
-    this._queriesByID = {};
-    this._userQueries = []; // for timestamp, it's the same as _glQueries
-
-    // stuffs used to virtualize query (no timestamp)
-    this._queryCount = 0;
-    this._nbOpened = 0;
+    this.reset(gl);
 };
 
 TimerGPU.FRAME_COUNT = 0;
 
-TimerGPU.instance = function(gl) {
+TimerGPU.instance = function(gl, force) {
     if (!TimerGPU._instance) {
         TimerGPU._instance = new TimerGPU(gl);
-    } else if (gl && TimerGPU._instance.getContext() !== gl) {
+    } else if (gl && (TimerGPU._instance.getContext() !== gl || force)) {
         TimerGPU._instance.setContext(gl);
+        TimerGPU._instance.reset(gl);
     }
     return TimerGPU._instance;
 };
 
 TimerGPU.prototype = {
+    reset: function(gl) {
+        if (gl) {
+            var ext = WebGLCaps.instance(gl).getDisjointTimerQuery();
+            if (!ext) return this;
+
+            // webgl1 to webgl2
+            if (!gl.getQueryParameter) gl.getQueryParameter = ext.getQueryObjectEXT.bind(ext);
+
+            // https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/extensions/ext-disjoint-timer-query.html#L102
+            // run the page if strange results
+            // to validate you gpu/browser has correct gpu queries support
+            this._hasTimeElapsed =
+                gl.getQuery(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30;
+            this._hasTimeStamp = gl.getQuery(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30;
+
+            if (!this._hasTimeElapsed && !this._hasTimeStamp) {
+                return this;
+            }
+
+            // no timestamp means not start/end absolute time
+            // which means each start must be followed by a end
+            // BEFORE any other start (of other queryID)
+            if (!this._hasTimeStamp) Notify.debug('Warning: do not use interleaved GPU query');
+
+            this._ext = ext;
+            this._gl = gl;
+            this._enabled = true;
+        }
+
+        this._frameAverageCount = 10;
+
+        this._glQueries = [];
+        this._queriesByID = {};
+        this._userQueries = []; // for timestamp, it's the same as _glQueries
+
+        // stuffs used to virtualize query (no timestamp)
+        this._queryCount = 0;
+        this._nbOpened = 0;
+    },
     getContext: function() {
         return this._gl;
     },

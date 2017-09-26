@@ -337,4 +337,19 @@ Utils.timeStamp = (Notify.console.timeStamp || Notify.console.markTimeline || fu
 Utils.profile = (Notify.console.profile || function() {}).bind(Notify.console);
 Utils.profileEnd = (Notify.console.profileEnd || function() {}).bind(Notify.console);
 
+Utils.arrayUniq = function(a) {
+    var len = a.length;
+    var seen = {};
+    var out = [];
+    var j = 0;
+    for (var i = 0; i < len; i++) {
+        var item = a[i];
+        if (seen[item] !== 1) {
+            seen[item] = 1;
+            out[j++] = item;
+        }
+    }
+    return out;
+};
+
 module.exports = Utils;

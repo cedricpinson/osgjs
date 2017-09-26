@@ -10,6 +10,7 @@ var Program = require('osg/Program');
 var Shader = require('osg/Shader');
 var vec3 = require('osg/glMatrix').vec3;
 var Viewport = require('osg/Viewport');
+var VertexArrayObject = require('osg/VertexArrayObject');
 var WebGLCaps = require('osg/WebGLCaps');
 var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
 var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
@@ -72,8 +73,8 @@ View.prototype = {
         return this.getCamera().getRenderer().getState().getGraphicContext();
     },
 
-    initWebGLCaps: function(gl) {
-        WebGLCaps.instance(gl);
+    initWebGLCaps: function(gl, force) {
+        WebGLCaps.instance(gl, force);
     },
 
     // check Each frame because HTML standard inconsistencies
@@ -320,6 +321,7 @@ View.prototype = {
         var gl = this.getGraphicContext();
         var availableTime = availableTimeBudget;
         availableTime = BufferArray.flushDeletedGLBufferArrays(gl, availableTime);
+        availableTime = VertexArrayObject.flushDeletedGLVertexArrayObjects(gl, availableTime);
         availableTime = Texture.getTextureManager(gl).flushDeletedTextureObjects(gl, availableTime);
         availableTime = Program.flushDeletedGLPrograms(gl, availableTime);
         availableTime = Shader.flushDeletedGLShaders(gl, availableTime);
@@ -330,7 +332,8 @@ View.prototype = {
     flushAllDeletedGLObjects: function() {
         // Flush all deleted OpenGL objects
         var gl = this.getGraphicContext();
-        BufferArray.flushAllDeletedGLBufferArrays(gl);
+        BufferArray.flushAllDeletedGLVertexArrayObjects(gl);
+        VertexArrayObject.flushAllDeletedGLBufferArrays(gl);
         Texture.getTextureManager(gl).flushAllDeletedTextureObjects(gl);
         Program.flushAllDeletedGLPrograms(gl);
         Shader.flushAllDeletedGLShaders(gl);

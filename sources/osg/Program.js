@@ -106,6 +106,13 @@ Program.flushAllDeletedGLPrograms = function(gl) {
     }
 };
 
+Program.onLostContext = function(gl) {
+    if (!Program._sDeletedGLProgramCache.has(gl)) return;
+    var deleteList = Program._sDeletedGLProgramCache.get(gl);
+    deleteList.length = 0;
+    return;
+};
+
 /** @lends Program.prototype */
 MACROUTILS.createPrototypeStateAttribute(
     Program,
@@ -188,7 +195,23 @@ MACROUTILS.createPrototypeStateAttribute(
                 if (this._program === null) return;
                 if (this._gl !== undefined) {
                     Program.deleteGLProgram(this._gl, this._program);
+                    GLObject.removeObject(this._gl, this);
                 }
+                this.invalidate();
+            },
+
+            dirty: function() {
+                this._program = undefined;
+            },
+
+            invalidate: function() {
+                this._cacheUniformId = undefined;
+
+                this._uniformsCache = undefined;
+                this._attributesCache = undefined;
+                this._foreignUniforms = undefined;
+                this._trackAttributes = undefined;
+
                 this._program = undefined;
             },
 

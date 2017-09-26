@@ -102,6 +102,12 @@ BufferArray.flushAllDeletedGLBufferArrays = function(gl) {
     }
 };
 
+BufferArray.onLostContext = function(gl) {
+    if (!BufferArray._sDeletedGLBufferArrayCache.has(gl)) return;
+    var deleteList = BufferArray._sDeletedGLBufferArrayCache.get(gl);
+    deleteList.length = 0;
+};
+
 MACROUTILS.createPrototypeObject(
     BufferArray,
     MACROUTILS.objectInherit(GLObject.prototype, {
@@ -124,11 +130,17 @@ MACROUTILS.createPrototypeObject(
             return false;
         },
 
+        invalidate: function() {
+            this._buffer = undefined;
+            this.dirty();
+        },
+
         releaseGLObjects: function() {
             if (this._buffer !== undefined && this._buffer !== null && this._gl !== undefined) {
                 BufferArray.deleteGLBufferArray(this._gl, this._buffer);
+                GLObject.removeObject(this._gl, this);
             }
-            this._buffer = undefined;
+            this.invalidate();
         },
 
         setNormalize: function(normalize) {
