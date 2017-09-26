@@ -19,7 +19,7 @@ var Float = {
     init: function() {
         return 0.0;
     },
-    copy: function(src) {
+    copy: function(out, src) {
         return src;
     },
     create: function() {
@@ -515,9 +515,9 @@ MACROUTILS.createPrototypeObject(
 
                 if (nbChannels === 0) {
                     // no blending ?
-                    target.value = operatorType.copy(target.defaultValue, target.value);
+                    target.value = operatorType.copy(target.value, target.defaultValue);
                 } else if (nbChannels === 1) {
-                    target.value = operatorType.copy(affectedChannels[0].value, target.value);
+                    target.value = operatorType.copy(target.value, affectedChannels[0].value);
                 } else {
                     // blend between multiple channels
                     target.value = operatorType.init(target.value);
@@ -552,8 +552,9 @@ MACROUTILS.createPrototypeObject(
                 var tLocal = t - channel.t;
 
                 // handle loop, careful in case animation is one frame
-                if (loop && instanceAnimation.duration > 0.0)
+                if (loop && instanceAnimation.duration > 0.0) {
                     tLocal = tLocal % instanceAnimation.duration;
+                }
 
                 interpolator(tLocal + instanceAnimation.firstKeyTime, channel);
             }
