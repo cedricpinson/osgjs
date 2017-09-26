@@ -24,8 +24,9 @@ module.exports = function() {
             'Check animation test'
         );
 
-        assert.equal(basicAnimationManager._targets[0].id, 0, 'check target ID [0] created');
-        assert.equal(basicAnimationManager._targets[1].id, 1, 'check target ID [1] created');
+        var basicTargets = basicAnimationManager._targets;
+        assert.equal(basicTargets[0].id, 0, 'check target ID [0] created');
+        assert.equal(basicTargets[1].id, 1, 'check target ID [1] created');
 
         //
         var time = 0.0;
@@ -55,64 +56,26 @@ module.exports = function() {
         );
 
         // .x comes from the mockup anmation name
-        assert.equal(
-            basicAnimationManager._targets[0].value,
-            1,
-            'check target a value at t = ' + time
-        );
-        assert.equal(
-            basicAnimationManager._targets[1].value,
-            1,
-            'check target b value at t = ' + time
-        );
+        assert.equal(basicTargets[0].value, 1, 'check target a value at t = ' + time);
+        assert.equal(basicTargets[1].value, 1, 'check target b value at t = ' + time);
 
         time = 0.5;
         basicAnimationManager.update(null, nv);
-        assert.equal(
-            basicAnimationManager._targets[0].value,
-            0.5,
-            'check target a value at t = ' + time
-        );
-        assert.equal(
-            basicAnimationManager._targets[1].value,
-            1,
-            'check target b value at t = ' + time
-        );
+        assert.equal(basicTargets[0].value, 0.5, 'check target a value at t = ' + time);
+        assert.equal(basicTargets[1].value, 1, 'check target b value at t = ' + time);
 
         time = 3.5;
         basicAnimationManager.update(null, nv);
-        assert.equal(
-            basicAnimationManager._targets[0].value,
-            3,
-            'check target a value at t = ' + time
-        );
-        assert.equal(
-            basicAnimationManager._targets[1].value,
-            1.5,
-            'check target b value at t = ' + time
-        );
+        assert.equal(basicTargets[0].value, 3, 'check target a value at t = ' + time);
+        assert.equal(basicTargets[1].value, 1.5, 'check target b value at t = ' + time);
 
         time = 6.0;
         basicAnimationManager.update(null, nv);
-        assert.equal(
-            basicAnimationManager._targets[0].value,
-            3,
-            'check target a value at t = ' + time
-        );
-        assert.equal(
-            basicAnimationManager._targets[1].value,
-            3,
-            'check target b value at t = ' + time
-        );
+        assert.equal(basicTargets[0].value, 3, 'check target a value at t = ' + time);
+        assert.equal(basicTargets[1].value, 3, 'check target b value at t = ' + time);
 
-        assert.isOk(
-            basicAnimationManager._targets[0].channels.length === 0,
-            'check target has not channels'
-        );
-        assert.isOk(
-            basicAnimationManager._targets[1].channels.length === 0,
-            'check target has not channels'
-        );
+        assert.isOk(basicTargets[0].channels.length === 0, 'check target has not channels');
+        assert.isOk(basicTargets[1].channels.length === 0, 'check target has not channels');
         assert.isOk(
             basicAnimationManager._activeAnimations[animationName] === undefined,
             'check animation ' + animationName + ' is not active'
