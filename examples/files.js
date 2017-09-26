@@ -30,8 +30,6 @@ var files = {
         'shadowmap',
         'sound-3d',
         'split-rendering-rtt',
-        'ssao',
-        'temporal',
         'text2D',
         'texture-video',
         'webVR'

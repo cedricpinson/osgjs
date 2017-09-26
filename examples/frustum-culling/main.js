@@ -3,7 +3,6 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
-    var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
     var osgDB = OSG.osgDB;
     var $ = window.$;
@@ -471,7 +470,9 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var stateset;
 
             var fgt = [
-                osgUtil.Composer.Filter.defaultFragmentShaderHeader,
+                'precision highp float;',
+                'varying vec2 vTexCoord0;',
+                'uniform sampler2D Texture0;',
                 'void main (void)',
                 '{',
                 '  gl_FragColor = texture2D(Texture0, vTexCoord0);',
@@ -487,7 +488,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                 'uniform mat4 uModelViewMatrix;',
                 'uniform mat4 uProjectionMatrix;',
                 'void main(void) {',
-                '  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(Vertex,1.0);',
+                '  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex,1.0));',
                 '  vTexCoord0 = TexCoord0;',
                 '}',
                 ''

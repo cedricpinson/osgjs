@@ -913,6 +913,10 @@ MACROUTILS.createPrototypeObject(
             var str = 'uniform sampler2D TextureInput;\n';
 
             var i;
+            for (i = 0; i < textures.length; i++) {
+                var tname = textures[i].uniformName || textures[i].name;
+                str += 'uniform sampler2D ' + tname + ';\n';
+            }
             for (i = 0; i < uniforms.length; i++) {
                 var uniform = uniforms[i];
                 str += 'uniform ' + uniform.getType() + ' ' + uniform.getName() + ';\n';
