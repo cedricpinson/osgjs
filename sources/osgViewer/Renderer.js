@@ -158,12 +158,16 @@ MACROUTILS.createPrototypeObject(
                 }
             }
 
-            this._cullVisitor.pushViewport(camera.getViewport());
+            var viewport = camera.getViewport();
+            var scissor = camera.getScissor();
+
+            this._cullVisitor.pushViewport(viewport);
 
             this._renderStage.setClearDepth(camera.getClearDepth());
             this._renderStage.setClearColor(camera.getClearColor());
             this._renderStage.setClearMask(camera.getClearMask());
-            this._renderStage.setViewport(camera.getViewport());
+            this._renderStage.setViewport(viewport);
+            this._renderStage.setScissor(scissor);
 
             // pass de dbpager to the cullvisitor, so plod's can do the requests
             this._cullVisitor.setDatabaseRequestHandler(this._camera.getView().getDatabasePager());

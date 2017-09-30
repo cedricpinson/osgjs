@@ -403,14 +403,20 @@ MACROUTILS.createPrototypeObject(
                 _attributeArray.length > stateSetAttributeArray.length
                     ? _attributeArray.length
                     : stateSetAttributeArray.length;
+
             for (var i = 0, l = max; i < l; i++) {
                 var attribute;
                 var attributeId = i;
-                var attributeStack = _attributeArray[attributeId];
 
-                var stateSetAttributePair = stateSetAttributeArray[attributeId];
+                var attributeStack =
+                    attributeId < _attributeArray.length ? _attributeArray[attributeId] : undefined;
 
-                var hasStateAttributeStack = attributeStack !== undefined;
+                var stateSetAttributePair =
+                    attributeId < stateSetAttributeArray.length
+                        ? stateSetAttributeArray[attributeId]
+                        : undefined;
+
+                var hasStateAttributeStack = !!attributeStack;
                 var hasStateAttributeStackChanged =
                     hasStateAttributeStack && attributeStack._changed;
 
@@ -456,13 +462,11 @@ MACROUTILS.createPrototypeObject(
         },
 
         _applyTextureAttributeMapListStateSet: function(
-            _textureAttributesArrayList,
+            _textureAttributeArrayList,
             stateSetTextureAttributeArrayList
         ) {
             var _textureAttributeArray;
-
             var stateSetTextureAttributeLength, stateTextureAttributeLength;
-
             // very interesting JIT optimizer behavior
             // max texture is supposed to be the max of activeTexture or stateSet texture list
             // if the loop is fix, for example max value that could be 16. It's faster than using the max of textureUnit of State and StateSet even if the value is 8 for example
@@ -470,13 +474,18 @@ MACROUTILS.createPrototypeObject(
             for (var i = 0, l = maxTexture; i < l; i++) {
                 var textureUnit = i;
 
-                _textureAttributeArray = _textureAttributesArrayList[textureUnit];
-                var stateSetTextureAttributeArray = stateSetTextureAttributeArrayList[textureUnit];
+                _textureAttributeArray =
+                    textureUnit < _textureAttributeArrayList.length
+                        ? _textureAttributeArrayList[textureUnit]
+                        : undefined;
+                var stateSetTextureAttributeArray =
+                    textureUnit < stateSetTextureAttributeArrayList.length
+                        ? stateSetTextureAttributeArrayList[textureUnit]
+                        : undefined;
 
                 if (!_textureAttributeArray && !stateSetTextureAttributeArray) continue;
 
                 stateSetTextureAttributeLength = stateTextureAttributeLength = 0;
-
                 if (!_textureAttributeArray) {
                     _textureAttributeArray = this.getOrCreateTextureAttributeArray(textureUnit);
                     stateSetTextureAttributeLength = stateSetTextureAttributeArray.length;
@@ -492,11 +501,18 @@ MACROUTILS.createPrototypeObject(
                         : stateSetTextureAttributeLength;
                 for (var j = 0; j < lt; j++) {
                     var attributeId = j;
-                    var attributeStack = _textureAttributeArray[attributeId];
-                    var stateSetAttributePair = stateSetTextureAttributeArray
-                        ? stateSetTextureAttributeArray[attributeId]
-                        : undefined;
-                    var hasStateAttributeStack = attributeStack !== undefined;
+
+                    var attributeStack =
+                        attributeId < stateTextureAttributeLength
+                            ? _textureAttributeArray[attributeId]
+                            : undefined;
+
+                    var stateSetAttributePair =
+                        stateSetTextureAttributeArray &&
+                        attributeId < stateSetTextureAttributeArray.length
+                            ? stateSetTextureAttributeArray[attributeId]
+                            : undefined;
+                    var hasStateAttributeStack = !!attributeStack;
                     var hasStateAttributeStackChanged =
                         hasStateAttributeStack && attributeStack._changed;
                     var attribute;
@@ -618,8 +634,7 @@ MACROUTILS.createPrototypeObject(
             for (var i = 0, l = activeTextureUnits.length; i < l; i++) {
                 var unit = activeTextureUnits[i];
                 var _attributeArray = textureAttributeArrayList[unit];
-
-                var textureUnitAttributeArray = this.getOrCreateTextureAttributeArray(unit);
+                var textureUnitAttributeArray = this._textureAttributeArrayList[unit];
                 this.popAttributeMap(
                     textureUnitAttributeArray,
                     _attributeArray,
@@ -635,11 +650,12 @@ MACROUTILS.createPrototypeObject(
             }
         },
 
-        _createAttributeStack: function(_attributeArray, index, globalDefault) {
+        _createAttributeStack: function(_attributeArray, typeIndex, globalDefault) {
+            MACROUTILS.makeDenseArray(typeIndex, _attributeArray);
             var attributeStack = new StackObjectPairPool();
             attributeStack._globalDefault = globalDefault;
 
-            _attributeArray[index] = attributeStack;
+            _attributeArray[typeIndex] = attributeStack;
 
             return attributeStack;
         },
@@ -647,11 +663,12 @@ MACROUTILS.createPrototypeObject(
         haveAppliedAttribute: function(attribute) {
             if (!attribute) return;
 
+            var attributeArray = this._attributeArray;
             var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(attribute);
-            var attributeStack = this._attributeArray[index];
+            var attributeStack = index < attributeArray.length ? attributeArray[index] : undefined;
             if (!attributeStack) {
                 attributeStack = this._createAttributeStack(
-                    this._attributeArray,
+                    attributeArray,
                     index,
                     attribute.cloneType()
                 );
@@ -663,14 +680,15 @@ MACROUTILS.createPrototypeObject(
         applyAttribute: function(attribute) {
             var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(attribute);
 
-            var _attributeArray = this._attributeArray;
-            var attributeStack = _attributeArray[index];
-            if (!attributeStack)
+            var attributeArray = this._attributeArray;
+            var attributeStack = index < attributeArray.length ? attributeArray[index] : undefined;
+            if (!attributeStack) {
                 attributeStack = this._createAttributeStack(
-                    _attributeArray,
+                    attributeArray,
                     index,
                     attribute.cloneType()
                 );
+            }
 
             attributeStack._changed = true;
             this._applyAttributeStack(attribute, attributeStack);
@@ -776,16 +794,16 @@ MACROUTILS.createPrototypeObject(
             }
         },
 
-        applyTextureAttributeMapList: function(textureAttributesArrayList) {
+        applyTextureAttributeMapList: function(textureAttributeArrayList) {
             var gl = this._graphicContext;
             var textureAttributeArray;
 
             for (
-                var textureUnit = 0, l = textureAttributesArrayList.length;
+                var textureUnit = 0, l = textureAttributeArrayList.length;
                 textureUnit < l;
                 textureUnit++
             ) {
-                textureAttributeArray = textureAttributesArrayList[textureUnit];
+                textureAttributeArray = textureAttributeArrayList[textureUnit];
                 if (!textureAttributeArray) continue;
 
                 for (var i = 0, lt = textureAttributeArray.length; i < lt; i++) {
@@ -815,41 +833,42 @@ MACROUTILS.createPrototypeObject(
         },
 
         setGlobalDefaultAttribute: function(attribute) {
-            var _attributeArray = this._attributeArray;
             var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(attribute);
-            if (_attributeArray[index] === undefined) {
-                this._createAttributeStack(_attributeArray, index, attribute);
+            if (index >= this._attributeArray.length || !this._attributeArray[index]) {
+                this._createAttributeStack(this._attributeArray, index, attribute);
             } else {
-                _attributeArray[index]._globalDefault = attribute;
+                this._attributeArray[index]._globalDefault = attribute;
             }
         },
 
         getGlobalDefaultAttribute: function(typeMember) {
             var _attributeArray = this._attributeArray;
             var index = MACROUTILS.getIdFromTypeMember(typeMember);
-            if (index === undefined) return undefined;
+            if (index === undefined || index >= _attributeArray.length) return undefined;
             return _attributeArray[index] ? _attributeArray[index]._globalDefault : undefined;
         },
 
         setGlobalDefaultTextureAttribute: function(unit, attribute) {
-            var _attributeArray = this.getOrCreateTextureAttributeArray(unit);
+            var attributeArray = this.getOrCreateTextureAttributeArray(unit);
             var index = MACROUTILS.getOrCreateTextureStateAttributeTypeMemberIndex(attribute);
 
-            if (_attributeArray[index] === undefined) {
-                this._createAttributeStack(_attributeArray, index, attribute);
+            if (index >= attributeArray.length || !attributeArray[index]) {
+                this._createAttributeStack(attributeArray, index, attribute);
             } else {
-                _attributeArray[index]._globalDefault = attribute;
+                attributeArray[index]._globalDefault = attribute;
             }
         },
 
         getGlobalDefaultTextureAttribute: function(unit, typeMember) {
-            var _attributeArray = this.getOrCreateTextureAttributeArray(unit);
+            var attributeArray = this.getOrCreateTextureAttributeArray(unit);
             var index = MACROUTILS.getTextureIdFromTypeMember(typeMember);
-            if (index === undefined) return undefined;
-            return _attributeArray[index] ? _attributeArray[index]._globalDefault : undefined;
+            if (index === undefined || index >= attributeArray.length) return undefined;
+            return attributeArray[index] ? attributeArray[index]._globalDefault : undefined;
         },
 
         getOrCreateTextureAttributeArray: function(unit) {
+            MACROUTILS.makeDenseArray(unit, this._textureAttributeArrayList);
+
             if (!this._textureAttributeArrayList[unit]) this._textureAttributeArrayList[unit] = [];
             return this._textureAttributeArrayList[unit];
         },
@@ -857,16 +876,23 @@ MACROUTILS.createPrototypeObject(
         pushAttributeMap: function(_attributeArray, stateSetAttributeArray, validAttributeArray) {
             /*jshint bitwise: false */
             var attributeStack;
-
+            var stateSetAttributeArrayLength = stateSetAttributeArray.length;
+            var _attributeArrayLength = _attributeArray.length;
             for (var i = 0, l = validAttributeArray.length; i < l; i++) {
                 var index = validAttributeArray[i];
-                var attributePair = stateSetAttributeArray[index];
+                var attributePair =
+                    index < stateSetAttributeArrayLength
+                        ? stateSetAttributeArray[index]
+                        : undefined;
                 var attribute = attributePair.getAttribute();
 
-                attributeStack = _attributeArray[index];
+                attributeStack = index < _attributeArrayLength ? _attributeArray[index] : undefined;
                 if (!attributeStack) {
-                    this._createAttributeStack(_attributeArray, index, attribute.cloneType());
-                    attributeStack = _attributeArray[index];
+                    attributeStack = this._createAttributeStack(
+                        _attributeArray,
+                        index,
+                        attribute.cloneType()
+                    );
                 }
 
                 this.pushCheckOverride(attributeStack, attribute, attributePair.getValue());
@@ -981,10 +1007,10 @@ MACROUTILS.createPrototypeObject(
         },
 
         /**
-     *  set a vertex array object.
-     *  return true if binded the vao and false
-     *  if was already binded
-     */
+         *  set a vertex array object.
+         *  return true if binded the vao and false
+         *  if was already binded
+         */
         setVertexArrayObject: function(vao) {
             if (this._currentVAO === vao) return false;
 
@@ -1052,13 +1078,13 @@ MACROUTILS.createPrototypeObject(
                     var key = attributeKeys[i];
                     var index = this.typeMember[key];
                     var attributeStack = _attributeArrayStack[index];
-                    if (attributeStack === undefined) {
+                    if (!attributeStack) {
                         continue;
                     }
 
                     // we just need the uniform list and not the attribute itself
                     var attribute = attributeStack._globalDefault;
-                    if (attribute.getOrCreateUniforms === undefined) {
+                    if (!attribute.getOrCreateUniforms) {
                         continue;
                     }
 
@@ -1072,25 +1098,25 @@ MACROUTILS.createPrototypeObject(
 
         _getActiveUniformsFromProgramTextureAttributes: function(program, activeUniformsList) {
             var textureAttributeKeysList = program.getTrackAttributes().textureAttributeKeys;
-            if (textureAttributeKeysList === undefined) return;
+            if (!textureAttributeKeysList) return;
 
             for (var unit = 0, nbUnit = textureAttributeKeysList.length; unit < nbUnit; unit++) {
                 var textureAttributeKeys = textureAttributeKeysList[unit];
-                if (textureAttributeKeys === undefined) continue;
+                if (!textureAttributeKeys) continue;
 
                 var unitTextureAttributeList = this._textureAttributeArrayList[unit];
-                if (unitTextureAttributeList === undefined) continue;
+                if (!unitTextureAttributeList) continue;
 
                 for (var i = 0, l = textureAttributeKeys.length; i < l; i++) {
                     var key = textureAttributeKeys[i];
 
                     var attributeStack = unitTextureAttributeList[key];
-                    if (attributeStack === undefined) {
+                    if (!attributeStack) {
                         continue;
                     }
                     // we just need the uniform list and not the attribute itself
                     var attribute = attributeStack._globalDefault;
-                    if (attribute.getOrCreateUniforms === undefined) {
+                    if (!attribute.getOrCreateUniforms) {
                         continue;
                     }
                     var uniformMap = attribute.getOrCreateUniforms();

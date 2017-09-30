@@ -55,7 +55,7 @@ ShaderGenerator.prototype = {
 
         for (var j = 0, k = cacheType.length; j < k; j++) {
             var type = cacheType[j];
-            var attributeStack = _attributeArray[type];
+            var attributeStack = type < _attributeArray.length ? _attributeArray[type] : undefined;
             if (!attributeStack) continue;
 
             var attribute = attributeStack._lastApplied;
@@ -76,7 +76,8 @@ ShaderGenerator.prototype = {
         var cacheType = this._ShaderCompiler._validAttributeTypeMemberCache;
         for (var i = 0, l = cacheType.length; i < l; i++) {
             var type = cacheType[i];
-            var attributeStack = state._attributeArray[type];
+            var attributeStack =
+                type < state._attributeArray.length ? state._attributeArray[type] : undefined;
             if (attributeStack) {
                 var attribute = attributeStack._lastApplied;
                 if (!attribute || this.filterAttributeTypes(attribute)) continue;
@@ -98,9 +99,10 @@ ShaderGenerator.prototype = {
             var textureUnit = textureUnitList[j];
             if (!textureUnit) continue;
 
+            var textureUnitLength = textureUnit.length;
             for (var i = 0; i < cacheType.length; i++) {
                 var type = cacheType[i];
-                var attributeStack = textureUnit[type];
+                var attributeStack = type < textureUnitLength ? textureUnit[type] : undefined;
                 if (attributeStack) {
                     var attribute = attributeStack._lastApplied;
 
@@ -138,7 +140,8 @@ ShaderGenerator.prototype = {
             for (var j = 0, m = cacheType.length; j < m; j++) {
                 var type = cacheType[j];
 
-                var attributeStack = _attributeArrayForUnit[type];
+                var attributeStack =
+                    type < _attributeArrayForUnit.length ? _attributeArrayForUnit[type] : undefined;
                 if (!attributeStack) continue;
 
                 var attribute = attributeStack._lastApplied;

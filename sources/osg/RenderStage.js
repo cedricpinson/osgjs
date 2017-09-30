@@ -24,6 +24,7 @@ var RenderStage = function() {
     this._clearMask = undefined;
     this._camera = undefined;
     this._viewport = undefined;
+    this._scissor = undefined;
     this._preRenderList = [];
     this._postRenderList = [];
     // calling prototype to make sure
@@ -52,6 +53,7 @@ MACROUTILS.createPrototypeObject(
             /*jshint bitwise: true */
             this._camera = undefined;
             this._viewport = undefined;
+            this._scissor = undefined;
             this._renderStage = this;
             RenderStage.prototype._initInternal.call(this);
             return this;
@@ -98,6 +100,14 @@ MACROUTILS.createPrototypeObject(
 
         getViewport: function() {
             return this._viewport;
+        },
+
+        setScissor: function(scissor) {
+            this._scissor = scissor;
+        },
+
+        getScissor: function() {
+            return this._scissor;
         },
 
         setCamera: function(camera) {
@@ -272,7 +282,10 @@ MACROUTILS.createPrototypeObject(
             }
             state.applyAttribute(this._viewport);
 
-            /*jshint bitwise: false */
+            if (this._scissor) {
+                state.applyAttribute(this._scissor);
+            }
+
             if (this._clearMask !== 0x0) {
                 if (this._clearMask & gl.COLOR_BUFFER_BIT) {
                     gl.clearColor(
@@ -286,7 +299,6 @@ MACROUTILS.createPrototypeObject(
                     gl.depthMask(true);
                     gl.clearDepth(this._clearDepth);
                 }
-                /*jshint bitwise: true */
                 gl.clear(this._clearMask);
             }
 

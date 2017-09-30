@@ -519,8 +519,6 @@ var cameraApply = function(camera) {
     if (camera.getRenderOrder() === Camera.NESTED_RENDER) {
         this.handleCullCallbacksAndTraverse(camera);
     } else {
-        // not tested
-
         var renderBin = this.getCurrentRenderBin();
         var previousStage = renderBin.getStage();
 
@@ -532,13 +530,10 @@ var cameraApply = function(camera) {
         rtts.setClearColor(camera.getClearColor());
         rtts.setClearMask(camera.getClearMask());
 
-        var vp;
-        if (camera.getViewport() === undefined) {
-            vp = previousStage.getViewport();
-        } else {
-            vp = camera.getViewport();
-        }
-        rtts.setViewport(vp);
+        var viewport = camera.getViewport() ? camera.getViewport() : previousStage.getViewport();
+        var scissor = camera.getScissor() ? camera.getScissor() : previousStage.getScissor();
+        rtts.setViewport(viewport);
+        rtts.setScissor(scissor);
 
         // skip positional state for now
         // ...

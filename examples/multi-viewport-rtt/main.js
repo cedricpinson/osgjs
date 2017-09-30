@@ -20,10 +20,11 @@
             var size = texture.getWidth() / num;
             var offset = index * size;
             camera.setViewport(new osg.Viewport(offset, 0, size, texture.getHeight()));
+            camera.setScissor(new osg.Scissor(offset, 0, size, texture.getHeight()));
             camera.setClearColor(clearColor);
-            camera
-                .getOrCreateStateSet()
-                .setAttributeAndModes(new osg.Scissor(offset, 0, size, texture.getHeight()));
+
+            var stateSet = camera.getOrCreateStateSet();
+            stateSet.setAttributeAndModes(new osg.BlendFunc(osg.BlendFunc.DISABLE));
 
             camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
             camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture);
@@ -103,10 +104,10 @@
             ];
 
             var clearColors = [
-                osg.vec4.fromValues(1, 0, 0, 0),
-                osg.vec4.fromValues(0, 1, 0, 0),
-                osg.vec4.fromValues(0, 0, 1, 0),
-                osg.vec4.fromValues(1, 0, 1, 0)
+                osg.vec4.fromValues(1, 0, 0, 1),
+                osg.vec4.fromValues(0, 1, 0, 1),
+                osg.vec4.fromValues(0, 0, 1, 1),
+                osg.vec4.fromValues(1, 0, 1, 1)
             ];
 
             for (var i = 0; i < num; i++) {

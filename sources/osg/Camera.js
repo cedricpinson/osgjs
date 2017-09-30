@@ -18,6 +18,7 @@ var Camera = function() {
 
     this.viewport = undefined;
     this._graphicContext = undefined;
+    this._scissor = undefined;
     this.setClearColor(vec4.fromValues(0, 0, 0, 1.0));
     this.setClearDepth(1.0);
 
@@ -125,6 +126,14 @@ MACROUTILS.createPrototypeNode(
             },
             getViewport: function() {
                 return this.viewport;
+            },
+
+            setScissor: function(scissor) {
+                this._scissor = scissor;
+                this.getOrCreateStateSet().setAttributeAndModes(this._scissor);
+            },
+            getScissor: function() {
+                return this._scissor;
             },
 
             setViewMatrix: function(matrix) {

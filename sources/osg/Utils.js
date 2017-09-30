@@ -127,6 +127,15 @@ Utils.objectMix = function(obj, properties, test) {
 Utils.objectType = {};
 Utils.objectType.type = 0;
 
+Utils.makeDenseArray = function(index, array, createDefaultType) {
+    var length = array.length;
+    if (index >= length) {
+        for (var i = length; i <= index; i++) {
+            array.push(createDefaultType ? createDefaultType() : null);
+        }
+    }
+};
+
 Utils.objectLibraryClass = function(object, libName, className) {
     object.className = function() {
         return className;
@@ -209,6 +218,7 @@ Utils.createPrototypeNode = function(Constructor, prototype, libraryName, classN
 
     Utils.setNodeTypeID(Constructor);
     var nodeTypeId = Constructor.nodeTypeID;
+    Utils.makeDenseArray(nodeTypeId, cullVisitorHelper.applyFunctionArray);
     cullVisitorHelper.registerApplyFunction(
         nodeTypeId,
         cullVisitorHelper.getApplyFunction(parentNodeTypeID)

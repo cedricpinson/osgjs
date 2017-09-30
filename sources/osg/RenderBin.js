@@ -8,7 +8,7 @@ var PooledArray = require('osg/PooledArray');
 var PooledMap = require('osg/PooledMap');
 
 var createPositionAttribute = function() {
-    return new Array(2);
+    return [null, null];
 };
 
 /**
