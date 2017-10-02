@@ -291,13 +291,13 @@ utils.createPrototypeObject(
 
         // for internal use, you should not call it directly
         _setTextureAttribute: function(unit, attributePair) {
-            utils.makeDenseArray(unit, this._textureAttributeArrayList);
+            utils.arrayDense(unit, this._textureAttributeArrayList);
             if (!this._textureAttributeArrayList[unit]) this._textureAttributeArrayList[unit] = [];
 
             var index = utils.getOrCreateTextureStateAttributeTypeMemberIndex(
                 attributePair.getAttribute()
             );
-            utils.makeDenseArray(index, this._textureAttributeArrayList[unit]);
+            utils.arrayDense(index, this._textureAttributeArrayList[unit]);
 
             this._textureAttributeArrayList[unit][index] = attributePair;
             this._computeValidTextureUnit();
@@ -336,7 +336,7 @@ utils.createPrototypeObject(
             var index = utils.getOrCreateStateAttributeTypeMemberIndex(
                 attributePair.getAttribute()
             );
-            utils.makeDenseArray(index, this._attributeArray);
+            utils.arrayDense(index, this._attributeArray);
             this._attributeArray[index] = attributePair;
             this._computeValidAttribute();
         },

@@ -651,7 +651,7 @@ utils.createPrototypeObject(
         },
 
         _createAttributeStack: function(_attributeArray, typeIndex, globalDefault) {
-            utils.makeDenseArray(typeIndex, _attributeArray);
+            utils.arrayDense(typeIndex, _attributeArray);
             var attributeStack = new StackObjectPairPool();
             attributeStack._globalDefault = globalDefault;
 
@@ -867,7 +867,7 @@ utils.createPrototypeObject(
         },
 
         getOrCreateTextureAttributeArray: function(unit) {
-            utils.makeDenseArray(unit, this._textureAttributeArrayList);
+            utils.arrayDense(unit, this._textureAttributeArrayList);
 
             if (!this._textureAttributeArrayList[unit]) this._textureAttributeArrayList[unit] = [];
             return this._textureAttributeArrayList[unit];
