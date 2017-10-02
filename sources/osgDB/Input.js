@@ -5,7 +5,7 @@ var osgNameSpace = require('osgNameSpace');
 var _requestFile = require('osgDB/requestFile');
 var Options = require('osgDB/options');
 var zlib = require('osgDB/zlib');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Image = require('osg/Image');
 var BufferArray = require('osg/BufferArray');
 var DrawArrays = require('osg/DrawArrays');
@@ -151,7 +151,7 @@ Input.prototype = {
 
         return new P(function(resolve) {
             img.onerror = function() {
-                Notify.warn('warning use white texture as fallback instead of ' + url);
+                notify.warn('warning use white texture as fallback instead of ' + url);
                 image.setImage(Input.imageFallback);
                 resolve(image);
             };
@@ -224,7 +224,7 @@ Input.prototype = {
 
         var readSceneGraph = function(data) {
             return ReaderParser.parseSceneGraph(data, options).then(function(child) {
-                Notify.log('loaded ' + url);
+                notify.log('loaded ' + url);
                 return child;
             });
         };
@@ -253,7 +253,7 @@ Input.prototype = {
             return str;
         };
 
-        MACROUTILS.time('osgjs.metric:Input.readNodeURL', Notify.INFO);
+        MACROUTILS.time('osgjs.metric:Input.readNodeURL', notify.INFO);
         // try to get the file as responseText to parse JSON
         var fileTextPromise = that.requestFile(url);
         return fileTextPromise
@@ -264,7 +264,7 @@ Input.prototype = {
                 } catch (error) {
                     // can't parse try with ungzip code path
 
-                    Notify.error('cant parse url ' + url + ' try to gunzip');
+                    notify.error('cant parse url ' + url + ' try to gunzip');
                 }
                 // we have the json, read it
                 if (data) return readSceneGraph(data);
@@ -281,13 +281,13 @@ Input.prototype = {
                     })
                     .catch(function(status) {
                         var err = 'cant read file ' + url + ' status ' + status;
-                        Notify.error(err);
+                        notify.error(err);
                         return err;
                     });
             })
             .catch(function(status) {
                 var err = 'cant get file ' + url + ' status ' + status;
-                Notify.error(err);
+                notify.error(err);
                 return err;
             })
             .finally(function() {
@@ -304,7 +304,7 @@ Input.prototype = {
             var _zlib = require('zlib');
 
             if (!_zlib) {
-                Notify.error(
+                notify.error(
                     'osg failed to use a gunzip.min.js to uncompress a gz file.\n You can add this vendors to enable this feature or adds the good header in your gzip file served by your server'
                 );
             }
@@ -375,7 +375,7 @@ Input.prototype = {
             var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
 
             if (bigEndian) {
-                Notify.log('big endian detected');
+                notify.log('big endian detected');
                 var TypedArray = MACROUTILS[type];
                 var tmpArray = new TypedArray(nbItems * nbCoords);
                 var data = new DataView(array, offset, totalSizeInBytes);

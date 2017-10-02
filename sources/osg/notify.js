@@ -1,19 +1,19 @@
 'use strict';
 
-var Notify = {};
+var notify = {};
 
 // Range of notify levels from DEBUG through to FATAL
 // ALWAYS is reserved for forcing the absorption of all messages.
 // Must be uppercase and match loggers
-Notify.ALWAYS = 0;
-Notify.FATAL = Notify.ERROR = 1;
-Notify.WARN = 2;
-Notify.NOTICE = Notify.LOG = 3;
-Notify.INFO = 4;
-Notify.DEBUG = 5;
+notify.ALWAYS = 0;
+notify.FATAL = notify.ERROR = 1;
+notify.WARN = 2;
+notify.NOTICE = notify.LOG = 3;
+notify.INFO = 4;
+notify.DEBUG = 5;
 
-Notify.currentNotifyLevel = Notify.LOG;
-Notify.console = window.console;
+notify.currentNotifyLevel = notify.LOG;
+notify.console = window.console;
 
 /** logging with readability in mind.
  * @param { level } what severity is that log (gives text color too )
@@ -21,20 +21,20 @@ Notify.console = window.console;
  * @param { fold  } sometimes you want to hide looooong text
  */
 function logSub(intLevel, strLevel, str) {
-    if (!Notify.console || intLevel > Notify.currentNotifyLevel) return;
+    if (!notify.console || intLevel > notify.currentNotifyLevel) return;
 
-    Notify.console[strLevel](str);
-    if (Notify.traceLogCall && intLevel !== Notify.ERROR) console.trace();
+    notify.console[strLevel](str);
+    if (notify.traceLogCall && intLevel !== notify.ERROR) console.trace();
 }
 
 function logSubFold(intLevel, strLevel, title, str) {
-    if (!Notify.console || intLevel > Notify.currentNotifyLevel) return;
+    if (!notify.console || intLevel > notify.currentNotifyLevel) return;
 
-    if (Notify.console.groupCollapsed) Notify.console.groupCollapsed(title);
-    Notify.console[strLevel](str);
-    if (Notify.traceLogCall && intLevel !== Notify.ERROR) console.trace();
+    if (notify.console.groupCollapsed) notify.console.groupCollapsed(title);
+    notify.console[strLevel](str);
+    if (notify.traceLogCall && intLevel !== notify.ERROR) console.trace();
 
-    if (Notify.console.groupEnd) Notify.console.groupEnd();
+    if (notify.console.groupEnd) notify.console.groupEnd();
 }
 
 function unFlattenMatrix(m, rowMajor) {
@@ -51,53 +51,53 @@ function unFlattenMatrix(m, rowMajor) {
 }
 
 function logMatrix(intLevel, m, rowMajor) {
-    if (intLevel > Notify.currentNotifyLevel) return;
+    if (intLevel > notify.currentNotifyLevel) return;
 
-    if (Notify.console.table) logSub('table', unFlattenMatrix(m, rowMajor));
+    if (notify.console.table) logSub('table', unFlattenMatrix(m, rowMajor));
 }
 
 function logMatrixFold(intLevel, title, m, rowMajor) {
-    if (intLevel > Notify.currentNotifyLevel) return;
+    if (intLevel > notify.currentNotifyLevel) return;
 
-    if (Notify.console.table) logSubFold('table', title, unFlattenMatrix(m, rowMajor));
+    if (notify.console.table) logSubFold('table', title, unFlattenMatrix(m, rowMajor));
 }
 
 var levelEntries = ['error', 'warn', 'log', 'info', 'debug'];
 
 for (var i = 0; i < levelEntries.length; ++i) {
     var level = levelEntries[i];
-    var intLevel = Notify[level.toUpperCase()];
-    Notify[level] = logSub.bind(Notify, intLevel, level);
-    Notify[level + 'Fold'] = logSubFold.bind(Notify, intLevel, level);
-    Notify[level + 'Matrix'] = logMatrix.bind(Notify, intLevel);
-    Notify[level + 'MatrixFold'] = logMatrixFold.bind(Notify, intLevel);
+    var intLevel = notify[level.toUpperCase()];
+    notify[level] = logSub.bind(notify, intLevel, level);
+    notify[level + 'Fold'] = logSubFold.bind(notify, intLevel, level);
+    notify[level + 'Matrix'] = logMatrix.bind(notify, intLevel);
+    notify[level + 'MatrixFold'] = logMatrixFold.bind(notify, intLevel);
 }
 
 // alias
-Notify.notice = Notify.log;
-Notify.noticeFold = Notify.logFold;
-Notify.noticeMatrix = Notify.logMatrix;
-Notify.noticeMatrixFold = Notify.logMatrixFold;
+notify.notice = notify.log;
+notify.noticeFold = notify.logFold;
+notify.noticeMatrix = notify.logMatrix;
+notify.noticeMatrixFold = notify.logMatrixFold;
 
-Notify.assert = function(test, str) {
+notify.assert = function(test, str) {
     if (this.console !== undefined && !test) {
         this.console.assert(test, str);
     }
 };
 
-Notify.setNotifyLevel = function(logLevel, trace) {
-    Notify.currentNotifyLevel = logLevel;
-    if (trace !== undefined) Notify.traceLogCall = trace;
+notify.setNotifyLevel = function(logLevel, trace) {
+    notify.currentNotifyLevel = logLevel;
+    if (trace !== undefined) notify.traceLogCall = trace;
 };
 
-Notify.getNotifyLevel = function() {
-    return Notify.currentNotifyLevel;
+notify.getNotifyLevel = function() {
+    return notify.currentNotifyLevel;
 };
 
-Notify.reportWebGLError = false;
+notify.reportWebGLError = false;
 
-Notify.setConsole = function(replacement) {
-    Notify.console = replacement;
+notify.setConsole = function(replacement) {
+    notify.console = replacement;
 };
 
-module.exports = Notify;
+module.exports = notify;

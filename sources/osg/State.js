@@ -2,7 +2,7 @@
 
 var mat4 = require('osg/glMatrix').mat4;
 var mat3 = require('osg/glMatrix').mat3;
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Object = require('osg/Object');
 var Program = require('osg/Program');
 var StateAttribute = require('osg/StateAttribute');
@@ -255,7 +255,7 @@ MACROUTILS.createPrototypeObject(
             return function(pos) {
                 var length = this.getStateSetStackSize();
                 if (pos >= length) {
-                    Notify.warn('Warning State:removeStateSet ' + pos + ' out of range');
+                    notify.warn('Warning State:removeStateSet ' + pos + ' out of range');
                     return;
                 }
 
@@ -1222,7 +1222,7 @@ MACROUTILS.createPrototypeObject(
 
             STANDARD_UNIFORMS[uniformName] = 1; // avoid multiple spammy errors
 
-            Notify.error('Uniform not in the scene hierarchy : ' + uniformName);
+            notify.error('Uniform not in the scene hierarchy : ' + uniformName);
         },
 
         _computeForeignUniforms: function(programUniformMap, activeUniformMap) {

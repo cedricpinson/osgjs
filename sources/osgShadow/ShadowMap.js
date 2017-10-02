@@ -6,7 +6,7 @@ var Depth = require('osg/Depth');
 var FrameBufferObject = require('osg/FrameBufferObject');
 var mat4 = require('osg/glMatrix').mat4;
 var MatrixTransform = require('osg/MatrixTransform');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Shape = require('osg/shape');
 var StateAttribute = require('osg/StateAttribute');
 var StateSet = require('osg/StateSet');
@@ -295,7 +295,7 @@ MACROUTILS.createPrototypeObject(
             }
 
             /*develblock:start*/
-            Notify.assert(
+            notify.assert(
                 this._shadowReceiveAttribute.getTypeMember() ===
                     this._shadowReceiveAttribute.attributeType + lightNumber,
                 'TypeMember isnt reflecting light number' +
@@ -466,7 +466,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         updateShadowTechnic: function(/*nv*/) {
-            Notify.log(
+            notify.log(
                 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead'
             );
             this.updateShadowTechnique();
@@ -746,7 +746,7 @@ MACROUTILS.createPrototypeObject(
             }
 
             if (lightMatrix === undefined) {
-                Notify.warn('light isnt inside children of shadowedScene Node');
+                notify.warn('light isnt inside children of shadowedScene Node');
                 this._emptyCasterScene = true;
                 return;
             }

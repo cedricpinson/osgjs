@@ -4,7 +4,7 @@ var DatabasePager = require('osgDB/DatabasePager');
 var PagedLOD = require('osg/PagedLOD');
 var Node = require('osg/Node');
 var FrameStamp = require('osg/FrameStamp');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 module.exports = function() {
     var dbpager = new DatabasePager();
@@ -14,7 +14,7 @@ module.exports = function() {
         var that = this;
         // Check if the request is valid;
         if (dbrequest._groupExpired) {
-            //Notify.log( 'DatabasePager::processRequest() Request expired.' );
+            //notify.log( 'DatabasePager::processRequest() Request expired.' );
             that._downloadingRequestsNumber--;
             this._loading = false;
             return undefined;
@@ -59,7 +59,7 @@ module.exports = function() {
                 assert.isOk(dbpager._pendingNodes.length === 1, 'Request processed');
             })
             .catch(function(error) {
-                Notify.error(error);
+                notify.error(error);
             });
     });
 
@@ -86,7 +86,7 @@ module.exports = function() {
                 );
             })
             .catch(function(error) {
-                Notify.error(error);
+                notify.error(error);
             });
     });
 
@@ -121,7 +121,7 @@ module.exports = function() {
                 );
             })
             .catch(function(error) {
-                Notify.error(error);
+                notify.error(error);
             });
     });
 };

@@ -1,7 +1,7 @@
 'use strict';
 var P = require('bluebird');
 var Timer = require('osg/Timer');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 var Utils = {};
 
@@ -184,7 +184,7 @@ Utils.createPrototypeObject = function(Constructor, prototype, libraryName, clas
 // ============== Node ID =================================
 Utils.generateId = function(typeMap, className) {
     if (typeMap[className] !== undefined) {
-        Notify.error(className + ' is already defined, change class name or library name');
+        notify.error(className + ' is already defined, change class name or library name');
         return -1;
     }
 
@@ -310,29 +310,29 @@ Utils.Uint32Array = typeof Uint32Array !== 'undefined' ? Uint32Array : null;
 
 var times = {};
 var registeredTimers = {};
-// we bind the function to Notify.console once and for all to avoid costly apply function
+// we bind the function to notify.console once and for all to avoid costly apply function
 
-Utils.logTime = (Notify.console.time ||
+Utils.logTime = (notify.console.time ||
     function(name) {
         times[name] = Timer.instance().tick();
     })
-    .bind(Notify.console);
+    .bind(notify.console);
 
-Utils.logTimeEnd = (Notify.console.timeEnd ||
+Utils.logTimeEnd = (notify.console.timeEnd ||
     function(name) {
         if (times[name] === undefined) return;
 
         var duration = Timer.instance().deltaM(times[name], Timer.instance().tick());
 
-        Notify.log(name + ': ' + duration + 'ms');
+        notify.log(name + ': ' + duration + 'ms');
         times[name] = undefined;
     })
-    .bind(Notify.console);
+    .bind(notify.console);
 
 Utils.time = function(name, logLevel) {
     var level = logLevel;
-    if (level === undefined) level = Notify.NOTICE;
-    if (level > Notify.getNotifyLevel()) return;
+    if (level === undefined) level = notify.NOTICE;
+    if (level > notify.getnotifyLevel()) return;
     registeredTimers[name] = 1;
     Utils.logTime(name);
 };
@@ -342,10 +342,10 @@ Utils.timeEnd = function(name) {
     Utils.logTimeEnd(name);
 };
 
-Utils.timeStamp = (Notify.console.timeStamp || Notify.console.markTimeline || function() {})
-    .bind(Notify.console);
-Utils.profile = (Notify.console.profile || function() {}).bind(Notify.console);
-Utils.profileEnd = (Notify.console.profileEnd || function() {}).bind(Notify.console);
+Utils.timeStamp = (notify.console.timeStamp || notify.console.markTimeline || function() {})
+    .bind(notify.console);
+Utils.profile = (notify.console.profile || function() {}).bind(notify.console);
+Utils.profileEnd = (notify.console.profileEnd || function() {}).bind(notify.console);
 
 Utils.arrayUniq = function(a) {
     var len = a.length;
@@ -365,7 +365,7 @@ Utils.arrayUniq = function(a) {
 // mostly used as an osgDB helper to issue a warning and reject a promise
 Utils.rejectObject = function(msg, jsonObj) {
     if (jsonObj) msg = 'Invalid json ' + msg + ' ' + Object.keys(jsonObj);
-    Notify.warn(msg); // useful for line debugging
+    notify.warn(msg); // useful for line debugging
     return P.reject(msg); // reject with a message to avoid "undefined" rejection
 };
 

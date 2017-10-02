@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var GLObject = require('osg/GLObject');
 var StateAttribute = require('osg/StateAttribute');
@@ -197,19 +197,19 @@ MACROUTILS.createPrototypeStateAttribute(
             _reportFrameBufferError: function(code) {
                 switch (code) {
                     case 0x8cd6:
-                        Notify.debug('FRAMEBUFFER_INCOMPLETE_ATTACHMENT');
+                        notify.debug('FRAMEBUFFER_INCOMPLETE_ATTACHMENT');
                         break;
                     case 0x8cd7:
-                        Notify.debug('FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT');
+                        notify.debug('FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT');
                         break;
                     case 0x8cd9:
-                        Notify.debug('FRAMEBUFFER_INCOMPLETE_DIMENSIONS');
+                        notify.debug('FRAMEBUFFER_INCOMPLETE_DIMENSIONS');
                         break;
                     case 0x8cdd:
-                        Notify.debug('FRAMEBUFFER_UNSUPPORTED');
+                        notify.debug('FRAMEBUFFER_UNSUPPORTED');
                         break;
                     default:
-                        Notify.debug('FRAMEBUFFER unknown error ' + code.toString(16));
+                        notify.debug('FRAMEBUFFER unknown error ' + code.toString(16));
                 }
             },
 
@@ -253,7 +253,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 /* develblock:start */
                 // only visible with webgl-insector enabled
                 if (gl.rawgl !== undefined) {
-                    Notify.log('FBO: renderBuffer: ' + this._fbo.trackedObject.defaultName);
+                    notify.log('FBO: renderBuffer: ' + this._fbo.trackedObject.defaultName);
                 }
                 /* develblock:end */
             },
@@ -285,7 +285,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 // only visible with webgl-insector enabled
                 // allow trace debug (fb<->texture link)
                 if (gl.rawgl !== undefined) {
-                    Notify.log(
+                    notify.log(
                         'FBO: texture: ' +
                             texture.getName() +
                             ' : ' +
@@ -316,7 +316,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 var maxSize = WebglCaps.instance().getWebGLParameter('MAX_RENDERBUFFER_SIZE');
 
                 if (w === 0 || h === 0 || h > maxSize || w > maxSize) {
-                    Notify.error(
+                    notify.error(
                         'width (' +
                             w +
                             ') or height (' +
@@ -346,7 +346,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 // each frame
                 if (!this.isDirty()) {
                     gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
-                    if (Notify.reportWebGLError === true) this.checkStatus();
+                    if (notify.reportWebGLError === true) this.checkStatus();
                     return;
                 }
 

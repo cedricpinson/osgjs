@@ -1,6 +1,6 @@
 'use strict';
 
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Uniform = require('osg/Uniform');
 var factory = require('osgShader/nodeFactory');
 var MACROUTILS = require('osg/Utils');
@@ -132,11 +132,11 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
     },
 
     logError: function(msg) {
-        Notify.error(this.getDebugIdentifier() + ' : ' + msg);
+        notify.error(this.getDebugIdentifier() + ' : ' + msg);
     },
 
     logWarn: function(msg) {
-        Notify.warn(this.getDebugIdentifier() + ' : ' + msg);
+        notify.warn(this.getDebugIdentifier() + ' : ' + msg);
     },
 
     getOrCreateConstantOne: function(type) {
@@ -337,7 +337,7 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
 
     getNode: function(/*name, arg1, etc*/) {
         var n = factory.getNode.apply(factory, arguments);
-        if (!n) Notify.error('Unknown Node type : ' + arguments[0]);
+        if (!n) notify.error('Unknown Node type : ' + arguments[0]);
         var cacheID = n.getID();
         this._activeNodeList[cacheID] = n;
         return n;

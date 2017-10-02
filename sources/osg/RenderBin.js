@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require('osg/Utils');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Object = require('osg/Object');
 var osgMath = require('osg/math');
 var PooledResource = require('osg/PooledResource');
@@ -135,7 +135,7 @@ MACROUTILS.createPrototypeObject(
             }
 
             if (detectedNaN) {
-                Notify.debug(
+                notify.debug(
                     'warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.'
                 );
             }

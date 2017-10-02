@@ -4,7 +4,7 @@ var mockup = require('tests/mockup/mockup');
 var mat4 = require('osg/glMatrix').mat4;
 var vec3 = require('osg/glMatrix').vec3;
 var quat = require('osg/glMatrix').quat;
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 module.exports = function() {
     test('Matrix.makeRotateFromQuat', function() {
@@ -444,7 +444,7 @@ module.exports = function() {
         );
         var valid = mat4.invert(result2, m2);
         assert.isOk(true, valid);
-        Notify.log('inverse ' + mat4.str(result2));
+        notify.log('inverse ' + mat4.str(result2));
         //    assert.isOk(true, valid);
     });
 

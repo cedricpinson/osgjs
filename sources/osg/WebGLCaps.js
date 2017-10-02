@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var WebGLUtils = require('osgViewer/webgl-utils');
 var Options = require('osg/Options');
 var Texture;
@@ -77,7 +77,7 @@ WebGLCaps.instance = function(glParam, force) {
             // like nodejs, phantomjs
             // warns but no error so that nodejs/phantomjs
             // can still has some webglcaps object
-            Notify.warn('no support for webgl context detected.');
+            notify.warn('no support for webgl context detected.');
         }
 
         if (oldWebGLInspector) {

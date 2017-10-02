@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var Object = require('osg/Object');
 
@@ -224,7 +224,7 @@ MACROUTILS.createPrototypeObject(
 
             // It's not something we recognise
             /*develblock:start*/
-            Notify.warn("Warning can't detect image object ");
+            notify.warn("Warning can't detect image object ");
             /*develblock:end*/
             return false;
         },

@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var Node = require('osgShader/node/Node');
 
@@ -46,7 +46,7 @@ MACROUTILS.createPrototypeObject(
             if (outType === 'vec2') return variable + '.rg';
             if (outType === 'float') return variable + '.r';
 
-            Notify.error('Mismatch type : ' + outType + ' with ' + inType + ', ' + variable);
+            notify.error('Mismatch type : ' + outType + ' with ' + inType + ', ' + variable);
             return variable;
         },
 
@@ -306,8 +306,8 @@ MACROUTILS.createPrototypeObject(
                 var str = result[i].substr(1);
                 if (!done.has(str)) {
                     if (!replaceVariables[str]) {
-                        Notify.error('error with inline code\n' + this._text);
-                        Notify.error('input ' + str + ' not provided for ' + result[i]);
+                        notify.error('error with inline code\n' + this._text);
+                        notify.error('input ' + str + ' not provided for ' + result[i]);
                     }
                     var reg = new RegExp(result[i].toString(), 'gm');
                     text = text.replace(reg, replaceVariables[str].getVariable());

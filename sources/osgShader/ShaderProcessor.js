@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var shaderLib = require('osgShader/shaderLib');
 var shadowShaderLib = require('osgShadow/shaderLib');
 var WebglCaps = require('osg/WebGLCaps');
@@ -74,7 +74,7 @@ ShaderProcessor.prototype = {
         var preShader = this._shadersText[shaderName];
 
         if (!preShader) {
-            Notify.error('shader file/text: ' + shaderName + ' not registered');
+            notify.error('shader file/text: ' + shaderName + ' not registered');
             preShader = '';
         }
 

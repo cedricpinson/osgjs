@@ -1,6 +1,6 @@
 'use strict';
 
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Texture = require('osg/Texture');
 var Uniform = require('osg/Uniform');
 var MACROUTILS = require('osg/Utils');
@@ -64,8 +64,8 @@ MACROUTILS.createPrototypeStateAttribute(
             // uniform are once per CLASS attribute, not per instance
             var obj = ShadowTexture;
 
-            Notify.assert(unit !== undefined);
-            Notify.assert(this._lightNumber !== -1);
+            notify.assert(unit !== undefined);
+            notify.assert(this._lightNumber !== -1);
 
             if (obj.uniforms[unit] !== undefined) return obj.uniforms[unit];
 

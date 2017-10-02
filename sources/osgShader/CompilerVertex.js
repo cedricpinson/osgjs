@@ -1,6 +1,6 @@
 'use strict';
 
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 var CompilerVertex = {
     _createVertexShader: function() {
@@ -12,8 +12,8 @@ var CompilerVertex = {
         // call the graph compiler itself
         var shader = this.createShaderFromGraphs(roots);
 
-        Notify.debug(this.getDebugIdentifier());
-        Notify.debug(shader);
+        notify.debug(this.getDebugIdentifier());
+        notify.debug(shader);
 
         return shader;
     },

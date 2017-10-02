@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var Uniform = require('osg/Uniform');
 var BlendFunc = require('osg/BlendFunc');
@@ -74,7 +74,7 @@ ReaderParser.parseSceneGraph = function(node, options) {
             MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
             return object;
         } else {
-            Notify.log("can't parse scenegraph " + node);
+            notify.log("can't parse scenegraph " + node);
         }
     } else {
         MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
@@ -140,7 +140,7 @@ ReaderParser.parseSceneGraphDeprecated = function(node) {
                 osgjs.setImage(img);
             })
             .catch(function() {
-                Notify.log("Can't read image");
+                notify.log("Can't read image");
             });
     };
 
@@ -154,7 +154,7 @@ ReaderParser.parseSceneGraphDeprecated = function(node) {
             for (var t = 0, tl = textures.length; t < tl; t++) {
                 var file = getFieldBackwardCompatible('File', textures[t]);
                 if (!file) {
-                    Notify.log('no texture on unit ' + t + ' skip it');
+                    notify.log('no texture on unit ' + t + ' skip it');
                     continue;
                 }
                 var Texture = require('osg/Texture');

@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require('osg/Utils');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var ObjectBase = require('osg/Object');
 var FindNearestParentSkeleton = require('osgAnimation/FindNearestParentSkeleton');
 
@@ -16,14 +16,14 @@ MACROUTILS.createPrototypeObject(
         init: function(geom) {
             var finder = new FindNearestParentSkeleton();
             if (geom.getParents().length > 1)
-                Notify.warn(
+                notify.warn(
                     'A RigGeometry should not have multi parent ( ' + geom.getName() + ' )'
                 );
 
             geom.getParents()[0].accept(finder);
 
             if (!finder._root) {
-                Notify.warn(
+                notify.warn(
                     'A RigGeometry did not find a parent skeleton for RigGeometry ( ' +
                         geom.getName() +
                         ' )'

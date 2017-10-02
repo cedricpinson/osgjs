@@ -1,6 +1,6 @@
 'use strict';
 
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var WebGLCaps = require('osg/WebGLCaps');
 
 /*
@@ -54,7 +54,7 @@ TimerGPU.prototype = {
             // no timestamp means not start/end absolute time
             // which means each start must be followed by a end
             // BEFORE any other start (of other queryID)
-            if (!this._hasTimeStamp) Notify.debug('Warning: do not use interleaved GPU query');
+            if (!this._hasTimeStamp) notify.debug('Warning: do not use interleaved GPU query');
 
             this._ext = ext;
             this._gl = gl;

@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var Object = require('osg/Object');
 var MatrixTransform = require('osg/MatrixTransform');
@@ -36,7 +36,7 @@ MACROUTILS.createPrototypeObject(
         linkAnimation: function(anim) {
             var name = this.getName();
             if (name.length === 0) {
-                Notify.log('no name on an update callback, discard');
+                notify.log('no name on an update callback, discard');
                 return 0;
             }
             var nbLinks = 0;

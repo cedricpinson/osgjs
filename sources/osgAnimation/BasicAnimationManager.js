@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var BaseObject = require('osg/Object');
 var quat = require('osg/glMatrix').quat;
@@ -291,7 +291,7 @@ MACROUTILS.createPrototypeObject(
         playAnimationObject: function(obj) {
             var anim = this._instanceAnimations[obj.name];
             if (!anim) {
-                Notify.info('no animation ' + obj.name + ' found');
+                notify.info('no animation ' + obj.name + ' found');
                 return;
             }
 
@@ -356,7 +356,7 @@ MACROUTILS.createPrototypeObject(
                 // it must be a user decision in case the user plugin different scene
                 // graph together and target would appear later in the scenegraph
                 if (!this._targetMap[uniqueTargetName]) {
-                    Notify.warn(
+                    notify.warn(
                         'registerInstanceAnimation did not find targetName (' +
                             uniqueTargetName +
                             ') in the scene graph'
@@ -403,7 +403,7 @@ MACROUTILS.createPrototypeObject(
                     // detect differents target instance with same
                     // unique target name. It's a problem
                     if (target !== targetMap[uniqueTargetName])
-                        Notify.warn(
+                        notify.warn(
                             'detected differents target instance with the same name (' + name + ')'
                         );
                 }

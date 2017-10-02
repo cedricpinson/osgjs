@@ -1,6 +1,6 @@
 'use strict';
 var MACROUTILS = require('osg/Utils');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var UpdateMatrixTransform = require('osgAnimation/UpdateMatrixTransform');
 var mat4 = require('osg/glMatrix').mat4;
 var NodeVisitor = require('osg/NodeVisitor');
@@ -20,7 +20,7 @@ MACROUTILS.createPrototypeObject(
         update: function(node, nv) {
             if (nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR) {
                 if (node.className && node.className() !== 'Bone') {
-                    Notify.warn('Warning: UpdateBone set on non-Bone object.');
+                    notify.warn('Warning: UpdateBone set on non-Bone object.');
                     return false;
                 }
 

@@ -2,7 +2,7 @@
 
 var DisplayGraphRenderer = require('osgUtil/DisplayGraphRenderer');
 var DisplayGraphNode = require('osgUtil/DisplayGraphNode');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 var $;
 
@@ -10,7 +10,7 @@ var init$ = function() {
     try {
         $ = require('jquery');
     } catch (e) {
-        Notify.warn(
+        notify.warn(
             'You will not be able to use osgUtil.DisplayGraph until you add jQuery in your page'
         );
     }
@@ -252,9 +252,9 @@ DisplayGraph.prototype = {
         target.childNodes[0].style.fill = '#f00';
 
         window.activeNode = elt;
-        Notify.info('window.activeNode is set with the node below !');
-        Notify.log(window.activeNode);
-        Notify.log('\n');
+        notify.info('window.activeNode is set with the node below !');
+        notify.log(window.activeNode);
+        notify.log('\n');
 
         if (this._cbSelect) this._cbSelect(elt);
     },

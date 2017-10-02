@@ -2,7 +2,7 @@
 var MACROUTILS = require('osg/Utils');
 var Camera = require('osg/Camera');
 var FrameBufferObject = require('osg/FrameBufferObject');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var RenderBin = require('osg/RenderBin');
 var vec4 = require('osg/glMatrix').vec4;
 var PooledResource = require('osg/PooledResource');
@@ -278,7 +278,7 @@ MACROUTILS.createPrototypeObject(
 
             // projection clipping
             if (this._viewport === undefined) {
-                Notify.log('RenderStage does not have a valid viewport');
+                notify.log('RenderStage does not have a valid viewport');
             }
             state.applyAttribute(this._viewport);
 

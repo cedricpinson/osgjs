@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require('osg/Utils');
 var NodeVisitor = require('osg/NodeVisitor');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Bone = require('osgAnimation/Bone');
 
 var CollectBoneVisitor = function() {
@@ -17,7 +17,7 @@ MACROUTILS.createPrototypeObject(
                 var name = node.getName();
 
                 if (!name) {
-                    Notify.warn('found Bone without name');
+                    notify.warn('found Bone without name');
                 } else {
                     this._boneMap[name] = node;
                 }

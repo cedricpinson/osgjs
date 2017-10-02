@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
@@ -43,7 +43,7 @@ var checkAndFixEnum = function(mode, fallback) {
     var value = Texture[mode];
 
     if (value === undefined) {
-        Notify.warn('bad Texture enum argument ' + mode + '\n' + 'fallback to ' + fallback);
+        notify.warn('bad Texture enum argument ' + mode + '\n' + 'fallback to ' + fallback);
         return fallback;
     }
 
@@ -352,7 +352,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
                 if (w !== undefined) {
                     if (w > maxSize) {
-                        Notify.error(
+                        notify.error(
                             'width (' +
                                 w +
                                 ') too big for GPU. Max Texture Size is "' +
@@ -367,7 +367,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
                 if (h !== undefined) {
                     if (h > maxSize) {
-                        Notify.error(
+                        notify.error(
                             'height (' +
                                 h +
                                 ') too big for GPU. Max Texture Size is "' +

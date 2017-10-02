@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require('osg/Utils');
 var BufferArrayProxy = require('osg/BufferArrayProxy');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var vec3 = require('osg/glMatrix').vec3;
 var Geometry = require('osg/Geometry');
 var StateSet = require('osg/StateSet');
@@ -63,7 +63,7 @@ MACROUTILS.createPrototypeNode(
                 this._morphAttribute.copyTargetNames(this._morphTargetNames);
             } else {
                 this._morphTargetNames = [];
-                Notify.error('No Targets in the MorphGeometry !');
+                notify.error('No Targets in the MorphGeometry !');
             }
 
             this._isInitialized = true;

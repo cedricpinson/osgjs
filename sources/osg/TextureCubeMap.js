@@ -1,7 +1,7 @@
 'use strict';
 var MACROUTILS = require('osg/Utils');
 var Image = require('osg/Image');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Texture = require('osg/Texture');
 
 /**
@@ -160,7 +160,7 @@ MACROUTILS.createPrototypeStateAttribute(
                 for (var face = 0; face < 6; face++) {
                     var faceImage = this._images[Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face];
                     if (!faceImage.hasMipmap()) {
-                        Notify.error('mipmap not set correctly for TextureCubemap');
+                        notify.error('mipmap not set correctly for TextureCubemap');
                     }
 
                     var internalFormat = this._internalFormat;

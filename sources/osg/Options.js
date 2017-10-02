@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 
 var OptionsDefault = {
@@ -49,19 +49,19 @@ Options.getOptionsURL = function() {
 
         switch (level) {
             case 'debug':
-                Notify.setNotifyLevel(Notify.DEBUG);
+                notify.setNotifyLevel(notify.DEBUG);
                 break;
             case 'info':
-                Notify.setNotifyLevel(Notify.INFO);
+                notify.setNotifyLevel(notify.INFO);
                 break;
             case 'notice':
-                Notify.setNotifyLevel(Notify.NOTICE);
+                notify.setNotifyLevel(notify.NOTICE);
                 break;
             case 'warn':
-                Notify.setNotifyLevel(Notify.WARN);
+                notify.setNotifyLevel(notify.WARN);
                 break;
             case 'error':
-                Notify.setNotifyLevel(Notify.ERROR);
+                notify.setNotifyLevel(notify.ERROR);
                 break;
             case 'html':
                 var logContent = [];

@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var MACROUTILS = require('osg/Utils');
 var osgMath = require('osg/math');
 var NodeVisitor = require('osg/NodeVisitor');
@@ -267,7 +267,7 @@ MACROUTILS.createPrototypeObject(
             clampProjectionMatrix: function(projection, znear, zfar, nearFarRatio, resultNearFar) {
                 var epsilon = 1e-6;
                 if (zfar < znear - epsilon) {
-                    Notify.log(
+                    notify.log(
                         'clampProjectionMatrix not applied, invalid depth range, znear = ' +
                             znear +
                             '  zfar = ' +
@@ -686,7 +686,7 @@ var geometryApply = function(node) {
     }
     if (osgMath.isNaN(depth)) {
         if (!loggedOnce) {
-            Notify.warn('warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec);
+            notify.warn('warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec);
             loggedOnce = true;
         }
     } else {

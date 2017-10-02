@@ -2,7 +2,7 @@
 var MACROUTILS = require('osg/Utils');
 var vec3 = require('osg/glMatrix').vec3;
 var Geometry = require('osg/Geometry');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var mat4 = require('osg/glMatrix').mat4;
 var StateSet = require('osg/StateSet');
 var MorphGeometry = require('osgAnimation/MorphGeometry');
@@ -148,7 +148,7 @@ MACROUTILS.createPrototypeNode(
 
         computeMatrixFromRootSkeleton: function() {
             if (!this._root) {
-                Notify.warn(
+                notify.warn(
                     'Warning ' +
                         this.className() +
                         '.computeMatrixFromRootSkeleton if you have this message it means you miss to call buildTransformer( root ), or your RigGeometry (' +
