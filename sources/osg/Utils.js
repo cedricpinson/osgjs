@@ -1,5 +1,5 @@
 'use strict';
-
+var P = require('bluebird');
 var Timer = require('osg/Timer');
 var Notify = require('osg/notify');
 
@@ -360,6 +360,13 @@ Utils.arrayUniq = function(a) {
         }
     }
     return out;
+};
+
+// mostly used as an osgDB helper to issue a warning and reject a promise
+Utils.rejectObject = function(msg, jsonObj) {
+    if (jsonObj) msg = 'Invalid json ' + msg + ' ' + Object.keys(jsonObj);
+    Notify.warn(msg); // useful for line debugging
+    return P.reject(msg); // reject with a message to avoid "undefined" rejection
 };
 
 module.exports = Utils;

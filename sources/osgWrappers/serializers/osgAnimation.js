@@ -1,5 +1,6 @@
 'use strict';
 var P = require('bluebird');
+var MACROUTILS = require('osg/Utils');
 var Notify = require('osg/notify');
 var osgWrapper = require('osgWrappers/serializers/osg');
 var Channel = require('osgAnimation/channel');
@@ -10,13 +11,7 @@ var StackedScale = require('osgAnimation/StackedScale');
 var MorphGeometry = require('osgAnimation/MorphGeometry');
 var Geometry = require('osg/Geometry');
 
-var rejectObject = function(msg, node) {
-    msg = 'Invalid json ' + msg;
-    if (node) msg += ' ' + Object.keys(node);
-
-    Notify.warn(msg); // useful for line debugging
-    return P.reject(msg); // reject with a message to avoid "undefined" rejection
-};
+var rejectObject = MACROUTILS.rejectObject;
 
 var osgAnimationWrapper = {};
 
