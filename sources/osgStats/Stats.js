@@ -1,4 +1,4 @@
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var BlendFunc = require('osg/BlendFunc');
 var Camera = require('osg/Camera');
 var CullFace = require('osg/CullFace');
@@ -102,7 +102,7 @@ var Stats = function(viewport, options) {
     this._init(options);
 };
 
-MACROUTILS.createPrototypeObject(Stats, {
+utils.createPrototypeObject(Stats, {
     getCounter: function(name) {
         if (!this._counters[name]) {
             this._counters[name] = new Counter({

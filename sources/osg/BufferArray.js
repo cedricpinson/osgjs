@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 var GLObject = require('osg/GLObject');
 var Timer = require('osg/Timer');
@@ -7,10 +7,10 @@ var Timer = require('osg/Timer');
 var getAttributeType = function(array) {
     var type;
 
-    if (array instanceof MACROUTILS.Float32Array) type = 0x1406;
-    if (array instanceof MACROUTILS.Uint32Array) type = 0x1405;
-    if (array instanceof MACROUTILS.Uint16Array) type = 0x1403;
-    if (array instanceof MACROUTILS.Uint8Array) type = 0x1401;
+    if (array instanceof utils.Float32Array) type = 0x1406;
+    if (array instanceof utils.Uint32Array) type = 0x1405;
+    if (array instanceof utils.Uint16Array) type = 0x1403;
+    if (array instanceof utils.Uint8Array) type = 0x1401;
 
     return type;
 };
@@ -42,14 +42,14 @@ var BufferArray = function(target, elements, itemSize, preserveArrayType) {
         if (!preserveArrayType) {
             if (this._target === BufferArray.ELEMENT_ARRAY_BUFFER) {
                 typedArray =
-                    elements instanceof MACROUTILS.Uint16Array
+                    elements instanceof utils.Uint16Array
                         ? elements
-                        : new MACROUTILS.Uint16Array(elements);
+                        : new utils.Uint16Array(elements);
             } else {
                 typedArray =
-                    elements instanceof MACROUTILS.Float32Array
+                    elements instanceof utils.Float32Array
                         ? elements
-                        : new MACROUTILS.Float32Array(elements);
+                        : new utils.Float32Array(elements);
             }
         }
         this.setElements(typedArray);
@@ -108,9 +108,9 @@ BufferArray.onLostContext = function(gl) {
     deleteList.length = 0;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     BufferArray,
-    MACROUTILS.objectInherit(GLObject.prototype, {
+    utils.objectInherit(GLObject.prototype, {
         setUsage: function(usage) {
             this._usage = usage;
         },
@@ -178,7 +178,7 @@ MACROUTILS.createPrototypeObject(
         },
         compile: function(gl) {
             if (this._dirty) {
-                MACROUTILS.timeStamp('osgjs.metrics:bufferData');
+                utils.timeStamp('osgjs.metrics:bufferData');
                 gl.bufferData(this._target, this._elements, this._usage);
                 this._dirty = false;
             }

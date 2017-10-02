@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Node = require('osg/Node');
 var NodeVisitor = require('osg/NodeVisitor');
 var mat4 = require('osg/glMatrix').mat4;
@@ -28,9 +28,9 @@ Lod.USER_DEFINED_CENTER = 1;
 Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED = 2;
 
 /** @lends Lod.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     Lod,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         // Functions here
         getRadius: function() {
             return this._radius;

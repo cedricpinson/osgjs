@@ -1,6 +1,6 @@
 'use strict';
 var assert = require('chai').assert;
-var Utils = require('osg/Utils');
+var utils = require('osg/utils');
 
 module.exports = function() {
     var checkBaseClass = function(BaseObject, libraryName, className) {
@@ -27,7 +27,7 @@ module.exports = function() {
             this._var0 = 1;
         };
 
-        Utils.createPrototypeObject(
+        utils.createPrototypeObject(
             BaseObject,
             {
                 getMember: function() {
@@ -45,9 +45,9 @@ module.exports = function() {
             this._var1 = 1;
         };
 
-        Utils.createPrototypeObject(
+        utils.createPrototypeObject(
             ExtendedObject,
-            Utils.objectInherit(BaseObject.prototype, {
+            utils.objectInherit(BaseObject.prototype, {
                 getMember: function() {
                     return 2;
                 }
@@ -61,7 +61,7 @@ module.exports = function() {
         var BaseObjectOld = function() {
             this._var0 = 1;
         };
-        BaseObjectOld.prototype = Utils.objectLibraryClass(
+        BaseObjectOld.prototype = utils.objectLibraryClass(
             {
                 getMember: function() {
                     return 1;
@@ -70,7 +70,7 @@ module.exports = function() {
             'toto1',
             'Asticot1'
         );
-        Utils.setTypeID(BaseObjectOld);
+        utils.setTypeID(BaseObjectOld);
         checkBaseClass(BaseObjectOld, 'toto1', 'Asticot1');
 
         var ExtendedObjectOld = function() {
@@ -78,8 +78,8 @@ module.exports = function() {
             this._var1 = 1;
         };
 
-        ExtendedObjectOld.prototype = Utils.objectLibraryClass(
-            Utils.objectInherit(BaseObjectOld.prototype, {
+        ExtendedObjectOld.prototype = utils.objectLibraryClass(
+            utils.objectInherit(BaseObjectOld.prototype, {
                 getMember: function() {
                     return 2;
                 }
@@ -87,7 +87,7 @@ module.exports = function() {
             'toto1',
             'LeRigolo1'
         );
-        Utils.setTypeID(ExtendedObjectOld);
+        utils.setTypeID(ExtendedObjectOld);
 
         checkExtendedClass(BaseObjectOld, ExtendedObjectOld, 'toto1', 'LeRigolo1');
     });

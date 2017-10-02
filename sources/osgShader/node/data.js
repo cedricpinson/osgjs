@@ -1,9 +1,7 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
-var utils = require('osgShader/utils');
+var utils = require('osg/utils');
+var sprintf = require('osgShader/utils').sprintf;
 var Node = require('osgShader/node/Node');
-
-var sprintf = utils.sprintf;
 
 // Base Class for all variables Nodes
 // TODO: add precision
@@ -17,9 +15,9 @@ var Variable = function(type, prefix) {
     this._value = undefined;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Variable,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         getType: function() {
             return this._type;
         },
@@ -69,9 +67,9 @@ var Constant = function(type, prefix) {
     Variable.call(this, type, prefix);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Constant,
-    MACROUTILS.objectInherit(Variable.prototype, {
+    utils.objectInherit(Variable.prototype, {
         declare: function() {
             return sprintf('const %s %s = %s;', [this._type, this.getVariable(), this._value]);
         }
@@ -85,9 +83,9 @@ var Uniform = function(type, prefix, size) {
     this._size = size;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Uniform,
-    MACROUTILS.objectInherit(Variable.prototype, {
+    utils.objectInherit(Variable.prototype, {
         declare: function() {
             return undefined;
         },
@@ -109,9 +107,9 @@ var Attribute = function(type, prefix) {
     Variable.call(this, type, prefix);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Attribute,
-    MACROUTILS.objectInherit(Variable.prototype, {
+    utils.objectInherit(Variable.prototype, {
         declare: function() {
             return undefined;
         },
@@ -128,9 +126,9 @@ var Varying = function(type, prefix) {
     Variable.call(this, type, prefix);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Varying,
-    MACROUTILS.objectInherit(Variable.prototype, {
+    utils.objectInherit(Variable.prototype, {
         declare: function() {
             return undefined;
         },
@@ -147,9 +145,9 @@ var Sampler = function(type, prefix) {
     Variable.call(this, type, prefix);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Sampler,
-    MACROUTILS.objectInherit(Variable.prototype, {
+    utils.objectInherit(Variable.prototype, {
         declare: function() {
             return undefined;
         },
@@ -169,9 +167,9 @@ var Output = function(type, wholeName) {
     Variable.call(this, type, wholeName);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Output,
-    MACROUTILS.objectInherit(Variable.prototype, {
+    utils.objectInherit(Variable.prototype, {
         _unique: true,
         isUnique: function() {
             return this._unique;
@@ -194,9 +192,9 @@ var glFragColor = function() {
     this._name = 'glFragColor';
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     glFragColor,
-    MACROUTILS.objectInherit(Output.prototype, {}),
+    utils.objectInherit(Output.prototype, {}),
     'osgShader',
     'glFragColor'
 );
@@ -206,9 +204,9 @@ var glPosition = function() {
     this._name = 'glPosition';
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     glPosition,
-    MACROUTILS.objectInherit(Output.prototype, {}),
+    utils.objectInherit(Output.prototype, {}),
     'osgShader',
     'glPosition'
 );
@@ -218,9 +216,9 @@ var glPointSize = function() {
     this._name = 'glPointSize';
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     glPointSize,
-    MACROUTILS.objectInherit(Output.prototype, {}),
+    utils.objectInherit(Output.prototype, {}),
     'osgShader',
     'glPointSize'
 );
@@ -230,9 +228,9 @@ var Define = function(name) {
     this._defineName = name;
     this._defineValue = '';
 };
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Define,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         type: 'Define',
         setValue: function(value) {
             this._defineValue = value;

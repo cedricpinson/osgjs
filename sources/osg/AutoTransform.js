@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Transform = require('osg/Transform');
 var vec3 = require('osg/glMatrix').vec3;
 var vec4 = require('osg/glMatrix').vec4;
@@ -41,9 +41,9 @@ var AutoTransform = function() {
 };
 
 /** @lends Autotransform.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     AutoTransform,
-    MACROUTILS.objectInherit(Transform.prototype, {
+    utils.objectInherit(Transform.prototype, {
         getMatrix: function() {
             return this._matrix;
         },

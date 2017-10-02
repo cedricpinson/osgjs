@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Compiler = require('osgShader/Compiler');
 
 var CompilerShadowCast = function() {
@@ -11,9 +11,9 @@ config.attribute = ['ShadowCast', 'Morph', 'Skinning', 'PointSize'];
 
 Compiler.setStateAttributeConfig(CompilerShadowCast, config);
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CompilerShadowCast,
-    MACROUTILS.objectInherit(Compiler.prototype, {
+    utils.objectInherit(Compiler.prototype, {
         getCompilerName: function() {
             return 'ShadowCast';
         },

@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 var mat4 = require('osg/glMatrix').mat4;
 var Target = require('osgAnimation/target');
@@ -10,9 +10,9 @@ var StackedMatrix = function(name, matrix) {
     if (name) this.setName(name);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     StackedMatrix,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         init: function(matrix) {
             this.setMatrix(matrix);
             mat4.copy(this._target.defaultValue, matrix);

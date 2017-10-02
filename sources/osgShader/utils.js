@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var notify = require('osg/notify');
 var Node = require('osgShader/node/Node');
 
@@ -284,9 +284,9 @@ var createNode = function(res, fileName) {
     };
 
     var globalDeclare = '#pragma include "' + fileName + '"';
-    MACROUTILS.createPrototypeObject(
+    utils.createPrototypeObject(
         NodeCustom,
-        MACROUTILS.objectInherit(Node.prototype, {
+        utils.objectInherit(Node.prototype, {
             type: res.nodeName,
             signatures: [res.signature],
 

@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Node = require('osgShader/node/Node');
 
 // Abstract class
@@ -24,9 +24,9 @@ var Add = function() {
     BaseOperator.call(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Add,
-    MACROUTILS.objectInherit(BaseOperator.prototype, {
+    utils.objectInherit(BaseOperator.prototype, {
         type: 'Add',
 
         operator: '+',
@@ -85,9 +85,9 @@ var Mult = function() {
     Add.call(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Mult,
-    MACROUTILS.objectInherit(Add.prototype, {
+    utils.objectInherit(Add.prototype, {
         type: 'Mult',
         operator: '*'
     }),
@@ -101,9 +101,9 @@ var SetFromNode = function() {
     Add.call(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     SetFromNode,
-    MACROUTILS.objectInherit(Add.prototype, {
+    utils.objectInherit(Add.prototype, {
         type: 'SetFromNode'
     }),
     'osgShader',
@@ -121,9 +121,9 @@ var MatrixMultDirection = function() {
     this._inverseOp = false;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     MatrixMultDirection,
-    MACROUTILS.objectInherit(Add.prototype, {
+    utils.objectInherit(Add.prototype, {
         type: 'MatrixMultDirection',
         operator: '*',
         validInputs: ['vec', 'matrix'],
@@ -201,9 +201,9 @@ var MatrixMultPosition = function() {
     this._forceComplement = false;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     MatrixMultPosition,
-    MACROUTILS.objectInherit(MatrixMultDirection.prototype, {
+    utils.objectInherit(MatrixMultDirection.prototype, {
         type: 'MatrixMultPosition',
         complement: '1.'
     }),
@@ -215,9 +215,9 @@ var Blend = function() {
     BaseOperator.apply(this);
     this._mode = 'MIX';
 };
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Blend,
-    MACROUTILS.objectInherit(BaseOperator.prototype, {
+    utils.objectInherit(BaseOperator.prototype, {
         type: 'Blend',
         mode: function(mode) {
             this._mode = mode;
@@ -282,9 +282,9 @@ var InlineCode = function() {
     Node.call(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     InlineCode,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         type: 'InlineCode',
         code: function(txt) {
             this._text = txt;
@@ -292,8 +292,8 @@ MACROUTILS.createPrototypeObject(
         },
         computeShader: function() {
             // merge inputs and outputs dict to search in both
-            var replaceVariables = MACROUTILS.objectMix({}, this._inputs);
-            replaceVariables = MACROUTILS.objectMix(replaceVariables, this._outputs);
+            var replaceVariables = utils.objectMix({}, this._inputs);
+            replaceVariables = utils.objectMix(replaceVariables, this._outputs);
 
             // find all %string
             var r = new RegExp('%[A-Za-z0-9_]+', 'gm');

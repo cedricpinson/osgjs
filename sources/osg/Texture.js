@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
 var Image = require('osg/Image');
@@ -254,11 +254,11 @@ Texture.getEnumFromString = function(v) {
     return value;
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Texture,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         GLObject.prototype,
-        MACROUTILS.objectInherit(StateAttribute.prototype, {
+        utils.objectInherit(StateAttribute.prototype, {
             attributeType: 'Texture',
 
             cloneType: function() {
@@ -722,7 +722,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
             applyTexImage2D: function(gl) {
                 var args = Array.prototype.slice.call(arguments, 1);
-                MACROUTILS.timeStamp('osgjs.metrics:Texture.texImage2d');
+                utils.timeStamp('osgjs.metrics:Texture.texImage2d');
 
                 // use parameters of pixel store
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);

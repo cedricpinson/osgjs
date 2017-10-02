@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var NodeVisitor = require('osg/NodeVisitor');
 var Geometry = require('osg/Geometry');
 var BufferArray = require('osg/BufferArray');
@@ -27,9 +27,9 @@ configNormal.textureAttribute = [];
 
 Compiler.setStateAttributeConfig(CompilerOffsetNormal, configNormal);
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CompilerOffsetNormal,
-    MACROUTILS.objectInherit(Compiler.prototype, {
+    utils.objectInherit(Compiler.prototype, {
         getCompilerName: function() {
             return 'CompilerOffsetNormal';
         },
@@ -98,9 +98,9 @@ var ShaderGeneratorCompilerOffsetNormal = function() {
     ShaderGenerator.apply(this, arguments);
     this.setShaderCompiler(CompilerOffsetNormal);
 };
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShaderGeneratorCompilerOffsetNormal,
-    MACROUTILS.objectInherit(ShaderGenerator.prototype, {}),
+    utils.objectInherit(ShaderGenerator.prototype, {}),
     'osgUtil',
     'ShaderGeneratorCompilerOffsetNormal'
 );
@@ -115,9 +115,9 @@ var CompilerOffsetTangent = function() {
 var configTangent = configNormal;
 Compiler.setStateAttributeConfig(CompilerOffsetTangent, configTangent);
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CompilerOffsetTangent,
-    MACROUTILS.objectInherit(CompilerOffsetNormal.prototype, {
+    utils.objectInherit(CompilerOffsetNormal.prototype, {
         getCompilerName: function() {
             return 'CompilerOffsetTangent';
         },
@@ -134,9 +134,9 @@ var ShaderGeneratorCompilerOffsetTangent = function() {
     this.setShaderCompiler(CompilerOffsetTangent);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShaderGeneratorCompilerOffsetTangent,
-    MACROUTILS.objectInherit(ShaderGenerator.prototype, {}),
+    utils.objectInherit(ShaderGenerator.prototype, {}),
     'osgUtil',
     'ShaderGeneratorCompilerOffsetTangent'
 );
@@ -168,9 +168,9 @@ DisplayNormalVisitor.CompilerOffsetTangent = CompilerOffsetTangent;
 DisplayNormalVisitor.ShaderGeneratorCompilerOffsetNormal = ShaderGeneratorCompilerOffsetNormal;
 DisplayNormalVisitor.ShaderGeneratorCompilerOffsetTangent = ShaderGeneratorCompilerOffsetTangent;
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     DisplayNormalVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         setScale: function(scale) {
             this._unifScale.setFloat(scale);
         },

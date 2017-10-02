@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var NodeVisitor = require('osg/NodeVisitor');
 var Geometry = require('osg/Geometry');
 var RigGeometry = require('osgAnimation/RigGeometry');
@@ -27,9 +27,9 @@ configColor.attribute = [];
 
 Compiler.setStateAttributeConfig(CompilerColorGeometry, configColor);
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CompilerColorGeometry,
-    MACROUTILS.objectInherit(Compiler.prototype, {
+    utils.objectInherit(Compiler.prototype, {
         getCompilerName: function() {
             return 'CompilerDebugGeometry';
         },
@@ -58,9 +58,9 @@ var ShaderGeneratorCompilerColorGeometry = function() {
     this.setShaderCompiler(CompilerColorGeometry);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShaderGeneratorCompilerColorGeometry,
-    MACROUTILS.objectInherit(ShaderGenerator.prototype, {}),
+    utils.objectInherit(ShaderGenerator.prototype, {}),
     'osgUtil',
     'ShaderGeneratorCompilerColorGeometry'
 );
@@ -77,9 +77,9 @@ configSkinning.textureAttribute = [];
 
 Compiler.setStateAttributeConfig(CompilerColorSkinning, configSkinning);
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CompilerColorSkinning,
-    MACROUTILS.objectInherit(Compiler.prototype, {
+    utils.objectInherit(Compiler.prototype, {
         getCompilerName: function() {
             return 'CompilerDebugSkinning';
         },
@@ -115,9 +115,9 @@ var ShaderGeneratorCompilerColorSkinning = function() {
     this.setShaderCompiler(CompilerColorSkinning);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShaderGeneratorCompilerColorSkinning,
-    MACROUTILS.objectInherit(ShaderGenerator.prototype, {}),
+    utils.objectInherit(ShaderGenerator.prototype, {}),
     'osgUtil',
     'ShaderGeneratorCompilerColorSkinning'
 );
@@ -141,9 +141,9 @@ GeometryColorDebugVisitor.ShaderGeneratorCompilerColorGeometry = ShaderGenerator
 GeometryColorDebugVisitor.CompilerSkinningGeometry = CompilerColorSkinning;
 GeometryColorDebugVisitor.ShaderGeneratorCompilerColorSkinning = ShaderGeneratorCompilerColorSkinning;
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     GeometryColorDebugVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         setGeometryDebug: function(node) {
             this._stCenter.setAttributeAndModes(new Depth(Depth.ALWAYS));
             this._debugColor = true;

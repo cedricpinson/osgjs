@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var mat4 = require('osg/glMatrix').mat4;
 var AnimationUpdateCallback = require('osgAnimation/AnimationUpdateCallback');
 
@@ -17,9 +17,9 @@ var UpdateMatrixTransform = function() {
     this._dirty = false;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     UpdateMatrixTransform,
-    MACROUTILS.objectInherit(AnimationUpdateCallback.prototype, {
+    utils.objectInherit(AnimationUpdateCallback.prototype, {
         getStackedTransforms: function() {
             return this._stackedTransforms;
         },

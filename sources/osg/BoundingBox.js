@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var mat4 = require('osg/glMatrix').mat4;
 
@@ -8,7 +8,7 @@ var BoundingBox = function() {
     this._max = vec3.create();
     this.init();
 };
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     BoundingBox,
     {
         init: function() {

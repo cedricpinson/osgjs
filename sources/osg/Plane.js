@@ -1,10 +1,10 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec4 = require('osg/glMatrix').vec4;
 var vec3 = require('osg/glMatrix').vec3;
 
 /** @class Plane Operations */
-var Plane = MACROUTILS.objectInherit(vec4, {
+var Plane = utils.objectInherit(vec4, {
     // Many case (frustum, convexity)
     // needs to know where from a plane it stands,
     // not just boolean intersection

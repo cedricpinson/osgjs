@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var notify = require('osg/notify');
 var ObjectBase = require('osg/Object');
 var FindNearestParentSkeleton = require('osgAnimation/FindNearestParentSkeleton');
@@ -10,9 +10,9 @@ var UpdateRigGeometry = function() {
     ObjectBase.call(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     UpdateRigGeometry,
-    MACROUTILS.objectInherit(ObjectBase.prototype, {
+    utils.objectInherit(ObjectBase.prototype, {
         init: function(geom) {
             var finder = new FindNearestParentSkeleton();
             if (geom.getParents().length > 1)

@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 
 /**
@@ -53,9 +53,9 @@ BlendFunc.ONE_MINUS_CONSTANT_ALPHA = 0x8004;
 BlendFunc.BLEND_COLOR = 0x8005;
 
 /** @lends BlendFunc.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     BlendFunc,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         /**
   StateAttribute type of BlendFunc
   @type String

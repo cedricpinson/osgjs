@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var NodeVisitor = require('osg/NodeVisitor');
 var notify = require('osg/notify');
 var Bone = require('osgAnimation/Bone');
@@ -9,9 +9,9 @@ var CollectBoneVisitor = function() {
     this._boneMap = {};
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CollectBoneVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         apply: function(node) {
             if (node.typeID === Bone.typeID) {
                 var name = node.getName();

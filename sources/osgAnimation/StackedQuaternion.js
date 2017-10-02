@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 var mat4 = require('osg/glMatrix').mat4;
 var quat = require('osg/glMatrix').quat;
@@ -13,9 +13,9 @@ var StackedQuaternion = function(name, q) {
     if (name) this.setName(name);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     StackedQuaternion,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         init: function(q) {
             this.setQuaternion(q);
             quat.copy(this._target.defaultValue, q);

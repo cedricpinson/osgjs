@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
 
@@ -15,9 +15,9 @@ var PointSizeAttribute = function(disable) {
     this._hash = '';
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     PointSizeAttribute,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'PointSize',
 
         cloneType: function() {

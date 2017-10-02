@@ -4,7 +4,7 @@ var mat4 = require('osg/glMatrix').mat4;
 var Node = require('osg/Node');
 var NodeVisitor = require('osg/NodeVisitor');
 var StateSet = require('osg/StateSet');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec4 = require('osg/glMatrix').vec4;
 var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor');
 var ShadowCasterVisitor = require('osgShadow/ShadowCasterVisitor');
@@ -44,9 +44,9 @@ var ShadowedScene = function(settings) {
 };
 
 /** @lends ShadowedScene.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     ShadowedScene,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         getReceivingStateSet: function() {
             return this._receivingStateset;
         },

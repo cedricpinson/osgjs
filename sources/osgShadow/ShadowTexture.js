@@ -3,7 +3,7 @@
 var notify = require('osg/notify');
 var Texture = require('osg/Texture');
 var Uniform = require('osg/Uniform');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec4 = require('osg/glMatrix').vec4;
 
 /**
@@ -27,9 +27,9 @@ var ShadowTexture = function() {
 
 ShadowTexture.uniforms = {};
 /** @lends Texture.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     ShadowTexture,
-    MACROUTILS.objectInherit(Texture.prototype, {
+    utils.objectInherit(Texture.prototype, {
         cloneType: function() {
             return new ShadowTexture();
         },

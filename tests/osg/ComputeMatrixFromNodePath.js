@@ -3,7 +3,7 @@ var assert = require('chai').assert;
 require('tests/mockup/mockup');
 var ComputeMatrixFromNodePath = require('osg/computeMatrixFromNodePath');
 var NodeVisitor = require('osg/NodeVisitor');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var MatrixTransform = require('osg/MatrixTransform');
 var mat4 = require('osg/glMatrix').mat4;
 var Camera = require('osg/Camera');
@@ -18,7 +18,7 @@ module.exports = function() {
                 NodeVisitor.call(this, NodeVisitor.TRAVERSE_PARENTS);
                 this.node = undefined;
             };
-            GetRootItem.prototype = MACROUTILS.objectInherit(NodeVisitor.prototype, {
+            GetRootItem.prototype = utils.objectInherit(NodeVisitor.prototype, {
                 apply: function(node) {
                     this.node = node;
                     this.traverse(node);

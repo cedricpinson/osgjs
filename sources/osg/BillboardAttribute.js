@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 
 var BillboardAttribute = function() {
@@ -7,9 +7,9 @@ var BillboardAttribute = function() {
     this._attributeEnable = false;
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     BillboardAttribute,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'Billboard',
 
         cloneType: function() {

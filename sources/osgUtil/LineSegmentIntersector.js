@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var mat4 = require('osg/glMatrix').mat4;
 var Intersector = require('osgUtil/Intersector');
@@ -20,9 +20,9 @@ var LineSegmentIntersector = function() {
     this._iThreshold = 0.0;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     LineSegmentIntersector,
-    MACROUTILS.objectInherit(Intersector.prototype, {
+    utils.objectInherit(Intersector.prototype, {
         set: function(start, end, threshold) {
             vec3.copy(this._start, start);
             vec3.copy(this._iStart, start);

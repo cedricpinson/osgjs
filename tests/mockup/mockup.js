@@ -13,7 +13,7 @@ var StackedQuaternion = require('osgAnimation/StackedQuaternion');
 var StackedTranslate = require('osgAnimation/StackedTranslate');
 var StackedMatrix = require('osgAnimation/StackedMatrix');
 var ViewerOriginal = require('osgViewer/Viewer');
-var Utils = require('osg/Utils');
+var Utils = require('osg/utils');
 
 var isNodeContext = function() {
     return typeof process !== 'undefined' && process.release.name === 'node'; // eslint-disable-line no-undef

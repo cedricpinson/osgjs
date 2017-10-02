@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Camera = require('osg/Camera');
 var FrameBufferObject = require('osg/FrameBufferObject');
 var notify = require('osg/notify');
@@ -41,9 +41,9 @@ var createRenderStageOrder = function() {
 
 var pooledRenderStageOrder = new PooledResource(createRenderStageOrder);
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     RenderStage,
-    MACROUTILS.objectInherit(RenderBin.prototype, {
+    utils.objectInherit(RenderBin.prototype, {
         init: function() {
             RenderBin.prototype.init.call(this);
             this._clearDepth = 1.0;

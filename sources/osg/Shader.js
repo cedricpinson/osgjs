@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Timer = require('osg/Timer');
 var GLObject = require('osg/GLObject');
 
@@ -73,9 +73,9 @@ Shader.onLostContext = function(gl) {
     return;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Shader,
-    MACROUTILS.objectInherit(GLObject.prototype, {
+    utils.objectInherit(GLObject.prototype, {
         setText: function(text) {
             this.text = text;
         },
@@ -184,7 +184,7 @@ MACROUTILS.createPrototypeObject(
             }
 
             gl.shaderSource(this.shader, shaderText);
-            MACROUTILS.timeStamp('osgjs.metrics:compileShader');
+            utils.timeStamp('osgjs.metrics:compileShader');
             gl.compileShader(this.shader);
             if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
                 var err = gl.getShaderInfoLog(this.shader);

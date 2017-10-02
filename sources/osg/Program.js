@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var notify = require('osg/notify');
 var GLObject = require('osg/GLObject');
 var StateAttribute = require('osg/StateAttribute');
@@ -114,11 +114,11 @@ Program.onLostContext = function(gl) {
 };
 
 /** @lends Program.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Program,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         GLObject.prototype,
-        MACROUTILS.objectInherit(StateAttribute.prototype, {
+        utils.objectInherit(StateAttribute.prototype, {
             attributeType: 'Program',
 
             cloneType: function() {
@@ -245,7 +245,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
                         gl.attachShader(this._program, this._vertex.shader);
                         gl.attachShader(this._program, this._fragment.shader);
-                        MACROUTILS.timeStamp('osgjs.metrics:linkShader');
+                        utils.timeStamp('osgjs.metrics:linkShader');
                         gl.linkProgram(this._program);
 
                         if (

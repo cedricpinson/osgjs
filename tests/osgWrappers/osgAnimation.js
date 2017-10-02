@@ -1,7 +1,7 @@
 'use strict';
 var assert = require('chai').assert;
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Input = require('osgDB/Input');
 var mockup = require('tests/mockup/mockup');
 if (mockup.isNodeContext()) {
@@ -15,7 +15,7 @@ module.exports = function() {
         NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
         this._cb = undefined;
     };
-    FindAnimationManagerVisitor.prototype = MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    FindAnimationManagerVisitor.prototype = utils.objectInherit(NodeVisitor.prototype, {
         getAnimationManager: function() {
             return this._cb;
         },

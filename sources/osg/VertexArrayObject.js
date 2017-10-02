@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 var GLObject = require('osg/GLObject');
 var Timer = require('osg/Timer');
@@ -61,9 +61,9 @@ VertexArrayObject.onLostContext = function(gl) {
     deleteList.length = 0;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     VertexArrayObject,
-    MACROUTILS.objectInherit(GLObject.prototype, {
+    utils.objectInherit(GLObject.prototype, {
         getInstanceID: function() {
             return this._instanceID;
         },

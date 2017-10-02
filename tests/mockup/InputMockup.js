@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Input = require('osgDB/Input');
 var P = require('bluebird');
 var fs = require('fs');
@@ -10,9 +10,9 @@ var InputMockup = function(json, identifier) {
     Input.call(this, json, identifier);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     InputMockup,
-    MACROUTILS.objectInherit(Input.prototype, {
+    utils.objectInherit(Input.prototype, {
         requestFile: function(url, options) {
             var nurl = url.replace('file://', '');
             var data;

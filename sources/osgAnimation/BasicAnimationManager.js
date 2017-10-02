@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var BaseObject = require('osg/Object');
 var quat = require('osg/glMatrix').quat;
 var vec3 = require('osg/glMatrix').vec3;
@@ -122,9 +122,9 @@ var BasicAnimationManager = function() {
     this._seekTime = -1;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     BasicAnimationManager,
-    MACROUTILS.objectInherit(BaseObject.prototype, {
+    utils.objectInherit(BaseObject.prototype, {
         init: function(animations) {
             // reset all
             this._simulationTime = 0.0;

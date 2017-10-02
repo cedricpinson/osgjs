@@ -1,14 +1,14 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 
 var StateAttribute = function() {
     Object.call(this);
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     StateAttribute,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         _attributeTypeIndex: undefined,
 
         getType: function() {

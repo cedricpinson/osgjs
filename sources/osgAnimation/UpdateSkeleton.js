@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Bone = require('osgAnimation/Bone');
 var NodeVisitor = require('osg/NodeVisitor');
 var notify = require('osg/notify');
@@ -13,9 +13,9 @@ var ValidateSkeletonVisitor = function() {
     NodeVisitor.call(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ValidateSkeletonVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         apply: function(node) {
             if (node.getTypeID() !== Bone.getTypeID()) {
                 return;
@@ -61,9 +61,9 @@ var UpdateSkeleton = function() {
     this._needValidate = true;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     UpdateSkeleton,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         needToValidate: function() {
             return this._needValidate;
         },

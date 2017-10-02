@@ -1,7 +1,7 @@
 'use strict';
 var notify = require('osg/notify');
 var Object = require('osg/Object');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 
 /**
  *  ShadowTechnique provides an implementation interface of shadow techniques.
@@ -19,9 +19,9 @@ var ShadowTechnique = function() {
 };
 
 /** @lends ShadowTechnique.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShadowTechnique,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         dirty: function() {
             this._dirty = true;
         },

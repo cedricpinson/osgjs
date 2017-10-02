@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Node = require('osg/Node');
 var mat4 = require('osg/glMatrix').mat4;
 var TransformEnums = require('osg/transformEnums');
@@ -15,9 +15,9 @@ var Transform = function() {
 };
 
 /** @lends Transform.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     Transform,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         setReferenceFrame: function(value) {
             this.referenceFrame = value;
         },

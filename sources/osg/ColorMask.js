@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 
 var ColorMask = function(red, green, blue, alpha) {
@@ -9,9 +9,9 @@ var ColorMask = function(red, green, blue, alpha) {
     this.setMask(red, green, blue, alpha);
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     ColorMask,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'ColorMask',
 
         cloneType: function() {

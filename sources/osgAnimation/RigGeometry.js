@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var Geometry = require('osg/Geometry');
 var notify = require('osg/notify');
@@ -50,9 +50,9 @@ var RigGeometry = function() {
     this._needToComputeMatrix = true;
 };
 
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     RigGeometry,
-    MACROUTILS.objectInherit(Geometry.prototype, {
+    utils.objectInherit(Geometry.prototype, {
         getStateSetAnimation: function() {
             return this._stateSetAnimation;
         },

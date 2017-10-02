@@ -1,6 +1,6 @@
 'use strict';
 var P = require('bluebird');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var notify = require('osg/notify');
 var osgWrapper = require('osgWrappers/serializers/osg');
 var Channel = require('osgAnimation/channel');
@@ -11,7 +11,7 @@ var StackedScale = require('osgAnimation/StackedScale');
 var MorphGeometry = require('osgAnimation/MorphGeometry');
 var Geometry = require('osg/Geometry');
 
-var rejectObject = MACROUTILS.rejectObject;
+var rejectObject = utils.rejectObject;
 
 var osgAnimationWrapper = {};
 

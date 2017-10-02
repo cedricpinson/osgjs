@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Node = require('osg/Node');
 var TransformEnums = require('osg/transformEnums');
 var vec3 = require('osg/glMatrix').vec3;
@@ -16,9 +16,9 @@ var LightSource = function() {
 };
 
 /** @lends LightSource.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     LightSource,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         getLight: function() {
             return this._light;
         },

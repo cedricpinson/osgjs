@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 var MatrixTransform = require('osg/MatrixTransform');
 
@@ -29,9 +29,9 @@ AnimationUpdateCallback.checkPathIsAnimated = function(path) {
 };
 
 /** @lends AnimationUpdateCallback.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     AnimationUpdateCallback,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         linkChannel: function() {},
         linkAnimation: function(anim) {
             var name = this.getName();

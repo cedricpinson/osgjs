@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 
 /**
  *  Object class
@@ -12,7 +12,7 @@ var Object = function() {
 };
 
 /** @lends Object.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Object,
     {
         // this method works only if constructor is set correctly

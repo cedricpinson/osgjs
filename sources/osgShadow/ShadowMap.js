@@ -14,7 +14,7 @@ var Debug = require('osgUtil/debug');
 var Texture = require('osg/Texture');
 var Transform = require('osg/Transform');
 var Uniform = require('osg/Uniform');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var primitiveSet = require('osg/primitiveSet');
 var vec3 = require('osg/glMatrix').vec3;
 var vec4 = require('osg/glMatrix').vec4;
@@ -32,7 +32,7 @@ var CameraCullCallback = function(shadowTechnique) {
     this._shadowTechnique = shadowTechnique;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CameraCullCallback,
     {
         cull: function(node, nv) {
@@ -172,9 +172,9 @@ var ShadowMap = function(settings, shadowTexture) {
 };
 
 /** @lends ShadowMap.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShadowMap,
-    MACROUTILS.objectInherit(ShadowTechnique.prototype, {
+    utils.objectInherit(ShadowTechnique.prototype, {
         getDepthRange: function() {
             return this._depthRange;
         },

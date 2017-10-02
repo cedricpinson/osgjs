@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 
 var Depth = function(func, near, far, writeMask) {
@@ -38,9 +38,9 @@ Depth.NOTEQUAL = 0x0205;
 Depth.GEQUAL = 0x0206;
 Depth.ALWAYS = 0x0207;
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Depth,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'Depth',
         cloneType: function() {
             return new Depth();

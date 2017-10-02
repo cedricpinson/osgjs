@@ -2,7 +2,7 @@
 var notify = require('osg/notify');
 var vec4 = require('osg/glMatrix').vec4;
 var Camera = require('osg/Camera');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var ShadowTechnique = require('osgShadow/ShadowTechnique');
 var ShadowTextureAtlas = require('osgShadow/ShadowTextureAtlas');
 var ShadowMap = require('osgShadow/ShadowMap');
@@ -61,9 +61,9 @@ var ShadowMapAtlas = function(settings) {
 };
 
 /** @lends ShadowMapAtlas.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShadowMapAtlas,
-    MACROUTILS.objectInherit(ShadowTechnique.prototype, {
+    utils.objectInherit(ShadowTechnique.prototype, {
         getTexture: function() {
             return this._texture;
         },

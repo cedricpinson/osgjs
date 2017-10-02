@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var GLObject = require('osg/GLObject');
 var StateAttribute = require('osg/StateAttribute');
 var Timer = require('osg/Timer');
@@ -127,11 +127,11 @@ FrameBufferObject.onLostContext = function(gl) {
 };
 
 /** @lends FrameBufferObject.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     FrameBufferObject,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         GLObject.prototype,
-        MACROUTILS.objectInherit(StateAttribute.prototype, {
+        utils.objectInherit(StateAttribute.prototype, {
             attributeType: 'FrameBufferObject',
 
             cloneType: function() {

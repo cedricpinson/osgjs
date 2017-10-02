@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Manipulator = require('osgGA/Manipulator');
 var mat4 = require('osg/glMatrix').mat4;
 var vec2 = require('osg/glMatrix').vec2;
@@ -39,9 +39,9 @@ FirstPersonManipulator.ControllerList = [
     'Hammer'
 ];
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     FirstPersonManipulator,
-    MACROUTILS.objectInherit(Manipulator.prototype, {
+    utils.objectInherit(Manipulator.prototype, {
         computeHomePosition: function(boundStrategy) {
             var bs = this.getHomeBound(boundStrategy);
             if (!bs || !bs.valid()) return;

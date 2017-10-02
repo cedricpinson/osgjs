@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Manipulator = require('osgGA/Manipulator');
 var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
 var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
@@ -112,9 +112,9 @@ CADManipulator.AvailableControllerList = ['StandardMouseKeyboard', 'Hammer'];
 CADManipulator.ControllerList = ['StandardMouseKeyboard', 'Hammer'];
 
 /** @lends CADManipulator.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CADManipulator,
-    MACROUTILS.objectInherit(Manipulator.prototype, {
+    utils.objectInherit(Manipulator.prototype, {
         init: function() {
             this._distance = 25.0;
             this._target = vec3.create();

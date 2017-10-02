@@ -14,7 +14,7 @@ var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
 var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
 var GizmoGeometry = require('osgUtil/gizmoGeometry');
 var TransformEnums = require('osg/transformEnums');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 
 var getCanvasCoord = function(vec, e) {
     vec[0] = e.offsetX === undefined ? e.layerX : e.offsetX;
@@ -35,9 +35,9 @@ var LineCustomIntersector = function(testPlane) {
     this._inter = vec3.create(); // translate distance
     LineSegmentIntersector.call(this);
 };
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     LineCustomIntersector,
-    MACROUTILS.objectInherit(LineSegmentIntersector.prototype, {
+    utils.objectInherit(LineSegmentIntersector.prototype, {
         setTestPlane: function(testPlane) {
             this._testPlane = testPlane; // intersection plane or line
         },
@@ -188,9 +188,9 @@ NodeGizmo.PICK_PLANE = NodeGizmo.PICK_PLANE_X | NodeGizmo.PICK_PLANE_Y | NodeGiz
 
 NodeGizmo.PICK_GIZMO = NodeGizmo.PICK_ARC | NodeGizmo.PICK_ARROW | NodeGizmo.PICK_PLANE;
 
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     NodeGizmo,
-    MACROUTILS.objectInherit(MatrixTransform.prototype, {
+    utils.objectInherit(MatrixTransform.prototype, {
         setRotateInLocal: function(bool) {
             this._rotateInLocal = bool;
         },

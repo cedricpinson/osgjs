@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var notify = require('osg/notify');
 var Object = require('osg/Object');
 var osgMath = require('osg/math');
@@ -69,9 +69,9 @@ var sortBinNumberFunction = function(a, b) {
     return a._binNum - b._binNum;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     RenderBin,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         init: function(sortMode) {
             this._renderStage = undefined;
             this._parent = undefined;

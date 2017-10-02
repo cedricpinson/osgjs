@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 
 // Used to notify the Compiler to create a Depth Casting optimized shader
@@ -11,9 +11,9 @@ var ShadowCastAttribute = function(disable, shadowReceiveAttribute) {
     this._hash = '';
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     ShadowCastAttribute,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'ShadowCast',
         cloneType: function() {
             return new ShadowCastAttribute(true);

@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Image = require('osg/Image');
 var notify = require('osg/notify');
 var Texture = require('osg/Texture');
@@ -20,9 +20,9 @@ var TextureCubeMap = function() {
 };
 
 /** @lends TextureCubeMap.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     TextureCubeMap,
-    MACROUTILS.objectInherit(Texture.prototype, {
+    utils.objectInherit(Texture.prototype, {
         setDefaultParameters: function() {
             Texture.prototype.setDefaultParameters.call(this);
             this._textureTarget = Texture.TEXTURE_CUBE_MAP;

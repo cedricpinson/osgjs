@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Lod = require('osg/Lod');
 var NodeVisitor = require('osg/NodeVisitor');
 var mat4 = require('osg/glMatrix').mat4;
@@ -36,9 +36,9 @@ var PerRangeData = function() {
 };
 
 /** @lends PagedLOD.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     PagedLOD,
-    MACROUTILS.objectInherit(Lod.prototype, {
+    utils.objectInherit(Lod.prototype, {
         // Functions here
         setRange: function(childNo, min, max) {
             if (childNo >= this._range.length) {

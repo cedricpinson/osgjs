@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var BufferArray = require('osg/BufferArray');
 var RigGeometry = require('osgAnimation/RigGeometry');
 var AnimationUpdateCallback = require('osgAnimation/AnimationUpdateCallback');
@@ -28,9 +28,9 @@ var funcWeights = function(a, b) {
     return Math.abs(b.value) - Math.abs(a.value);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     UpdateMorph,
-    MACROUTILS.objectInherit(AnimationUpdateCallback.prototype, {
+    utils.objectInherit(AnimationUpdateCallback.prototype, {
         init: function(node) {
             this._maxMorphGPU = MorphGeometry.MAX_MORPH_GPU;
             this._morphs.length = 0;

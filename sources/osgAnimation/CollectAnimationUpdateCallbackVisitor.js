@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var NodeVisitor = require('osg/NodeVisitor');
 var AnimationUpdateCallback = require('osgAnimation/AnimationUpdateCallback');
 
@@ -9,9 +9,9 @@ var CollectAnimationUpdateCallbackVisitor = function() {
     this._animationUpdateCallback = {};
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CollectAnimationUpdateCallbackVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         getAnimationUpdateCallbackMap: function() {
             return this._animationUpdateCallback;
         },

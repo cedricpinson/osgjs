@@ -1,9 +1,9 @@
 'use strict';
 var P = require('bluebird');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var TransformEnums = require('osg/transformEnums');
 
-var rejectObject = MACROUTILS.rejectObject;
+var rejectObject = utils.rejectObject;
 
 var osgWrapper = {};
 

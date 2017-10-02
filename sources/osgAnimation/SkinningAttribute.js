@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
 
@@ -24,9 +24,9 @@ SkinningAttribute.uniforms = {};
 SkinningAttribute.maxBoneUniformSize = 1;
 SkinningAttribute.maxBoneUniformAllowed = Infinity; // can be overriden by application specific limit on startup (typically gl limit)
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     SkinningAttribute,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'Skinning',
 
         cloneType: function() {

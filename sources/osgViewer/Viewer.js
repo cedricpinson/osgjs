@@ -6,7 +6,7 @@ var P = require('bluebird');
 var Timer = require('osg/Timer');
 var TimerGPU = require('osg/TimerGPU');
 var UpdateVisitor = require('osg/UpdateVisitor');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var GLObject = require('osg/GLObject');
 var FrameBufferObject = require('osg/FrameBufferObject');
 var BufferArray = require('osg/BufferArray');
@@ -100,9 +100,9 @@ var Viewer = function(canvas, userOptions, error) {
     this.renderBinded = this.render.bind(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Viewer,
-    MACROUTILS.objectInherit(View.prototype, {
+    utils.objectInherit(View.prototype, {
         initDeviceEvents: function(options, canvas) {
             // default argument for mouse binding
             var defaultMouseEventNode = options.mouseEventNode || canvas;

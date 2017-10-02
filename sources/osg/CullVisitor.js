@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var osgMath = require('osg/math');
 var NodeVisitor = require('osg/NodeVisitor');
 var CullSettings = require('osg/CullSettings');
@@ -87,11 +87,11 @@ var CullVisitor = function() {
 CullVisitor.registerApplyFunction = cullVisitorHelper.registerApplyFunction;
 CullVisitor.getApplyFunction = cullVisitorHelper.getApplyFunction;
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CullVisitor,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         CullStack.prototype,
-        MACROUTILS.objectInherit(NodeVisitor.prototype, {
+        utils.objectInherit(NodeVisitor.prototype, {
             applyFunctionArray: cullVisitorHelper.applyFunctionArray,
 
             distance: function(coord, matrix) {

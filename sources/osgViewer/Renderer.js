@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var CullSettings = require('osg/CullSettings');
 var CullVisitor = require('osg/CullVisitor');
 var Object = require('osg/Object');
@@ -27,9 +27,9 @@ var Renderer = function(camera) {
 
 Renderer.debugGraph = false;
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Renderer,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         setDefaults: function() {
             this._state = new State(new osgShader.ShaderGeneratorProxy());
 

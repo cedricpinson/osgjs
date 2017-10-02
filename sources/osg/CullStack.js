@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var BoundingSphere = require('osg/BoundingSphere');
 var Camera = require('osg/Camera');
 var ComputeMatrixFromNodePath = require('osg/computeMatrixFromNodePath');
@@ -44,9 +44,9 @@ var CullStack = function() {
     this._cameraMatrixInverseRoot = undefined;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CullStack,
-    MACROUTILS.objectInherit(CullSettings.prototype, {
+    utils.objectInherit(CullSettings.prototype, {
         reset: function() {
             this._modelViewMatrixStack.reset();
             this._projectionMatrixStack.reset();

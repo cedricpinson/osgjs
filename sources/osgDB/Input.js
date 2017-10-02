@@ -1,6 +1,6 @@
 'use strict';
 var P = require('bluebird');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var osgNameSpace = require('osgNameSpace');
 var _requestFile = require('osgDB/requestFile');
 var Options = require('osgDB/options');
@@ -13,7 +13,7 @@ var DrawArrayLengths = require('osg/DrawArrayLengths');
 var DrawElements = require('osg/DrawElements');
 var primitiveSet = require('osg/primitiveSet');
 
-var rejectObject = MACROUTILS.rejectObject;
+var rejectObject = utils.rejectObject;
 
 var Input = function(json, identifier) {
     this._json = json;
@@ -33,7 +33,7 @@ var Input = function(json, identifier) {
     //     onload: undefined
     // } );
 
-    this.setOptions(MACROUTILS.objectMix({}, Options));
+    this.setOptions(utils.objectMix({}, Options));
 
     // {
     //     prefixURL: '',
@@ -208,7 +208,7 @@ Input.prototype = {
         url = this.computeURL(url);
         var that = this;
         // copy because we are going to modify it to have relative prefix to load assets
-        options = MACROUTILS.objectMix({}, options);
+        options = utils.objectMix({}, options);
 
         // automatic prefix if non specfied
         if (!options.prefixURL) {
@@ -253,7 +253,7 @@ Input.prototype = {
             return str;
         };
 
-        MACROUTILS.time('osgjs.metric:Input.readNodeURL', notify.INFO);
+        utils.time('osgjs.metric:Input.readNodeURL', notify.INFO);
         // try to get the file as responseText to parse JSON
         var fileTextPromise = that.requestFile(url);
         return fileTextPromise
@@ -292,7 +292,7 @@ Input.prototype = {
             })
             .finally(function() {
                 // Stop the timer
-                MACROUTILS.timeEnd('osgjs.metric:Input.readNodeURL');
+                utils.timeEnd('osgjs.metric:Input.readNodeURL');
             });
     },
 
@@ -369,14 +369,14 @@ Input.prototype = {
                 offset = vb.Offset;
             }
 
-            var bytesPerElement = MACROUTILS[type].BYTES_PER_ELEMENT;
+            var bytesPerElement = utils[type].BYTES_PER_ELEMENT;
             var nbItems = vb.Size;
             var nbCoords = buf.getItemSize();
             var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
 
             if (bigEndian) {
                 notify.log('big endian detected');
-                var TypedArray = MACROUTILS[type];
+                var TypedArray = utils[type];
                 var tmpArray = new TypedArray(nbItems * nbCoords);
                 var data = new DataView(array, offset, totalSizeInBytes);
                 var i = 0,
@@ -393,7 +393,7 @@ Input.prototype = {
                 typedArray = tmpArray;
                 data = null;
             } else {
-                typedArray = new MACROUTILS[type](array, offset, nbCoords * nbItems);
+                typedArray = new utils[type](array, offset, nbCoords * nbItems);
             }
 
             buf.setElements(typedArray);
@@ -450,7 +450,7 @@ Input.prototype = {
             if (vb.File) {
                 promise = this.initializeBufferArray(vb, type, buf);
             } else if (vb.Elements) {
-                buf.setElements(new MACROUTILS[type](vb.Elements));
+                buf.setElements(new utils[type](vb.Elements));
                 promise = P.resolve(buf);
             }
         }

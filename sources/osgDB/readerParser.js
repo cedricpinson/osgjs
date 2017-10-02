@@ -1,6 +1,6 @@
 'use strict';
 var notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Uniform = require('osg/Uniform');
 var BlendFunc = require('osg/BlendFunc');
 var Geometry = require('osg/Geometry');
@@ -48,7 +48,7 @@ ReaderParser.registry = function() {
 
 ReaderParser.parseSceneGraph = function(node, options) {
     if (node.Version !== undefined && node.Version > 0) {
-        MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraph');
+        utils.time('osgjs.metric:ReaderParser.parseSceneGraph');
 
         var key;
         for (var prop in node) {
@@ -65,21 +65,21 @@ ReaderParser.parseSceneGraph = function(node, options) {
             input.setJSON(obj);
 
             // copy global options and override with user options
-            var opt = MACROUTILS.objectMix(
-                MACROUTILS.objectMix({}, ReaderParser.registry().getOptions()),
+            var opt = utils.objectMix(
+                utils.objectMix({}, ReaderParser.registry().getOptions()),
                 options || {}
             );
             input.setOptions(opt);
             var object = input.readObject();
-            MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
+            utils.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
             return object;
         } else {
             notify.log("can't parse scenegraph " + node);
         }
     } else {
-        MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+        utils.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
         var nodeOld = ReaderParser.parseSceneGraphDeprecated(node);
-        MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+        utils.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
         return nodeOld;
     }
     return undefined;
@@ -234,7 +234,7 @@ ReaderParser.parseSceneGraphDeprecated = function(node) {
         newnode = new MatrixTransform();
         setName(newnode, node);
 
-        MACROUTILS.extend(newnode, node);
+        utils.extend(newnode, node);
         mat4.copy(newnode.getMatrix(), matrix);
         node = newnode;
     }
@@ -243,7 +243,7 @@ ReaderParser.parseSceneGraphDeprecated = function(node) {
     if (projection) {
         newnode = new Projection();
         setName(newnode, node);
-        MACROUTILS.extend(newnode, node);
+        utils.extend(newnode, node);
         mat4.copy(newnode.setProjectionMatrix(), projection);
         node = newnode;
     }
@@ -252,7 +252,7 @@ ReaderParser.parseSceneGraphDeprecated = function(node) {
     if (node.typeID === undefined) {
         newnode = new Node();
         setName(newnode, node);
-        MACROUTILS.extend(newnode, node);
+        utils.extend(newnode, node);
         node = newnode;
     }
 
