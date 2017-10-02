@@ -1,6 +1,15 @@
 'use strict';
 var P = require('bluebird');
+var Notify = require('osg/notify');
 var TransformEnums = require('osg/transformEnums');
+
+var rejectObject = function(msg, node) {
+    msg = 'Invalid json ' + msg;
+    if (node) msg += ' ' + Object.keys(node);
+
+    Notify.warn(msg); // useful for line debugging
+    return P.reject(msg); // reject with a message to avoid "undefined" rejection
+};
 
 var osgWrapper = {};
 
@@ -120,8 +129,9 @@ osgWrapper.Material = function(input, material) {
         !jsonObj.Emission ||
         !jsonObj.Specular ||
         jsonObj.Shininess === undefined
-    )
-        return P.reject();
+    ) {
+        return rejectObject('Material', jsonObj);
+    }
 
     osgWrapper.Object(input, material);
 
@@ -140,8 +150,9 @@ osgWrapper.BlendFunc = function(input, blend) {
         !jsonObj.SourceAlpha ||
         !jsonObj.DestinationRGB ||
         !jsonObj.DestinationAlpha
-    )
-        return P.reject();
+    ) {
+        return rejectObject('BlendFunc', jsonObj);
+    }
 
     osgWrapper.Object(input, blend);
 
@@ -154,7 +165,7 @@ osgWrapper.BlendFunc = function(input, blend) {
 
 osgWrapper.CullFace = function(input, attr) {
     var jsonObj = input.getJSON();
-    if (jsonObj.Mode === undefined) return P.reject();
+    if (jsonObj.Mode === undefined) return rejectObject('CullFace', jsonObj);
 
     osgWrapper.Object(input, attr);
     attr.setMode(jsonObj.Mode);
@@ -163,7 +174,7 @@ osgWrapper.CullFace = function(input, attr) {
 
 osgWrapper.BlendColor = function(input, attr) {
     var jsonObj = input.getJSON();
-    if (!jsonObj.ConstantColor) return P.reject();
+    if (!jsonObj.ConstantColor) return rejectObject('BlendColor', jsonObj);
 
     osgWrapper.Object(input, attr);
     attr.setConstantColor(jsonObj.ConstantColor);
@@ -184,8 +195,9 @@ osgWrapper.Light = function(input, light) {
         jsonObj.LinearAttenuation === undefined ||
         jsonObj.ConstantAttenuation === undefined ||
         jsonObj.QuadraticAttenuation === undefined
-    )
-        return P.reject();
+    ) {
+        return rejectObject('Light', jsonObj);
+    }
 
     osgWrapper.Object(input, light);
     light.setAmbient(jsonObj.Ambient);
@@ -229,7 +241,7 @@ osgWrapper.Texture = function(input, texture) {
 
 osgWrapper.Projection = function(input, node) {
     var jsonObj = input.getJSON();
-    if (!jsonObj.Matrix) return P.reject();
+    if (!jsonObj.Matrix) return rejectObject('Projection', jsonObj);
 
     var promise = osgWrapper.Node(input, node);
     node.setMatrix(jsonObj.Matrix);
@@ -238,7 +250,7 @@ osgWrapper.Projection = function(input, node) {
 
 osgWrapper.MatrixTransform = function(input, node) {
     var jsonObj = input.getJSON();
-    if (!jsonObj.Matrix) return P.reject();
+    if (!jsonObj.Matrix) return rejectObject('MatrixTransform', jsonObj);
 
     var promise = osgWrapper.Node(input, node);
     node.setMatrix(jsonObj.Matrix);
@@ -247,15 +259,16 @@ osgWrapper.MatrixTransform = function(input, node) {
 
 osgWrapper.LightSource = function(input, node) {
     var jsonObj = input.getJSON();
-    if (!jsonObj.Light) return P.reject();
+    if (!jsonObj.Light) return rejectObject('LightSource', jsonObj);
 
     var promise = osgWrapper.Node(input, node);
     return P.all([input.setJSON(jsonObj.Light).readObject(), promise]).then(function(args) {
         var light = args[0];
         //var lightsource = args[ 1 ];
         node.setLight(light);
-        if (jsonObj.ReferenceFrame === 'ABSOLUTE_RF')
+        if (jsonObj.ReferenceFrame === 'ABSOLUTE_RF') {
             node.setReferenceFrame(TransformEnums.ABSOLUTE_RF);
+        }
         return node;
     });
 };
@@ -273,7 +286,7 @@ osgWrapper.functionSortAttributes = function(a, b) {
 
 osgWrapper.Geometry = function(input, node) {
     var jsonObj = input.getJSON();
-    if (!jsonObj.VertexAttributeList) return P.reject();
+    if (!jsonObj.VertexAttributeList) return rejectObject('Geometry', jsonObj);
 
     jsonObj.PrimitiveSetList = jsonObj.PrimitiveSetList || [];
 

@@ -13,6 +13,12 @@ var DrawArrayLengths = require('osg/DrawArrayLengths');
 var DrawElements = require('osg/DrawElements');
 var primitiveSet = require('osg/primitiveSet');
 
+var rejectObject = function(msg, node) {
+    if (node) msg = 'Invalid json ' + msg + ' ' + Object.keys(node);
+    Notify.warn(msg); // useful for line debugging
+    return P.reject(msg); // reject with a message to avoid "undefined" rejection
+};
+
 var Input = function(json, identifier) {
     this._json = json;
     var map = identifier;
@@ -187,6 +193,7 @@ Input.prototype = {
         var image = new Image();
         return this.fetchImage(image, url, options);
     },
+
     readNodeURL: function(url, opt) {
         var options = opt;
         if (options === undefined) {
@@ -201,100 +208,96 @@ Input.prototype = {
             // recursion call
             return options.readNodeURL.call(this, url, options);
         }
+
         url = this.computeURL(url);
         var that = this;
-        return new P(function(resolve, reject) {
-            // copy because we are going to modify it to have relative prefix to load assets
-            options = MACROUTILS.objectMix({}, options);
+        // copy because we are going to modify it to have relative prefix to load assets
+        options = MACROUTILS.objectMix({}, options);
 
-            // automatic prefix if non specfied
-            if (!!!options.prefixURL) {
-                var prefix = that.getPrefixURL();
-                var index = url.lastIndexOf('/');
-                if (index !== -1) {
-                    prefix = url.substring(0, index + 1);
-                }
-                options.prefixURL = prefix;
+        // automatic prefix if non specfied
+        if (!options.prefixURL) {
+            var prefix = that.getPrefixURL();
+            var index = url.lastIndexOf('/');
+            if (index !== -1) {
+                prefix = url.substring(0, index + 1);
+            }
+            options.prefixURL = prefix;
+        }
+
+        var ReaderParser = require('osgDB/readerParser');
+
+        var readSceneGraph = function(data) {
+            return ReaderParser.parseSceneGraph(data, options).then(function(child) {
+                Notify.log('loaded ' + url);
+                return child;
+            });
+        };
+
+        var ungzipFile = function(arrayBuffer) {
+            function pad(n) {
+                return n.length < 2 ? '0' + n : n;
             }
 
-            var ReaderParser = require('osgDB/readerParser');
-
-            var readSceneGraph = function(data) {
-                return ReaderParser.parseSceneGraph(data, options)
-                    .then(function(child) {
-                        resolve(child);
-                        Notify.log('loaded ' + url);
-                    })
-                    .catch(function() {
-                        reject();
-                    });
-            };
-
-            var ungzipFile = function(arrayBuffer) {
-                function pad(n) {
-                    return n.length < 2 ? '0' + n : n;
+            function uintToString(uintArray) {
+                var str = '';
+                for (var i = 0, len = uintArray.length; i < len; ++i) {
+                    str += '%' + pad(uintArray[i].toString(16));
                 }
-
-                function uintToString(uintArray) {
-                    var str = '';
-                    for (var i = 0, len = uintArray.length; i < len; ++i) {
-                        str += '%' + pad(uintArray[i].toString(16));
-                    }
-                    str = decodeURIComponent(str);
-                    return str;
-                }
-
-                var unpacked = arrayBuffer;
-                if (zlib.isGunzipBuffer(arrayBuffer)) {
-                    unpacked = zlib.gunzip(arrayBuffer);
-                }
-
-                var typedArray = new Uint8Array(unpacked);
-                var str = uintToString(typedArray);
+                str = decodeURIComponent(str);
                 return str;
-            };
-            MACROUTILS.time('osgjs.metric:Input.readNodeURL', Notify.INFO);
-            // try to get the file as responseText to parse JSON
-            var fileTextPromise = that.requestFile(url);
-            fileTextPromise
-                .then(function(str) {
-                    var data;
-                    try {
-                        data = JSON.parse(str);
-                    } catch (error) {
-                        // can't parse try with ungzip code path
+            }
 
-                        Notify.error('cant parse url ' + url + ' try to gunzip');
-                    }
-                    // we have the json, read it
-                    if (data) return readSceneGraph(data);
+            var unpacked = arrayBuffer;
+            if (zlib.isGunzipBuffer(arrayBuffer)) {
+                unpacked = zlib.gunzip(arrayBuffer);
+            }
 
-                    // no data try with gunzip
-                    var fileGzipPromise = that.requestFile(url, {
-                        responseType: 'arraybuffer'
-                    });
-                    fileGzipPromise
-                        .then(function(file) {
-                            var strUnzip = ungzipFile(file);
-                            data = JSON.parse(strUnzip);
-                            readSceneGraph(data);
-                        })
-                        .catch(function(status) {
-                            Notify.error('cant read file ' + url + ' status ' + status);
-                            reject();
-                        });
+            var typedArray = new Uint8Array(unpacked);
+            var str = uintToString(typedArray);
+            return str;
+        };
 
-                    return true;
-                })
-                .catch(function(status) {
-                    Notify.error('cant get file ' + url + ' status ' + status);
-                    reject();
-                })
-                .finally(function() {
-                    // Stop the timer
-                    MACROUTILS.timeEnd('osgjs.metric:Input.readNodeURL');
+        MACROUTILS.time('osgjs.metric:Input.readNodeURL', Notify.INFO);
+        // try to get the file as responseText to parse JSON
+        var fileTextPromise = that.requestFile(url);
+        return fileTextPromise
+            .then(function(str) {
+                var data;
+                try {
+                    data = JSON.parse(str);
+                } catch (error) {
+                    // can't parse try with ungzip code path
+
+                    Notify.error('cant parse url ' + url + ' try to gunzip');
+                }
+                // we have the json, read it
+                if (data) return readSceneGraph(data);
+
+                // no data try with gunzip
+                var fileGzipPromise = that.requestFile(url, {
+                    responseType: 'arraybuffer'
                 });
-        });
+                return fileGzipPromise
+                    .then(function(file) {
+                        var strUnzip = ungzipFile(file);
+                        data = JSON.parse(strUnzip);
+                        return readSceneGraph(data);
+                    })
+                    .catch(function(status) {
+                        var err = 'cant read file ' + url + ' status ' + status;
+                        Notify.error(err);
+                        return err;
+                    });
+            })
+            .catch(function(status) {
+                var err = 'cant get file ' + url + ' status ' + status;
+                Notify.error(err);
+                return err;
+            })
+            .finally(function() {
+                // Stop the timer
+                MACROUTILS.timeEnd('osgjs.metric:Input.readNodeURL');
+            });
     },
 
     _unzipTypedArray: function(binary) {
@@ -332,18 +335,15 @@ Input.prototype = {
         if (this._identifierMap[url] !== undefined) {
             return this._identifierMap[url];
         }
-        var that = this;
-        this._identifierMap[url] = new P(function(resolve) {
-            var filePromise = that.requestFile(url, {
-                responseType: 'arraybuffer',
-                progress: that._defaultOptions.progressXHRCallback
-            });
 
-            filePromise.then(
-                function(file) {
-                    resolve(that._unzipTypedArray(file));
-                }.bind(that)
-            );
+        var filePromise = this.requestFile(url, {
+            responseType: 'arraybuffer',
+            progress: this._defaultOptions.progressXHRCallback
+        });
+
+        var that = this;
+        this._identifierMap[url] = filePromise.then(function(file) {
+            return that._unzipTypedArray(file);
         });
 
         return this._identifierMap[url];
@@ -351,61 +351,58 @@ Input.prototype = {
 
     initializeBufferArray: function(vb, type, buf, options) {
         if (options === undefined) options = this.getOptions();
-        if (options.initializeBufferArray)
+
+        if (options.initializeBufferArray) {
             return options.initializeBufferArray.call(this, vb, type, buf);
+        }
 
         var url = vb.File;
 
-        return this.readBinaryArrayURL(url)
-            .then(function(array) {
-                var typedArray;
-                // manage endianness
-                var bigEndian;
-                (function() {
-                    var a = new Uint8Array([0x12, 0x34]);
-                    var b = new Uint16Array(a.buffer);
-                    bigEndian = b[0].toString(16) === '1234';
-                })();
+        return this.readBinaryArrayURL(url).then(function(array) {
+            var typedArray;
+            // manage endianness
+            var bigEndian;
+            (function() {
+                var a = new Uint8Array([0x12, 0x34]);
+                var b = new Uint16Array(a.buffer);
+                bigEndian = b[0].toString(16) === '1234';
+            })();
 
-                var offset = 0;
-                if (vb.Offset !== undefined) {
-                    offset = vb.Offset;
-                }
+            var offset = 0;
+            if (vb.Offset !== undefined) {
+                offset = vb.Offset;
+            }
 
-                var bytesPerElement = MACROUTILS[type].BYTES_PER_ELEMENT;
-                var nbItems = vb.Size;
-                var nbCoords = buf.getItemSize();
-                var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
+            var bytesPerElement = MACROUTILS[type].BYTES_PER_ELEMENT;
+            var nbItems = vb.Size;
+            var nbCoords = buf.getItemSize();
+            var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
 
-                if (bigEndian) {
-                    Notify.log('big endian detected');
-                    var TypedArray = MACROUTILS[type];
-                    var tmpArray = new TypedArray(nbItems * nbCoords);
-                    var data = new DataView(array, offset, totalSizeInBytes);
-                    var i = 0,
-                        l = tmpArray.length;
-                    if (type === 'Uint16Array') {
-                        for (; i < l; i++) {
-                            tmpArray[i] = data.getUint16(i * bytesPerElement, true);
-                        }
-                    } else if (type === 'Float32Array') {
-                        for (; i < l; i++) {
-                            tmpArray[i] = data.getFloat32(i * bytesPerElement, true);
-                        }
+            if (bigEndian) {
+                Notify.log('big endian detected');
+                var TypedArray = MACROUTILS[type];
+                var tmpArray = new TypedArray(nbItems * nbCoords);
+                var data = new DataView(array, offset, totalSizeInBytes);
+                var i = 0,
+                    l = tmpArray.length;
+                if (type === 'Uint16Array') {
+                    for (; i < l; i++) {
+                        tmpArray[i] = data.getUint16(i * bytesPerElement, true);
                     }
-                    typedArray = tmpArray;
-                    data = null;
-                } else {
-                    typedArray = new MACROUTILS[type](array, offset, nbCoords * nbItems);
+                } else if (type === 'Float32Array') {
+                    for (; i < l; i++) {
+                        tmpArray[i] = data.getFloat32(i * bytesPerElement, true);
+                    }
                 }
+                typedArray = tmpArray;
+                data = null;
+            } else {
+                typedArray = new MACROUTILS[type](array, offset, nbCoords * nbItems);
+            }
 
-                buf.setElements(typedArray);
-                return buf;
-            })
-            .catch(function(error) {
-                Notify.warn("Can't read binary array URL: " + error);
-                P.reject();
-            });
+            buf.setElements(typedArray);
+            return buf;
+        });
     },
 
     readBufferArray: function(options) {
@@ -423,8 +420,9 @@ Input.prototype = {
         if (options === undefined) options = this.getOptions();
         if (options.readBufferArray) return options.readBufferArray.call(this);
 
-        if ((!jsonObj.Elements && !jsonObj.Array) || !jsonObj.ItemSize || !jsonObj.Type)
-            return P.reject();
+        if ((!jsonObj.Elements && !jsonObj.Array) || !jsonObj.ItemSize || !jsonObj.Type) {
+            return rejectObject('BufferArray', jsonObj);
+        }
 
         var promise;
 
@@ -450,8 +448,7 @@ Input.prototype = {
             }
 
             if (vb === undefined) {
-                Notify.warn('Typed Array ' + window.Object.keys(jsonObj.Array)[0]);
-                return P.reject();
+                return rejectObject('Typed Array ' + window.Object.keys(jsonObj.Array)[0]);
             }
 
             if (vb.File) {
@@ -488,90 +485,68 @@ Input.prototype = {
         var uniqueID;
         var osgjsObject;
 
-        var that = this;
-        var promise = new P(function(resolve) {
-            var obj, mode, first, count;
-            var drawElementPrimitive =
-                jsonObj.DrawElementUShort ||
-                jsonObj.DrawElementUByte ||
-                jsonObj.DrawElementUInt ||
-                jsonObj.DrawElementsUShort ||
-                jsonObj.DrawElementsUByte ||
-                jsonObj.DrawElementsUInt ||
-                undefined;
-            if (drawElementPrimitive) {
-                uniqueID = drawElementPrimitive.UniqueID;
-                if (uniqueID !== undefined) {
-                    osgjsObject = that._identifierMap[uniqueID];
-                    if (osgjsObject !== undefined) {
-                        return osgjsObject;
-                    }
+        var promise;
+        var obj, mode, first, count;
+        var drawElements =
+            jsonObj.DrawElementUShort ||
+            jsonObj.DrawElementUByte ||
+            jsonObj.DrawElementUInt ||
+            jsonObj.DrawElementsUShort ||
+            jsonObj.DrawElementsUByte ||
+            jsonObj.DrawElementsUInt;
+        var drawArray = jsonObj.DrawArray || jsonObj.DrawArrays;
+        var drawArrayLengths = jsonObj.DrawArrayLengths;
+
+        if (drawElements) {
+            uniqueID = drawElements.UniqueID;
+            if (uniqueID !== undefined) {
+                osgjsObject = this._identifierMap[uniqueID];
+                if (osgjsObject !== undefined) {
+                    return osgjsObject;
                 }
-
-                var jsonArray = drawElementPrimitive.Indices;
-                var prevJson = jsonObj;
-
-                mode = drawElementPrimitive.Mode;
-                if (!mode) {
-                    mode = primitiveSet.TRIANGLES;
-                } else {
-                    mode = primitiveSet[mode];
-                }
-                obj = new DrawElements(mode);
-
-                that.setJSON(jsonArray);
-                that
-                    .readBufferArray()
-                    .then(function(array) {
-                        obj.setIndices(array);
-                        resolve(obj);
-                    })
-                    .catch(function() {
-                        Notify.warn('Error buffer array');
-                    });
-                that.setJSON(prevJson);
             }
 
-            var drawArrayPrimitive = jsonObj.DrawArray || jsonObj.DrawArrays;
-            if (drawArrayPrimitive) {
-                uniqueID = drawArrayPrimitive.UniqueID;
-                if (uniqueID !== undefined) {
-                    osgjsObject = that._identifierMap[uniqueID];
-                    if (osgjsObject !== undefined) {
-                        resolve(osgjsObject);
-                    }
-                }
+            mode = drawElements.Mode ? primitiveSet[drawElements.Mode] : primitiveSet.TRIANGLES;
+            obj = new DrawElements(mode);
 
-                mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
-                first =
-                    drawArrayPrimitive.First !== undefined
-                        ? drawArrayPrimitive.First
-                        : drawArrayPrimitive.first;
-                count =
-                    drawArrayPrimitive.Count !== undefined
-                        ? drawArrayPrimitive.Count
-                        : drawArrayPrimitive.count;
-                var drawArray = new DrawArrays(primitiveSet[mode], first, count);
-                resolve(drawArray);
+            this.setJSON(drawElements.Indices);
+            promise = this.readBufferArray().then(function(array) {
+                obj.setIndices(array);
+                return obj;
+            });
+            this.setJSON(jsonObj);
+        } else if (drawArray) {
+            uniqueID = drawArray.UniqueID;
+            if (uniqueID !== undefined) {
+                osgjsObject = this._identifierMap[uniqueID];
+                if (osgjsObject !== undefined) {
+                    return osgjsObject;
+                }
             }
 
-            var drawArrayLengthsPrimitive = jsonObj.DrawArrayLengths || undefined;
-            if (drawArrayLengthsPrimitive) {
-                uniqueID = drawArrayLengthsPrimitive.UniqueID;
-                if (uniqueID !== undefined) {
-                    osgjsObject = that._identifierMap[uniqueID];
-                    if (osgjsObject !== undefined) {
-                        return osgjsObject;
-                    }
+            mode = drawArray.Mode || drawArray.mode;
+            first = drawArray.First !== undefined ? drawArray.First : drawArray.first;
+            count = drawArray.Count !== undefined ? drawArray.Count : drawArray.count;
+            obj = new DrawArrays(primitiveSet[mode], first, count);
+            promise = P.resolve(obj);
+        } else if (drawArrayLengths) {
+            uniqueID = drawArrayLengths.UniqueID;
+            if (uniqueID !== undefined) {
+                osgjsObject = this._identifierMap[uniqueID];
+                if (osgjsObject !== undefined) {
+                    return osgjsObject;
                 }
-
-                mode = drawArrayLengthsPrimitive.Mode;
-                first = drawArrayLengthsPrimitive.First;
-                var array = drawArrayLengthsPrimitive.ArrayLengths;
-                var drawArrayLengths = new DrawArrayLengths(primitiveSet[mode], first, array);
-                resolve(drawArrayLengths);
             }
-        });
+
+            mode = drawArrayLengths.Mode;
+            first = drawArrayLengths.First;
+            var array = drawArrayLengths.ArrayLengths;
+            obj = new DrawArrayLengths(primitiveSet[mode], first, array);
+            promise = P.resolve(obj);
+        } else {
+            promise = rejectObject('PrimitiveSet', jsonObj);
+        }
+
         if (uniqueID !== undefined) {
             this._identifierMap[uniqueID] = promise;
         }
@@ -581,10 +556,10 @@ Input.prototype = {
 
     readObject: function() {
         var jsonObj = this.getJSON();
-        var prop = window.Object.keys(jsonObj)[0];
+        var objKeys = window.Object.keys(jsonObj);
+        var prop = objKeys[0];
         if (!prop) {
-            Notify.warn("can't find property for object " + jsonObj);
-            return P.reject();
+            return rejectObject("can't find property for object " + objKeys);
         }
 
         var uniqueID = jsonObj[prop].UniqueID;
@@ -599,8 +574,7 @@ Input.prototype = {
         var obj = this.getObjectWrapper(prop);
 
         if (!obj) {
-            Notify.warn("can't instanciate object " + prop);
-            return P.reject();
+            return rejectObject("can't instanciate object " + prop);
         }
 
         var ReaderParser = require('osgDB/readerParser');
@@ -611,10 +585,10 @@ Input.prototype = {
         } else {
             var splittedPath = prop.split('.');
             for (var i = 0, l = splittedPath.length; i < l; i++) {
-                var reader = scope[splittedPath[i]];
-                if (reader === undefined) {
-                    Notify.warn("can't find function to read object " + prop + ' - undefined');
-                    return P.reject();
+                var sub = splittedPath[i];
+                var reader = scope[sub];
+                if (!reader) {
+                    return rejectObject('Unknown scope ' + prop + '(' + sub + ')');
                 }
                 scope = reader;
             }
