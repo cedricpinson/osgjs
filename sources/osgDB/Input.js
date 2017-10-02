@@ -13,11 +13,7 @@ var DrawArrayLengths = require('osg/DrawArrayLengths');
 var DrawElements = require('osg/DrawElements');
 var primitiveSet = require('osg/primitiveSet');
 
-var rejectObject = function(msg, node) {
-    if (node) msg = 'Invalid json ' + msg + ' ' + Object.keys(node);
-    Notify.warn(msg); // useful for line debugging
-    return P.reject(msg); // reject with a message to avoid "undefined" rejection
-};
+var rejectObject = MACROUTILS.rejectObject;
 
 var Input = function(json, identifier) {
     this._json = json;

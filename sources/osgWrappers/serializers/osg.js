@@ -1,15 +1,9 @@
 'use strict';
 var P = require('bluebird');
-var Notify = require('osg/notify');
+var MACROUTILS = require('osg/Utils');
 var TransformEnums = require('osg/transformEnums');
 
-var rejectObject = function(msg, node) {
-    msg = 'Invalid json ' + msg;
-    if (node) msg += ' ' + Object.keys(node);
-
-    Notify.warn(msg); // useful for line debugging
-    return P.reject(msg); // reject with a message to avoid "undefined" rejection
-};
+var rejectObject = MACROUTILS.rejectObject;
 
 var osgWrapper = {};
 
