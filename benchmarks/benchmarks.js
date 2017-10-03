@@ -8,7 +8,4 @@ var OSG = require('OSG');
 var osgBenchmarks = require('benchmarks/osg/osgBenchmarks');
 OSG.osg.setNotifyLevel(OSG.osg.ERROR);
 
-// hack because of osgPool
-OSG.osg.init();
-
 osgBenchmarks();
