@@ -1,4 +1,5 @@
 'use strict';
+var notify = require('osg/notify');
 var utils = require('osg/utils');
 var Object = require('osg/Object');
 var GLObject = require('osg/GLObject');
@@ -30,7 +31,7 @@ var getAttributeType = function(array) {
  * @class BufferArray
  */
 
-var BufferArray = function(target, elements, itemSize, preserveArrayType) {
+var BufferArray = function(target, elements, itemSize) {
     GLObject.call(this);
     // maybe could inherit from Object
     this._instanceID = Object.getInstanceID();
@@ -44,22 +45,17 @@ var BufferArray = function(target, elements, itemSize, preserveArrayType) {
     this._type = undefined;
     this._normalize = false;
 
-    if (elements !== undefined) {
-        var typedArray = elements;
-        if (!preserveArrayType) {
+    if (elements) {
+        // byteLength should be enough to detect typedArray
+        if (elements.byteLength === undefined) {
+            notify.warn('BufferArray with non typedArray elements is deprecated');
             if (this._target === BufferArray.ELEMENT_ARRAY_BUFFER) {
-                typedArray =
-                    elements instanceof utils.Uint16Array
-                        ? elements
-                        : new utils.Uint16Array(elements);
+                elements = new utils.Uint16Array(elements);
             } else {
-                typedArray =
-                    elements instanceof utils.Float32Array
-                        ? elements
-                        : new utils.Float32Array(elements);
+                elements = new utils.Float32Array(elements);
             }
         }
-        this.setElements(typedArray);
+        this.setElements(elements);
     }
 
     this._usage = BufferArray.STATIC_DRAW;
