@@ -8,9 +8,16 @@ var getAttributeType = function(array) {
     var type;
 
     if (array instanceof utils.Float32Array) type = 0x1406;
-    if (array instanceof utils.Uint32Array) type = 0x1405;
+
+    if (array instanceof utils.Int16Array) type = 0x1402;
     if (array instanceof utils.Uint16Array) type = 0x1403;
+
+    if (array instanceof utils.Int8Array) type = 0x1400;
     if (array instanceof utils.Uint8Array) type = 0x1401;
+    if (array instanceof utils.Uint8ClampedArray) type = 0x1401;
+
+    if (array instanceof utils.Int32Array) type = 0x1404; // webgl2 for vertexAttribPointer
+    if (array instanceof utils.Uint32Array) type = 0x1405; // webgl2 for vertexAttribPointer
 
     return type;
 };
