@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var data = require('osgShader/node/data');
 var operations = require('osgShader/node/operations');
 var shaderUtils = require('osgShader/utils');
@@ -33,7 +33,7 @@ Factory.prototype = {
 
     registerNode: function(name, constructor) {
         if (this._nodes.has(name)) {
-            Notify.warn('Node ' + name + ' already registered');
+            notify.warn('Node ' + name + ' already registered');
         }
         this._nodes.set(name, constructor);
     },
@@ -50,7 +50,7 @@ Factory.prototype = {
             // - the node isn't registered by methods above
             // - you mistyped the name
             // - Core Node has changed its Name
-            Notify.warn('Node ' + name + ' does not exist');
+            notify.warn('Node ' + name + ' does not exist');
             return undefined;
         }
 

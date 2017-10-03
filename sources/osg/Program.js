@@ -1,6 +1,6 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
-var Notify = require('osg/notify');
+var utils = require('osg/utils');
+var notify = require('osg/notify');
 var GLObject = require('osg/GLObject');
 var StateAttribute = require('osg/StateAttribute');
 var ShaderProcessor = require('osgShader/ShaderProcessor');
@@ -114,11 +114,11 @@ Program.onLostContext = function(gl) {
 };
 
 /** @lends Program.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Program,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         GLObject.prototype,
-        MACROUTILS.objectInherit(StateAttribute.prototype, {
+        utils.objectInherit(StateAttribute.prototype, {
             attributeType: 'Program',
 
             cloneType: function() {
@@ -245,7 +245,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
                         gl.attachShader(this._program, this._vertex.shader);
                         gl.attachShader(this._program, this._fragment.shader);
-                        MACROUTILS.timeStamp('osgjs.metrics:linkShader');
+                        utils.timeStamp('osgjs.metrics:linkShader');
                         gl.linkProgram(this._program);
 
                         if (
@@ -254,7 +254,7 @@ MACROUTILS.createPrototypeStateAttribute(
                         ) {
                             var errLink = gl.getProgramInfoLog(this._program);
 
-                            Notify.errorFold(
+                            notify.errorFold(
                                 errLink,
                                 "can't link program\nvertex shader:\n" +
                                     this._vertex.text +
@@ -267,10 +267,10 @@ MACROUTILS.createPrototypeStateAttribute(
                             if (debugShader !== undefined && debugShader.getExtension !== undefined)
                                 debugShader = debugShader.getExtension('WEBGL_debug_shaders');
                             if (debugShader && errLink === 'Failed to create D3D shaders.\n') {
-                                Notify.error(
+                                notify.error(
                                     debugShader.getTranslatedShaderSource(this._vertex.shader)
                                 );
-                                Notify.error(
+                                notify.error(
                                     debugShader.getTranslatedShaderSource(this._fragment.shader)
                                 );
                             }
@@ -297,7 +297,7 @@ MACROUTILS.createPrototypeStateAttribute(
                         gl.linkProgram(program);
                         gl.validateProgram(program);
 
-                        Notify.warn('FailSafe shader Activated ');
+                        notify.warn('FailSafe shader Activated ');
                         this._program = program;
                     }
 

@@ -1,6 +1,6 @@
 'use strict';
 var assert = require('chai').assert;
-var Utils = require('osg/Utils');
+var Utils = require('osg/utils');
 var State = require('osg/State');
 var StateSet = require('osg/StateSet');
 var Material = require('osg/Material');

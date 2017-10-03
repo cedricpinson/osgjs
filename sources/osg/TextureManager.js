@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Timer = require('osg/Timer');
 
 var TextureProfile = function(target, internalFormat, width, height) {
@@ -180,7 +180,7 @@ TextureObjectSet.prototype = {
             this._orphanedTextureObjects[i].reset();
         }
         this._orphanedTextureObjects.length = 0;
-        Notify.info(
+        notify.info(
             'TextureManager: released ' +
                 nbTextures +
                 ' with ' +
@@ -251,7 +251,7 @@ TextureManager.prototype = {
             var nb = this._textureSetMap[keyTexture].getUsedTextureObjects().length;
             size *= nb;
             total += size;
-            Notify.notice(
+            notify.notice(
                 String(size) +
                     ' MB with ' +
                     nb +
@@ -264,7 +264,7 @@ TextureManager.prototype = {
             );
         }
 
-        Notify.notice(String(total) + ' MB in total');
+        notify.notice(String(total) + ' MB in total');
     },
 
     flushAllDeletedTextureObjects: function(gl) {

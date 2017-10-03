@@ -1,6 +1,6 @@
 'use strict';
-var Notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var notify = require('osg/notify');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
 var Image = require('osg/Image');
@@ -43,7 +43,7 @@ var checkAndFixEnum = function(mode, fallback) {
     var value = Texture[mode];
 
     if (value === undefined) {
-        Notify.warn('bad Texture enum argument ' + mode + '\n' + 'fallback to ' + fallback);
+        notify.warn('bad Texture enum argument ' + mode + '\n' + 'fallback to ' + fallback);
         return fallback;
     }
 
@@ -254,11 +254,11 @@ Texture.getEnumFromString = function(v) {
     return value;
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Texture,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         GLObject.prototype,
-        MACROUTILS.objectInherit(StateAttribute.prototype, {
+        utils.objectInherit(StateAttribute.prototype, {
             attributeType: 'Texture',
 
             cloneType: function() {
@@ -352,7 +352,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
                 if (w !== undefined) {
                     if (w > maxSize) {
-                        Notify.error(
+                        notify.error(
                             'width (' +
                                 w +
                                 ') too big for GPU. Max Texture Size is "' +
@@ -367,7 +367,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
                 if (h !== undefined) {
                     if (h > maxSize) {
-                        Notify.error(
+                        notify.error(
                             'height (' +
                                 h +
                                 ') too big for GPU. Max Texture Size is "' +
@@ -722,7 +722,7 @@ MACROUTILS.createPrototypeStateAttribute(
 
             applyTexImage2D: function(gl) {
                 var args = Array.prototype.slice.call(arguments, 1);
-                MACROUTILS.timeStamp('osgjs.metrics:Texture.texImage2d');
+                utils.timeStamp('osgjs.metrics:Texture.texImage2d');
 
                 // use parameters of pixel store
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);

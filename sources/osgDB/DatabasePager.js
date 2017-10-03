@@ -1,6 +1,6 @@
 'use strict';
 var P = require('bluebird');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var NodeVisitor = require('osg/NodeVisitor');
 var PagedLOD = require('osg/PagedLOD');
 var Timer = require('osg/Timer');
@@ -11,9 +11,9 @@ var FindPagedLODsVisitor = function() {
     this._frameNumber = 0;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     FindPagedLODsVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         apply: function(node) {
             if (node.getTypeID() === PagedLOD.getTypeID()) {
                 node.setFrameNumberOfLastTraversal(this._frameNumber);
@@ -34,9 +34,9 @@ var ReleaseVisitor = function() {
     NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ReleaseVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         apply: function(node) {
             // mark GLResources in nodes to be released
             node.releaseGLObjects();
@@ -52,9 +52,9 @@ var ExpiredPagedLODVisitor = function() {
     this._childrenList = [];
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ExpiredPagedLODVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         apply: function(node) {
             if (node.getTypeID() === PagedLOD.getTypeID()) {
                 this._childrenList.push(node);
@@ -151,7 +151,7 @@ var DatabaseRequest = function() {
     this._priority = 0.0;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     DatabasePager,
     {
         setTargetMaximumNumberOfPageLOD: function(target) {

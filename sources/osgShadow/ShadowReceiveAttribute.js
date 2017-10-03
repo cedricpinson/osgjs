@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
 
@@ -40,9 +40,9 @@ var ShadowReceiveAttribute = function(lightNum, disable) {
 };
 
 ShadowReceiveAttribute.uniforms = {};
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     ShadowReceiveAttribute,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'ShadowReceive',
 
         cloneType: function() {

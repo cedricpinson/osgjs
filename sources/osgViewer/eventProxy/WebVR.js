@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var quat = require('osg/glMatrix').quat;
 var vec3 = require('osg/glMatrix').vec3;
 var mat4 = require('osg/glMatrix').mat4;
@@ -41,7 +41,7 @@ WebVR.prototype = {
             if (displays.length > 0) {
                 self._hmd = displays[0];
                 self._frameData = new window.VRFrameData();
-                Notify.log('Found a VR display');
+                notify.log('Found a VR display');
                 // currently it's the event proxy webvr that has the responsability of detecting vr devices
                 self._viewer.setVRDisplay(self._hmd);
             }

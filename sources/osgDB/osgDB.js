@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Input = require('osgDB/Input');
 var ReaderParser = require('osgDB/readerParser');
 var DatabasePager = require('osgDB/DatabasePager');
@@ -11,7 +11,7 @@ var FileHelper = require('osgDB/FileHelper');
 
 var osgDB = {};
 osgDB.Input = Input;
-MACROUTILS.objectMix(osgDB, ReaderParser);
+utils.objectMix(osgDB, ReaderParser);
 osgDB.DatabasePager = DatabasePager;
 osgDB.ObjectWrapper.serializers.osg = osgWrappers;
 osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
@@ -21,6 +21,6 @@ osgDB.FileHelper = FileHelper;
 osgDB.requestFile = require('osgDB/requestFile');
 
 var zlib = require('osgDB/zlib');
-MACROUTILS.objectMix(osgDB, zlib);
+utils.objectMix(osgDB, zlib);
 
 module.exports = osgDB;

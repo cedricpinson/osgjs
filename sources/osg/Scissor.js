@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 
 var Scissor = function(x, y, w, h) {
@@ -12,9 +12,9 @@ var Scissor = function(x, y, w, h) {
     this._height = h !== undefined ? h : -1;
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Scissor,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'Scissor',
 
         cloneType: function() {

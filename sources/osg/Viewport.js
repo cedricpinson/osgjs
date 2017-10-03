@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var mat4 = require('osg/glMatrix').mat4;
 var vec3 = require('osg/glMatrix').vec3;
@@ -13,9 +13,9 @@ var Viewport = function(x, y, w, h) {
     this._height = h !== undefined ? h : 600;
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Viewport,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'Viewport',
 
         cloneType: function() {

@@ -1,7 +1,7 @@
 'use strict';
 var P = require('bluebird');
 var requestFile = require('osgDB/requestFile.js');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Registry = require('osgDB/Registry');
 var ReaderParser = require('osgDB/readerParser');
 var FileHelper = require('osgDB/FileHelper');
@@ -16,10 +16,10 @@ var ReaderWriterZIP = function() {
 ReaderWriterZIP.prototype = {
     readNodeURL: function(url, options) {
         if (JSZip === undefined) {
-            Notify.error('You need to add JSZip as a dependency');
+            notify.error('You need to add JSZip as a dependency');
             return;
         }
-        Notify.log('starting to read: ' + url);
+        notify.log('starting to read: ' + url);
         // Check if we already have the file
         var self = this;
         if (options && options.filesMap !== undefined) {

@@ -1,7 +1,7 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var BufferArrayProxy = require('osg/BufferArrayProxy');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var vec3 = require('osg/glMatrix').vec3;
 var Geometry = require('osg/Geometry');
 var StateSet = require('osg/StateSet');
@@ -38,9 +38,9 @@ var EFFECTIVE_EPS = (MorphGeometry.EFFECTIVE_EPS = 0.05);
 // this should be constant, if you change it only do it at parse time, otherwise it's better to call setMaximumPossibleMorphGPU
 MorphGeometry.MAX_MORPH_GPU = 4;
 
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     MorphGeometry,
-    MACROUTILS.objectInherit(Geometry.prototype, {
+    utils.objectInherit(Geometry.prototype, {
         init: function() {
             if (this._morphAttribute) {
                 this._isInitialized = true;
@@ -63,7 +63,7 @@ MACROUTILS.createPrototypeNode(
                 this._morphAttribute.copyTargetNames(this._morphTargetNames);
             } else {
                 this._morphTargetNames = [];
-                Notify.error('No Targets in the MorphGeometry !');
+                notify.error('No Targets in the MorphGeometry !');
             }
 
             this._isInitialized = true;

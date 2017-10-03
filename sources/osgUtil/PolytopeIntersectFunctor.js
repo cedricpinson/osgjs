@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var Plane = require('osg/Plane');
 var IntersectFunctor = require('osgUtil/IntersectFunctor');
@@ -23,9 +23,9 @@ var PolytopeIntersectFunctor = function() {
     this._maxNumIntersectionsPoints = 6;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     PolytopeIntersectFunctor,
-    MACROUTILS.objectInherit(IntersectFunctor.prototype, {
+    utils.objectInherit(IntersectFunctor.prototype, {
         reset: function() {
             IntersectFunctor.prototype.reset.call(this);
             this._src = [];
@@ -45,7 +45,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         addIntersection: function() {
-            this._src = MACROUTILS.arrayUniq(this._src);
+            this._src = utils.arrayUniq(this._src);
             var src = this._src;
 
             var center = vec3.create();

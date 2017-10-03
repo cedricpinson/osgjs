@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var mat4 = require('osg/glMatrix').mat4;
 var Manipulator = require('osgGA/Manipulator');
@@ -44,9 +44,9 @@ var lowerOrEqual = function(val, limit) {
 };
 
 /** @lends OrbitManipulator.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     OrbitManipulator,
-    MACROUTILS.objectInherit(Manipulator.prototype, {
+    utils.objectInherit(Manipulator.prototype, {
         init: function() {
             this._distance = 25.0;
             this._target = vec3.create();

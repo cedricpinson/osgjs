@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var PooledArray = require('osg/PooledArray');
 var PooledMap = require('osg/PooledMap');
 var PooledResource = require('osg/PooledResource');
@@ -24,7 +24,7 @@ StateGraph.reset = function() {
     StateGraph.statsNbMoveStateGraph = 0;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     StateGraph,
     {
         clean: function() {

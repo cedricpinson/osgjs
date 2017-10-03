@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 
 /**
@@ -17,9 +17,9 @@ CullFace.BACK = 0x0405;
 CullFace.FRONT_AND_BACK = 0x0408;
 
 /** @lends CullFace.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     CullFace,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'CullFace',
 
         cloneType: function() {

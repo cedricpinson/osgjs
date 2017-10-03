@@ -6,7 +6,7 @@ var mockup = require('tests/mockup/mockup');
 if (mockup.isNodeContext()) {
     Input = require('tests/mockup/InputMockup');
 }
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Image = require('osg/Image');
 
 module.exports = function() {
@@ -22,7 +22,7 @@ module.exports = function() {
                 done();
             })
             .catch(function(error) {
-                Notify.error(error);
+                notify.error(error);
             });
     });
 
@@ -44,7 +44,7 @@ module.exports = function() {
                 }
             )
             .catch(function(error) {
-                Notify.error(error);
+                notify.error(error);
             });
     });
 
@@ -67,7 +67,7 @@ module.exports = function() {
                 done();
             })
             .catch(function(error) {
-                Notify.error(error);
+                notify.error(error);
             });
     });
 

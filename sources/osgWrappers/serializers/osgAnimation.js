@@ -1,7 +1,7 @@
 'use strict';
 var P = require('bluebird');
-var MACROUTILS = require('osg/Utils');
-var Notify = require('osg/notify');
+var utils = require('osg/utils');
+var notify = require('osg/notify');
 var osgWrapper = require('osgWrappers/serializers/osg');
 var Channel = require('osgAnimation/channel');
 var Animation = require('osgAnimation/animation');
@@ -11,7 +11,7 @@ var StackedScale = require('osgAnimation/StackedScale');
 var MorphGeometry = require('osgAnimation/MorphGeometry');
 var Geometry = require('osg/Geometry');
 
-var rejectObject = MACROUTILS.rejectObject;
+var rejectObject = utils.rejectObject;
 
 var osgAnimationWrapper = {};
 
@@ -321,7 +321,7 @@ osgAnimationWrapper.BasicAnimationManager = function(input, manager) {
     for (var i = 0, l = jsonObj.Animations.length; i < l; i++) {
         var promiseAnimation = input.setJSON(jsonObj.Animations[i]).readObject();
         if (promiseAnimation.isRejected()) {
-            Notify.warn('An Animation failed on the parsing!');
+            notify.warn('An Animation failed on the parsing!');
             continue;
         }
         animPromises.push(promiseAnimation);
@@ -347,7 +347,7 @@ osgAnimationWrapper.UpdateMatrixTransform = function(input, umt) {
     for (i = 0, l = jsonObj.StackedTransforms.length; i < l; i++) {
         var promiseStacked = input.setJSON(jsonObj.StackedTransforms[i]).readObject();
         if (promiseStacked.isRejected()) {
-            Notify.warn('A stacked transforms failed on the parsing!');
+            notify.warn('A stacked transforms failed on the parsing!');
             continue;
         }
         promiseArray.push(promiseStacked);
@@ -453,7 +453,7 @@ osgAnimationWrapper.RigGeometry = function(input, rigGeom) {
     // check boneMap
     if (!jsonObj.SourceGeometry) return rejectObject('RigGeometry', jsonObj);
 
-    if (!jsonObj.BoneMap) Notify.warn('No boneMap found in a RigGeometry !');
+    if (!jsonObj.BoneMap) notify.warn('No boneMap found in a RigGeometry !');
 
     //Import rigGeometry as Geometry + BoneMap
     var rigPromise = osgWrapper.Geometry(input, rigGeom);
@@ -473,7 +473,7 @@ osgAnimationWrapper.RigGeometry = function(input, rigGeom) {
             rigGeom.setSourceGeometry(new MorphGeometry());
             geomPromise = osgAnimationWrapper.MorphGeometry(input, rigGeom.getSourceGeometry());
         } else {
-            Notify.warn('SourceGeometry type no recognized');
+            notify.warn('SourceGeometry type no recognized');
         }
     }
 

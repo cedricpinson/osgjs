@@ -1,7 +1,7 @@
 'use strict';
 var Object = require('osg/Object');
 var Plane = require('osg/Plane');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec4 = require('osg/glMatrix').vec4;
 var PooledArray = require('osg/PooledArray');
 
@@ -32,9 +32,9 @@ var Polytope = function() {
     this._maskStack.push(this._resultMask);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Polytope,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         getPlanes: function() {
             return this._planeList;
         },

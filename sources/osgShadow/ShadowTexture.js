@@ -1,9 +1,9 @@
 'use strict';
 
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Texture = require('osg/Texture');
 var Uniform = require('osg/Uniform');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec4 = require('osg/glMatrix').vec4;
 
 /**
@@ -27,9 +27,9 @@ var ShadowTexture = function() {
 
 ShadowTexture.uniforms = {};
 /** @lends Texture.prototype */
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     ShadowTexture,
-    MACROUTILS.objectInherit(Texture.prototype, {
+    utils.objectInherit(Texture.prototype, {
         cloneType: function() {
             return new ShadowTexture();
         },
@@ -64,8 +64,8 @@ MACROUTILS.createPrototypeStateAttribute(
             // uniform are once per CLASS attribute, not per instance
             var obj = ShadowTexture;
 
-            Notify.assert(unit !== undefined);
-            Notify.assert(this._lightNumber !== -1);
+            notify.assert(unit !== undefined);
+            notify.assert(this._lightNumber !== -1);
 
             if (obj.uniforms[unit] !== undefined) return obj.uniforms[unit];
 

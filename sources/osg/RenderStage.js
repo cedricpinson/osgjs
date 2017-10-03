@@ -1,8 +1,8 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Camera = require('osg/Camera');
 var FrameBufferObject = require('osg/FrameBufferObject');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var RenderBin = require('osg/RenderBin');
 var vec4 = require('osg/glMatrix').vec4;
 var PooledResource = require('osg/PooledResource');
@@ -41,9 +41,9 @@ var createRenderStageOrder = function() {
 
 var pooledRenderStageOrder = new PooledResource(createRenderStageOrder);
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     RenderStage,
-    MACROUTILS.objectInherit(RenderBin.prototype, {
+    utils.objectInherit(RenderBin.prototype, {
         init: function() {
             RenderBin.prototype.init.call(this);
             this._clearDepth = 1.0;
@@ -278,7 +278,7 @@ MACROUTILS.createPrototypeObject(
 
             // projection clipping
             if (this._viewport === undefined) {
-                Notify.log('RenderStage does not have a valid viewport');
+                notify.log('RenderStage does not have a valid viewport');
             }
             state.applyAttribute(this._viewport);
 

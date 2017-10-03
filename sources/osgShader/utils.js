@@ -1,6 +1,6 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
-var Notify = require('osg/notify');
+var utils = require('osg/utils');
+var notify = require('osg/notify');
 var Node = require('osgShader/node/Node');
 
 /*
@@ -284,9 +284,9 @@ var createNode = function(res, fileName) {
     };
 
     var globalDeclare = '#pragma include "' + fileName + '"';
-    MACROUTILS.createPrototypeObject(
+    utils.createPrototypeObject(
         NodeCustom,
-        MACROUTILS.objectInherit(Node.prototype, {
+        utils.objectInherit(Node.prototype, {
             type: res.nodeName,
             signatures: [res.signature],
 
@@ -379,7 +379,7 @@ var createNode = function(res, fileName) {
 
                 if (!jsArg) {
                     var typeIn = glslArg.isOutput ? 'output' : 'input';
-                    Notify.error(
+                    notify.error(
                         'missing ' + typeIn + ' ' + glslArg.name + ' on NodeCustom ' + res.nodeName
                     );
                     this._missingArgs = true;
@@ -402,7 +402,7 @@ var createNode = function(res, fileName) {
                 var ret = signature.returnVariable && signature.returnVariable.name;
                 var returnOut = ret ? this._outputs[ret] : undefined;
                 if (ret && !returnOut) {
-                    Notify.error('missing output ' + ret + ' on NodeCustom ' + res.nodeName);
+                    notify.error('missing output ' + ret + ' on NodeCustom ' + res.nodeName);
                     this._missingArgs = true;
                 }
 

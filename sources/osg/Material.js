@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var vec4 = require('osg/glMatrix').vec4;
 var Uniform = require('osg/Uniform');
@@ -15,9 +15,9 @@ var Material = function() {
     this._shininess = 12.5;
 };
 
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Material,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'Material',
 
         cloneType: function() {

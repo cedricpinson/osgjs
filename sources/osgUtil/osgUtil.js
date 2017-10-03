@@ -10,7 +10,7 @@ var Intersector = require('osgUtil/Intersector');
 var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
 var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
 var LineSegmentIntersectFunctor = require('osgUtil/LineSegmentIntersectFunctor');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var NodeGizmo = require('osgUtil/NodeGizmo');
 var GizmoGeometry = require('osgUtil/gizmoGeometry');
 var PolytopeIntersector = require('osgUtil/PolytopeIntersector');
@@ -24,7 +24,7 @@ var intersectionEnums = require('osgUtil/intersectionEnums');
 var osgUtil = {};
 
 osgUtil.ComposerPostProcess = ComposerPostProcess;
-MACROUTILS.objectMix(osgUtil, debug);
+utils.objectMix(osgUtil, debug);
 osgUtil.DelayInterpolator = DelayInterpolator;
 osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
 osgUtil.DisplayGeometryVisitor = DisplayGeometryVisitor;

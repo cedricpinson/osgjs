@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 var mat4 = require('osg/glMatrix').mat4;
 var vec3 = require('osg/glMatrix').vec3;
@@ -11,9 +11,9 @@ var StackedScale = function(name, scale) {
     if (name) this.setName(name);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     StackedScale,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         init: function(scale) {
             this.setScale(scale);
             vec3.copy(this._target.defaultValue, scale);

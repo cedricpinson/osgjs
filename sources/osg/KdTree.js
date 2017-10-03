@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var BoundingBox = require('osg/BoundingBox');
 var primitiveIndexFunctor = require('osg/primitiveIndexFunctor');
@@ -447,7 +447,7 @@ var KdTree = function() {
     this._numPrimitiveIndices = 0;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     KdTree,
     {
         getVertices: function() {

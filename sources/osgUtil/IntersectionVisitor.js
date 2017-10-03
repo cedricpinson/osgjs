@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var NodeVisitor = require('osg/NodeVisitor');
 var mat4 = require('osg/glMatrix').mat4;
 var PooledResource = require('osg/PooledResource');
@@ -21,9 +21,9 @@ var IntersectionVisitor = function() {
     this.reset();
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     IntersectionVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         reset: function() {
             this._pooledMatrix.reset();
             this._viewStack.reset();

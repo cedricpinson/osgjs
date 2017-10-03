@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Transform = require('osg/Transform');
 var CullSettings = require('osg/CullSettings');
 var mat4 = require('osg/glMatrix').mat4;
@@ -45,11 +45,11 @@ Camera.DEPTH_BUFFER_BIT = 0x00000100;
 Camera.STENCIL_BUFFER_BIT = 0x00000400;
 
 /** @lends Camera.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     Camera,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         CullSettings.prototype,
-        MACROUTILS.objectInherit(Transform.prototype, {
+        utils.objectInherit(Transform.prototype, {
             // at which view this camera is attached
             getView: function() {
                 return this._view;

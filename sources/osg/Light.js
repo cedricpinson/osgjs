@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var StateAttribute = require('osg/StateAttribute');
 var Uniform = require('osg/Uniform');
 var mat3 = require('osg/glMatrix').mat3;
@@ -48,9 +48,9 @@ Light.POINT = 'POINT';
 Light.HEMI = 'HEMI';
 
 Light.uniforms = {};
-MACROUTILS.createPrototypeStateAttribute(
+utils.createPrototypeStateAttribute(
     Light,
-    MACROUTILS.objectInherit(StateAttribute.prototype, {
+    utils.objectInherit(StateAttribute.prototype, {
         attributeType: 'Light',
 
         cloneType: function() {

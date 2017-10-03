@@ -10,7 +10,7 @@ var PooledArray = require('osg/PooledArray');
 var MatrixTransform = require('osg/MatrixTransform');
 var NodeVisitor = require('osg/NodeVisitor');
 var Plane = require('osg/Plane');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 
 /**
  * [ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum]
@@ -30,9 +30,9 @@ var ComputeMultiFrustumBoundsVisitor = function() {
 /*
  * TODO: apply world matrix on the traverse instead of per node
  */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ComputeMultiFrustumBoundsVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         reset: function(traversalMask, worldLightPos, cameraFrustum, cameraNearFar, lightFrustum) {
             this.setTraversalMask(traversalMask);
 

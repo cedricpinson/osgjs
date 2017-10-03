@@ -18,7 +18,7 @@ var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
 var Renderer = require('osgViewer/Renderer');
 var Scene = require('osgViewer/Scene');
 var DisplayGraph = require('osgUtil/DisplayGraph');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 // View is normally inherited from osg/View. In osgjs we dont need it yet
 // this split, so everything is in osgViewer/View
@@ -186,7 +186,7 @@ View.prototype = {
                 displayGraph.createGraph(camera);
             };
 
-            Notify.log(
+            notify.log(
                 'to refresh the graphs type in the console:\nOSG.osgUtil.DisplayGraph.instance().refreshGraph()'
             );
         }

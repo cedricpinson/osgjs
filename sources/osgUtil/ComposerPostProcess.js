@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Node = require('osg/Node');
 var CullFace = require('osg/CullFace');
 var Depth = require('osg/Depth');
@@ -185,9 +185,9 @@ ComposerPostProcess.FragmentShader = [
     ''
 ].join('\n');
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ComposerPostProcess,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         clear: function() {
             this._textures = {};
             this._internalPasses.length = 0;

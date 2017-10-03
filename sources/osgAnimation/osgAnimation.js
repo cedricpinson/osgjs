@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Animation = require('osgAnimation/animation');
 var SkinningAttribute = require('osgAnimation/SkinningAttribute');
 var AnimationUpdateCallback = require('osgAnimation/AnimationUpdateCallback');
@@ -25,8 +25,8 @@ var UpdateSkeleton = require('osgAnimation/UpdateSkeleton');
 
 var osgAnimation = {};
 
-MACROUTILS.objectMix(osgAnimation, Easing);
-MACROUTILS.objectMix(osgAnimation, Interpolator);
+utils.objectMix(osgAnimation, Easing);
+utils.objectMix(osgAnimation, Interpolator);
 osgAnimation.Animation = Animation;
 osgAnimation.SkinningAttribute = SkinningAttribute;
 osgAnimation.AnimationUpdateCallback = AnimationUpdateCallback;

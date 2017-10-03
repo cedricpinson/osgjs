@@ -1,6 +1,6 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
-var Notify = require('osg/notify');
+var utils = require('osg/utils');
+var notify = require('osg/notify');
 var ObjectBase = require('osg/Object');
 var FindNearestParentSkeleton = require('osgAnimation/FindNearestParentSkeleton');
 
@@ -10,20 +10,20 @@ var UpdateRigGeometry = function() {
     ObjectBase.call(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     UpdateRigGeometry,
-    MACROUTILS.objectInherit(ObjectBase.prototype, {
+    utils.objectInherit(ObjectBase.prototype, {
         init: function(geom) {
             var finder = new FindNearestParentSkeleton();
             if (geom.getParents().length > 1)
-                Notify.warn(
+                notify.warn(
                     'A RigGeometry should not have multi parent ( ' + geom.getName() + ' )'
                 );
 
             geom.getParents()[0].accept(finder);
 
             if (!finder._root) {
-                Notify.warn(
+                notify.warn(
                     'A RigGeometry did not find a parent skeleton for RigGeometry ( ' +
                         geom.getName() +
                         ' )'

@@ -1,7 +1,7 @@
 'use strict';
 
 var Light = require('osg/Light');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 var CompilerFragment = {
     _createFragmentShader: function() {
@@ -12,8 +12,8 @@ var CompilerFragment = {
 
         var shader = this.createShaderFromGraphs(roots);
 
-        Notify.debug(this.getDebugIdentifier());
-        Notify.debug(shader);
+        notify.debug(this.getDebugIdentifier());
+        notify.debug(shader);
 
         this.cleanAfterFragment();
 

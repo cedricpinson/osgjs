@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 var BoundingBox = require('osg/BoundingBox');
 var BoundingSphere = require('osg/BoundingSphere');
@@ -46,9 +46,9 @@ var nodeGetMat = function() {
 };
 
 /** @lends Node.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     Node,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         /**
       Return StateSet and create it if it does not exist yet
       @type StateSet
@@ -406,7 +406,7 @@ MACROUTILS.createPrototypeNode(
                 this.halt = undefined;
                 NodeVisitor.call(this, NodeVisitor.TRAVERSE_PARENTS);
             };
-            CollectParentPaths.prototype = MACROUTILS.objectInherit(NodeVisitor.prototype, {
+            CollectParentPaths.prototype = utils.objectInherit(NodeVisitor.prototype, {
                 reset: function() {
                     this.nodePath.length = 0;
                     this.nodePaths.length = 0;

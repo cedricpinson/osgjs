@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 // Base class for GLResources: Textures, Buffers, Programs, Shaders, FrameBuffers and RenderBuffers
 // It holds a reference to the graphic context that is needed for resource deletion
@@ -25,7 +25,7 @@ GLObject.prototype = {
         }
         /* develblock:start */
         if (!this.invalidate || typeof this.invalidate !== 'function') {
-            Notify.error('GLObject needs Dirty mechanism for webgl restore');
+            notify.error('GLObject needs Dirty mechanism for webgl restore');
         }
         /* develblock:end */
         if (this._onLostContextCallback) this._onLostContextCallback();

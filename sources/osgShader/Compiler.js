@@ -1,9 +1,9 @@
 'use strict';
 
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Uniform = require('osg/Uniform');
 var factory = require('osgShader/nodeFactory');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var CompilerVertex = require('osgShader/CompilerVertex');
 var CompilerFragment = require('osgShader/CompilerFragment');
 
@@ -55,10 +55,8 @@ Compiler.cloneStateAttributeConfig = function(compilerClass) {
 Compiler.setStateAttributeConfig = function(compilerClass, config) {
     compilerClass.stateAttributeConfig = config;
 
-    config.attribute.forEach(MACROUTILS.getOrCreateStateAttributeTypeMemberIndexFromName);
-    config.textureAttribute.forEach(
-        MACROUTILS.getOrCreateTextureStateAttributeTypeMemberIndexFromName
-    );
+    config.attribute.forEach(utils.getOrCreateStateAttributeTypeMemberIndexFromName);
+    config.textureAttribute.forEach(utils.getOrCreateTextureStateAttributeTypeMemberIndexFromName);
 
     compilerClass.validAttributeTypeMember = config.attribute;
     compilerClass.validTextureAttributeTypeMember = config.textureAttribute;
@@ -87,7 +85,7 @@ Compiler.setStateAttributeConfig(Compiler, {
     textureAttribute: ['Texture']
 });
 
-Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
+Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
     constructor: Compiler,
 
     createFragmentShader: function() {
@@ -132,11 +130,11 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
     },
 
     logError: function(msg) {
-        Notify.error(this.getDebugIdentifier() + ' : ' + msg);
+        notify.error(this.getDebugIdentifier() + ' : ' + msg);
     },
 
     logWarn: function(msg) {
-        Notify.warn(this.getDebugIdentifier() + ' : ' + msg);
+        notify.warn(this.getDebugIdentifier() + ' : ' + msg);
     },
 
     getOrCreateConstantOne: function(type) {
@@ -337,7 +335,7 @@ Compiler.prototype = MACROUTILS.extend({}, CompilerVertex, CompilerFragment, {
 
     getNode: function(/*name, arg1, etc*/) {
         var n = factory.getNode.apply(factory, arguments);
-        if (!n) Notify.error('Unknown Node type : ' + arguments[0]);
+        if (!n) notify.error('Unknown Node type : ' + arguments[0]);
         var cacheID = n.getID();
         this._activeNodeList[cacheID] = n;
         return n;

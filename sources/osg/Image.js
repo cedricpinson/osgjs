@@ -1,6 +1,6 @@
 'use strict';
-var Notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var notify = require('osg/notify');
+var utils = require('osg/utils');
 var Object = require('osg/Object');
 
 var ImageBitmap = window.ImageBitmap || function() {};
@@ -22,9 +22,9 @@ var ImageObject = function(image) {
     this._isGreyscale = undefined;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ImageObject,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         dirty: function() {
             this._isGreyscale = undefined;
             this._dirty = true;
@@ -224,7 +224,7 @@ MACROUTILS.createPrototypeObject(
 
             // It's not something we recognise
             /*develblock:start*/
-            Notify.warn("Warning can't detect image object ");
+            notify.warn("Warning can't detect image object ");
             /*develblock:end*/
             return false;
         },

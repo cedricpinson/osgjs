@@ -4,7 +4,7 @@ var Geometry = require('osg/Geometry');
 var mat4 = require('osg/glMatrix').mat4;
 var Transform = require('osg/Transform');
 var NodeVisitor = require('osg/NodeVisitor');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var PooledArray = require('osg/PooledArray');
 var PooledResource = require('osg/PooledResource');
 
@@ -21,9 +21,9 @@ var ComputeBoundsVisitor = function(traversalMode) {
     this._bb = new BoundingBox();
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ComputeBoundsVisitor,
-    MACROUTILS.objectInherit(NodeVisitor.prototype, {
+    utils.objectInherit(NodeVisitor.prototype, {
         reset: function() {
             this._pooledMatrix.reset();
             this._matrixStack.reset();

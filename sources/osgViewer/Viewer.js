@@ -1,12 +1,12 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var mat4 = require('osg/glMatrix').mat4;
 var Options = require('osg/Options');
 var P = require('bluebird');
 var Timer = require('osg/Timer');
 var TimerGPU = require('osg/TimerGPU');
 var UpdateVisitor = require('osg/UpdateVisitor');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var GLObject = require('osg/GLObject');
 var FrameBufferObject = require('osg/FrameBufferObject');
 var BufferArray = require('osg/BufferArray');
@@ -36,13 +36,13 @@ var getGLSLOptimizer = function() {
             '                window.deferOptimizeGLSL( func );',
             '            } ],',
             '            print: function ( text ) {',
-            '                Notify.debug( text );',
+            '                notify.debug( text );',
             '            },',
             '            printErr: function ( text ) {',
-            '                Notify.debug( text );',
+            '                notify.debug( text );',
             '            },',
             '            setStatus: function ( text ) {',
-            '                Notify.debug( text );',
+            '                notify.debug( text );',
             '            },',
             '            totalDependencies: 0,',
             '            monitorRunDependencies: function ( left ) {',
@@ -53,7 +53,7 @@ var getGLSLOptimizer = function() {
             '        };'
         ].join('\n');
 
-        Notify.log('try to load glsl optimizer');
+        notify.log('try to load glsl optimizer');
         var url =
             'https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/glsl-optimizer.js';
         var promise = requestFile(url);
@@ -100,9 +100,9 @@ var Viewer = function(canvas, userOptions, error) {
     this.renderBinded = this.render.bind(this);
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     Viewer,
-    MACROUTILS.objectInherit(View.prototype, {
+    utils.objectInherit(View.prototype, {
         initDeviceEvents: function(options, canvas) {
             // default argument for mouse binding
             var defaultMouseEventNode = options.mouseEventNode || canvas;
@@ -142,7 +142,7 @@ MACROUTILS.createPrototypeObject(
             options.extendWithOptionsURL();
 
             // Activate global trace on log call
-            if (options.getBoolean('traceLogCall') === true) Notify.traceLogCall = true;
+            if (options.getBoolean('traceLogCall') === true) notify.traceLogCall = true;
 
             // Check if Frustum culling is enabled to calculate the clip planes
             if (options.getBoolean('enableFrustumCulling') === true)
@@ -181,7 +181,7 @@ MACROUTILS.createPrototypeObject(
                 false
             );
 
-            if (Notify.reportWebGLError || options.get('reportWebGLError')) {
+            if (notify.reportWebGLError || options.get('reportWebGLError')) {
                 gl = WebGLDebugUtils.makeDebugContext(gl);
             }
 
@@ -200,11 +200,11 @@ MACROUTILS.createPrototypeObject(
                     .then(function(glslOptimizer) {
                         Shader.glslOptimizer = glslOptimizer;
                         if (Shader.glslOptimizer)
-                            Notify.log('uses glsl optimizer, use ?log=info to see shader output');
-                        else Notify.error('failed to load glsl optimizer');
+                            notify.log('uses glsl optimizer, use ?log=info to see shader output');
+                        else notify.error('failed to load glsl optimizer');
                     })
                     .catch(function(error) {
-                        Notify.error(error);
+                        notify.error(error);
                     });
             }
         },
@@ -226,7 +226,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         contextLost: function() {
-            Notify.log('webgl context lost');
+            notify.log('webgl context lost');
             if (this._contextLostCallback) {
                 this._forceRestoreContext = this._contextLostCallback();
             }
@@ -236,13 +236,13 @@ MACROUTILS.createPrototypeObject(
 
         contextRestored: function() {
             if (this._forceRestoreContext === false) {
-                Notify.log('webgl context restore not supported - please reload the page - ');
+                notify.log('webgl context restore not supported - please reload the page - ');
                 return;
             }
             // restore is already async
             // https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
             this.restoreContext();
-            Notify.log('webgl context restored');
+            notify.log('webgl context restored');
         },
 
         restoreContext: function() {
@@ -516,7 +516,7 @@ MACROUTILS.createPrototypeObject(
 
         setPresentVR: function(doPresentVR) {
             if (!this._hmd) {
-                Notify.warn('no hmd device provided to the viewer!');
+                notify.warn('no hmd device provided to the viewer!');
                 return P.reject();
             }
 

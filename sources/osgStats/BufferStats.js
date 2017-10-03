@@ -1,4 +1,4 @@
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var BufferArray = require('osg/BufferArray');
 var Geometry = require('osg/Geometry');
 var primitiveSet = require('osg/primitiveSet');
@@ -31,7 +31,7 @@ BufferStats.redColor = 7.0;
 BufferStats.greyColor = 4.0;
 BufferStats.whiteColor = 1.0;
 
-MACROUTILS.createPrototypeObject(BufferStats, {
+utils.createPrototypeObject(BufferStats, {
     getGeometry: function() {
         return this._geometry;
     },

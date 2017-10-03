@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Node = require('osg/Node');
 var NodeVisitor = require('osg/NodeVisitor');
 
@@ -14,9 +14,9 @@ var Switch = function() {
 };
 
 /** @lends Switch.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     Switch,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         addChild: function(node, value) {
             Node.prototype.addChild.call(this, node);
 

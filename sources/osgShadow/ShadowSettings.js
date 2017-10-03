@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Texture = require('osg/Texture');
 
 var kernelSizeList = [
@@ -56,7 +56,7 @@ var ShadowSettings = function(options) {
     this.shadowCastShaderGeneratorName = 'ShadowCast';
 
     // if url options override url options
-    MACROUTILS.objectMix(this, options);
+    utils.objectMix(this, options);
 };
 
 ShadowSettings.kernelSizeList = kernelSizeList;

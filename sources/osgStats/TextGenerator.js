@@ -1,4 +1,4 @@
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var P = require('bluebird');
 var notify = require('osg/notify');
 
@@ -53,7 +53,7 @@ var TextGenerator = function() {
     this._createCanvas();
 };
 
-MACROUTILS.createPrototypeObject(TextGenerator, {
+utils.createPrototypeObject(TextGenerator, {
     setFontSize: function(size) {
         this._fontSize = size;
     },

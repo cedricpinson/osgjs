@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var mat4 = require('osg/glMatrix').mat4;
 var Transform = require('osg/Transform');
 var TransformEnums = require('osg/transformEnums');
@@ -14,9 +14,9 @@ var MatrixTransform = function() {
 };
 
 /** @lends MatrixTransform.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     MatrixTransform,
-    MACROUTILS.objectInherit(Transform.prototype, {
+    utils.objectInherit(Transform.prototype, {
         getMatrix: function() {
             return this.matrix;
         },

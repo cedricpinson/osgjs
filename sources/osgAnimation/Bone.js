@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var BoundingBox = require('osg/BoundingBox');
 var mat4 = require('osg/glMatrix').mat4;
@@ -19,9 +19,9 @@ var Bone = function(name) {
     this._boneBoundingBox = new BoundingBox();
 };
 
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     Bone,
-    MACROUTILS.objectInherit(MatrixTransform.prototype, {
+    utils.objectInherit(MatrixTransform.prototype, {
         // consistent color depending of id
         // _rand: function ( id ) {
         //     var x = Math.sin( id * 45.233 ) * 43758.5453;

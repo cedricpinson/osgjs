@@ -4,7 +4,7 @@ require('tests/mockup/mockup');
 var Node = require('osg/Node');
 var NodeVisitor = require('osg/NodeVisitor');
 var Switch = require('osg/Switch');
-var Utils = require('osg/Utils');
+var Utils = require('osg/utils');
 
 module.exports = function() {
     test('Switch', function() {

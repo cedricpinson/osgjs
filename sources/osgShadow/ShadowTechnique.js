@@ -1,7 +1,7 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Object = require('osg/Object');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 
 /**
  *  ShadowTechnique provides an implementation interface of shadow techniques.
@@ -19,9 +19,9 @@ var ShadowTechnique = function() {
 };
 
 /** @lends ShadowTechnique.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShadowTechnique,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         dirty: function() {
             this._dirty = true;
         },
@@ -52,7 +52,7 @@ MACROUTILS.createPrototypeObject(
 
         init: function() {
             // well shouldn't be called
-            Notify.log('No ShadowTechnique activated: normal rendering activated');
+            notify.log('No ShadowTechnique activated: normal rendering activated');
         },
 
         valid: function() {
@@ -67,7 +67,7 @@ MACROUTILS.createPrototypeObject(
 
         cleanSceneGraph: function() {
             // well shouldn't be called
-            Notify.log('No ShadowTechnique activated: normal rendering activated');
+            notify.log('No ShadowTechnique activated: normal rendering activated');
         }
     }),
     'osgShadow',

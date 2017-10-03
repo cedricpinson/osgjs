@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 
 var GamePad = function(viewer) {
     this._viewer = viewer;
@@ -58,11 +58,11 @@ GamePad.prototype = {
     },
 
     onGamepadConnect: function(gamepad) {
-        Notify.log('Detected new gamepad!', gamepad);
+        notify.log('Detected new gamepad!', gamepad);
     },
 
     onGamepadDisconnect: function() {
-        Notify.log('Gamepad disconnected');
+        notify.log('Gamepad disconnected');
     },
 
     // Called in each frame

@@ -1,6 +1,6 @@
 'use strict';
-var Notify = require('osg/notify');
-var MACROUTILS = require('osg/Utils');
+var notify = require('osg/notify');
+var utils = require('osg/utils');
 var osgMath = require('osg/math');
 var NodeVisitor = require('osg/NodeVisitor');
 var CullSettings = require('osg/CullSettings');
@@ -87,11 +87,11 @@ var CullVisitor = function() {
 CullVisitor.registerApplyFunction = cullVisitorHelper.registerApplyFunction;
 CullVisitor.getApplyFunction = cullVisitorHelper.getApplyFunction;
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CullVisitor,
-    MACROUTILS.objectInherit(
+    utils.objectInherit(
         CullStack.prototype,
-        MACROUTILS.objectInherit(NodeVisitor.prototype, {
+        utils.objectInherit(NodeVisitor.prototype, {
             applyFunctionArray: cullVisitorHelper.applyFunctionArray,
 
             distance: function(coord, matrix) {
@@ -267,7 +267,7 @@ MACROUTILS.createPrototypeObject(
             clampProjectionMatrix: function(projection, znear, zfar, nearFarRatio, resultNearFar) {
                 var epsilon = 1e-6;
                 if (zfar < znear - epsilon) {
-                    Notify.log(
+                    notify.log(
                         'clampProjectionMatrix not applied, invalid depth range, znear = ' +
                             znear +
                             '  zfar = ' +
@@ -686,7 +686,7 @@ var geometryApply = function(node) {
     }
     if (osgMath.isNaN(depth)) {
         if (!loggedOnce) {
-            Notify.warn('warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec);
+            notify.warn('warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec);
             loggedOnce = true;
         }
     } else {

@@ -1,8 +1,8 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec3 = require('osg/glMatrix').vec3;
 var Geometry = require('osg/Geometry');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var mat4 = require('osg/glMatrix').mat4;
 var StateSet = require('osg/StateSet');
 var MorphGeometry = require('osgAnimation/MorphGeometry');
@@ -50,9 +50,9 @@ var RigGeometry = function() {
     this._needToComputeMatrix = true;
 };
 
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     RigGeometry,
-    MACROUTILS.objectInherit(Geometry.prototype, {
+    utils.objectInherit(Geometry.prototype, {
         getStateSetAnimation: function() {
             return this._stateSetAnimation;
         },
@@ -148,7 +148,7 @@ MACROUTILS.createPrototypeNode(
 
         computeMatrixFromRootSkeleton: function() {
             if (!this._root) {
-                Notify.warn(
+                notify.warn(
                     'Warning ' +
                         this.className() +
                         '.computeMatrixFromRootSkeleton if you have this message it means you miss to call buildTransformer( root ), or your RigGeometry (' +

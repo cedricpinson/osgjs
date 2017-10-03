@@ -1,6 +1,6 @@
 'use strict';
 
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var vec4 = require('osg/glMatrix').vec4;
 var vec3 = require('osg/glMatrix').vec3;
 var Polytope = require('osg/Polytope');
@@ -33,9 +33,9 @@ var transformVec4PostMult = function(out, p, m) {
     out[3] = m[12] * x + m[13] * y + m[14] * z + m[15] * w;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     PolytopeIntersector,
-    MACROUTILS.objectInherit(Intersector.prototype, {
+    utils.objectInherit(Intersector.prototype, {
         setPolytope: function(polytope) {
             this._polytope.setPlanes(polytope);
             var iPlanes = [];

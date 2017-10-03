@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var Node = require('osg/Node');
 var WebGLCaps = require('osg/WebGLCaps');
 var DrawElements = require('osg/DrawElements');
@@ -35,9 +35,9 @@ var Geometry = function() {
 Geometry.enableVAO = true;
 
 /** @lends Geometry.prototype */
-MACROUTILS.createPrototypeNode(
+utils.createPrototypeNode(
     Geometry,
-    MACROUTILS.objectInherit(Node.prototype, {
+    utils.objectInherit(Node.prototype, {
         releaseGLObjects: function() {
             if (this.stateset !== undefined) this.stateset.releaseGLObjects();
 

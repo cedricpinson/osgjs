@@ -2,7 +2,7 @@
 var assert = require('chai').assert;
 var NodeVisitor = require('osg/NodeVisitor');
 var Node = require('osg/Node');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 
 module.exports = function() {
     test('NodeVisitor', function() {
@@ -12,7 +12,7 @@ module.exports = function() {
             this.result = [];
         };
 
-        FindItemAnchor.prototype = MACROUTILS.objectInherit(NodeVisitor.prototype, {
+        FindItemAnchor.prototype = utils.objectInherit(NodeVisitor.prototype, {
             apply: function(node) {
                 if (node.getName !== undefined) {
                     var name = node.getName();
@@ -48,7 +48,7 @@ module.exports = function() {
                 NodeVisitor.call(this, NodeVisitor.TRAVERSE_PARENTS);
                 this.node = undefined;
             };
-            GetRootItem.prototype = MACROUTILS.objectInherit(NodeVisitor.prototype, {
+            GetRootItem.prototype = utils.objectInherit(NodeVisitor.prototype, {
                 apply: function(node) {
                     this.node = node;
                     this.traverse(node);

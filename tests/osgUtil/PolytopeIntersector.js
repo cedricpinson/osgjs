@@ -1,6 +1,6 @@
 'use strict';
 var assert = require('chai').assert;
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
 var PolytopeIntersector = require('osgUtil/PolytopeIntersector');
 var Camera = require('osg/Camera');
@@ -18,7 +18,7 @@ var intersectionEnums = require('osgUtil/intersectionEnums');
 module.exports = function() {
     var createLines = function(lineType) {
         var g = new Geometry();
-        var vertexes = new MACROUTILS.Float32Array(12);
+        var vertexes = new utils.Float32Array(12);
         vertexes[0] = -2.0;
         vertexes[1] = 2.0;
         vertexes[2] = 0.0;
@@ -35,7 +35,7 @@ module.exports = function() {
         vertexes[10] = 0.0;
         vertexes[11] = 0.0;
 
-        var normal = new MACROUTILS.Float32Array(12);
+        var normal = new utils.Float32Array(12);
         normal[0] = 0;
         normal[1] = 0;
         normal[2] = 1;
@@ -62,7 +62,7 @@ module.exports = function() {
 
     var createTriangle = function() {
         var g = new Geometry();
-        var vertexes = new MACROUTILS.Float32Array(9);
+        var vertexes = new utils.Float32Array(9);
         vertexes[0] = -2.0;
         vertexes[1] = 2.0;
         vertexes[2] = 0.0;
@@ -75,7 +75,7 @@ module.exports = function() {
         vertexes[7] = 2.0;
         vertexes[8] = 0.0;
 
-        var normal = new MACROUTILS.Float32Array(9);
+        var normal = new utils.Float32Array(9);
         normal[0] = 0;
         normal[1] = 0;
         normal[2] = 1;
@@ -99,7 +99,7 @@ module.exports = function() {
     var createPoints = function() {
         var g = new Geometry();
 
-        var vertexes = new MACROUTILS.Float32Array(9);
+        var vertexes = new utils.Float32Array(9);
         vertexes[0] = 0;
         vertexes[1] = 0;
         vertexes[2] = 0;
@@ -112,7 +112,7 @@ module.exports = function() {
         vertexes[7] = 0.2;
         vertexes[8] = 0.0;
 
-        var normal = new MACROUTILS.Float32Array(9);
+        var normal = new utils.Float32Array(9);
         normal[0] = 0;
         normal[1] = 0;
         normal[2] = 1;
@@ -125,7 +125,7 @@ module.exports = function() {
         normal[7] = 0;
         normal[8] = 1;
 
-        var indexes = new MACROUTILS.Uint16Array(3);
+        var indexes = new utils.Uint16Array(3);
         indexes[0] = 2;
         indexes[1] = 0;
         indexes[2] = 1;

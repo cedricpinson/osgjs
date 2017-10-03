@@ -1,11 +1,11 @@
 'use strict';
 var P = require('bluebird');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var osgNameSpace = require('osgNameSpace');
 var _requestFile = require('osgDB/requestFile');
 var Options = require('osgDB/options');
 var zlib = require('osgDB/zlib');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Image = require('osg/Image');
 var BufferArray = require('osg/BufferArray');
 var DrawArrays = require('osg/DrawArrays');
@@ -13,7 +13,7 @@ var DrawArrayLengths = require('osg/DrawArrayLengths');
 var DrawElements = require('osg/DrawElements');
 var primitiveSet = require('osg/primitiveSet');
 
-var rejectObject = MACROUTILS.rejectObject;
+var rejectObject = utils.rejectObject;
 
 var Input = function(json, identifier) {
     this._json = json;
@@ -33,7 +33,7 @@ var Input = function(json, identifier) {
     //     onload: undefined
     // } );
 
-    this.setOptions(MACROUTILS.objectMix({}, Options));
+    this.setOptions(utils.objectMix({}, Options));
 
     // {
     //     prefixURL: '',
@@ -151,7 +151,7 @@ Input.prototype = {
 
         return new P(function(resolve) {
             img.onerror = function() {
-                Notify.warn('warning use white texture as fallback instead of ' + url);
+                notify.warn('warning use white texture as fallback instead of ' + url);
                 image.setImage(Input.imageFallback);
                 resolve(image);
             };
@@ -208,7 +208,7 @@ Input.prototype = {
         url = this.computeURL(url);
         var that = this;
         // copy because we are going to modify it to have relative prefix to load assets
-        options = MACROUTILS.objectMix({}, options);
+        options = utils.objectMix({}, options);
 
         // automatic prefix if non specfied
         if (!options.prefixURL) {
@@ -224,7 +224,7 @@ Input.prototype = {
 
         var readSceneGraph = function(data) {
             return ReaderParser.parseSceneGraph(data, options).then(function(child) {
-                Notify.log('loaded ' + url);
+                notify.log('loaded ' + url);
                 return child;
             });
         };
@@ -253,7 +253,7 @@ Input.prototype = {
             return str;
         };
 
-        MACROUTILS.time('osgjs.metric:Input.readNodeURL', Notify.INFO);
+        utils.time('osgjs.metric:Input.readNodeURL', notify.INFO);
         // try to get the file as responseText to parse JSON
         var fileTextPromise = that.requestFile(url);
         return fileTextPromise
@@ -264,7 +264,7 @@ Input.prototype = {
                 } catch (error) {
                     // can't parse try with ungzip code path
 
-                    Notify.error('cant parse url ' + url + ' try to gunzip');
+                    notify.error('cant parse url ' + url + ' try to gunzip');
                 }
                 // we have the json, read it
                 if (data) return readSceneGraph(data);
@@ -281,18 +281,18 @@ Input.prototype = {
                     })
                     .catch(function(status) {
                         var err = 'cant read file ' + url + ' status ' + status;
-                        Notify.error(err);
+                        notify.error(err);
                         return err;
                     });
             })
             .catch(function(status) {
                 var err = 'cant get file ' + url + ' status ' + status;
-                Notify.error(err);
+                notify.error(err);
                 return err;
             })
             .finally(function() {
                 // Stop the timer
-                MACROUTILS.timeEnd('osgjs.metric:Input.readNodeURL');
+                utils.timeEnd('osgjs.metric:Input.readNodeURL');
             });
     },
 
@@ -304,7 +304,7 @@ Input.prototype = {
             var _zlib = require('zlib');
 
             if (!_zlib) {
-                Notify.error(
+                notify.error(
                     'osg failed to use a gunzip.min.js to uncompress a gz file.\n You can add this vendors to enable this feature or adds the good header in your gzip file served by your server'
                 );
             }
@@ -369,14 +369,14 @@ Input.prototype = {
                 offset = vb.Offset;
             }
 
-            var bytesPerElement = MACROUTILS[type].BYTES_PER_ELEMENT;
+            var bytesPerElement = utils[type].BYTES_PER_ELEMENT;
             var nbItems = vb.Size;
             var nbCoords = buf.getItemSize();
             var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
 
             if (bigEndian) {
-                Notify.log('big endian detected');
-                var TypedArray = MACROUTILS[type];
+                notify.log('big endian detected');
+                var TypedArray = utils[type];
                 var tmpArray = new TypedArray(nbItems * nbCoords);
                 var data = new DataView(array, offset, totalSizeInBytes);
                 var i = 0,
@@ -393,7 +393,7 @@ Input.prototype = {
                 typedArray = tmpArray;
                 data = null;
             } else {
-                typedArray = new MACROUTILS[type](array, offset, nbCoords * nbItems);
+                typedArray = new utils[type](array, offset, nbCoords * nbItems);
             }
 
             buf.setElements(typedArray);
@@ -450,7 +450,7 @@ Input.prototype = {
             if (vb.File) {
                 promise = this.initializeBufferArray(vb, type, buf);
             } else if (vb.Elements) {
-                buf.setElements(new MACROUTILS[type](vb.Elements));
+                buf.setElements(new utils[type](vb.Elements));
                 promise = P.resolve(buf);
             }
         }

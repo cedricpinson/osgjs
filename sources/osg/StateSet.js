@@ -1,7 +1,7 @@
 'use strict';
 var Object = require('osg/Object');
 var StateAttribute = require('osg/StateAttribute');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 
 /** Stores a set of modes and attributes which represent a set of OpenGL state.
  *  Notice that a \c StateSet contains just a subset of the whole OpenGL state.
@@ -61,9 +61,9 @@ StateSet.AttributePair.prototype = {
     }
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     StateSet,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         setDrawID: function(id) {
             this._drawID = id;
         },
@@ -128,7 +128,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         getTextureAttribute: function(unit, typeMember) {
-            var index = MACROUTILS.getTextureIdFromTypeMember(typeMember);
+            var index = utils.getTextureIdFromTypeMember(typeMember);
             if (index === undefined || !this._hasTextureAttribute(unit, index)) return undefined;
 
             var textureArray = this._textureAttributeArrayList[unit];
@@ -137,7 +137,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         removeTextureAttribute: function(unit, typeMember) {
-            var index = MACROUTILS.getTextureIdFromTypeMember(typeMember);
+            var index = utils.getTextureIdFromTypeMember(typeMember);
             if (index === undefined || !this._hasTextureAttribute(unit, index)) return;
 
             var textureArray = this._textureAttributeArrayList[unit];
@@ -147,7 +147,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         getAttribute: function(typeMember) {
-            var index = MACROUTILS.getIdFromTypeMember(typeMember);
+            var index = utils.getIdFromTypeMember(typeMember);
             if (index === undefined || !this._hasAttribute(index)) return undefined;
 
             return this._attributeArray[index].getAttribute();
@@ -165,7 +165,7 @@ MACROUTILS.createPrototypeObject(
 
         // TODO: check if it's an attribute type or a attribute to remove it
         removeAttribute: function(typeMember) {
-            var index = MACROUTILS.getIdFromTypeMember(typeMember);
+            var index = utils.getIdFromTypeMember(typeMember);
             if (!this._hasAttribute(index)) return;
 
             this._attributeArray[index] = undefined;
@@ -291,13 +291,13 @@ MACROUTILS.createPrototypeObject(
 
         // for internal use, you should not call it directly
         _setTextureAttribute: function(unit, attributePair) {
-            MACROUTILS.makeDenseArray(unit, this._textureAttributeArrayList);
+            utils.arrayDense(unit, this._textureAttributeArrayList);
             if (!this._textureAttributeArrayList[unit]) this._textureAttributeArrayList[unit] = [];
 
-            var index = MACROUTILS.getOrCreateTextureStateAttributeTypeMemberIndex(
+            var index = utils.getOrCreateTextureStateAttributeTypeMemberIndex(
                 attributePair.getAttribute()
             );
-            MACROUTILS.makeDenseArray(index, this._textureAttributeArrayList[unit]);
+            utils.arrayDense(index, this._textureAttributeArrayList[unit]);
 
             this._textureAttributeArrayList[unit][index] = attributePair;
             this._computeValidTextureUnit();
@@ -333,10 +333,10 @@ MACROUTILS.createPrototypeObject(
         },
         // for internal use, you should not call it directly
         _setAttribute: function(attributePair) {
-            var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(
+            var index = utils.getOrCreateStateAttributeTypeMemberIndex(
                 attributePair.getAttribute()
             );
-            MACROUTILS.makeDenseArray(index, this._attributeArray);
+            utils.arrayDense(index, this._attributeArray);
             this._attributeArray[index] = attributePair;
             this._computeValidAttribute();
         },

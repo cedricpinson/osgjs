@@ -2,14 +2,14 @@
 
 var mat4 = require('osg/glMatrix').mat4;
 var mat3 = require('osg/glMatrix').mat3;
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Object = require('osg/Object');
 var Program = require('osg/Program');
 var StateAttribute = require('osg/StateAttribute');
 var PooledArray = require('osg/PooledArray');
 var StackObjectPairPool = require('osg/StackObjectPairPool');
 var Uniform = require('osg/Uniform');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var WebGLCaps = require('osg/WebGLCaps');
 
 var checkUniformCache = [
@@ -119,7 +119,7 @@ var State = function(shaderGeneratorProxy) {
     this.applyAttribute(program);
 
     // cache programAttribute access
-    this._programType = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(program);
+    this._programType = utils.getOrCreateStateAttributeTypeMemberIndex(program);
     this._programAttribute = this._attributeArray[this._programType];
 
     this._numPushStateSet = 0;
@@ -131,9 +131,9 @@ var State = function(shaderGeneratorProxy) {
     this.resetStats();
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     State,
-    MACROUTILS.objectInherit(Object.prototype, {
+    utils.objectInherit(Object.prototype, {
         resetCaches: function() {
             this._currentVAO = null;
             this._currentIndexVBO = null;
@@ -255,7 +255,7 @@ MACROUTILS.createPrototypeObject(
             return function(pos) {
                 var length = this.getStateSetStackSize();
                 if (pos >= length) {
-                    Notify.warn('Warning State:removeStateSet ' + pos + ' out of range');
+                    notify.warn('Warning State:removeStateSet ' + pos + ' out of range');
                     return;
                 }
 
@@ -651,7 +651,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         _createAttributeStack: function(_attributeArray, typeIndex, globalDefault) {
-            MACROUTILS.makeDenseArray(typeIndex, _attributeArray);
+            utils.arrayDense(typeIndex, _attributeArray);
             var attributeStack = new StackObjectPairPool();
             attributeStack._globalDefault = globalDefault;
 
@@ -664,7 +664,7 @@ MACROUTILS.createPrototypeObject(
             if (!attribute) return;
 
             var attributeArray = this._attributeArray;
-            var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(attribute);
+            var index = utils.getOrCreateStateAttributeTypeMemberIndex(attribute);
             var attributeStack = index < attributeArray.length ? attributeArray[index] : undefined;
             if (!attributeStack) {
                 attributeStack = this._createAttributeStack(
@@ -678,7 +678,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         applyAttribute: function(attribute) {
-            var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(attribute);
+            var index = utils.getOrCreateStateAttributeTypeMemberIndex(attribute);
 
             var attributeArray = this._attributeArray;
             var attributeStack = index < attributeArray.length ? attributeArray[index] : undefined;
@@ -720,7 +720,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         applyTextureAttribute: function(unit, attribute) {
-            var index = MACROUTILS.getOrCreateTextureStateAttributeTypeMemberIndex(attribute);
+            var index = utils.getOrCreateTextureStateAttributeTypeMemberIndex(attribute);
             var textureUnitAttributeArray = this.getOrCreateTextureAttributeArray(unit);
             var attributeStack = textureUnitAttributeArray[index];
 
@@ -833,7 +833,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         setGlobalDefaultAttribute: function(attribute) {
-            var index = MACROUTILS.getOrCreateStateAttributeTypeMemberIndex(attribute);
+            var index = utils.getOrCreateStateAttributeTypeMemberIndex(attribute);
             if (index >= this._attributeArray.length || !this._attributeArray[index]) {
                 this._createAttributeStack(this._attributeArray, index, attribute);
             } else {
@@ -843,14 +843,14 @@ MACROUTILS.createPrototypeObject(
 
         getGlobalDefaultAttribute: function(typeMember) {
             var _attributeArray = this._attributeArray;
-            var index = MACROUTILS.getIdFromTypeMember(typeMember);
+            var index = utils.getIdFromTypeMember(typeMember);
             if (index === undefined || index >= _attributeArray.length) return undefined;
             return _attributeArray[index] ? _attributeArray[index]._globalDefault : undefined;
         },
 
         setGlobalDefaultTextureAttribute: function(unit, attribute) {
             var attributeArray = this.getOrCreateTextureAttributeArray(unit);
-            var index = MACROUTILS.getOrCreateTextureStateAttributeTypeMemberIndex(attribute);
+            var index = utils.getOrCreateTextureStateAttributeTypeMemberIndex(attribute);
 
             if (index >= attributeArray.length || !attributeArray[index]) {
                 this._createAttributeStack(attributeArray, index, attribute);
@@ -861,13 +861,13 @@ MACROUTILS.createPrototypeObject(
 
         getGlobalDefaultTextureAttribute: function(unit, typeMember) {
             var attributeArray = this.getOrCreateTextureAttributeArray(unit);
-            var index = MACROUTILS.getTextureIdFromTypeMember(typeMember);
+            var index = utils.getTextureIdFromTypeMember(typeMember);
             if (index === undefined || index >= attributeArray.length) return undefined;
             return attributeArray[index] ? attributeArray[index]._globalDefault : undefined;
         },
 
         getOrCreateTextureAttributeArray: function(unit) {
-            MACROUTILS.makeDenseArray(unit, this._textureAttributeArrayList);
+            utils.arrayDense(unit, this._textureAttributeArrayList);
 
             if (!this._textureAttributeArrayList[unit]) this._textureAttributeArrayList[unit] = [];
             return this._textureAttributeArrayList[unit];
@@ -1222,7 +1222,7 @@ MACROUTILS.createPrototypeObject(
 
             STANDARD_UNIFORMS[uniformName] = 1; // avoid multiple spammy errors
 
-            Notify.error('Uniform not in the scene hierarchy : ' + uniformName);
+            notify.error('Uniform not in the scene hierarchy : ' + uniformName);
         },
 
         _computeForeignUniforms: function(programUniformMap, activeUniformMap) {

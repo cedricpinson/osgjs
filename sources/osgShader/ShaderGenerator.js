@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var notify = require('osg/notify');
 var Program = require('osg/Program');
 var Shader = require('osg/Shader');
@@ -199,7 +199,7 @@ ShaderGenerator.prototype = {
         var id;
         for (i = 0, il = typeMemberNames.length; i < il; i++) {
             typeMemberName = typeMemberNames[i];
-            id = MACROUTILS.getIdFromTypeMember(typeMemberName);
+            id = utils.getIdFromTypeMember(typeMemberName);
             if (id !== undefined) {
                 if (validTypeMemberList.indexOf(id) !== -1) {
                     notify.warn(
@@ -221,7 +221,7 @@ ShaderGenerator.prototype = {
         validTypeMemberList = [];
         for (i = 0, il = typeMemberNames.length; i < il; i++) {
             typeMemberName = typeMemberNames[i];
-            id = MACROUTILS.getTextureIdFromTypeMember(typeMemberName);
+            id = utils.getTextureIdFromTypeMember(typeMemberName);
             if (validTypeMemberList.indexOf(id) !== -1) {
                 notify.warn(
                     'Compiler ' +

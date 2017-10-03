@@ -6,7 +6,7 @@ var Depth = require('osg/Depth');
 var FrameBufferObject = require('osg/FrameBufferObject');
 var mat4 = require('osg/glMatrix').mat4;
 var MatrixTransform = require('osg/MatrixTransform');
-var Notify = require('osg/notify');
+var notify = require('osg/notify');
 var Shape = require('osg/shape');
 var StateAttribute = require('osg/StateAttribute');
 var StateSet = require('osg/StateSet');
@@ -14,7 +14,7 @@ var Debug = require('osgUtil/debug');
 var Texture = require('osg/Texture');
 var Transform = require('osg/Transform');
 var Uniform = require('osg/Uniform');
-var MACROUTILS = require('osg/Utils');
+var utils = require('osg/utils');
 var primitiveSet = require('osg/primitiveSet');
 var vec3 = require('osg/glMatrix').vec3;
 var vec4 = require('osg/glMatrix').vec4;
@@ -32,7 +32,7 @@ var CameraCullCallback = function(shadowTechnique) {
     this._shadowTechnique = shadowTechnique;
 };
 
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     CameraCullCallback,
     {
         cull: function(node, nv) {
@@ -172,9 +172,9 @@ var ShadowMap = function(settings, shadowTexture) {
 };
 
 /** @lends ShadowMap.prototype */
-MACROUTILS.createPrototypeObject(
+utils.createPrototypeObject(
     ShadowMap,
-    MACROUTILS.objectInherit(ShadowTechnique.prototype, {
+    utils.objectInherit(ShadowTechnique.prototype, {
         getDepthRange: function() {
             return this._depthRange;
         },
@@ -295,7 +295,7 @@ MACROUTILS.createPrototypeObject(
             }
 
             /*develblock:start*/
-            Notify.assert(
+            notify.assert(
                 this._shadowReceiveAttribute.getTypeMember() ===
                     this._shadowReceiveAttribute.attributeType + lightNumber,
                 'TypeMember isnt reflecting light number' +
@@ -466,7 +466,7 @@ MACROUTILS.createPrototypeObject(
         },
 
         updateShadowTechnic: function(/*nv*/) {
-            Notify.log(
+            notify.log(
                 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead'
             );
             this.updateShadowTechnique();
@@ -746,7 +746,7 @@ MACROUTILS.createPrototypeObject(
             }
 
             if (lightMatrix === undefined) {
-                Notify.warn('light isnt inside children of shadowedScene Node');
+                notify.warn('light isnt inside children of shadowedScene Node');
                 this._emptyCasterScene = true;
                 return;
             }
