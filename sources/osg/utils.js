@@ -302,11 +302,15 @@ utils.getTextureIdFromTypeMember = function(typeMember) {
     return textureStateAttributeTypeMember[typeMember];
 };
 
-utils.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
-utils.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;
-utils.Uint8Array = typeof Uint8Array !== 'undefined' ? Uint8Array : null;
-utils.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
-utils.Uint32Array = typeof Uint32Array !== 'undefined' ? Uint32Array : null;
+utils.Int8Array = window.Int8Array;
+utils.Uint8Array = window.Uint8Array;
+utils.Uint8ClampedArray = window.Uint8ClampedArray;
+utils.Int16Array = window.Int16Array;
+utils.Uint16Array = window.Uint16Array;
+utils.Int32Array = window.Int32Array;
+utils.Uint32Array = window.Uint32Array;
+utils.Float32Array = window.Float32Array;
+utils.Float64Array = window.Float64Array;
 
 var times = {};
 var registeredTimers = {};
