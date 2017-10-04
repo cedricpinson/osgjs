@@ -23,7 +23,7 @@ var CompilerColorGeometry = function() {
 
 var configColor = Compiler.cloneStateAttributeConfig(Compiler);
 configColor.textureAttribute = [];
-configColor.attribute = [];
+configColor.attribute = ['PointSize', 'Morph', 'Skinning'];
 
 Compiler.setStateAttributeConfig(CompilerColorGeometry, configColor);
 
