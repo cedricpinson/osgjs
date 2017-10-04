@@ -118,6 +118,10 @@ var ComposerPostProcess = function() {
     // in case of dynamic resolution scaling : true will do a final upsampling
     // to full viewport size
     this._finalPassUpScaleToScreen = true;
+    // wrap uv stuffs
+    this._methodWrapUV = 0;
+    this._thresholdWrapUV = 1.0;
+    this._texInfos = undefined;
 
     this._screenWidth = this._screenHeight = 0;
 
@@ -931,21 +935,60 @@ utils.createPrototypeObject(
             return source;
         },
 
-        _extractTextures: function(file) {
-            var infos = {
+        setMethodWrapUV: function(method, threshold) {
+            // hook every texture call to handle viewport/texture ratio
+            // when reading out of texture assigned zone
+
+            // 0 - do nothing
+            // 1 - black color when fetching out of bound
+            // 2 - clamp uv to thresold (usually vec2(1.0))
+            if (method !== undefined) this._methodWrapUV = method;
+            if (threshold !== undefined) this._thresholdWrapUV = threshold;
+            this._texInfos = undefined;
+        },
+
+        _getInfos: function() {
+            if (this._texInfos) return this._texInfos;
+
+            var bodySimple = 'texture2D(%tex, (uv) * %ratio)';
+            var bodyNearest =
+                'texture2D(%tex, (floor((uv) * %size) + 0.5) * %ratio / %size, -99999.0)';
+            var bodyBias = 'texture2D(%tex, (uv) * %ratio)';
+
+            // see setMethodWrapUV
+            var val = this._thresholdWrapUV.toExponential();
+            if (this._methodWrapUV === 1) {
+                var prefix = 'step((uv).x, ' + val + ') * step((uv).y, ' + val + ') * ';
+                bodySimple = prefix + bodySimple;
+                bodyNearest = prefix + bodyNearest;
+                bodyBias = prefix + bodyBias;
+            } else if (this._methodWrapUV === 2) {
+                var replaceValue = 'min(uv, vec2(' + val + '))';
+                bodySimple = bodySimple.replace(/(uv)/g, replaceValue);
+                bodyNearest = bodyNearest.replace(/(uv)/g, replaceValue);
+                bodyBias = bodyBias.replace(/(uv)/g, replaceValue);
+            }
+
+            this._texInfos = {
                 TEXTURE_2D: {
                     signature: 'TEXTURE_2D_%tex(uv)',
-                    body: 'texture2D(%tex, (uv) * %ratio)'
+                    body: bodySimple
                 },
                 TEXTURE_2D_NEAREST: {
                     signature: 'TEXTURE_2D_NEAREST_%tex(uv)',
-                    body: 'texture2D(%tex, (floor((uv) * %size) + 0.5) * %ratio / %size, -99999.0)'
+                    body: bodyNearest
                 },
                 TEXTURE_2D_BIAS: {
                     signature: 'TEXTURE_2D_BIAS_%tex(uv, bias)',
-                    body: 'texture2D(%tex, (uv) * %ratio, bias)'
+                    body: bodyBias
                 }
             };
+
+            return this._texInfos;
+        },
+
+        _extractTextures: function(file) {
+            var infos = this._getInfos();
 
             var lines = file.match(/TEXTURE_2D(?:_BIAS|_NEAREST)?_\w+\(/g);
             if (!lines) return {};
@@ -976,10 +1019,11 @@ utils.createPrototypeObject(
 
                 var textureDefines = this._extractTextures(file);
                 if (collapsible) {
+                    var tex2dInfo = this._getInfos().TEXTURE_2D;
                     textureDefines.TEXTURE_2D_TextureInput = {
                         name: 'TextureInput',
-                        signature: 'TEXTURE_2D_%tex(uv)',
-                        body: 'texture2D(%tex, (uv) * %ratio)'
+                        signature: tex2dInfo.signature,
+                        body: tex2dInfo.body
                     };
                 }
 
@@ -1006,7 +1050,7 @@ utils.createPrototypeObject(
 
                     var code = defineInfo.body;
                     if (rgbm) code = 'vec4(decodeRGBM(' + code + ', uRGBMRange), 1.0)';
-                    code = '#define ' + defineInfo.signature + ' ' + code;
+                    code = '#define ' + defineInfo.signature + ' (' + code + ')';
 
                     // replace %stuff by uniform names
                     var uName = this._getUniformName(texName);
