@@ -940,8 +940,8 @@ utils.createPrototypeObject(
             // when reading out of texture assigned zone
 
             // 0 - do nothing
-            // 1 - black color when fetching out of bound
-            // 2 - clamp uv to thresold (usually vec2(1.0))
+            // 1 - clamp uv
+            // 2 - black color
             if (method !== undefined) this._methodWrapUV = method;
             if (threshold !== undefined) this._thresholdWrapUV = threshold;
             this._texInfos = undefined;
@@ -958,15 +958,16 @@ utils.createPrototypeObject(
             // see setMethodWrapUV
             var val = this._thresholdWrapUV.toExponential();
             if (this._methodWrapUV === 1) {
-                var prefix = 'step((uv).x, ' + val + ') * step((uv).y, ' + val + ') * ';
-                bodySimple = prefix + bodySimple;
-                bodyNearest = prefix + bodyNearest;
-                bodyBias = prefix + bodyBias;
-            } else if (this._methodWrapUV === 2) {
-                var replaceValue = 'min(uv, vec2(' + val + '))';
+                var replaceValue = 'min(uv, 1.0 - ' + val + ' / %size.xy)';
                 bodySimple = bodySimple.replace(/(uv)/g, replaceValue);
                 bodyNearest = bodyNearest.replace(/(uv)/g, replaceValue);
                 bodyBias = bodyBias.replace(/(uv)/g, replaceValue);
+            } else if (this._methodWrapUV === 2) {
+                var prefix = 'step((uv).x, 1.0 - ' + val + ' / %size.x) *';
+                prefix += 'step((uv).y, 1.0 - ' + val + ' / %size.y) * ';
+                bodySimple = prefix + bodySimple;
+                bodyNearest = prefix + bodyNearest;
+                bodyBias = prefix + bodyBias;
             }
 
             this._texInfos = {
