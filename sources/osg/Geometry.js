@@ -322,6 +322,7 @@ utils.createPrototypeNode(
             var program = state.getLastProgramApplied();
             var prgID = program.getInstanceID();
 
+            state.drawGeometry(this);
             var cachedDraw = this._cacheDrawCall[prgID];
 
             if (this._useVAO) {

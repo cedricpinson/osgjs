@@ -4,9 +4,6 @@ var mat4 = require('osg/glMatrix').mat4;
 var mat3 = require('osg/glMatrix').mat3;
 var notify = require('osg/notify');
 var Object = require('osg/Object');
-var BlendFunc = require('osg/BlendFunc');
-var CullFace = require('osg/CullFace');
-var Depth = require('osg/Depth');
 var Program = require('osg/Program');
 var StateAttribute = require('osg/StateAttribute');
 var PooledArray = require('osg/PooledArray');
@@ -14,6 +11,7 @@ var StackObjectPairPool = require('osg/StackObjectPairPool');
 var Uniform = require('osg/Uniform');
 var utils = require('osg/utils');
 var WebGLCaps = require('osg/WebGLCaps');
+var StateCache = require('osg/StateCache');
 
 var checkUniformCache = [
     undefined,
@@ -67,202 +65,6 @@ var STANDARD_UNIFORMS = {
     uModelNormalMatrix: true,
     uModelViewNormalMatrix: true,
     uArrayColorEnabled: true
-};
-
-var CacheDepth = function() {
-    this._func = undefined;
-    this._enable = undefined;
-    this._writeMask = undefined;
-    this._near = undefined;
-    this._far = undefined;
-
-    this.applyState = function(attribute, gl) {
-        var enable = attribute._func !== Depth.DISABLE;
-
-        if (this._enable !== enable) {
-            this._enable = enable;
-            if (this._enable) {
-                gl.enable(gl.DEPTH_TEST);
-            } else {
-                gl.disable(gl.DEPTH_TEST);
-            }
-        }
-
-        if (!this._enable) return;
-
-        if (this._func !== attribute._func) {
-            this._func = attribute._func;
-            gl.depthFunc(this._func);
-        }
-
-        if (this._writeMask !== attribute._writeMask) {
-            this._writeMask = attribute._writeMask;
-            gl.depthMask(this._writeMask);
-        }
-
-        if (this._near !== attribute._near || this._far !== attribute._far) {
-            this._far = attribute._far;
-            this._near = attribute._near;
-            gl.depthRange(this._near, this._far);
-        }
-    };
-};
-
-var CacheCullFace = function() {
-    this._enable = undefined;
-    this._mode = undefined;
-
-    this.applyState = function(attribute, gl) {
-        var enable = attribute._mode !== CullFace.DISABLE;
-
-        if (this._enable !== enable) {
-            this._enable = enable;
-            if (this._enable) {
-                gl.enable(gl.CULL_FACE);
-            } else {
-                gl.disable(gl.CULL_FACE);
-            }
-        }
-
-        if (!this._enable) return;
-
-        if (this._mode !== attribute._mode) {
-            this._mode = attribute._mode;
-            gl.cullFace(this._mode);
-        }
-    };
-};
-
-var CacheScissor = function() {
-    this._enable = undefined;
-    this._x = undefined;
-    this._y = undefined;
-    this._width = undefined;
-    this._height = undefined;
-
-    this.applyState = function(attribute, gl) {
-        var enable = attribute._x !== -1;
-
-        if (this._enable !== enable) {
-            this._enable = enable;
-            if (this._enable) {
-                gl.enable(gl.SCISSOR_TEST);
-            } else {
-                gl.disable(gl.SCISSOR_TEST);
-            }
-        }
-
-        if (!this._enable) return;
-
-        if (
-            this._x !== attribute._x ||
-            this._y !== attribute._y ||
-            this._width !== attribute._width ||
-            this._height !== attribute._height
-        ) {
-            this._x = attribute._x;
-            this._y = attribute._y;
-            this._width = attribute._width;
-            this._height = attribute._height;
-            gl.scissor(this._x, this._y, this._width, this._height);
-        }
-    };
-};
-
-var CacheBlendFunc = function() {
-    this._enable = undefined;
-    this._sourceFactor = undefined;
-    this._destinationFactor = undefined;
-    this._sourceFactorAlpha = undefined;
-    this._destinationFactorAlpha = undefined;
-
-    this.applyState = function(attribute, gl) {
-        var enable =
-            attribute._sourceFactor !== BlendFunc.DISABLE &&
-            attribute._destinationFactor !== BlendFunc.DISABLE;
-
-        if (this._enable !== enable) {
-            this._enable = enable;
-            if (this._enable) {
-                gl.enable(gl.BLEND);
-            } else {
-                gl.disable(gl.BLEND);
-            }
-        }
-
-        if (!this._enable) return;
-
-        if (attribute._separate) {
-            if (
-                this._sourceFactor !== attribute._sourceFactor ||
-                this._destinationFactor !== attribute._destinationFactor ||
-                this._sourceFactorAlpha !== attribute._sourceFactorAlpha ||
-                this._destinationFactorAlpha !== attribute._destinationFactorAlpha
-            ) {
-                this._sourceFactor = attribute._sourceFactor;
-                this._destinationFactor = attribute._destinationFactor;
-                this._sourceFactorAlpha = attribute._sourceFactorAlpha;
-                this._destinationFactorAlpha = attribute._destinationFactorAlpha;
-                gl.blendFuncSeparate(
-                    this._sourceFactor,
-                    this._destinationFactor,
-                    this._sourceFactorAlpha,
-                    this._destinationFactorAlpha
-                );
-            }
-        } else if (
-            this._sourceFactor !== attribute._sourceFactor ||
-            this._destinationFactor !== attribute._destinationFactor
-        ) {
-            this._sourceFactor = attribute._sourceFactor;
-            this._destinationFactor = attribute._destinationFactor;
-            gl.blendFunc(this._sourceFactor, this._destinationFactor);
-        }
-    };
-};
-
-var CacheColorMask = function() {
-    this._red = undefined;
-    this._green = undefined;
-    this._blue = undefined;
-    this._alpha = undefined;
-
-    this.applyState = function(attribute, gl) {
-        if (
-            this._red !== attribute._red ||
-            this._green !== attribute._green ||
-            this._blue !== attribute._blue ||
-            this._alpha !== attribute._alpha
-        ) {
-            this._red = attribute._red;
-            this._green = attribute._green;
-            this._blue = attribute._blue;
-            this._alpha = attribute._alpha;
-            gl.colorMask(this._red, this._green, this._blue, this._alpha);
-        }
-    };
-};
-
-var CacheViewport = function() {
-    this._x = undefined;
-    this._y = undefined;
-    this._width = undefined;
-    this._height = undefined;
-
-    this.applyState = function(attribute, gl) {
-        if (
-            this._x !== attribute._x ||
-            this._y !== attribute._y ||
-            this._width !== attribute._width ||
-            this._height !== attribute._height
-        ) {
-            this._x = attribute._x;
-            this._y = attribute._y;
-            this._width = attribute._width;
-            this._height = attribute._height;
-            gl.viewport(this._x, this._y, this._width, this._height);
-        }
-    };
 };
 
 var State = function(shaderGeneratorProxy) {
@@ -328,15 +130,7 @@ var State = function(shaderGeneratorProxy) {
     this._cacheUniformId = 0;
 
     // gl states cache
-    this._cacheColorMask = new CacheColorMask();
-    this._cacheBlendFunc = new CacheBlendFunc();
-    this._cacheCullFace = new CacheCullFace();
-    this._cacheDepth = new CacheDepth();
-    this._cacheViewport = new CacheViewport();
-    this._cacheScissor = new CacheScissor();
-    this._depthMask = undefined;
-    this._clearDepth = undefined;
-    this._clearColor = [2.0, 2.0, 2.0, 2.0];
+    this._stateCache = new StateCache();
 
     this.resetStats();
 };
@@ -357,61 +151,51 @@ utils.createPrototypeObject(
         },
 
         applyColorMask: function(attribute) {
-            this._cacheColorMask.applyState(attribute, this._graphicContext);
+            this._stateCache.applyColorMaskAttribute(attribute);
         },
 
         applyBlendFunc: function(attribute) {
-            this._cacheBlendFunc.applyState(attribute, this._graphicContext);
+            this._stateCache.applyBlendFuncAttribute(attribute);
         },
 
         applyCullFace: function(attribute) {
-            this._cacheCullFace.applyState(attribute, this._graphicContext);
+            this._stateCache.applyCullFaceAttribute(attribute);
         },
 
         applyDepth: function(attribute) {
-            this._cacheDepth.applyState(attribute, this._graphicContext);
+            this._stateCache.applyDepthAttribute(attribute);
         },
 
         applyViewport: function(attribute) {
-            this._cacheViewport.applyState(attribute, this._graphicContext);
+            this._stateCache.applyViewportAttribute(attribute);
         },
 
         applyScissor: function(attribute) {
-            this._cacheScissor.applyState(attribute, this._graphicContext);
+            this._stateCache.applyScissorAttribute(attribute);
+        },
+
+        viewport: function(x, y, width, height) {
+            this._stateCache.viewport(x, y, width, height);
         },
 
         depthMask: function(value) {
-            if (this._depthMask !== value) {
-                this._depthMask = value;
-                this._graphicContext.depthMask(this._depthMask);
-            }
+            this._stateCache.depthMask(value);
         },
 
         clearDepth: function(value) {
-            if (this._clearDepth !== value) {
-                this._clearDepth = value;
-                this._graphicContext.depthMask(this._clearDepth);
-            }
+            this._stateCache.clearDepth(value);
         },
 
         clearColor: function(value) {
-            if (
-                this._clearColor[0] !== value[0] ||
-                this._clearColor[1] !== value[1] ||
-                this._clearColor[2] !== value[2] ||
-                this._clearColor[3] !== value[3]
-            ) {
-                this._clearColor[0] = value[0];
-                this._clearColor[1] = value[1];
-                this._clearColor[2] = value[2];
-                this._clearColor[3] = value[3];
-                this._graphicContext.clearColor(
-                    this._clearColor[0],
-                    this._clearColor[1],
-                    this._clearColor[2],
-                    this._clearColor[3]
-                );
-            }
+            this._stateCache.clearColor(value);
+        },
+
+        clear: function(mask) {
+            this._stateCache.clear(this._graphicContext, mask);
+        },
+
+        drawGeometry: function(geom) {
+            this._stateCache.drawGeometry(this._graphicContext, geom);
         },
 
         getCacheUniformsApplyRenderLeaf: function() {

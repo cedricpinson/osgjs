@@ -294,7 +294,7 @@ utils.createPrototypeObject(
                     state.depthMask(true);
                     state.clearDepth(this._clearDepth);
                 }
-                gl.clear(this._clearMask);
+                state.clear(this._clearMask);
             }
 
             if (this._positionedAttribute.getLength() !== 0) {
