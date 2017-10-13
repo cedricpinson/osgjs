@@ -7,15 +7,13 @@ float getShadowPCF(
     const in float compare,
     const in vec2 biasPCF,
     const in vec4 clampDimension
-    OPT_ARG_outDistance) {
+    OPT_ARG_outDistance
+    OPT_ARG_jitter) {
 
      float res = 0.0;
 
-#ifdef _OUT_DISTANCE     
-     res += texture2DShadowLerp(depths, size, uv + biasPCF, compare, clampDimension, outDistance);
-#else
-     res += texture2DShadowLerp(depths, size, uv + biasPCF, compare, clampDimension);
-#endif
+     res += texture2DShadowLerp(depths, size, uv + biasPCF, compare, clampDimension OPT_INSTANCE_ARG_outDistance OPT_INSTANCE_ARG_jitter);
+
 
 #if defined(_PCFx1)
 
@@ -26,7 +24,7 @@ float getShadowPCF(
     float dx1 = size.z;
     float dy1 = size.w;
 
-#define TSF(o1,o2) texture2DShadowLerp(depths, size, uv + vec2(o1, o2) + biasPCF, compare, clampDimension)
+#define TSF(o1,o2) texture2DShadowLerp(depths, size, uv + vec2(o1, o2) + biasPCF, compare, clampDimension OPT_INSTANCE_ARG_outDistance OPT_INSTANCE_ARG_jitter)
 
     res += TSF(dx0, dx0);
     res += TSF(dx0, .0);
