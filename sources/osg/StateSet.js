@@ -99,7 +99,7 @@ utils.createPrototypeObject(
 
         removeUniformByName: function(uniformName) {
             delete this.uniforms[uniformName];
-            this._hasUniform = Object.keys(this.uniforms).length ? true : false;
+            this._hasUniform = window.Object.keys(this.uniforms).length ? true : false;
         },
 
         hasUniform: function() {
