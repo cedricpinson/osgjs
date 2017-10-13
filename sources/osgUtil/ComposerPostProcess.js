@@ -1045,14 +1045,18 @@ utils.createPrototypeObject(
                 var texName = defineInfo.name;
 
                 var rgbm = false;
+                // check if the textures is rgbm
                 for (var j = 0; j < textures.length; j++) {
                     var inTex = textures[j];
                     if (inTex.uniformName !== texName) {
                         continue;
                     }
 
-                    var tex = inTex && this._textures[inTex.name];
-                    if (tex) rgbm = tex.rgbm;
+                    var tex = this._textures[inTex.name];
+                    if (tex && tex.rgbm) {
+                        rgbm = tex.rgbm;
+                        break;
+                    }
                 }
 
                 var code = defineInfo.body;
