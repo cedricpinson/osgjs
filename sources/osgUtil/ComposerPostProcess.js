@@ -1017,52 +1017,59 @@ utils.createPrototypeObject(
 
             for (var i = 0; i < funcs.length; i++) {
                 var file = this._shaderProcessor.getShaderTextPure(funcs[i].file);
+                functionBodies += file + '\n';
+            }
 
-                var textureDefines = this._extractTextures(file);
-                if (collapsible) {
-                    var tex2dInfo = this._getInfos().TEXTURE_2D;
-                    textureDefines.TEXTURE_2D_TextureInput = {
-                        name: 'TextureInput',
-                        signature: tex2dInfo.signature,
-                        body: tex2dInfo.body
-                    };
+            // resolve pragma include
+            var includeList = ['functions.glsl']; // included in composer main shader
+            functionBodies = this._shaderProcessor.preprocess(functionBodies, 0, includeList);
+
+            var textureDefines = this._extractTextures(functionBodies);
+            if (collapsible) {
+                var tex2dInfo = this._getInfos().TEXTURE_2D;
+                textureDefines.TEXTURE_2D_TextureInput = {
+                    name: 'TextureInput',
+                    signature: tex2dInfo.signature,
+                    body: tex2dInfo.body
+                };
+            }
+
+            for (var key in textureDefines) {
+                if (defineKeys[key]) {
+                    continue;
                 }
 
-                for (var key in textureDefines) {
-                    if (defineKeys[key]) {
+                defineKeys[key] = true;
+
+                var defineInfo = textureDefines[key];
+                var texName = defineInfo.name;
+
+                var rgbm = false;
+                // check if the textures is rgbm
+                for (var j = 0; j < textures.length; j++) {
+                    var inTex = textures[j];
+                    if (inTex.uniformName !== texName) {
                         continue;
                     }
 
-                    defineKeys[key] = true;
-
-                    var defineInfo = textureDefines[key];
-                    var texName = defineInfo.name;
-
-                    var rgbm = false;
-                    for (var j = 0; j < textures.length; j++) {
-                        var inTex = textures[j];
-                        if (inTex.uniformName !== texName) {
-                            continue;
-                        }
-
-                        var tex = inTex && this._textures[inTex.name];
-                        if (tex) rgbm = tex.rgbm;
+                    var tex = this._textures[inTex.name];
+                    if (tex && tex.rgbm) {
+                        rgbm = tex.rgbm;
+                        break;
                     }
-
-                    var code = defineInfo.body;
-                    if (rgbm) code = 'vec4(decodeRGBM(' + code + ', uRGBMRange), 1.0)';
-                    code = '#define ' + defineInfo.signature + ' (' + code + ')';
-
-                    // replace %stuff by uniform names
-                    var uName = this._getUniformName(texName);
-                    code = code.replace(/%size/g, uName + 'Size');
-                    code = code.replace(/%ratio/g, uName + 'Ratio');
-                    code = code.replace(/%tex/g, texName);
-
-                    colorSpacesDefines.push(code);
                 }
 
-                functionBodies += file + '\n';
+                var code = defineInfo.body;
+                if (rgbm) code = 'vec4(decodeRGBM(' + code + ', uRGBMRange), 1.0)';
+                code = '#define ' + defineInfo.signature + ' (' + code + ')';
+
+                // replace %stuff by uniform names
+                var uName = this._getUniformName(texName);
+                code = code.replace(/%size/g, uName + 'Size');
+                code = code.replace(/%ratio/g, uName + 'Ratio');
+                code = code.replace(/%tex/g, texName);
+
+                colorSpacesDefines.push(code);
             }
 
             source = source.replace('%texturesColorSpace%', colorSpacesDefines.join('\n'));
@@ -1107,8 +1114,6 @@ utils.createPrototypeObject(
         _removeDuplicatedUniforms: function(source) {
             var lines = source.split('\n');
 
-            //var r = source.match(/uniform(?:\s+){1,}\w+(?:\s+){1,}\w+/g);
-
             var uniforms = {};
 
             var numLines = lines.length;
@@ -1152,11 +1157,9 @@ utils.createPrototypeObject(
             source = source.replace('%name%', pass.out.name);
             source = this._removeDuplicatedUniforms(source);
 
+            var vertexSource = ComposerPostProcess.VertexShader.replace('%name%', pass.out.name);
             var program = new Program(
-                new Shader(
-                    Shader.VERTEX_SHADER,
-                    ComposerPostProcess.VertexShader.replace('%name%', pass.out.name)
-                ),
+                new Shader(Shader.VERTEX_SHADER, vertexSource),
                 new Shader(Shader.FRAGMENT_SHADER, source)
             );
 
