@@ -1,9 +1,8 @@
-'use strict';
-var utils = require('osg/utils');
-var Object = require('osg/Object');
-var mat4 = require('osg/glMatrix').mat4;
-var quat = require('osg/glMatrix').quat;
-var Target = require('osgAnimation/target');
+import utils from 'osg/utils';
+import Object from 'osg/Object';
+import { mat4 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import Target from 'osgAnimation/target';
 
 var qIdentity = quat.create();
 
@@ -47,4 +46,4 @@ utils.createPrototypeObject(
     'StackedQuaternion'
 );
 
-module.exports = StackedQuaternion;
+export default StackedQuaternion;

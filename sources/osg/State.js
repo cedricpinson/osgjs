@@ -1,17 +1,15 @@
-'use strict';
-
-var mat4 = require('osg/glMatrix').mat4;
-var mat3 = require('osg/glMatrix').mat3;
-var notify = require('osg/notify');
-var Object = require('osg/Object');
-var Program = require('osg/Program');
-var StateAttribute = require('osg/StateAttribute');
-var PooledArray = require('osg/PooledArray');
-var StackObjectPairPool = require('osg/StackObjectPairPool');
-var Uniform = require('osg/Uniform');
-var utils = require('osg/utils');
-var WebGLCaps = require('osg/WebGLCaps');
-var StateCache = require('osg/StateCache');
+import { mat4 } from 'osg/glMatrix';
+import { mat3 } from 'osg/glMatrix';
+import notify from 'osg/notify';
+import Object from 'osg/Object';
+import Program from 'osg/Program';
+import StateAttribute from 'osg/StateAttribute';
+import PooledArray from 'osg/PooledArray';
+import StackObjectPairPool from 'osg/StackObjectPairPool';
+import Uniform from 'osg/Uniform';
+import utils from 'osg/utils';
+import WebGLCaps from 'osg/WebGLCaps';
+import StateCache from 'osg/StateCache';
 
 var checkUniformCache = [
     undefined,
@@ -1504,4 +1502,4 @@ utils.createPrototypeObject(
     'State'
 );
 
-module.exports = State;
+export default State;

@@ -1,5 +1,4 @@
-'use strict';
-var Shape = require('osg/shape');
+import Shape from 'osg/shape';
 
 /*
  * Given a Camera, update a wireframe representation of its
@@ -79,6 +78,6 @@ var createDebugFrustrumGeometry = function() {
     return g;
 };
 
-module.exports = {
+export default {
     createDebugFrustumGeometry: createDebugFrustrumGeometry
 };

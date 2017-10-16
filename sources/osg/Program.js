@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var notify = require('osg/notify');
-var GLObject = require('osg/GLObject');
-var StateAttribute = require('osg/StateAttribute');
-var ShaderProcessor = require('osgShader/ShaderProcessor');
-var Timer = require('osg/Timer');
+import utils from 'osg/utils';
+import notify from 'osg/notify';
+import GLObject from 'osg/GLObject';
+import StateAttribute from 'osg/StateAttribute';
+import ShaderProcessor from 'osgShader/ShaderProcessor';
+import Timer from 'osg/Timer';
 
 // singleton
 var sp = new ShaderProcessor();
@@ -351,4 +350,4 @@ utils.createPrototypeStateAttribute(
     'Program'
 );
 
-module.exports = Program;
+export default Program;

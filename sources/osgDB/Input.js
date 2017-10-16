@@ -1,17 +1,16 @@
-'use strict';
-var P = require('bluebird');
-var utils = require('osg/utils');
-var osgNameSpace = require('osgNameSpace');
-var _requestFile = require('osgDB/requestFile');
-var Options = require('osgDB/options');
-var zlib = require('osgDB/zlib');
-var notify = require('osg/notify');
-var Image = require('osg/Image');
-var BufferArray = require('osg/BufferArray');
-var DrawArrays = require('osg/DrawArrays');
-var DrawArrayLengths = require('osg/DrawArrayLengths');
-var DrawElements = require('osg/DrawElements');
-var primitiveSet = require('osg/primitiveSet');
+import P from 'bluebird';
+import utils from 'osg/utils';
+import osgNameSpace from 'osgNameSpace';
+import _requestFile from 'osgDB/requestFile';
+import Options from 'osgDB/options';
+import zlib from 'osgDB/zlib';
+import notify from 'osg/notify';
+import Image from 'osg/Image';
+import BufferArray from 'osg/BufferArray';
+import DrawArrays from 'osg/DrawArrays';
+import DrawArrayLengths from 'osg/DrawArrayLengths';
+import DrawElements from 'osg/DrawElements';
+import primitiveSet from 'osg/primitiveSet';
 
 var rejectObject = utils.rejectObject;
 
@@ -220,7 +219,7 @@ Input.prototype = {
             options.prefixURL = prefix;
         }
 
-        var ReaderParser = require('osgDB/readerParser');
+        var ReaderParser = require('osgDB/readerParser').default;
 
         var readSceneGraph = function(data) {
             return ReaderParser.parseSceneGraph(data, options).then(function(child) {
@@ -573,7 +572,7 @@ Input.prototype = {
             return rejectObject("can't instanciate object " + prop);
         }
 
-        var ReaderParser = require('osgDB/readerParser');
+        var ReaderParser = require('osgDB/readerParser').default;
         var scope = ReaderParser.ObjectWrapper.serializers;
 
         if (this._cacheReadObject[prop]) {
@@ -602,4 +601,4 @@ Input.prototype = {
     }
 };
 
-module.exports = Input;
+export default Input;

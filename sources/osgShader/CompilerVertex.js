@@ -1,6 +1,4 @@
-'use strict';
-
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 var CompilerVertex = {
     _createVertexShader: function() {
@@ -488,4 +486,4 @@ for (var fnName in CompilerVertex) {
     CompilerVertex[fnName] = wrapperVertexOnly(CompilerVertex[fnName], fnName);
 }
 
-module.exports = CompilerVertex;
+export default CompilerVertex;

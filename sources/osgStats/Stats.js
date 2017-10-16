@@ -1,18 +1,18 @@
-var utils = require('osg/utils');
-var BlendFunc = require('osg/BlendFunc');
-var Camera = require('osg/Camera');
-var CullFace = require('osg/CullFace');
-var Depth = require('osg/Depth');
-var Node = require('osg/Node');
-var Program = require('osg/Program');
-var Shader = require('osg/Shader');
-var Transform = require('osg/Transform');
-var Texture = require('osg/Texture');
-var mat4 = require('osg/glMatrix').mat4;
-var BufferStats = require('osgStats/BufferStats');
-var Counter = require('osgStats/Counter');
-var Graph = require('osgStats/Graph');
-var TextGenerator = require('osgStats/TextGenerator');
+import utils from 'osg/utils';
+import BlendFunc from 'osg/BlendFunc';
+import Camera from 'osg/Camera';
+import CullFace from 'osg/CullFace';
+import Depth from 'osg/Depth';
+import Node from 'osg/Node';
+import Program from 'osg/Program';
+import Shader from 'osg/Shader';
+import Transform from 'osg/Transform';
+import Texture from 'osg/Texture';
+import { mat4 } from 'osg/glMatrix';
+import BufferStats from 'osgStats/BufferStats';
+import Counter from 'osgStats/Counter';
+import Graph from 'osgStats/Graph';
+import TextGenerator from 'osgStats/TextGenerator';
 
 var createShader = function() {
     var vertexshader = [
@@ -397,4 +397,4 @@ utils.createPrototypeObject(Stats, {
     }
 });
 
-module.exports = Stats;
+export default Stats;

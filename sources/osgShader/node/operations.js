@@ -1,7 +1,6 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var Node = require('osgShader/node/Node');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import Node from 'osgShader/node/Node';
 
 // Abstract class
 // base operator contains helper for the constructor
@@ -322,7 +321,7 @@ utils.createPrototypeObject(
     'InlineCode'
 );
 
-module.exports = {
+export default {
     BaseOperator: BaseOperator,
     Mult: Mult,
     MatrixMultPosition: MatrixMultPosition,

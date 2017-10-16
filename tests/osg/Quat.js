@@ -1,11 +1,10 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var quat = require('osg/glMatrix').quat;
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     // shared const
     var id = quat.create(); // inited with identity
     var sqrt2 = Math.sqrt(0.5);
@@ -171,4 +170,4 @@ module.exports = function() {
         vec3.transformQuat(v, v, quat.fromValues(0.0, 0.707107, 0.0, 0.707107));
         assert.equalVector(v, vec3.fromValues(3.0, 2.0, -1.0));
     });
-};
+}

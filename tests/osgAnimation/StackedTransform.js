@@ -1,15 +1,14 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var mat4 = require('osg/glMatrix').mat4;
-var quat = require('osg/glMatrix').quat;
-var StackedRotateAxis = require('osgAnimation/StackedRotateAxis');
-var StackedTranslate = require('osgAnimation/StackedTranslate');
-var StackedScale = require('osgAnimation/StackedScale');
-var StackedMatrix = require('osgAnimation/StackedMatrix');
-var StackedQuaternion = require('osgAnimation/StackedQuaternion');
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import { mat4 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import StackedRotateAxis from 'osgAnimation/StackedRotateAxis';
+import StackedTranslate from 'osgAnimation/StackedTranslate';
+import StackedScale from 'osgAnimation/StackedScale';
+import StackedMatrix from 'osgAnimation/StackedMatrix';
+import StackedQuaternion from 'osgAnimation/StackedQuaternion';
 
-module.exports = function() {
+export default function() {
     test('StackedRotateAxis', function() {
         var st = new StackedRotateAxis('rotateX');
         assert.isOk(st.getName() === 'rotateX', 'Check name');
@@ -58,4 +57,4 @@ module.exports = function() {
         st.init(q);
         assert.equalVector(q, st._target.value, 'Check quat value after init');
     });
-};
+}

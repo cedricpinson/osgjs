@@ -1,5 +1,4 @@
-'use strict';
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 /**
  * Uniform manage variable used in glsl shader.
@@ -300,4 +299,4 @@ Uniform.mat2 = Uniform.createMat2Array = Uniform.createMat2 = Uniform.createMatr
 Uniform.mat3 = Uniform.createMat3Array = Uniform.createMat3 = Uniform.createMatrix3;
 Uniform.mat4 = Uniform.createMat4Array = Uniform.createMat4 = Uniform.createMatrix4;
 
-module.exports = Uniform;
+export default Uniform;

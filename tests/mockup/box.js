@@ -1,5 +1,3 @@
-'use strict';
-
 var getBoxScene = function() {
     return {
         children: [
@@ -252,4 +250,4 @@ var getBoxScene = function() {
     };
 };
 
-module.exports = getBoxScene;
+export default getBoxScene;

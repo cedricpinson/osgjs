@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var Compiler = require('osgShader/Compiler');
+import utils from 'osg/utils';
+import Compiler from 'osgShader/Compiler';
 
 var CompilerShadowCast = function() {
     Compiler.apply(this, arguments);
@@ -69,4 +68,4 @@ utils.createPrototypeObject(
     'CompilerShadowCast'
 );
 
-module.exports = CompilerShadowCast;
+export default CompilerShadowCast;

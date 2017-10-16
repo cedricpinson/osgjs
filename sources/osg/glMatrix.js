@@ -1,8 +1,7 @@
-'use strict';
+import mth from 'osg/math';
+import glm from 'gl-matrix';
+import config from 'config.js';
 
-var mth = require('osg/math');
-var glm = require('gl-matrix');
-var config = require('config.js');
 glm.glMatrix.setMatrixArrayType(config.ArrayType);
 glm.glMatrix.EPSILON = 1e-9;
 
@@ -550,4 +549,4 @@ mat4.fromRotation = function(out, rad, axis) {
     return glmFromRotate(out, rad, axis) || mat4.identity(out);
 };
 
-module.exports = glm;
+export { glm, mat3, mat4, quat, vec2, vec3, vec4 };

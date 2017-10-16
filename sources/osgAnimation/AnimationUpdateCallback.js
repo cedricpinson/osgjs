@@ -1,8 +1,7 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var Object = require('osg/Object');
-var MatrixTransform = require('osg/MatrixTransform');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import Object from 'osg/Object';
+import MatrixTransform from 'osg/MatrixTransform';
 
 /**
  *  AnimationUpdateCallback
@@ -55,4 +54,4 @@ utils.createPrototypeObject(
     'AnimationUpdateCallback'
 );
 
-module.exports = AnimationUpdateCallback;
+export default AnimationUpdateCallback;

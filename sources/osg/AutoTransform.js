@@ -1,14 +1,12 @@
-'use strict';
-
-var utils = require('osg/utils');
-var Transform = require('osg/Transform');
-var vec3 = require('osg/glMatrix').vec3;
-var vec4 = require('osg/glMatrix').vec4;
-var quat = require('osg/glMatrix').quat;
-var mat4 = require('osg/glMatrix').mat4;
-var NodeVisitor = require('osg/NodeVisitor');
-var TransformEnums = require('osg/transformEnums');
-var Node = require('osg/Node');
+import utils from 'osg/utils';
+import Transform from 'osg/Transform';
+import { vec3 } from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import NodeVisitor from 'osg/NodeVisitor';
+import TransformEnums from 'osg/transformEnums';
+import Node from 'osg/Node';
 
 /** AutoTransform is a derived form of Transform that automatically
  * scales or rotates to keep its children aligned with screen coordinates.
@@ -353,4 +351,4 @@ utils.createPrototypeNode(
     'AutoTransform'
 );
 
-module.exports = AutoTransform;
+export default AutoTransform;

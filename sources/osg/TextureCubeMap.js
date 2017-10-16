@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var Image = require('osg/Image');
-var notify = require('osg/notify');
-var Texture = require('osg/Texture');
+import utils from 'osg/utils';
+import Image from 'osg/Image';
+import notify from 'osg/notify';
+import Texture from 'osg/Texture';
 
 /**
  * TextureCubeMap
@@ -301,4 +300,4 @@ utils.createPrototypeStateAttribute(
     'TextureCubeMap'
 );
 
-module.exports = TextureCubeMap;
+export default TextureCubeMap;

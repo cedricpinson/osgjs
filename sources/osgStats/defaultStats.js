@@ -124,4 +124,4 @@ var config = {
     groups: groups
 };
 
-module.exports = config;
+export default config;

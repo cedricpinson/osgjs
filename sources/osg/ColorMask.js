@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 var ColorMask = function(red, green, blue, alpha) {
     StateAttribute.call(this);
@@ -34,4 +33,4 @@ utils.createPrototypeStateAttribute(
     'ColorMask'
 );
 
-module.exports = ColorMask;
+export default ColorMask;

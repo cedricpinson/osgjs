@@ -1,15 +1,14 @@
-'use strict';
-var assert = require('chai').assert;
-var Utils = require('osg/utils');
-var State = require('osg/State');
-var StateSet = require('osg/StateSet');
-var Material = require('osg/Material');
-var StateAttribute = require('osg/StateAttribute');
-var Texture = require('osg/Texture');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
-var mockup = require('tests/mockup/mockup');
+import { assert } from 'chai';
+import Utils from 'osg/utils';
+import State from 'osg/State';
+import StateSet from 'osg/StateSet';
+import Material from 'osg/Material';
+import StateAttribute from 'osg/StateAttribute';
+import Texture from 'osg/Texture';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
+import mockup from 'tests/mockup/mockup';
 
-module.exports = function() {
+export default function() {
     test('State', function() {
         (function() {
             var state = new State(new ShaderGeneratorProxy());
@@ -104,4 +103,4 @@ module.exports = function() {
             assert.equal(textureBindCall.get(1), 1, 'check that texture 0 is applied only once');
         })();
     });
-};
+}

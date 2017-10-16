@@ -1,8 +1,6 @@
-'use strict';
-
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var IntersectFunctor = require('osgUtil/IntersectFunctor');
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import IntersectFunctor from 'osgUtil/IntersectFunctor';
 
 var SphereIntersection = function() {
     IntersectFunctor.Intersection.call(this);
@@ -329,4 +327,4 @@ utils.createPrototypeObject(
     'SphereIntersectFunctor'
 );
 
-module.exports = SphereIntersectFunctor;
+export default SphereIntersectFunctor;

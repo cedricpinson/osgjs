@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var notify = require('osg/notify');
-var Bone = require('osgAnimation/Bone');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import notify from 'osg/notify';
+import Bone from 'osgAnimation/Bone';
 
 var CollectBoneVisitor = function() {
     NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
@@ -34,4 +33,4 @@ utils.createPrototypeObject(
     'CollectBoneVisitor'
 );
 
-module.exports = CollectBoneVisitor;
+export default CollectBoneVisitor;

@@ -1,6 +1,5 @@
-'use strict';
-var BoundingSphere = require('osg/BoundingSphere');
-var mat4 = require('osg/glMatrix').mat4;
+import BoundingSphere from 'osg/BoundingSphere';
+import { mat4 } from 'osg/glMatrix';
 
 // Base class for Camera / User manipulator
 var Manipulator = function(boundStrategy) {
@@ -47,7 +46,7 @@ Manipulator.prototype = {
             if (this._computeBoundNodeMaskOverride === ~0x0) {
                 bb = node.getBoundingBox();
             } else {
-                var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor');
+                var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor').default;
                 var cbv = new ComputeBoundsVisitor();
                 cbv.setNodeMaskOverride(this._computeBoundNodeMaskOverride);
                 cbv.reset();
@@ -97,4 +96,4 @@ Manipulator.prototype = {
 Manipulator.COMPUTE_HOME_USING_SPHERE = 1 << 0;
 Manipulator.COMPUTE_HOME_USING_BBOX = 1 << 1;
 
-module.exports = Manipulator;
+export default Manipulator;

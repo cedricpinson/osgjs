@@ -1,5 +1,4 @@
-'use strict';
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 // Base class for GLResources: Textures, Buffers, Programs, Shaders, FrameBuffers and RenderBuffers
 // It holds a reference to the graphic context that is needed for resource deletion
@@ -61,4 +60,4 @@ GLObject.onLostContext = function(gl) {
     }
 };
 
-module.exports = GLObject;
+export default GLObject;

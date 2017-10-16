@@ -1,8 +1,7 @@
-'use strict';
-var View = require('tests/osgViewer/View');
-var Viewer = require('tests/osgViewer/Viewer');
+import View from 'tests/osgViewer/View';
+import Viewer from 'tests/osgViewer/Viewer';
 
-module.exports = function() {
+export default function() {
     View();
     Viewer();
-};
+}

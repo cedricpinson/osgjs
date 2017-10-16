@@ -1,12 +1,10 @@
-'use strict';
-
-var utils = require('osg/utils');
-var vec4 = require('osg/glMatrix').vec4;
-var vec3 = require('osg/glMatrix').vec3;
-var Polytope = require('osg/Polytope');
-var Plane = require('osg/Plane');
-var Intersector = require('osgUtil/Intersector');
-var PolytopeIntersectFunctor = require('osgUtil/PolytopeIntersectFunctor');
+import utils from 'osg/utils';
+import { vec4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import Polytope from 'osg/Polytope';
+import Plane from 'osg/Plane';
+import Intersector from 'osgUtil/Intersector';
+import PolytopeIntersectFunctor from 'osgUtil/PolytopeIntersectFunctor';
 
 /** Concrete class for implementing polytope intersections with the scene graph.
  * To be used in conjunction with IntersectionVisitor. */
@@ -123,4 +121,4 @@ utils.createPrototypeObject(
     'PolytopeIntersector'
 );
 
-module.exports = PolytopeIntersector;
+export default PolytopeIntersector;

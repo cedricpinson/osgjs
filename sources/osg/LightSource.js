@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var Node = require('osg/Node');
-var TransformEnums = require('osg/transformEnums');
-var vec3 = require('osg/glMatrix').vec3;
+import utils from 'osg/utils';
+import Node from 'osg/Node';
+import TransformEnums from 'osg/transformEnums';
+import { vec3 } from 'osg/glMatrix';
 
 /**
  *  LightSource is a positioned node to use with StateAttribute Light
@@ -56,4 +55,4 @@ utils.createPrototypeNode(
     'LightSource'
 );
 
-module.exports = LightSource;
+export default LightSource;

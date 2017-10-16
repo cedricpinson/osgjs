@@ -1,8 +1,7 @@
-'use strict';
-var assert = require('chai').assert;
-var osgText = require('osgText/Text');
+import { assert } from 'chai';
+import osgText from 'osgText/Text';
 
-module.exports = function() {
+export default function() {
     test('Text._nextPowerOfTwo', function() {
         var text = new osgText();
         var npot = text._nextPowerOfTwo(25);
@@ -29,4 +28,4 @@ module.exports = function() {
         assert.isOk(text._textY === 0, '_textY should be 0');
         assert.isOk(text._context.textBaseline === 'top', 'context baseline should be top');
     });
-};
+}

@@ -33,4 +33,4 @@ Graph.prototype = {
     }
 };
 
-module.exports = Graph;
+export default Graph;

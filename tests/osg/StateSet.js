@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-var StateSet = require('osg/StateSet');
-var Uniform = require('osg/Uniform');
-var Shader = require('osg/Shader');
-var Program = require('osg/Program');
-var Texture = require('osg/Texture');
+import { assert } from 'chai';
+import StateSet from 'osg/StateSet';
+import Uniform from 'osg/Uniform';
+import Shader from 'osg/Shader';
+import Program from 'osg/Program';
+import Texture from 'osg/Texture';
 
-module.exports = function() {
+export default function() {
     test('StateSet', function() {
         (function() {
             var stateset = new StateSet();
@@ -79,4 +78,4 @@ module.exports = function() {
             assert.isOk(ss.getAttribute('Program') === undefined, 'Check program has been removed');
         })();
     });
-};
+}

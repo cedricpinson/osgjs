@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 var BillboardAttribute = function() {
     StateAttribute.call(this);
@@ -30,4 +29,4 @@ utils.createPrototypeStateAttribute(
     'Billboard'
 );
 
-module.exports = BillboardAttribute;
+export default BillboardAttribute;

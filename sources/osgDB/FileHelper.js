@@ -1,10 +1,9 @@
-'use strict';
-var P = require('bluebird');
+import P from 'bluebird';
 
-var ReaderParser = require('osgDB/readerParser');
-var Registry = require('osgDB/Registry');
-var requestFile = require('osgDB/requestFile.js');
-var notify = require('osg/notify');
+import ReaderParser from 'osgDB/readerParser';
+import Registry from 'osgDB/Registry';
+import requestFile from 'osgDB/requestFile.js';
+import notify from 'osg/notify';
 
 // Drag'n Drop file helper
 // it also holds a list of basic types per extension to do requests.
@@ -79,4 +78,4 @@ var FileHelper = {
     }
 };
 
-module.exports = FileHelper;
+export default FileHelper;

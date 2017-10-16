@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 var LineWidth = function(lineWidth) {
     StateAttribute.call(this);
@@ -24,4 +23,4 @@ utils.createPrototypeStateAttribute(
     'LineWidth'
 );
 
-module.exports = LineWidth;
+export default LineWidth;

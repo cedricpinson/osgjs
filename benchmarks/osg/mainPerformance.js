@@ -1,12 +1,11 @@
-'use strict';
-var mockup = require('tests/mockup/mockup');
-var mat4 = require('osg/glMatrix').mat4;
-var Node = require('osg/Node');
-var Timer = require('osg/Timer');
-var reportStats = require('benchmarks/reportStats');
-var mockupBench = require('benchmarks/mockupBench');
+import mockup from 'tests/mockup/mockup';
+import { mat4 } from 'osg/glMatrix';
+import Node from 'osg/Node';
+import Timer from 'osg/Timer';
+import reportStats from 'benchmarks/reportStats';
+import mockupBench from 'benchmarks/mockupBench';
 
-module.exports = function() {
+export default function() {
     test('CullVisitor Heavy Static Scene', function() {
         var canvas = mockup.createCanvas(true);
         var viewer = new mockup.Viewer(canvas);
@@ -245,4 +244,4 @@ module.exports = function() {
 
         reportStats(result, 'perf Frame');
     });
-};
+}

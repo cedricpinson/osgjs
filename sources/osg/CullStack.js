@@ -1,18 +1,17 @@
-'use strict';
-var utils = require('osg/utils');
-var BoundingSphere = require('osg/BoundingSphere');
-var Camera = require('osg/Camera');
-var ComputeMatrixFromNodePath = require('osg/computeMatrixFromNodePath');
-var CullSettings = require('osg/CullSettings');
-var CullingSet = require('osg/CullingSet');
-var mat4 = require('osg/glMatrix').mat4;
-var Plane = require('osg/Plane');
-var Transform = require('osg/Transform');
-var TransformEnums = require('osg/transformEnums');
-var vec3 = require('osg/glMatrix').vec3;
-var PooledArray = require('osg/PooledArray');
-var PooledResource = require('osg/PooledResource');
-var PooledMap = require('osg/PooledMap');
+import utils from 'osg/utils';
+import BoundingSphere from 'osg/BoundingSphere';
+import Camera from 'osg/Camera';
+import ComputeMatrixFromNodePath from 'osg/computeMatrixFromNodePath';
+import CullSettings from 'osg/CullSettings';
+import CullingSet from 'osg/CullingSet';
+import { mat4 } from 'osg/glMatrix';
+import Plane from 'osg/Plane';
+import Transform from 'osg/Transform';
+import TransformEnums from 'osg/transformEnums';
+import { vec3 } from 'osg/glMatrix';
+import PooledArray from 'osg/PooledArray';
+import PooledResource from 'osg/PooledResource';
+import PooledMap from 'osg/PooledMap';
 
 var createCullingSet = function() {
     return new CullingSet();
@@ -384,4 +383,4 @@ utils.createPrototypeObject(
     'CullStack'
 );
 
-module.exports = CullStack;
+export default CullStack;

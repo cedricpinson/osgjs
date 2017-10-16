@@ -1,5 +1,4 @@
-'use strict';
-var vec2 = require('osg/glMatrix').vec2;
+import { vec2 } from 'osg/glMatrix';
 
 var StandardMouseKeyboard = function(viewer) {
     this._enable = true;
@@ -221,4 +220,4 @@ StandardMouseKeyboard.prototype = {
         this.getManipulatorController().setEventProxy(this);
     }
 };
-module.exports = StandardMouseKeyboard;
+export default StandardMouseKeyboard;

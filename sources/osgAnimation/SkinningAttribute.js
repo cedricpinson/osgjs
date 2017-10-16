@@ -1,8 +1,6 @@
-'use strict';
-
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
-var Uniform = require('osg/Uniform');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
+import Uniform from 'osg/Uniform';
 
 /**
  * SkinningAttribute encapsulate Animation State
@@ -102,4 +100,4 @@ utils.createPrototypeStateAttribute(
     'SkinningAttribute'
 );
 
-module.exports = SkinningAttribute;
+export default SkinningAttribute;

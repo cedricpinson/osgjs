@@ -1,9 +1,8 @@
-'use strict';
-var assert = require('chai').assert;
-var UpdateVisitor = require('osg/UpdateVisitor');
-var Node = require('osg/Node');
+import { assert } from 'chai';
+import UpdateVisitor from 'osg/UpdateVisitor';
+import Node from 'osg/Node';
 
-module.exports = function() {
+export default function() {
     test('UpdateVisitor', function() {
         var uv = new UpdateVisitor();
 
@@ -70,4 +69,4 @@ module.exports = function() {
         assert.isOk(callb === 1, 'Called b update callback');
         assert.isOk(callc === 0, 'Did not Call c update callback as expected');
     });
-};
+}

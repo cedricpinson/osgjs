@@ -1,5 +1,3 @@
-'use strict';
-
 var OrbitManipulatorWebVRController = function(manipulator) {
     this._manipulator = manipulator;
     this.init();
@@ -12,4 +10,4 @@ OrbitManipulatorWebVRController.prototype = {
     }
 };
 
-module.exports = OrbitManipulatorWebVRController;
+export default OrbitManipulatorWebVRController;

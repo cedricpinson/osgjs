@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * DrawArrayLengths manage rendering primitives
  * @class DrawArrayLengths
@@ -48,4 +46,4 @@ DrawArrayLengths.prototype = {
     }
 };
 
-module.exports = DrawArrayLengths;
+export default DrawArrayLengths;

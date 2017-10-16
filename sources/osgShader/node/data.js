@@ -1,7 +1,8 @@
-'use strict';
-var utils = require('osg/utils');
-var sprintf = require('osgShader/utils').sprintf;
-var Node = require('osgShader/node/Node');
+import utils from 'osg/utils';
+import shaderUtils from 'osgShader/utils';
+import Node from 'osgShader/node/Node';
+
+var sprintf = shaderUtils.sprintf;
 
 // Base Class for all variables Nodes
 // TODO: add precision
@@ -244,7 +245,7 @@ utils.createPrototypeObject(
     'Define'
 );
 
-module.exports = {
+export default {
     Output: Output,
     glPointSize: glPointSize,
     glPosition: glPosition,

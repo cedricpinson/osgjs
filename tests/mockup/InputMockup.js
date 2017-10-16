@@ -1,10 +1,8 @@
-'use strict';
-
-var utils = require('osg/utils');
-var Input = require('osgDB/Input');
-var P = require('bluebird');
-var fs = require('fs');
-var notify = require('osg/notify');
+import utils from 'osg/utils';
+import Input from 'osgDB/Input';
+import P from 'bluebird';
+import fs from 'fs';
+import notify from 'osg/notify';
 
 var InputMockup = function(json, identifier) {
     Input.call(this, json, identifier);
@@ -65,4 +63,4 @@ utils.createPrototypeObject(
     })
 );
 
-module.exports = InputMockup;
+export default InputMockup;

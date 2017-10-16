@@ -1,16 +1,15 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var Light = require('osg/Light');
-var Shape = require('osg/shape');
-var Node = require('osg/Node');
-var RenderStage = require('osg/RenderStage');
-var StateGraph = require('osg/StateGraph');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var vec4 = require('osg/glMatrix').vec4;
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import Light from 'osg/Light';
+import Shape from 'osg/shape';
+import Node from 'osg/Node';
+import RenderStage from 'osg/RenderStage';
+import StateGraph from 'osg/StateGraph';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     test('Light', function() {
         (function() {
             var l0 = new Light();
@@ -127,4 +126,4 @@ module.exports = function() {
 
         assert.isOk(true, 'check no exception');
     });
-};
+}

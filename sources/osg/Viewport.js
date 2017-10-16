@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
 
 var Viewport = function(x, y, w, h) {
     StateAttribute.call(this);
@@ -71,4 +70,4 @@ utils.createPrototypeStateAttribute(
     'Viewport'
 );
 
-module.exports = Viewport;
+export default Viewport;

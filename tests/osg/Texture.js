@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var Texture = require('osg/Texture');
-var State = require('osg/State');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
-var Input = require('osgDB/Input');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import Texture from 'osg/Texture';
+import State from 'osg/State';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
+import Input from 'osgDB/Input';
 
-module.exports = function() {
+export default function() {
     test('Texture', function(done) {
         this.timeout(20000);
 
@@ -89,4 +88,4 @@ module.exports = function() {
             image.onload();
         }
     });
-};
+}

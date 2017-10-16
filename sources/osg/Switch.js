@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var Node = require('osg/Node');
-var NodeVisitor = require('osg/NodeVisitor');
+import utils from 'osg/utils';
+import Node from 'osg/Node';
+import NodeVisitor from 'osg/NodeVisitor';
 
 /**
  *  Switch that can switch on and off separate children
@@ -86,4 +85,4 @@ utils.createPrototypeNode(
     'Switch'
 );
 
-module.exports = Switch;
+export default Switch;

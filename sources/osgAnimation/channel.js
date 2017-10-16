@@ -1,9 +1,8 @@
-'use strict';
-var vec3 = require('osg/glMatrix').vec3;
-var quat = require('osg/glMatrix').quat;
+import { vec3 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
 
-var Target = require('osgAnimation/target');
-var channelType = require('osgAnimation/channelType');
+import Target from 'osgAnimation/target';
+import channelType from 'osgAnimation/channelType';
 
 var Channel = {};
 
@@ -257,4 +256,4 @@ Channel[channelType.Vec3CubicBezier] = createInstanceVec3CubicBezierChannel;
 
 Channel.ChannelType = channelType;
 
-module.exports = Channel;
+export default Channel;

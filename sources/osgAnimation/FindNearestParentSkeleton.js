@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var Skeleton = require('osgAnimation/Skeleton');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import Skeleton from 'osgAnimation/Skeleton';
 
 /**
  * FindNearestParentSkeleton
@@ -34,4 +33,4 @@ utils.createPrototypeObject(
     'FindNearestParentSkeleton'
 );
 
-module.exports = FindNearestParentSkeleton;
+export default FindNearestParentSkeleton;

@@ -1,7 +1,5 @@
-'use strict';
-
-var notify = require('osg/notify');
-var WebGLCaps = require('osg/WebGLCaps');
+import notify from 'osg/notify';
+import WebGLCaps from 'osg/WebGLCaps';
 
 /*
 use EXT_disjoint_timer_queryto time webgl calls GPU side average over multiple frames
@@ -366,4 +364,4 @@ TimerGPU.prototype = {
     }
 };
 
-module.exports = TimerGPU;
+export default TimerGPU;

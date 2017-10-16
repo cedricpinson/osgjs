@@ -1,16 +1,15 @@
-'use strict';
-var notify = require('osg/notify');
-var vec4 = require('osg/glMatrix').vec4;
-var Camera = require('osg/Camera');
-var utils = require('osg/utils');
-var ShadowTechnique = require('osgShadow/ShadowTechnique');
-var ShadowTextureAtlas = require('osgShadow/ShadowTextureAtlas');
-var ShadowMap = require('osgShadow/ShadowMap');
-var Texture = require('osg/Texture');
-var FrameBufferObject = require('osg/FrameBufferObject');
-var Uniform = require('osg/Uniform');
-var Viewport = require('osg/Viewport');
-var Scissor = require('osg/Scissor');
+import notify from 'osg/notify';
+import { vec4 } from 'osg/glMatrix';
+import Camera from 'osg/Camera';
+import utils from 'osg/utils';
+import ShadowTechnique from 'osgShadow/ShadowTechnique';
+import ShadowTextureAtlas from 'osgShadow/ShadowTextureAtlas';
+import ShadowMap from 'osgShadow/ShadowMap';
+import Texture from 'osg/Texture';
+import FrameBufferObject from 'osg/FrameBufferObject';
+import Uniform from 'osg/Uniform';
+import Viewport from 'osg/Viewport';
+import Scissor from 'osg/Scissor';
 
 /**
  *  ShadowMapAtlas provides an implementation of shadow textures.
@@ -485,4 +484,4 @@ utils.createPrototypeObject(
     'ShadowMapAtlas'
 );
 
-module.exports = ShadowMapAtlas;
+export default ShadowMapAtlas;

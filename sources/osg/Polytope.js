@@ -1,9 +1,8 @@
-'use strict';
-var Object = require('osg/Object');
-var Plane = require('osg/Plane');
-var utils = require('osg/utils');
-var vec4 = require('osg/glMatrix').vec4;
-var PooledArray = require('osg/PooledArray');
+import Object from 'osg/Object';
+import Plane from 'osg/Plane';
+import utils from 'osg/utils';
+import { vec4 } from 'osg/glMatrix';
+import PooledArray from 'osg/PooledArray';
 
 /*jshint bitwise: false */
 /**
@@ -361,4 +360,4 @@ utils.createPrototypeObject(
 
 /*jshint bitwise: true */
 
-module.exports = Polytope;
+export default Polytope;

@@ -1,14 +1,13 @@
-'use strict';
-var utils = require('osg/utils');
-var Object = require('osg/Object');
-var BoundingBox = require('osg/BoundingBox');
-var BoundingSphere = require('osg/BoundingSphere');
-var StateSet = require('osg/StateSet');
-var NodeVisitor = require('osg/NodeVisitor');
-var mat4 = require('osg/glMatrix').mat4;
-var PooledResource = require('osg/PooledResource');
-var ComputeMatrixFromNodePath = require('osg/computeMatrixFromNodePath');
-var TransformEnums = require('osg/transformEnums');
+import utils from 'osg/utils';
+import Object from 'osg/Object';
+import BoundingBox from 'osg/BoundingBox';
+import BoundingSphere from 'osg/BoundingSphere';
+import StateSet from 'osg/StateSet';
+import NodeVisitor from 'osg/NodeVisitor';
+import { mat4 } from 'osg/glMatrix';
+import PooledResource from 'osg/PooledResource';
+import ComputeMatrixFromNodePath from 'osg/computeMatrixFromNodePath';
+import TransformEnums from 'osg/transformEnums';
 
 /**
  *  Node that can contains child node
@@ -348,7 +347,7 @@ utils.createPrototypeNode(
 
         computeBoundingBox: function(bbox) {
             // circular dependency... not sure if the global visitor instance should be instancied here
-            var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor');
+            var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor').default;
             var cbv = (ComputeBoundsVisitor.instance =
                 ComputeBoundsVisitor.instance || new ComputeBoundsVisitor());
             cbv.setNodeMaskOverride(~0x0); // traverse everything to be consistent with computeBoundingSphere
@@ -521,4 +520,4 @@ utils.createPrototypeNode(
     'Node'
 );
 
-module.exports = Node;
+export default Node;

@@ -1,4 +1,4 @@
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 var memory = undefined;
 
@@ -51,4 +51,4 @@ var config = {
     init: init
 };
 
-module.exports = config;
+export default config;

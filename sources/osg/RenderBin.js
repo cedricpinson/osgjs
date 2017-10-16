@@ -1,11 +1,10 @@
-'use strict';
-var utils = require('osg/utils');
-var notify = require('osg/notify');
-var Object = require('osg/Object');
-var osgMath = require('osg/math');
-var PooledResource = require('osg/PooledResource');
-var PooledArray = require('osg/PooledArray');
-var PooledMap = require('osg/PooledMap');
+import utils from 'osg/utils';
+import notify from 'osg/notify';
+import Object from 'osg/Object';
+import osgMath from 'osg/math';
+import PooledResource from 'osg/PooledResource';
+import PooledArray from 'osg/PooledArray';
+import PooledMap from 'osg/PooledMap';
 
 var createPositionAttribute = function() {
     return [null, null];
@@ -329,4 +328,4 @@ RenderBin.reset = function() {
     pooledRenderBin.reset();
 };
 
-module.exports = RenderBin;
+export default RenderBin;

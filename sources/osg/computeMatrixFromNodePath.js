@@ -1,6 +1,5 @@
-'use strict';
-var mat4 = require('osg/glMatrix').mat4;
-var TransformEnums = require('osg/transformEnums');
+import { mat4 } from 'osg/glMatrix';
+import TransformEnums from 'osg/transformEnums';
 
 var computeLocalToWorld = function(nodePath, ignoreCameras, userMatrix, nodePathIndex) {
     var ignoreCamera = ignoreCameras;
@@ -41,6 +40,6 @@ var computeLocalToWorld = function(nodePath, ignoreCameras, userMatrix, nodePath
     return matrix;
 };
 
-module.exports = {
+export default {
     computeLocalToWorld: computeLocalToWorld
 };

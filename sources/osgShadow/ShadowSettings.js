@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var Texture = require('osg/Texture');
+import utils from 'osg/utils';
+import Texture from 'osg/Texture';
 
 var kernelSizeList = [
     '1Tap(4texFetch)',
@@ -109,4 +108,4 @@ ShadowSettings.prototype = {
     }
 };
 
-module.exports = ShadowSettings;
+export default ShadowSettings;

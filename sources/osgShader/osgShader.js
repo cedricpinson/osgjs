@@ -1,11 +1,10 @@
-'use strict';
-var Compiler = require('osgShader/Compiler');
-var ShaderGenerator = require('osgShader/ShaderGenerator');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
-var ShaderProcessor = require('osgShader/ShaderProcessor');
-var nodeFactory = require('osgShader/nodeFactory');
-var Node = require('osgShader/node/Node');
-var utils = require('osgShader/utils');
+import Compiler from 'osgShader/Compiler';
+import ShaderGenerator from 'osgShader/ShaderGenerator';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
+import ShaderProcessor from 'osgShader/ShaderProcessor';
+import nodeFactory from 'osgShader/nodeFactory';
+import Node from 'osgShader/node/Node';
+import utils from 'osgShader/utils';
 
 var lib = {};
 
@@ -28,4 +27,4 @@ lib.debugShaderNode = false;
 lib.debugShaderNode = true;
 /*develblock:end*/
 
-module.exports = lib;
+export default lib;

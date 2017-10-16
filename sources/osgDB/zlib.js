@@ -1,4 +1,4 @@
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 var isBufferGZIP = function(arrayBuffer) {
     var typedArray = new Uint8Array(arrayBuffer);
@@ -20,7 +20,7 @@ var gunzip = function(arrayBuffer) {
     return result.buffer;
 };
 
-module.exports = {
+export default {
     isGunzipBuffer: isBufferGZIP,
     gunzip: gunzip
 };

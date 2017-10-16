@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var Object = require('osg/Object');
-var DatabasePager = require('osgDB/DatabasePager');
+import utils from 'osg/utils';
+import Object from 'osg/Object';
+import DatabasePager from 'osgDB/DatabasePager';
 
 var Scene = function() {
     Object.call(this);
@@ -39,4 +38,4 @@ utils.createPrototypeObject(
     'Scene'
 );
 
-module.exports = Scene;
+export default Scene;

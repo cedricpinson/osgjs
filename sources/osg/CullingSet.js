@@ -1,5 +1,4 @@
-'use strict';
-var Polytope = require('osg/Polytope');
+import Polytope from 'osg/Polytope';
 
 var CullingSet = function() {
     this._mask = CullingSet.DEFAULT_CULLING;
@@ -82,4 +81,4 @@ CullingSet.DEFAULT_CULLING = CullingSet.VIEW_FRUSTUM_SIDES_CULLING;
 
 CullingSet.ENABLE_ALL_CULLING = CullingSet.VIEW_FRUSTUM_CULLING;
 
-module.exports = CullingSet;
+export default CullingSet;

@@ -1,11 +1,10 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var FrameBufferObject = require('osg/FrameBufferObject');
-var Texture = require('osg/Texture');
-var WebglCaps = require('osg/WebGLCaps');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import FrameBufferObject from 'osg/FrameBufferObject';
+import Texture from 'osg/Texture';
+import WebglCaps from 'osg/WebGLCaps';
 
-module.exports = function() {
+export default function() {
     test('FrameBufferObject', function() {
         var maxRenderBufferSize = WebglCaps.instance().getWebGLParameter('MAX_RENDERBUFFER_SIZE');
         if (maxRenderBufferSize === undefined) {
@@ -135,4 +134,4 @@ module.exports = function() {
             assert.isOk(fbo.getFrameBufferObject() !== undefined, 'Check fbo');
         })();
     });
-};
+}

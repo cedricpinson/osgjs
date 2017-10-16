@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var BufferArray = require('osg/BufferArray');
-var RigGeometry = require('osgAnimation/RigGeometry');
-var AnimationUpdateCallback = require('osgAnimation/AnimationUpdateCallback');
-var Target = require('osgAnimation/target');
-var MorphGeometry = require('osgAnimation/MorphGeometry');
+import utils from 'osg/utils';
+import BufferArray from 'osg/BufferArray';
+import RigGeometry from 'osgAnimation/RigGeometry';
+import AnimationUpdateCallback from 'osgAnimation/AnimationUpdateCallback';
+import Target from 'osgAnimation/target';
+import MorphGeometry from 'osgAnimation/MorphGeometry';
 
 var UpdateMorph = function() {
     AnimationUpdateCallback.call(this);
@@ -278,4 +277,4 @@ utils.createPrototypeObject(
     'UpdateMorph'
 );
 
-module.exports = UpdateMorph;
+export default UpdateMorph;

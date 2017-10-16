@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var MatrixTransform = require('osg/MatrixTransform');
-var UpdateSkeleton = require('osgAnimation/UpdateSkeleton');
-var NodeVisitor = require('osg/NodeVisitor');
-var UpdateMatrixTransform = require('osgAnimation/UpdateMatrixTransform');
-var Bone = require('osgAnimation/Bone');
+import utils from 'osg/utils';
+import MatrixTransform from 'osg/MatrixTransform';
+import UpdateSkeleton from 'osgAnimation/UpdateSkeleton';
+import NodeVisitor from 'osg/NodeVisitor';
+import UpdateMatrixTransform from 'osgAnimation/UpdateMatrixTransform';
+import Bone from 'osgAnimation/Bone';
 
 var ResetRestPoseVisitor = function() {
     NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
@@ -53,4 +52,4 @@ utils.createPrototypeNode(
     'Skeleton'
 );
 
-module.exports = Skeleton;
+export default Skeleton;

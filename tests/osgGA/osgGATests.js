@@ -1,8 +1,7 @@
-'use strict';
-var FirstPersonManipulator = require('tests/osgGA/FirstPersonManipulator');
-var OrbitManipulator = require('tests/osgGA/OrbitManipulator');
+import FirstPersonManipulator from 'tests/osgGA/FirstPersonManipulator';
+import OrbitManipulator from 'tests/osgGA/OrbitManipulator';
 
-module.exports = function() {
+export default function() {
     FirstPersonManipulator();
     OrbitManipulator();
-};
+}

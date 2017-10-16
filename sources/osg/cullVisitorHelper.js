@@ -1,5 +1,3 @@
-'use strict';
-
 var applyFunctionArray = [];
 
 var registerApplyFunction = function(type, apply) {
@@ -10,7 +8,7 @@ var getApplyFunction = function(type) {
     return applyFunctionArray[type];
 };
 
-module.exports = {
+export default {
     applyFunctionArray: applyFunctionArray,
     registerApplyFunction: registerApplyFunction,
     getApplyFunction: getApplyFunction

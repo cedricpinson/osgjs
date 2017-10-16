@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var notify = require('osg/notify');
-var Node = require('osgShader/node/Node');
+import utils from 'osg/utils';
+import notify from 'osg/notify';
+import Node from 'osgShader/node/Node';
 
 /*
 
@@ -132,7 +131,7 @@ var checkVariableType = function(vars, optionalPrefix) {
 };
 
 var callFunction = function(funcName, output, inputs) {
-    var osgShader = require('osgShader/osgShader');
+    var osgShader = require('osgShader/osgShader').default;
 
     var debug = [];
     var callString = '';
@@ -446,7 +445,7 @@ var extractFunctions = function(shaderLib, fileName) {
     return objOut;
 };
 
-module.exports = {
+export default {
     callFunction: callFunction,
     checkVariableType: checkVariableType,
     sprintf: sprintf,

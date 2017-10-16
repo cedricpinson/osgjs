@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  *  OrbitManipulator
  *  @class
@@ -80,4 +78,4 @@ SwitchManipulator.prototype = {
     }
 };
 
-module.exports = SwitchManipulator;
+export default SwitchManipulator;

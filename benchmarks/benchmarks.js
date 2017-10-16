@@ -1,11 +1,12 @@
+import { osg } from 'OSG';
+import osgBenchmarks from 'benchmarks/osg/osgBenchmarks';
+
 // add missing class for phantom js execution context
 if (window.HTMLVideoElement === undefined) {
     // dummy class
     window.HTMLVideoElement = function() {};
 }
 
-var OSG = require('OSG');
-var osgBenchmarks = require('benchmarks/osg/osgBenchmarks');
-OSG.osg.setNotifyLevel(OSG.osg.ERROR);
+osg.setNotifyLevel(osg.ERROR);
 
 osgBenchmarks();

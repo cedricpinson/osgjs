@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var FirstPersonManipulator = require('osgGA/FirstPersonManipulator');
-var Camera = require('osg/Camera');
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import FirstPersonManipulator from 'osgGA/FirstPersonManipulator';
+import Camera from 'osg/Camera';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     test('FirstPersonManipulator', function() {
         var manipulator = new FirstPersonManipulator();
         var matrix = manipulator.getInverseMatrix();
@@ -125,4 +124,4 @@ module.exports = function() {
             'check matrix result'
         );
     });
-};
+}

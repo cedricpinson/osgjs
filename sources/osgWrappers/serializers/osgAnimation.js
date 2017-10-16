@@ -1,15 +1,14 @@
-'use strict';
-var P = require('bluebird');
-var utils = require('osg/utils');
-var notify = require('osg/notify');
-var osgWrapper = require('osgWrappers/serializers/osg');
-var Channel = require('osgAnimation/channel');
-var Animation = require('osgAnimation/animation');
-var ReaderParser = require('osgDB/readerParser');
-var StackedMatrix = require('osgAnimation/StackedMatrix');
-var StackedScale = require('osgAnimation/StackedScale');
-var MorphGeometry = require('osgAnimation/MorphGeometry');
-var Geometry = require('osg/Geometry');
+import P from 'bluebird';
+import utils from 'osg/utils';
+import notify from 'osg/notify';
+import osgWrapper from 'osgWrappers/serializers/osg';
+import Channel from 'osgAnimation/channel';
+import Animation from 'osgAnimation/animation';
+import ReaderParser from 'osgDB/readerParser';
+import StackedMatrix from 'osgAnimation/StackedMatrix';
+import StackedScale from 'osgAnimation/StackedScale';
+import MorphGeometry from 'osgAnimation/MorphGeometry';
+import Geometry from 'osg/Geometry';
 
 var rejectObject = utils.rejectObject;
 
@@ -530,4 +529,4 @@ osgAnimationWrapper.UpdateMorph = function(input, updateMorph) {
 osgAnimationWrapper.StackedMatrixElement = osgAnimationWrapper.StackedMatrix;
 osgAnimationWrapper.StackedScaleElement = osgAnimationWrapper.StackedScale;
 
-module.exports = osgAnimationWrapper;
+export default osgAnimationWrapper;

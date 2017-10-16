@@ -1,17 +1,16 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var BoundingSphere = require('osg/BoundingSphere');
-var BoundingBox = require('osg/BoundingBox');
-var Node = require('osg/Node');
-var Camera = require('osg/Camera');
-var TransformEnums = require('osg/transformEnums');
-var Shape = require('osg/shape');
-var MatrixTransform = require('osg/MatrixTransform');
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import BoundingSphere from 'osg/BoundingSphere';
+import BoundingBox from 'osg/BoundingBox';
+import Node from 'osg/Node';
+import Camera from 'osg/Camera';
+import TransformEnums from 'osg/transformEnums';
+import Shape from 'osg/shape';
+import MatrixTransform from 'osg/MatrixTransform';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     test('BoundingSphere', function() {
         var simpleBoundingSphere = new BoundingSphere();
         assert.isOk(simpleBoundingSphere.valid() !== 1, 'BoundingSphere is invalid');
@@ -114,4 +113,4 @@ module.exports = function() {
             'Expands with box - check center'
         );
     });
-};
+}

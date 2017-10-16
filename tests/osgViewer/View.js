@@ -1,9 +1,8 @@
-'use strict';
-var assert = require('chai').assert;
-var View = require('osgViewer/View');
-var mockup = require('tests/mockup/mockup');
+import { assert } from 'chai';
+import View from 'osgViewer/View';
+import mockup from 'tests/mockup/mockup';
 
-module.exports = function() {
+export default function() {
     test('View', function() {
         var gc = mockup.createFakeRenderer();
         var view = new View();
@@ -15,4 +14,4 @@ module.exports = function() {
         assert.isOk(view.getScene() !== undefined, 'Check scene');
         assert.isOk(view.getSceneData() === undefined, 'Check scene data');
     });
-};
+}

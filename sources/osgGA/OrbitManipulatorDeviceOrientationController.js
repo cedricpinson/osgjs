@@ -1,8 +1,7 @@
-'use strict';
-var quat = require('osg/glMatrix').quat;
-var vec3 = require('osg/glMatrix').vec3;
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
 
-var FirstPersonDeviceOrientation = require('osgGA/FirstPersonManipulatorDeviceOrientationController');
+import FirstPersonDeviceOrientation from 'osgGA/FirstPersonManipulatorDeviceOrientationController';
 
 var OrbitManipulatorDeviceOrientationController = function(manipulator) {
     this._manipulator = manipulator;
@@ -27,4 +26,4 @@ OrbitManipulatorDeviceOrientationController.prototype = {
     }
 };
 
-module.exports = OrbitManipulatorDeviceOrientationController;
+export default OrbitManipulatorDeviceOrientationController;

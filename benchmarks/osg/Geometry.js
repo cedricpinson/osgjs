@@ -1,10 +1,8 @@
-'use strict';
+import Shape from 'osg/shape';
+import Timer from 'osg/Timer';
+import reportStats from 'benchmarks/reportStats';
 
-var Shape = require('osg/shape');
-var Timer = require('osg/Timer');
-var reportStats = require('benchmarks/reportStats');
-
-module.exports = function() {
+export default function() {
     test('ComputeBound', function() {
         // 250 * 250 * 6 = 375k vertices (draw arrays...)
         var geom = Shape.createTexturedSphere(1.0, 250, 250);
@@ -26,4 +24,4 @@ module.exports = function() {
 
         reportStats(timed, 'ComputeBound');
     });
-};
+}

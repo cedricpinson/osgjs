@@ -1,9 +1,8 @@
-'use strict';
-var Renderer = require('osgViewer/Renderer');
-var View = require('osgViewer/View');
-var Viewer = require('osgViewer/Viewer');
-var EventProxy = require('osgViewer/eventProxy/eventProxy');
-var Scene = require('osgViewer/Scene');
+import Renderer from 'osgViewer/Renderer';
+import View from 'osgViewer/View';
+import Viewer from 'osgViewer/Viewer';
+import EventProxy from 'osgViewer/eventProxy/eventProxy';
+import Scene from 'osgViewer/Scene';
 
 var osgViewer = {};
 
@@ -13,4 +12,4 @@ osgViewer.Viewer = Viewer;
 osgViewer.EventProxy = EventProxy;
 osgViewer.Scene = Scene;
 
-module.exports = osgViewer;
+export default osgViewer;

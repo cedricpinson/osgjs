@@ -1,10 +1,9 @@
-'use strict';
-var notify = require('osg/notify');
-var data = require('osgShader/node/data');
-var operations = require('osgShader/node/operations');
-var shaderUtils = require('osgShader/utils');
-var shaderLib = require('osgShader/shaderLib');
-var shadowLib = require('osgShadow/shaderLib');
+import notify from 'osg/notify';
+import data from 'osgShader/node/data';
+import operations from 'osgShader/node/operations';
+import shaderUtils from 'osgShader/utils';
+import shaderLib from 'osgShader/shaderLib';
+import shadowLib from 'osgShadow/shaderLib';
 
 var Factory = function() {
     this._nodes = new window.Map();
@@ -65,4 +64,4 @@ Factory.prototype = {
 
 var instance = new Factory();
 
-module.exports = instance;
+export default instance;

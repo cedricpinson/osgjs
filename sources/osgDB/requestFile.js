@@ -1,4 +1,4 @@
-var P = require('bluebird');
+import P from 'bluebird';
 
 var requestFileFromURL = function(url, options) {
     return new P(function(resolve, reject) {
@@ -55,4 +55,4 @@ var requestFile = function(urlOrFile, options) {
     }
 };
 
-module.exports = requestFile;
+export default requestFile;

@@ -1,5 +1,3 @@
-'use strict';
-
 var FirstPersonManipulatorStandardMouseKeyboardController = function(manipulator) {
     this._manipulator = manipulator;
     this.init();
@@ -118,4 +116,4 @@ FirstPersonManipulatorStandardMouseKeyboardController.prototype = {
     }
 };
 
-module.exports = FirstPersonManipulatorStandardMouseKeyboardController;
+export default FirstPersonManipulatorStandardMouseKeyboardController;

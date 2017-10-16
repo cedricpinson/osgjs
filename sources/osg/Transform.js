@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var Node = require('osg/Node');
-var mat4 = require('osg/glMatrix').mat4;
-var TransformEnums = require('osg/transformEnums');
+import utils from 'osg/utils';
+import Node from 'osg/Node';
+import { mat4 } from 'osg/glMatrix';
+import TransformEnums from 'osg/transformEnums';
 
 /**
  * Transform - base class for Transform type node ( Camera, MatrixTransform )
@@ -45,4 +44,4 @@ utils.createPrototypeNode(
     'Transform'
 );
 
-module.exports = Transform;
+export default Transform;

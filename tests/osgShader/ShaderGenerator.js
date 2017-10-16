@@ -1,15 +1,14 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var State = require('osg/State');
-var StateSet = require('osg/StateSet');
-var Material = require('osg/Material');
-var Shader = require('osg/Shader');
-var Program = require('osg/Program');
-var Texture = require('osg/Texture');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import State from 'osg/State';
+import StateSet from 'osg/StateSet';
+import Material from 'osg/Material';
+import Shader from 'osg/Shader';
+import Program from 'osg/Program';
+import Texture from 'osg/Texture';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
 
-module.exports = function() {
+export default function() {
     test('ShaderGenerator', function() {
         (function() {
             var state = new State(new ShaderGeneratorProxy());
@@ -90,4 +89,4 @@ module.exports = function() {
             assert.isOk(true, 'check not exception on stateset generator use');
         })();
     });
-};
+}

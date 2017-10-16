@@ -1,14 +1,13 @@
-'use strict';
-var utils = require('osg/utils');
-var CullSettings = require('osg/CullSettings');
-var CullVisitor = require('osg/CullVisitor');
-var Object = require('osg/Object');
-var RenderStage = require('osg/RenderStage');
-var State = require('osg/State');
-var StateGraph = require('osg/StateGraph');
-var vec4 = require('osg/glMatrix').vec4;
-var osgShader = require('osgShader/osgShader');
-var DisplayGraph = require('osgUtil/DisplayGraph');
+import utils from 'osg/utils';
+import CullSettings from 'osg/CullSettings';
+import CullVisitor from 'osg/CullVisitor';
+import Object from 'osg/Object';
+import RenderStage from 'osg/RenderStage';
+import State from 'osg/State';
+import StateGraph from 'osg/StateGraph';
+import { vec4 } from 'osg/glMatrix';
+import osgShader from 'osgShader/osgShader';
+import DisplayGraph from 'osgUtil/DisplayGraph';
 
 var Renderer = function(camera) {
     Object.call(this);
@@ -40,7 +39,7 @@ utils.createPrototypeObject(
             this.getCamera().setClearColor(vec4.create());
             this.setRenderStage(new RenderStage());
 
-            var osg = require('osg/osg');
+            var osg = require('osg/osg').default;
             var stateSet = this.getCamera().getOrCreateStateSet();
             stateSet.setAttributeAndModes(new osg.Material());
             stateSet.setAttributeAndModes(new osg.Depth());
@@ -141,7 +140,7 @@ utils.createPrototypeObject(
             camera.getBound();
 
             var light = view.getLight();
-            var View = require('osgViewer/View');
+            var View = require('osgViewer/View').default;
 
             if (light) {
                 switch (view.getLightingMode()) {
@@ -218,4 +217,4 @@ utils.createPrototypeObject(
     'Renderer'
 );
 
-module.exports = Renderer;
+export default Renderer;

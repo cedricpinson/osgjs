@@ -1,7 +1,5 @@
-'use strict';
-
 // must be sync wiht Interpolator Type
-module.exports = {
+export default {
     Vec3: 0,
     Quat: 1,
     Float: 2,

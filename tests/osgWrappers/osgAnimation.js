@@ -1,16 +1,18 @@
-'use strict';
-var assert = require('chai').assert;
+import { assert } from 'chai';
 
-var utils = require('osg/utils');
-var Input = require('osgDB/Input');
-var mockup = require('tests/mockup/mockup');
+import utils from 'osg/utils';
+import mockup from 'tests/mockup/mockup';
+import BasicAnimationManager from 'osgAnimation/BasicAnimationManager';
+import NodeVisitor from 'osg/NodeVisitor';
+
+var Input;
 if (mockup.isNodeContext()) {
-    Input = require('tests/mockup/InputMockup');
+    Input = require('tests/mockup/InputMockup').default;
+} else {
+    Input = require('osgDB/Input').default;
 }
-var BasicAnimationManager = require('osgAnimation/BasicAnimationManager');
-var NodeVisitor = require('osg/NodeVisitor');
 
-module.exports = function() {
+export default function() {
     var FindAnimationManagerVisitor = function() {
         NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
         this._cb = undefined;
@@ -127,4 +129,4 @@ module.exports = function() {
                 done();
             });
     });
-};
+}

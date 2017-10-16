@@ -1,11 +1,10 @@
-'use strict';
-var utils = require('osg/utils');
-var Camera = require('osg/Camera');
-var FrameBufferObject = require('osg/FrameBufferObject');
-var notify = require('osg/notify');
-var RenderBin = require('osg/RenderBin');
-var vec4 = require('osg/glMatrix').vec4;
-var PooledResource = require('osg/PooledResource');
+import utils from 'osg/utils';
+import Camera from 'osg/Camera';
+import FrameBufferObject from 'osg/FrameBufferObject';
+import notify from 'osg/notify';
+import RenderBin from 'osg/RenderBin';
+import { vec4 } from 'osg/glMatrix';
+import PooledResource from 'osg/PooledResource';
 
 /**
  * From OpenSceneGraph http://www.openscenegraph.org
@@ -314,4 +313,4 @@ utils.createPrototypeObject(
     'RenderStage'
 );
 
-module.exports = RenderStage;
+export default RenderStage;

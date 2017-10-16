@@ -1,26 +1,25 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var BoundingBox = require('osg/BoundingBox');
-var Camera = require('osg/Camera');
-var CullSettings = require('osg/CullSettings');
-var CullVisitor = require('osg/CullVisitor');
-var mat4 = require('osg/glMatrix').mat4;
-var MatrixTransform = require('osg/MatrixTransform');
-var Node = require('osg/Node');
-var RenderBin = require('osg/RenderBin');
-var RenderStage = require('osg/RenderStage');
-var Shape = require('osg/shape');
-var StateGraph = require('osg/StateGraph');
-var State = require('osg/State');
-var StateSet = require('osg/StateSet');
-var TransformEnums = require('osg/transformEnums');
-var vec3 = require('osg/glMatrix').vec3;
-var Viewport = require('osg/Viewport');
-var View = require('osgViewer/View');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import BoundingBox from 'osg/BoundingBox';
+import Camera from 'osg/Camera';
+import CullSettings from 'osg/CullSettings';
+import CullVisitor from 'osg/CullVisitor';
+import { mat4 } from 'osg/glMatrix';
+import MatrixTransform from 'osg/MatrixTransform';
+import Node from 'osg/Node';
+import RenderBin from 'osg/RenderBin';
+import RenderStage from 'osg/RenderStage';
+import Shape from 'osg/shape';
+import StateGraph from 'osg/StateGraph';
+import State from 'osg/State';
+import StateSet from 'osg/StateSet';
+import TransformEnums from 'osg/transformEnums';
+import { vec3 } from 'osg/glMatrix';
+import Viewport from 'osg/Viewport';
+import View from 'osgViewer/View';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
 
-module.exports = function() {
+export default function() {
     test('CullVisitor', function() {
         console.log('toto');
         var canvas = mockup.createCanvas();
@@ -801,4 +800,4 @@ module.exports = function() {
         //     checkLeaf(cull._pooledLeaf._pool[i]);
         // }
     });
-};
+}

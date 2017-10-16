@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var MatrixTransform = require('osg/MatrixTransform');
-var mat4 = require('osg/glMatrix').mat4;
-var ReaderParser = require('osgDB/readerParser');
-var TransformEnums = require('osg/transformEnums');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import MatrixTransform from 'osg/MatrixTransform';
+import { mat4 } from 'osg/glMatrix';
+import ReaderParser from 'osgDB/readerParser';
+import TransformEnums from 'osg/transformEnums';
 
-module.exports = function() {
+export default function() {
     test('MatrixTransform', function() {
         var n = new MatrixTransform();
         var scene = ReaderParser.parseSceneGraph(mockup.getBoxScene());
@@ -50,4 +49,4 @@ module.exports = function() {
         n.setReferenceFrame(TransformEnums.ABSOLUTE_RF);
         checkMatrices(n);
     });
-};
+}

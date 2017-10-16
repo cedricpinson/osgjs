@@ -70,4 +70,4 @@ DelayInterpolator.prototype = {
     }
 };
 
-module.exports = DelayInterpolator;
+export default DelayInterpolator;

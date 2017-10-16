@@ -1,10 +1,9 @@
-'use strict';
-var P = require('bluebird');
-var requestFile = require('osgDB/requestFile.js');
-var notify = require('osg/notify');
-var Registry = require('osgDB/Registry');
-var ReaderParser = require('osgDB/readerParser');
-var FileHelper = require('osgDB/FileHelper');
+import P from 'bluebird';
+import requestFile from 'osgDB/requestFile.js';
+import notify from 'osg/notify';
+import Registry from 'osgDB/Registry';
+import ReaderParser from 'osgDB/readerParser';
+import FileHelper from 'osgDB/FileHelper';
 var JSZip = window.JSZip;
 
 var ReaderWriterZIP = function() {
@@ -97,4 +96,4 @@ ReaderWriterZIP.prototype = {
 
 Registry.instance().addReaderWriter('zip', new ReaderWriterZIP());
 
-module.exports = ReaderWriterZIP;
+export default ReaderWriterZIP;

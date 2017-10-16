@@ -1,7 +1,6 @@
-'use strict';
-var P = require('bluebird');
-var Timer = require('osg/Timer');
-var notify = require('osg/notify');
+import P from 'bluebird';
+import Timer from 'osg/Timer';
+import notify from 'osg/notify';
 
 var utils = {};
 
@@ -209,7 +208,7 @@ utils.setNodeTypeID = function(classObject) {
 };
 
 utils.createPrototypeNode = function(Constructor, prototype, libraryName, className) {
-    var cullVisitorHelper = require('osg/cullVisitorHelper');
+    var cullVisitorHelper = require('osg/cullVisitorHelper').default;
     var parentNodeTypeID = prototype.nodeTypeID;
     utils.createPrototypeObject(Constructor, prototype, libraryName, className);
 
@@ -374,4 +373,4 @@ utils.rejectObject = function(msg, jsonObj) {
     return P.reject(msg); // reject with a message to avoid "undefined" rejection
 };
 
-module.exports = utils;
+export default utils;

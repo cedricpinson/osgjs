@@ -1,9 +1,8 @@
-'use strict';
-var assert = require('chai').assert;
-var Image = require('osg/Image');
-var mockup = require('tests/mockup/mockup');
+import { assert } from 'chai';
+import Image from 'osg/Image';
+import mockup from 'tests/mockup/mockup';
 
-module.exports = function() {
+export default function() {
     test('Image.isGreyScale grey image', function(done) {
         var test = function(img) {
             var n = new Image(img);
@@ -53,4 +52,4 @@ module.exports = function() {
         var n = new Image(fakeImage);
         assert.isOk(n.isReady(), 'check wrapped HTML Image ');
     });
-};
+}

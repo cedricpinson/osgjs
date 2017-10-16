@@ -1,13 +1,12 @@
-'use strict';
-var utils = require('osg/utils');
-var BufferArrayProxy = require('osg/BufferArrayProxy');
-var notify = require('osg/notify');
-var vec3 = require('osg/glMatrix').vec3;
-var Geometry = require('osg/Geometry');
-var StateSet = require('osg/StateSet');
-var MorphAttribute = require('osgAnimation/MorphAttribute');
-var StateAttribute = require('osg/StateAttribute');
-var BoundingBox = require('osg/BoundingBox');
+import utils from 'osg/utils';
+import BufferArrayProxy from 'osg/BufferArrayProxy';
+import notify from 'osg/notify';
+import { vec3 } from 'osg/glMatrix';
+import Geometry from 'osg/Geometry';
+import StateSet from 'osg/StateSet';
+import MorphAttribute from 'osgAnimation/MorphAttribute';
+import StateAttribute from 'osg/StateAttribute';
+import BoundingBox from 'osg/BoundingBox';
 
 /**
  * MorphGeometry manage up to MorphGeometry.MAX_MORPH_GPU morphTargets
@@ -215,4 +214,4 @@ utils.createPrototypeNode(
     'MorphGeometry'
 );
 
-module.exports = MorphGeometry;
+export default MorphGeometry;

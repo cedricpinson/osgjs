@@ -1,19 +1,18 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var vec3 = require('osg/glMatrix').vec3;
-var Shape = require('osg/shape');
-var DrawElements = require('osg/DrawElements');
-var DrawArrays = require('osg/DrawArrays');
-var primitiveSet = require('osg/primitiveSet');
-var BufferArray = require('osg/BufferArray');
-var Geometry = require('osg/Geometry');
-var KdTree = require('osg/KdTree');
-var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var SphereIntersector = require('osgUtil/SphereIntersector');
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import { vec3 } from 'osg/glMatrix';
+import Shape from 'osg/shape';
+import DrawElements from 'osg/DrawElements';
+import DrawArrays from 'osg/DrawArrays';
+import primitiveSet from 'osg/primitiveSet';
+import BufferArray from 'osg/BufferArray';
+import Geometry from 'osg/Geometry';
+import KdTree from 'osg/KdTree';
+import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import SphereIntersector from 'osgUtil/SphereIntersector';
 
-module.exports = function() {
+export default function() {
     test('KdTree', function() {
         //   0-3
         //   |\|
@@ -296,4 +295,4 @@ module.exports = function() {
             ' Hits should be ' + nbTriangles + ' and result is ' + hits.length
         );
     });
-};
+}

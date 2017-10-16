@@ -1,12 +1,11 @@
-'use strict';
-var BoundingBox = require('osg/BoundingBox');
-var Geometry = require('osg/Geometry');
-var mat4 = require('osg/glMatrix').mat4;
-var Transform = require('osg/Transform');
-var NodeVisitor = require('osg/NodeVisitor');
-var utils = require('osg/utils');
-var PooledArray = require('osg/PooledArray');
-var PooledResource = require('osg/PooledResource');
+import BoundingBox from 'osg/BoundingBox';
+import Geometry from 'osg/Geometry';
+import { mat4 } from 'osg/glMatrix';
+import Transform from 'osg/Transform';
+import NodeVisitor from 'osg/NodeVisitor';
+import utils from 'osg/utils';
+import PooledArray from 'osg/PooledArray';
+import PooledResource from 'osg/PooledResource';
 
 var ComputeBoundsVisitor = function(traversalMode) {
     NodeVisitor.call(this, traversalMode);
@@ -89,4 +88,4 @@ utils.createPrototypeObject(
     'ComputeBoundsVisitor'
 );
 
-module.exports = ComputeBoundsVisitor;
+export default ComputeBoundsVisitor;

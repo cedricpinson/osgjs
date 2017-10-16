@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var Node = require('osg/Node');
-var Lod = require('osg/Lod');
-var PagedLOD = require('osg/PagedLOD');
-var Shape = require('osg/shape');
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import Node from 'osg/Node';
+import Lod from 'osg/Lod';
+import PagedLOD from 'osg/PagedLOD';
+import Shape from 'osg/shape';
 
-module.exports = function() {
+export default function() {
     test('PagedLOD', function() {
         var plod = new PagedLOD();
         assert.isOk(plod.children.length === 0, 'number of children must be 0');
@@ -39,4 +38,4 @@ module.exports = function() {
         plod.dirtyBound();
         assert.equalVector(plod.getBound().radius(), 14.367360819, 0.0000001);
     });
-};
+}

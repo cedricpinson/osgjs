@@ -1,16 +1,15 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var ComputeMatrixFromNodePath = require('osg/computeMatrixFromNodePath');
-var NodeVisitor = require('osg/NodeVisitor');
-var utils = require('osg/utils');
-var MatrixTransform = require('osg/MatrixTransform');
-var mat4 = require('osg/glMatrix').mat4;
-var Camera = require('osg/Camera');
-var vec3 = require('osg/glMatrix').vec3;
-var TransformEnums = require('osg/transformEnums');
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import ComputeMatrixFromNodePath from 'osg/computeMatrixFromNodePath';
+import NodeVisitor from 'osg/NodeVisitor';
+import utils from 'osg/utils';
+import MatrixTransform from 'osg/MatrixTransform';
+import { mat4 } from 'osg/glMatrix';
+import Camera from 'osg/Camera';
+import { vec3 } from 'osg/glMatrix';
+import TransformEnums from 'osg/transformEnums';
 
-module.exports = function() {
+export default function() {
     test('ComputeMatrixFromNodePath', function() {
         (function() {
             // test visit parents
@@ -67,4 +66,4 @@ module.exports = function() {
             assert.equalVector(result, [0, -10, 10], 'Check we dont use the camera on top');
         })();
     });
-};
+}

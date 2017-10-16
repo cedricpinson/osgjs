@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var Node = require('osg/Node');
-var WebGLCaps = require('osg/WebGLCaps');
-var DrawElements = require('osg/DrawElements');
-var BufferArrayProxy = require('osg/BufferArrayProxy');
-var VertexArrayObject = require('osg/VertexArrayObject');
+import utils from 'osg/utils';
+import Node from 'osg/Node';
+import WebGLCaps from 'osg/WebGLCaps';
+import DrawElements from 'osg/DrawElements';
+import BufferArrayProxy from 'osg/BufferArrayProxy';
+import VertexArrayObject from 'osg/VertexArrayObject';
 /**
  * Geometry manage array and primitives to draw a geometry.
  * @class Geometry
@@ -427,4 +426,4 @@ Geometry.appendVertexAttributeToList = function(from, to, postfix) {
     }
 };
 
-module.exports = Geometry;
+export default Geometry;

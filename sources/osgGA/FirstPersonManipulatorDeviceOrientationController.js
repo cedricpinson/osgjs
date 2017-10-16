@@ -1,6 +1,5 @@
-'use strict';
-var quat = require('osg/glMatrix').quat;
-var vec3 = require('osg/glMatrix').vec3;
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
 
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
@@ -124,4 +123,4 @@ FirstPersonManipulatorDeviceOrientationController.prototype = {
     }
 };
 
-module.exports = FirstPersonManipulatorDeviceOrientationController;
+export default FirstPersonManipulatorDeviceOrientationController;

@@ -1,5 +1,4 @@
-'use strict';
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 var GamePad = function(viewer) {
     this._viewer = viewer;
@@ -81,4 +80,4 @@ GamePad.prototype = {
         }
     }
 };
-module.exports = GamePad;
+export default GamePad;

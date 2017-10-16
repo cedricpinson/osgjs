@@ -1,10 +1,8 @@
-'use strict';
-
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
-var Intersector = require('osgUtil/Intersector');
-var LineSegmentIntersectFunctor = require('osgUtil/LineSegmentIntersectFunctor');
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import Intersector from 'osgUtil/Intersector';
+import LineSegmentIntersectFunctor from 'osgUtil/LineSegmentIntersectFunctor';
 
 var LineSegmentIntersector = function() {
     Intersector.call(this);
@@ -140,4 +138,4 @@ utils.createPrototypeObject(
     'LineSegmentIntersector'
 );
 
-module.exports = LineSegmentIntersector;
+export default LineSegmentIntersector;

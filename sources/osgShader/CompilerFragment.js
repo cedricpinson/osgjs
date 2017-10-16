@@ -1,7 +1,5 @@
-'use strict';
-
-var Light = require('osg/Light');
-var notify = require('osg/notify');
+import Light from 'osg/Light';
+import notify from 'osg/notify';
 
 var CompilerFragment = {
     _createFragmentShader: function() {
@@ -687,4 +685,4 @@ for (var fnName in CompilerFragment) {
     CompilerFragment[fnName] = wrapperFragmentOnly(CompilerFragment[fnName], fnName);
 }
 
-module.exports = CompilerFragment;
+export default CompilerFragment;

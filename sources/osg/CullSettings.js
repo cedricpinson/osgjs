@@ -1,5 +1,3 @@
-'use strict';
-
 var CullSettings = function() {
     // Not doing a this.reset()
     // because of multiple inheritance
@@ -16,15 +14,16 @@ CullSettings.prototype = {
         // Magic numbers 3 & 4
         this.bbCornerFar = 3;
         this.bbCornerNear = 4;
-        // see code below for for the
-        // Code simplification origin
-        // var vec3 = require( 'osg/glMatrix' ).vec3;
-        // var lookVector = vec3.fromValues( 0.0, 0.0, -1.0 );
-        // /*jshint bitwise: false */
-        // this.bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
-        // this.bbCornerNear = ( ~this.bbCornerFar ) & 7;
-        // /*jshint bitwise: true */
-        // is equivalent to
+        // // see code below for for the
+        // // Code simplification origin
+        // var vec3 = require('osg/glMatrix').default.vec3;
+        // var lookVector = vec3.fromValues(0.0, 0.0, -1.0);
+        // this.bbCornerFar =
+        //     (lookVector[0] >= 0 ? 1 : 0) |
+        //     (lookVector[1] >= 0 ? 2 : 0) |
+        //     (lookVector[2] >= 0 ? 4 : 0);
+        // this.bbCornerNear = ~this.bbCornerFar & 7;
+        // // is equivalent to
 
         this._enableFrustumCulling = false;
 
@@ -87,4 +86,4 @@ CullSettings.prototype = {
     }
 };
 
-module.exports = CullSettings;
+export default CullSettings;

@@ -1,7 +1,6 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var Object = require('osg/Object');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import Object from 'osg/Object';
 
 var ImageBitmap = window.ImageBitmap || function() {};
 
@@ -246,4 +245,4 @@ utils.createPrototypeObject(
     'Image'
 );
 
-module.exports = ImageObject;
+export default ImageObject;

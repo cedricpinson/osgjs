@@ -1,11 +1,10 @@
-'use strict';
-var utils = require('osg/utils');
-var Node = require('osg/Node');
-var NodeVisitor = require('osg/NodeVisitor');
-var mat4 = require('osg/glMatrix').mat4;
-var vec2 = require('osg/glMatrix').vec2;
-var vec3 = require('osg/glMatrix').vec3;
-var BoundingSphere = require('osg/BoundingSphere');
+import utils from 'osg/utils';
+import Node from 'osg/Node';
+import NodeVisitor from 'osg/NodeVisitor';
+import { mat4 } from 'osg/glMatrix';
+import { vec2 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import BoundingSphere from 'osg/BoundingSphere';
 
 /**
  *  Lod that can contains child node
@@ -196,4 +195,4 @@ utils.createPrototypeNode(
     'Lod'
 );
 
-module.exports = Lod;
+export default Lod;

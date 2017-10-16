@@ -1,16 +1,15 @@
-'use strict';
-var assert = require('chai').assert;
-var utils = require('osg/utils');
-require('tests/mockup/mockup');
-var primitiveFunctor = require('osg/primitiveFunctor');
-var primitiveSet = require('osg/primitiveSet');
-var DrawElements = require('osg/DrawElements');
-var DrawArrays = require('osg/DrawArrays');
-var Geometry = require('osg/Geometry');
-var BufferArray = require('osg/BufferArray');
-var vec3 = require('osg/glMatrix').vec3;
+import { assert } from 'chai';
+import utils from 'osg/utils';
+import 'tests/mockup/mockup';
+import primitiveFunctor from 'osg/primitiveFunctor';
+import primitiveSet from 'osg/primitiveSet';
+import DrawElements from 'osg/DrawElements';
+import DrawArrays from 'osg/DrawArrays';
+import Geometry from 'osg/Geometry';
+import BufferArray from 'osg/BufferArray';
+import { vec3 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     var createGeometry = function(primitiveType, arraysOrElements) {
         var g = new Geometry();
         var vertexes = new utils.Float32Array(9);
@@ -200,4 +199,4 @@ module.exports = function() {
         assert.equalVector(vectors[1], [0, 0, 0]);
         assert.equalVector(vectors[2], [2.0, 2.0, 0]);
     });
-};
+}

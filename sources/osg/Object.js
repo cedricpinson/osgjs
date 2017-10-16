@@ -1,5 +1,4 @@
-'use strict';
-var utils = require('osg/utils');
+import utils from 'osg/utils';
 
 /**
  *  Object class
@@ -53,4 +52,4 @@ Object.getInstanceID = function() {
     return instanceID;
 };
 
-module.exports = Object;
+export default Object;

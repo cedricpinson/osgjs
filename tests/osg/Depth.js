@@ -1,11 +1,10 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var Depth = require('osg/Depth');
-var State = require('osg/State');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import Depth from 'osg/Depth';
+import State from 'osg/State';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
 
-module.exports = function() {
+export default function() {
     test('Depth', function() {
         var n = new Depth();
         assert.isOk(n._near === 0.0, 'Check near');
@@ -21,4 +20,4 @@ module.exports = function() {
         n = new Depth(Depth.DISABLE);
         n.apply(state);
     });
-};
+}

@@ -1,8 +1,7 @@
-'use strict';
-var P = require('bluebird');
-var osgWrapper = require('osgWrappers/serializers/osg');
-var notify = require('osg/notify');
-var Text = require('osgText/Text');
+import P from 'bluebird';
+import osgWrapper from 'osgWrappers/serializers/osg';
+import notify from 'osg/notify';
+import Text from 'osgText/Text';
 
 var osgTextWrapper = {};
 
@@ -46,4 +45,4 @@ osgTextWrapper.Text = function(input, node) {
     return promise;
 };
 
-module.exports = osgTextWrapper;
+export default osgTextWrapper;

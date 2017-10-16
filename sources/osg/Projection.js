@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var Node = require('osg/Node');
-var mat4 = require('osg/glMatrix').mat4;
+import utils from 'osg/utils';
+import Node from 'osg/Node';
+import { mat4 } from 'osg/glMatrix';
 
 var Projection = function() {
     Node.call(this);
@@ -22,4 +21,4 @@ utils.createPrototypeNode(
     'Projection'
 );
 
-module.exports = Projection;
+export default Projection;

@@ -1,5 +1,3 @@
-'use strict';
-
 var CADManipulatorHammerController = function(manipulator) {
     this._manipulator = manipulator;
     this._timer = false;
@@ -227,4 +225,4 @@ CADManipulatorHammerController.prototype = {
     }
 };
 
-module.exports = CADManipulatorHammerController;
+export default CADManipulatorHammerController;

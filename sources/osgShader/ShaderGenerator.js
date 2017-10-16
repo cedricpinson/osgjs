@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var notify = require('osg/notify');
-var Program = require('osg/Program');
-var Shader = require('osg/Shader');
-var Compiler = require('osgShader/Compiler');
-var ShaderProcessor = require('osgShader/ShaderProcessor');
+import utils from 'osg/utils';
+import notify from 'osg/notify';
+import Program from 'osg/Program';
+import Shader from 'osg/Shader';
+import Compiler from 'osgShader/Compiler';
+import ShaderProcessor from 'osgShader/ShaderProcessor';
 var ShaderGenerator = function() {
     this._cache = {};
 
@@ -301,4 +300,4 @@ ShaderGenerator.prototype = {
     })()
 };
 
-module.exports = ShaderGenerator;
+export default ShaderGenerator;

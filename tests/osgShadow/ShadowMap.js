@@ -1,16 +1,15 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var BoundingBox = require('osg/BoundingBox');
-var Light = require('osg/Light');
-var ShadowMap = require('osgShadow/ShadowMap');
-var ShadowSettings = require('osgShadow/ShadowSettings');
-var vec2 = require('osg/glMatrix').vec2;
-var vec3 = require('osg/glMatrix').vec3;
-var vec4 = require('osg/glMatrix').vec4;
-var mat4 = require('osg/glMatrix').mat4;
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import BoundingBox from 'osg/BoundingBox';
+import Light from 'osg/Light';
+import ShadowMap from 'osgShadow/ShadowMap';
+import ShadowSettings from 'osgShadow/ShadowSettings';
+import { vec2 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     var matrixCompare = function(matrix1, matrix2) {
         for (var i = 0; i < 16; i++) {
             if (Math.abs(matrix1[i] - matrix2[i]) > 1e-5) {
@@ -401,4 +400,4 @@ module.exports = function() {
             'correct near/far shadow  for directional light looking up'
         );
     });
-};
+}

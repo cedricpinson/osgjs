@@ -1,7 +1,6 @@
-'use strict';
-var notify = require('osg/notify');
-var Object = require('osg/Object');
-var utils = require('osg/utils');
+import notify from 'osg/notify';
+import Object from 'osg/Object';
+import utils from 'osg/utils';
 
 /**
  *  ShadowTechnique provides an implementation interface of shadow techniques.
@@ -74,4 +73,4 @@ utils.createPrototypeObject(
     'ShadowTechnique'
 );
 
-module.exports = ShadowTechnique;
+export default ShadowTechnique;

@@ -1,9 +1,8 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var Object = require('osg/Object');
-var GLObject = require('osg/GLObject');
-var Timer = require('osg/Timer');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import Object from 'osg/Object';
+import GLObject from 'osg/GLObject';
+import Timer from 'osg/Timer';
 
 var getAttributeType = function(array) {
     var type;
@@ -202,4 +201,4 @@ utils.createPrototypeObject(
     'BufferArray'
 );
 
-module.exports = BufferArray;
+export default BufferArray;

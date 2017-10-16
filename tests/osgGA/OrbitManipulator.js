@@ -1,8 +1,7 @@
-'use strict';
-var assert = require('chai').assert;
-var OrbitManipulator = require('osgGA/OrbitManipulator');
+import { assert } from 'chai';
+import OrbitManipulator from 'osgGA/OrbitManipulator';
 
-module.exports = function() {
+export default function() {
     test('OrbitManipulator', function() {
         var manipulator = new OrbitManipulator();
         var matrix = manipulator.getInverseMatrix();
@@ -183,4 +182,4 @@ module.exports = function() {
                 ' and should be 1.9198621771937625'
         );
     });
-};
+}

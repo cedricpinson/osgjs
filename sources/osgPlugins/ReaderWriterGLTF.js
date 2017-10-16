@@ -1,37 +1,35 @@
-'use strict';
-
-var P = require('bluebird');
-var requestFile = require('osgDB/requestFile');
-var Input = require('osgDB/Input');
-var Registry = require('osgDB/Registry');
-var animation = require('osgAnimation/animation');
-var BasicAnimationManager = require('osgAnimation/BasicAnimationManager');
-var Skeleton = require('osgAnimation/Skeleton');
-var Bone = require('osgAnimation/Bone');
-var StackedTranslate = require('osgAnimation/StackedTranslate');
-var StackedQuaternion = require('osgAnimation/StackedQuaternion');
-var StackedScale = require('osgAnimation/StackedScale');
-var RigGeometry = require('osgAnimation/RigGeometry');
-var channel = require('osgAnimation/channel');
+import P from 'bluebird';
+import requestFile from 'osgDB/requestFile';
+import Input from 'osgDB/Input';
+import Registry from 'osgDB/Registry';
+import animation from 'osgAnimation/animation';
+import BasicAnimationManager from 'osgAnimation/BasicAnimationManager';
+import Skeleton from 'osgAnimation/Skeleton';
+import Bone from 'osgAnimation/Bone';
+import StackedTranslate from 'osgAnimation/StackedTranslate';
+import StackedQuaternion from 'osgAnimation/StackedQuaternion';
+import StackedScale from 'osgAnimation/StackedScale';
+import RigGeometry from 'osgAnimation/RigGeometry';
+import channel from 'osgAnimation/channel';
 var createQuatChannel = channel.createQuatChannel;
 var createVec3Channel = channel.createVec3Channel;
-var BlendFunc = require('osg/BlendFunc');
+import BlendFunc from 'osg/BlendFunc';
 
-var Geometry = require('osg/Geometry');
-var Texture = require('osg/Texture');
-var MatrixTransform = require('osg/MatrixTransform');
-var Material = require('osg/Material');
-var DrawElements = require('osg/DrawElements');
-var primitiveSet = require('osg/primitiveSet');
-var BufferArray = require('osg/BufferArray');
-var UpdateBone = require('osgAnimation/UpdateBone');
-var UpdateMatrixTransform = require('osgAnimation/UpdateMatrixTransform');
-var FileHelper = require('osgDB/FileHelper');
+import Geometry from 'osg/Geometry';
+import Texture from 'osg/Texture';
+import MatrixTransform from 'osg/MatrixTransform';
+import Material from 'osg/Material';
+import DrawElements from 'osg/DrawElements';
+import primitiveSet from 'osg/primitiveSet';
+import BufferArray from 'osg/BufferArray';
+import UpdateBone from 'osgAnimation/UpdateBone';
+import UpdateMatrixTransform from 'osgAnimation/UpdateMatrixTransform';
+import FileHelper from 'osgDB/FileHelper';
 
-var Uniform = require('osg/Uniform');
-var vec3 = require('osg/glMatrix').vec3;
-var quat = require('osg/glMatrix').quat;
-var mat4 = require('osg/glMatrix').mat4;
+import Uniform from 'osg/Uniform';
+import { vec3 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 
 var ReaderWriterGLTF = function() {
     // Contains all the needed glTF files (.gltf, .bin, etc...)
@@ -885,4 +883,4 @@ ReaderWriterGLTF.prototype = {
 
 Registry.instance().addReaderWriter('gltf', new ReaderWriterGLTF());
 
-module.exports = ReaderWriterGLTF;
+export default ReaderWriterGLTF;

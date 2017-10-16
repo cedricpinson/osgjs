@@ -1,9 +1,8 @@
-'use strict';
-var notify = require('osg/notify');
-var ShaderGenerator = require('osgShader/ShaderGenerator');
-var ShadowCastShaderGenerator = require('osgShadow/ShadowCastShaderGenerator');
-var DisplayNormalVisitor = require('osgUtil/DisplayNormalVisitor');
-var DisplayGeometryVisitor = require('osgUtil/DisplayGeometryVisitor');
+import notify from 'osg/notify';
+import ShaderGenerator from 'osgShader/ShaderGenerator';
+import ShadowCastShaderGenerator from 'osgShadow/ShadowCastShaderGenerator';
+import DisplayNormalVisitor from 'osgUtil/DisplayNormalVisitor';
+import DisplayGeometryVisitor from 'osgUtil/DisplayGeometryVisitor';
 
 var ShaderGeneratorProxy = function() {
     // object of shader generators
@@ -50,4 +49,4 @@ ShaderGeneratorProxy.prototype = {
     }
 };
 
-module.exports = ShaderGeneratorProxy;
+export default ShaderGeneratorProxy;

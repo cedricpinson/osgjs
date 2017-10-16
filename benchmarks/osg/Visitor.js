@@ -1,19 +1,17 @@
-'use strict';
-var mockup = require('tests/mockup/mockup');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var Node = require('osg/Node');
-var NodeVisitor = require('osg/NodeVisitor');
-var Timer = require('osg/Timer');
-var reportStats = require('benchmarks/reportStats');
-var mockupBench = require('benchmarks/mockupBench');
-var KdTreeBuilder = require('osg/KdTreeBuilder');
-var Camera = require('osg/Camera');
-var Viewport = require('osg/Viewport');
-var View = require('osgViewer/View');
-var ReaderParser = require('osgDB/readerParser');
+import mockup from 'tests/mockup/mockup';
+import { vec3, mat4 } from 'osg/glMatrix';
+import Node from 'osg/Node';
+import NodeVisitor from 'osg/NodeVisitor';
+import Timer from 'osg/Timer';
+import reportStats from 'benchmarks/reportStats';
+import mockupBench from 'benchmarks/mockupBench';
+import KdTreeBuilder from 'osg/KdTreeBuilder';
+import Camera from 'osg/Camera';
+import Viewport from 'osg/Viewport';
+import View from 'osgViewer/View';
+import ReaderParser from 'osgDB/readerParser';
 
-module.exports = function() {
+export default function() {
     test('NodeVisitor Heavy Static Scene', function() {
         var root = new Node();
         mockupBench.addScene(root, 25, false, false);
@@ -118,4 +116,4 @@ module.exports = function() {
         module.accum = accum; // keep the variable on a scope to avoid JIT otimimization and remove code
         reportStats(timed, 'IntersectVisitor Visiting');
     });
-};
+}

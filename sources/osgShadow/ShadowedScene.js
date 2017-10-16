@@ -1,13 +1,12 @@
-'use strict';
-var CullVisitor = require('osg/CullVisitor');
-var mat4 = require('osg/glMatrix').mat4;
-var Node = require('osg/Node');
-var NodeVisitor = require('osg/NodeVisitor');
-var StateSet = require('osg/StateSet');
-var utils = require('osg/utils');
-var vec4 = require('osg/glMatrix').vec4;
-var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor');
-var ShadowCasterVisitor = require('osgShadow/ShadowCasterVisitor');
+import CullVisitor from 'osg/CullVisitor';
+import { mat4 } from 'osg/glMatrix';
+import Node from 'osg/Node';
+import NodeVisitor from 'osg/NodeVisitor';
+import StateSet from 'osg/StateSet';
+import utils from 'osg/utils';
+import { vec4 } from 'osg/glMatrix';
+import ComputeBoundsVisitor from 'osg/ComputeBoundsVisitor';
+import ShadowCasterVisitor from 'osgShadow/ShadowCasterVisitor';
 
 /**
  *  ShadowedScene provides a mechanism for decorating a scene that the needs to have shadows cast upon it.
@@ -234,4 +233,4 @@ CullVisitor.registerApplyFunction(
     CullVisitor.getApplyFunction(Node.nodeTypeID)
 );
 
-module.exports = ShadowedScene;
+export default ShadowedScene;

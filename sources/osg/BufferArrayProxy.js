@@ -1,5 +1,4 @@
-'use strict';
-var BufferArray = require('osg/BufferArray');
+import BufferArray from 'osg/BufferArray';
 
 var BufferArrayProxy = function(bufferArray) {
     this._initialBufferArray = undefined;
@@ -37,4 +36,4 @@ for (var methodName in BufferArray.prototype) {
 }
 
 BufferArrayProxy.prototype = prototype;
-module.exports = BufferArrayProxy;
+export default BufferArrayProxy;

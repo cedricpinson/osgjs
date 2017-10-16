@@ -1,6 +1,5 @@
-'use strict';
-var osgMath = require('osg/math');
-var OrbitManipulatorEnums = require('osgGA/orbitManipulatorEnums');
+import osgMath from 'osg/math';
+import OrbitManipulatorEnums from 'osgGA/orbitManipulatorEnums';
 
 var OrbitManipulatorStandardMouseKeyboardController = function(manipulator) {
     this._manipulator = manipulator;
@@ -152,4 +151,4 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
         this.setMode(undefined);
     }
 };
-module.exports = OrbitManipulatorStandardMouseKeyboardController;
+export default OrbitManipulatorStandardMouseKeyboardController;

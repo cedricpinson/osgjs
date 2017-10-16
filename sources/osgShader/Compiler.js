@@ -1,11 +1,9 @@
-'use strict';
-
-var notify = require('osg/notify');
-var Uniform = require('osg/Uniform');
-var factory = require('osgShader/nodeFactory');
-var utils = require('osg/utils');
-var CompilerVertex = require('osgShader/CompilerVertex');
-var CompilerFragment = require('osgShader/CompilerFragment');
+import notify from 'osg/notify';
+import Uniform from 'osg/Uniform';
+import factory from 'osgShader/nodeFactory';
+import utils from 'osg/utils';
+import CompilerVertex from 'osgShader/CompilerVertex';
+import CompilerFragment from 'osgShader/CompilerFragment';
 
 var Compiler = function(attributes, textureAttributes, shaderProcessor) {
     this._attributes = attributes;
@@ -747,4 +745,4 @@ Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
     }
 });
 
-module.exports = Compiler;
+export default Compiler;

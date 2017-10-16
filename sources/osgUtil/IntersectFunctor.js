@@ -1,9 +1,7 @@
-'use strict';
-
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
-var primitiveIndexFunctor = require('osg/primitiveIndexFunctor');
-var intersectionEnums = require('osgUtil/intersectionEnums');
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import primitiveIndexFunctor from 'osg/primitiveIndexFunctor';
+import intersectionEnums from 'osgUtil/intersectionEnums';
 
 var IntersectFunctor = function() {
     this._hit = false;
@@ -145,4 +143,4 @@ IntersectFunctor.prototype = {
     }
 };
 
-module.exports = IntersectFunctor;
+export default IntersectFunctor;

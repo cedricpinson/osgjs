@@ -1,6 +1,4 @@
-'use strict';
-
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 /**
  * This is a very simplistic version of the OSG registry, we could
@@ -28,4 +26,4 @@ var Registry = {
     }
 };
 
-module.exports = Registry;
+export default Registry;

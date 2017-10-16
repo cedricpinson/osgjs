@@ -158,4 +158,4 @@ var config = {
     init: init
 };
 
-module.exports = config;
+export default config;

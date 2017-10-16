@@ -1,10 +1,9 @@
-'use strict';
-var ReaderWriterGLTF = require('osgPlugins/ReaderWriterGLTF');
-var ReaderWriterZIP = require('osgPlugins/ReaderWriterZIP');
+import ReaderWriterGLTF from 'osgPlugins/ReaderWriterGLTF';
+import ReaderWriterZIP from 'osgPlugins/ReaderWriterZIP';
 
 var osgPlugins = {};
 
 osgPlugins.ReaderWriterGLTF = ReaderWriterGLTF;
 osgPlugins.ReaderWriterZIP = ReaderWriterZIP;
 
-module.exports = osgPlugins;
+export default osgPlugins;

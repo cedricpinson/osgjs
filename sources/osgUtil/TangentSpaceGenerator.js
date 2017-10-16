@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var BufferArray = require('osg/BufferArray');
-var Geometry = require('osg/Geometry');
-var NodeVisitor = require('osg/NodeVisitor');
-var primitiveSet = require('osg/primitiveSet');
-var vec3 = require('osg/glMatrix').vec3;
+import utils from 'osg/utils';
+import BufferArray from 'osg/BufferArray';
+import Geometry from 'osg/Geometry';
+import NodeVisitor from 'osg/NodeVisitor';
+import primitiveSet from 'osg/primitiveSet';
+import { vec3 } from 'osg/glMatrix';
 
 var TangentSpaceGenerator = function() {
     NodeVisitor.call(this);
@@ -247,4 +246,4 @@ utils.createPrototypeObject(
     'TangentSpaceGenerator'
 );
 
-module.exports = TangentSpaceGenerator;
+export default TangentSpaceGenerator;

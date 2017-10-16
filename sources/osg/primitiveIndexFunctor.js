@@ -1,8 +1,6 @@
-'use strict';
-
-var primitiveSet = require('osg/primitiveSet');
-var DrawElements = require('osg/DrawElements');
-var DrawArrays = require('osg/DrawArrays');
+import primitiveSet from 'osg/primitiveSet';
+import DrawElements from 'osg/DrawElements';
+import DrawArrays from 'osg/DrawArrays';
 
 /**
  * PrimitiveIndexFunctor emulates the TemplatePrimitiveIndexFunctor class in OSG and can
@@ -144,4 +142,4 @@ var primitiveIndexFunctor = function(geom, cb) {
     }
 };
 
-module.exports = primitiveIndexFunctor;
+export default primitiveIndexFunctor;

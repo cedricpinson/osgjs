@@ -1,6 +1,5 @@
-'use strict';
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
 
 var EllipsoidModel = function() {
     this._radiusEquator = EllipsoidModel.WGS_84_RADIUS_EQUATOR;
@@ -153,4 +152,4 @@ EllipsoidModel.prototype = {
     })()
 };
 
-module.exports = EllipsoidModel;
+export default EllipsoidModel;

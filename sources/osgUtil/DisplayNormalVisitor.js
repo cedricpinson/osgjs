@@ -1,19 +1,18 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var Geometry = require('osg/Geometry');
-var BufferArray = require('osg/BufferArray');
-var DrawArrays = require('osg/DrawArrays');
-var primitiveSet = require('osg/primitiveSet');
-var StateSet = require('osg/StateSet');
-var Uniform = require('osg/Uniform');
-var Depth = require('osg/Depth');
-var vec3 = require('osg/glMatrix').vec3;
-var ShaderGenerator = require('osgShader/ShaderGenerator');
-var Compiler = require('osgShader/Compiler');
-var RigGeometry = require('osgAnimation/RigGeometry');
-var MorphGeometry = require('osgAnimation/MorphGeometry');
-var UpdateMorph = require('osgAnimation/UpdateMorph');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import Geometry from 'osg/Geometry';
+import BufferArray from 'osg/BufferArray';
+import DrawArrays from 'osg/DrawArrays';
+import primitiveSet from 'osg/primitiveSet';
+import StateSet from 'osg/StateSet';
+import Uniform from 'osg/Uniform';
+import Depth from 'osg/Depth';
+import { vec3 } from 'osg/glMatrix';
+import ShaderGenerator from 'osgShader/ShaderGenerator';
+import Compiler from 'osgShader/Compiler';
+import RigGeometry from 'osgAnimation/RigGeometry';
+import MorphGeometry from 'osgAnimation/MorphGeometry';
+import UpdateMorph from 'osgAnimation/UpdateMorph';
 
 ////////////////////////
 // COMPILER OFFSET NORMAL
@@ -315,4 +314,4 @@ utils.createPrototypeObject(
     'DisplayNormalVisitor'
 );
 
-module.exports = DisplayNormalVisitor;
+export default DisplayNormalVisitor;

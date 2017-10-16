@@ -1,6 +1,5 @@
 // user performance if available or fallback
 
-'use strict';
 var now = (function() {
     var w = window || global; // eslint-disable-line
 
@@ -49,4 +48,4 @@ Timer.prototype = {
     }
 };
 
-module.exports = Timer;
+export default Timer;

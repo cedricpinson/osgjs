@@ -2,9 +2,7 @@
 /* eslint-env node, mocha */
 
 process.chdir(__dirname);
-var mockupForNode = require('../tests/mockup/mockupForNode.js');
-mockupForNode();
-
+require('../tests/mockup/mockupForNode.js');
 var Mocha = require('mocha');
 
 var mocha = new Mocha({

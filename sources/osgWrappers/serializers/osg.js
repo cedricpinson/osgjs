@@ -1,7 +1,6 @@
-'use strict';
-var P = require('bluebird');
-var utils = require('osg/utils');
-var TransformEnums = require('osg/transformEnums');
+import P from 'bluebird';
+import utils from 'osg/utils';
+import TransformEnums from 'osg/transformEnums';
 
 var rejectObject = utils.rejectObject;
 
@@ -372,4 +371,4 @@ osgWrapper.PagedLOD = function(input, plod) {
         return plod;
     });
 };
-module.exports = osgWrapper;
+export default osgWrapper;
