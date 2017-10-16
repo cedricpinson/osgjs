@@ -21,16 +21,6 @@ utils.createPrototypeStateAttribute(
             return new Scissor();
         },
 
-        apply: function(state) {
-            var gl = state.getGraphicContext();
-            if (this._x !== -1) {
-                gl.enable(gl.SCISSOR_TEST);
-                gl.scissor(this._x, this._y, this._width, this._height);
-            } else {
-                gl.disable(gl.SCISSOR_TEST);
-            }
-        },
-
         setScissor: function(x, y, width, height) {
             this._x = x;
             this._y = y;
@@ -52,6 +42,10 @@ utils.createPrototypeStateAttribute(
 
         height: function() {
             return this._height;
+        },
+
+        apply: function(state) {
+            state.applyScissor(this);
         }
     }),
     'osg',

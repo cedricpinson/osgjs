@@ -11,6 +11,7 @@ var StackObjectPairPool = require('osg/StackObjectPairPool');
 var Uniform = require('osg/Uniform');
 var utils = require('osg/utils');
 var WebGLCaps = require('osg/WebGLCaps');
+var StateCache = require('osg/StateCache');
 
 var checkUniformCache = [
     undefined,
@@ -128,6 +129,9 @@ var State = function(shaderGeneratorProxy) {
     this._programUniformCache = [];
     this._cacheUniformId = 0;
 
+    // gl states cache
+    this._stateCache = new StateCache();
+
     this.resetStats();
 };
 
@@ -144,6 +148,54 @@ utils.createPrototypeObject(
             this._vertexAttribMap._keys = [];
 
             this._programCommonUniformsCache = {};
+        },
+
+        applyColorMask: function(attribute) {
+            this._stateCache.applyColorMaskAttribute(attribute);
+        },
+
+        applyBlendFunc: function(attribute) {
+            this._stateCache.applyBlendFuncAttribute(attribute);
+        },
+
+        applyCullFace: function(attribute) {
+            this._stateCache.applyCullFaceAttribute(attribute);
+        },
+
+        applyDepth: function(attribute) {
+            this._stateCache.applyDepthAttribute(attribute);
+        },
+
+        applyViewport: function(attribute) {
+            this._stateCache.applyViewportAttribute(attribute);
+        },
+
+        applyScissor: function(attribute) {
+            this._stateCache.applyScissorAttribute(attribute);
+        },
+
+        viewport: function(x, y, width, height) {
+            this._stateCache.viewport(x, y, width, height);
+        },
+
+        depthMask: function(value) {
+            this._stateCache.depthMask(value);
+        },
+
+        clearDepth: function(value) {
+            this._stateCache.clearDepth(value);
+        },
+
+        clearColor: function(value) {
+            this._stateCache.clearColor(value);
+        },
+
+        clear: function(mask) {
+            this._stateCache.clear(this._graphicContext, mask);
+        },
+
+        drawGeometry: function(geom) {
+            this._stateCache.drawGeometry(this._graphicContext, geom);
         },
 
         getCacheUniformsApplyRenderLeaf: function() {

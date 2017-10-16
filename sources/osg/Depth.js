@@ -59,15 +59,7 @@ utils.createPrototypeStateAttribute(
             return this._func;
         },
         apply: function(state) {
-            var gl = state.getGraphicContext();
-            if (this._func === 0) {
-                gl.disable(gl.DEPTH_TEST);
-            } else {
-                gl.enable(gl.DEPTH_TEST);
-                gl.depthFunc(this._func);
-                gl.depthMask(this._writeMask);
-                gl.depthRange(this._near, this._far);
-            }
+            state.applyDepth(this);
         }
     }),
     'osg',

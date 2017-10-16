@@ -87,6 +87,9 @@ var createFakeRenderer = function() {
         createBuffer: function() {},
         deleteBuffer: function() {},
 
+        colorMask: function() {},
+        clearDepth: function() {},
+        clearColor: function() {},
         scissor: function() {},
         blendColor: function() {},
         enable: function() {},

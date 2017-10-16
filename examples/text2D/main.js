@@ -309,9 +309,10 @@
 
             if (hits.length === 0) return;
             // search in the node path the text node
-            for (var i = 0; i < hits[0].nodepath.length; i++) {
-                if (hits[0].nodepath[i] instanceof osgText.Text) {
-                    osg.log('Text picked: ' + hits[0].nodepath[i].getText());
+            var nodepath = hits[0]._nodePath;
+            for (var i = 0; i < nodepath.length; i++) {
+                if (nodepath[i] instanceof osgText.Text) {
+                    osg.log('Text picked: ' + nodepath[i].getText());
                     return;
                 }
             }

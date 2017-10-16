@@ -22,11 +22,6 @@ utils.createPrototypeStateAttribute(
             return new Viewport();
         },
 
-        apply: function(state) {
-            var gl = state.getGraphicContext();
-            gl.viewport(this._x, this._y, this._width, this._height);
-        },
-
         setViewport: function(x, y, width, height) {
             this._x = x;
             this._y = y;
@@ -66,7 +61,11 @@ utils.createPrototypeStateAttribute(
 
                 return mat4.mul(offset, offset, mat4.mul(scale, scale, translate));
             };
-        })()
+        })(),
+
+        apply: function(state) {
+            state.applyViewport(this);
+        }
     }),
     'osg',
     'Viewport'

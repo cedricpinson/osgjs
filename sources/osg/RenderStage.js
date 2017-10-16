@@ -288,18 +288,13 @@ utils.createPrototypeObject(
 
             if (this._clearMask !== 0x0) {
                 if (this._clearMask & gl.COLOR_BUFFER_BIT) {
-                    gl.clearColor(
-                        this._clearColor[0],
-                        this._clearColor[1],
-                        this._clearColor[2],
-                        this._clearColor[3]
-                    );
+                    state.clearColor(this._clearColor);
                 }
                 if (this._clearMask & gl.DEPTH_BUFFER_BIT) {
-                    gl.depthMask(true);
-                    gl.clearDepth(this._clearDepth);
+                    state.depthMask(true);
+                    state.clearDepth(this._clearDepth);
                 }
-                gl.clear(this._clearMask);
+                state.clear(this._clearMask);
             }
 
             if (this._positionedAttribute.getLength() !== 0) {
