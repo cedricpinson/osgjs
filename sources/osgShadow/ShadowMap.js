@@ -267,7 +267,8 @@ utils.createPrototypeObject(
 
         setBias: function(value) {
             this._shadowReceiveAttribute.setBias(value);
-            this._casterStateSet.getUniformList()['bias'].getUniform().setFloat(value);
+            var uniform = this._casterStateSet.getUniformList().bias.getUniform();
+            uniform.setFloat(value);
         },
 
         getKernelSizePCF: function() {

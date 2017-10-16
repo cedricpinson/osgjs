@@ -380,7 +380,10 @@
             controller = gui.add(this._config, 'normalBias', 0.001, 1.0);
             controller.onChange(this.updateShadow.bind(this));
 
-            controller = gui.add(this._config, 'fov').min(0.0).max(180.0);
+            controller = gui
+                .add(this._config, 'fov')
+                .min(0.0)
+                .max(180.0);
             controller.onChange(this.updateShadow.bind(this));
 
             controller = gui.add(

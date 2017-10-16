@@ -146,7 +146,10 @@ utils.createPrototypeObject(
 
             // Check if Frustum culling is enabled to calculate the clip planes
             if (options.getBoolean('enableFrustumCulling') === true)
-                this.getCamera().getRenderer().getCullVisitor().setEnableFrustumCulling(true);
+                this.getCamera()
+                    .getRenderer()
+                    .getCullVisitor()
+                    .setEnableFrustumCulling(true);
 
             return options;
         },
@@ -257,7 +260,10 @@ utils.createPrototypeObject(
 
             GLObject.onLostContext(gl);
 
-            this.getCamera().getRenderer().getState().resetCaches();
+            this.getCamera()
+                .getRenderer()
+                .getState()
+                .resetCaches();
 
             // if it's a different GPU, different webglcaps
             this.initWebGLCaps(gl, true);
@@ -290,7 +296,9 @@ utils.createPrototypeObject(
         },
 
         getState: function() {
-            return this.getCamera().getRenderer().getState();
+            return this.getCamera()
+                .getRenderer()
+                .getState();
         },
 
         initStats: function(options) {
@@ -322,7 +330,10 @@ utils.createPrototypeObject(
         renderingTraversal: function() {
             this.getState()._frameStamp = this._frameStamp;
 
-            if (this.getScene().getSceneData()) this.getScene().getSceneData().getBound();
+            if (this.getScene().getSceneData())
+                this.getScene()
+                    .getSceneData()
+                    .getBound();
 
             if (this.getCamera()) {
                 var stats = this._stats;

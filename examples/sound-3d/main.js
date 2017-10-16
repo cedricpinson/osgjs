@@ -136,7 +136,9 @@
 
             for (var i = 0, l = this._soundList.length; i < l; i++) {
                 var sound = this._soundList[i];
-                this.createSound(sound).then(addSoundInScene).catch(osg.error);
+                this.createSound(sound)
+                    .then(addSoundInScene)
+                    .catch(osg.error);
             }
         }
     });

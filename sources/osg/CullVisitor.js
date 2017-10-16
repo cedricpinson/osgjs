@@ -545,9 +545,13 @@ var cameraApply = function(camera) {
         this.setCurrentRenderBin(renderBin);
 
         if (camera.getRenderOrder() === Camera.PRE_RENDER) {
-            this.getCurrentRenderBin().getStage().addPreRenderStage(rtts, camera.renderOrderNum);
+            this.getCurrentRenderBin()
+                .getStage()
+                .addPreRenderStage(rtts, camera.renderOrderNum);
         } else {
-            this.getCurrentRenderBin().getStage().addPostRenderStage(rtts, camera.renderOrderNum);
+            this.getCurrentRenderBin()
+                .getStage()
+                .addPostRenderStage(rtts, camera.renderOrderNum);
         }
     }
 

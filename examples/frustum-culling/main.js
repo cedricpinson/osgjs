@@ -80,9 +80,12 @@
 
         // default & change debug
         var queryDict = {};
-        window.location.search.substr(1).split('&').forEach(function(item) {
-            queryDict[item.split('=')[0]] = item.split('=')[1];
-        });
+        window.location.search
+            .substr(1)
+            .split('&')
+            .forEach(function(item) {
+                queryDict[item.split('=')[0]] = item.split('=')[1];
+            });
         if (queryDict['debug']) {
             this._debugOtherTechniques = true;
             this._debugFrustum = true;

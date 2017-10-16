@@ -34,7 +34,10 @@ module.exports = function() {
             viewer.getCamera().getRenderer().draw = function() {}; // do nothing
             viewer.frame();
 
-            var cullvisitor = viewer.getCamera().getRenderer().getCullVisitor();
+            var cullvisitor = viewer
+                .getCamera()
+                .getRenderer()
+                .getCullVisitor();
             // with auto compute near far
             assert.approximately(cullvisitor._computedFar, 31.30036755335, 1e-5, 'check far');
             assert.approximately(cullvisitor._computedNear, 18.6996324495, 1e-5, 'check near');

@@ -61,7 +61,11 @@ SimpleTooltips.prototype = {
         this.el.innerHTML = target.getAttribute('title');
         this.el.style.display = 'block';
         this.el.style.left =
-            $(target).position().left + $(target).get(0).getBoundingClientRect().width + 'px';
+            $(target).position().left +
+            $(target)
+                .get(0)
+                .getBoundingClientRect().width +
+            'px';
         this.el.style.top = $(target).position().top + 'px';
     },
     hideTooltip: function() {

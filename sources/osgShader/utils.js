@@ -193,7 +193,10 @@ var extractSignature = function(option, signature) {
 
     // preSignature: "vec3 myFunction"
     var preSignature = signature.substring(0, openParen);
-    preSignature = preSignature.replace(/[\r\n|\r|\n]/g, '').trim().replace(/\s+/g, ' ');
+    preSignature = preSignature
+        .replace(/[\r\n|\r|\n]/g, '')
+        .trim()
+        .replace(/\s+/g, ' ');
 
     var splitPre = preSignature.split(/\s/);
     var firstWord = splitPre[0];
@@ -242,7 +245,10 @@ var extractSignature = function(option, signature) {
         if (!argi) continue;
 
         // cleanArg: "const in vec3 varIn"
-        var cleanArg = argi.trim().replace(/\s+/g, ' ').split('[')[0];
+        var cleanArg = argi
+            .trim()
+            .replace(/\s+/g, ' ')
+            .split('[')[0];
         var splits = cleanArg.split(/\s/);
         var nbSplits = splits.length;
 

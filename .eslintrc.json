@@ -41,43 +41,33 @@
         "ArrayBuffer": false
     },
     "rules": {
-        "comma-spacing": [ "error", { "before": false, "after": true } ],
-        "space-infix-ops": [ "error", { "int32Hint": true } ],
-        "key-spacing": [ "error", { "beforeColon": false, "afterColon": true, "mode": "strict" } ],
-        "semi": [ "error", "always" ],
+        "comma-spacing": ["error", { "before": false, "after": true }],
+        "space-infix-ops": ["error", { "int32Hint": true }],
+        "key-spacing": ["error", { "beforeColon": false, "afterColon": true, "mode": "strict" }],
+        "semi": ["error", "always"],
         "no-trailing-spaces": "error",
         "no-multi-spaces": "error",
         "no-unexpected-multiline": "error",
         "no-debugger": "error",
         "no-unsafe-negation": "error",
-        "brace-style": [ "error", "1tbs", { "allowSingleLine": true } ],
-        "linebreak-style": [ "error", "unix" ],
-        "object-property-newline": [ "error", { "allowMultiplePropertiesPerLine": true } ],
-        "keyword-spacing": [ "error", { "before": true, "after": true } ],
+        "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
+        "linebreak-style": ["error", "unix"],
+        "object-property-newline": ["error", { "allowMultiplePropertiesPerLine": true }],
+        "keyword-spacing": ["error", { "before": true, "after": true }],
         "no-bitwise": 0,
-        "eqeqeq": [ "error", "always", { "null": "ignore" } ],
-        "no-use-before-define": [ 2, { "functions": false } ],
+        "eqeqeq": ["error", "always", { "null": "ignore" }],
+        "no-use-before-define": [2, { "functions": false }],
         "eol-last": 2,
         "new-cap": 0,
         "no-caller": 2,
         "no-undef": 2,
         "no-unused-vars": 2,
         "no-multi-str": 0,
-        "no-redeclare": [ "error" ],
-        "object-shorthand": [ "error", "never" ],
-        "comma-style": [ 2, "last" ],
+        "no-redeclare": ["error"],
+        "object-shorthand": ["error", "never"],
+        "comma-style": [2, "last"],
         "dot-notation": 0,
-        "no-shadow": [ "error" ],
-        "prettier/prettier": [
-            "error",
-            {
-                "singleQuote": true,
-                "bracketSpacing": true,
-                "tabWidth": 4,
-                "printWidth": 100,
-                "trailingComma": "none"
-            }
-        ]
-
+        "no-shadow": ["error"],
+        "prettier/prettier": ["error", {}]
     }
 }
