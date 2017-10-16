@@ -30,7 +30,7 @@ var ShadowReceiveAttribute = function(lightNum, disable) {
 
     this._fakePCF = true;
 
-    this._rotateOffset = false;
+    this._jitterOffset = 'none';
 
     this._enable = !disable;
     this._isAtlasTexture = false;
@@ -83,6 +83,14 @@ utils.createPrototypeStateAttribute(
 
         getNormalBias: function() {
             return this._normalBias;
+        },
+
+        setJitterOffset: function(jitter) {
+            this._jitterOffset = jitter;
+        },
+
+        getJitterOffset: function() {
+            return this._jitterOffset;
         },
 
         getKernelSizePCF: function() {
@@ -149,6 +157,7 @@ utils.createPrototypeStateAttribute(
             if (this.getPrecision() !== 'UNSIGNED_BYTE') defines.push('#define _FLOATTEX');
             if (this.getAtlas()) defines.push('#define _ATLAS_SHADOW');
             if (this.getNormalBias()) defines.push('#define _NORMAL_OFFSET');
+            if (this.getJitterOffset() !== 'none') defines.push('#define _JITTER_OFFSET');
 
             return defines;
         },

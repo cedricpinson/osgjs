@@ -253,6 +253,14 @@ utils.createPrototypeObject(
             this._shadowReceiveAttribute.setNormalBias(value);
         },
 
+        getJitterOffset: function() {
+            return this._shadowReceiveAttribute.getJitterOffset();
+        },
+
+        setJitterOffset: function(value) {
+            this._shadowReceiveAttribute.setJitterOffset(value);
+        },
+
         getBias: function() {
             return this._shadowReceiveAttribute.getBias();
         },

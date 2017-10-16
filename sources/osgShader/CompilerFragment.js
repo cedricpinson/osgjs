@@ -395,6 +395,10 @@ var CompilerFragment = {
         return distance;
     },
 
+    getOrCreateJitterShadow: function() {
+        return false;
+    },
+
     hasLightShadow: function(lightNum) {
         var shadowTexture = this._getShadowTextureFromLightNum(this._shadowsTextures, lightNum);
         var shadowReceive = this._getShadowReceiveAttributeFromLightNum(this._shadows, lightNum);
@@ -420,6 +424,11 @@ var CompilerFragment = {
         if (outDistance) {
             outputs.outDistance = outDistance;
             defines.push('#define _OUT_DISTANCE');
+        }
+
+        var doJitter = this.getOrCreateJitterShadow(lightNum);
+        if (doJitter) {
+            inputs.jitter = doJitter;
         }
 
         this.getNode('ShadowReceive').inputs(inputs).outputs(outputs).addDefines(defines);
