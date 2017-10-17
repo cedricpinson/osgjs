@@ -1,6 +1,6 @@
 #ifdef _OUT_DISTANCE
 #define OPT_ARG_outDistance ,out float outDistance
-#define OPT_INSTANCE_outDistance ,outDistance
+#define OPT_INSTANCE_ARG_outDistance ,outDistance
 #else
 #define OPT_ARG_outDistance
 #define OPT_INSTANCE_ARG_outDistance
