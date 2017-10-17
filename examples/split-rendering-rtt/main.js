@@ -432,7 +432,10 @@
             window.refreshDebugTextureList = refreshDebugTextureList;
 
             // hook RenderStage
-            this._viewer.getCamera().getRenderer().setRenderStage(new RenderStageSplitter());
+            this._viewer
+                .getCamera()
+                .getRenderer()
+                .setRenderStage(new RenderStageSplitter());
         }
     });
 

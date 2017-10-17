@@ -91,7 +91,11 @@
             // config to let dat.gui change the scale
             var lodScaleController = this.gui.add(this._config, 'lodScale', 0.01, 3.0);
             lodScaleController.onChange(function(value) {
-                self.viewer.getCamera().getRenderer().getCullVisitor().setLODScale(value);
+                self.viewer
+                    .getCamera()
+                    .getRenderer()
+                    .getCullVisitor()
+                    .setLODScale(value);
             });
             var acceptRequestscontroller = this.gui.add(this._config, 'acceptNewRequests');
             acceptRequestscontroller.onChange(function(value) {

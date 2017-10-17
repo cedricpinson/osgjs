@@ -219,36 +219,6 @@ var gruntTasks = {};
     };
 })();
 
-function buildPrettierOptions(grunt) {
-    var filesList = [];
-    ['tests', 'examples', 'sources', 'self', 'benchmarks'].forEach(function(target) {
-        filesList = filesList.concat(gruntTasks.eslint[target].src);
-    });
-
-    var eslintConfigObject = grunt.file.readJSON(eslintConfigFilename);
-    var prettierConfig = eslintConfigObject.rules['prettier/prettier'][1];
-    var prettierOptions = ['--write'];
-
-    prettierOptions.push('--print-width', prettierConfig.printWidth);
-    if (prettierConfig.singleQuote) prettierOptions.push('--single-quote');
-    if (prettierConfig.tabWidth) prettierOptions.push('--tab-width', prettierConfig.tabWidth);
-    if (prettierConfig.jsxBracketSameLine) prettierOptions.push('--jsx-bracket-same-line');
-    if (prettierConfig.trailingComma)
-        prettierOptions.push('--trailing-comma', prettierConfig.trailingComma);
-    if (prettierConfig.bracketSpacing !== undefined)
-        prettierOptions.push('--bracket-spacing', prettierConfig.bracketSpacing);
-
-    Array.prototype.push.apply(prettierOptions, filesList);
-    var prettierArgs = prettierOptions;
-
-    gruntTasks.execute.prettier = {
-        options: {
-            args: prettierArgs
-        },
-        src: ['node_modules/.bin/prettier']
-    };
-}
-
 (function() {
     gruntTasks.execute = {
         test: {
@@ -257,6 +227,20 @@ function buildPrettierOptions(grunt) {
         bench: {
             src: ['benchmarks/runBenchmarks.js']
         }
+    };
+})();
+
+(function() {
+    var filesList = ['--write'];
+    ['tests', 'examples', 'sources', 'self', 'benchmarks'].forEach(function(target) {
+        filesList = filesList.concat(gruntTasks.eslint[target].src);
+    });
+
+    gruntTasks.execute.prettier = {
+        options: {
+            args: filesList
+        },
+        src: ['node_modules/.bin/prettier']
     };
 })();
 
@@ -433,9 +417,6 @@ function buildPrettierOptions(grunt) {
 module.exports = function(grunt) {
     var distFullPath = path.normalize(path.join(__dirname, DIST_PATH)); // eslint-disable-line no-undef
     grunt.file.mkdir(distFullPath);
-
-    // use same options as eslintrc for prettier
-    buildPrettierOptions(grunt);
 
     grunt.initConfig(
         extend(

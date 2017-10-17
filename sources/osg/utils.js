@@ -319,8 +319,8 @@ var registeredTimers = {};
 utils.logTime = (notify.console.time ||
     function(name) {
         times[name] = Timer.instance().tick();
-    })
-    .bind(notify.console);
+    }
+).bind(notify.console);
 
 utils.logTimeEnd = (notify.console.timeEnd ||
     function(name) {
@@ -330,8 +330,8 @@ utils.logTimeEnd = (notify.console.timeEnd ||
 
         notify.log(name + ': ' + duration + 'ms');
         times[name] = undefined;
-    })
-    .bind(notify.console);
+    }
+).bind(notify.console);
 
 utils.time = function(name, logLevel) {
     var level = logLevel;
@@ -346,8 +346,9 @@ utils.timeEnd = function(name) {
     utils.logTimeEnd(name);
 };
 
-utils.timeStamp = (notify.console.timeStamp || notify.console.markTimeline || function() {})
-    .bind(notify.console);
+utils.timeStamp = (notify.console.timeStamp || notify.console.markTimeline || function() {}).bind(
+    notify.console
+);
 utils.profile = (notify.console.profile || function() {}).bind(notify.console);
 utils.profileEnd = (notify.console.profileEnd || function() {}).bind(notify.console);
 

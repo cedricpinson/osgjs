@@ -67,11 +67,17 @@ View.prototype = {
     },
 
     setGraphicContext: function(gc) {
-        this.getCamera().getRenderer().getState().setGraphicContext(gc);
+        this.getCamera()
+            .getRenderer()
+            .getState()
+            .setGraphicContext(gc);
     },
 
     getGraphicContext: function() {
-        return this.getCamera().getRenderer().getState().getGraphicContext();
+        return this.getCamera()
+            .getRenderer()
+            .getState()
+            .getGraphicContext();
     },
 
     initWebGLCaps: function(gl, force) {
@@ -175,7 +181,10 @@ View.prototype = {
         );
 
         if (options && options.enableFrustumCulling)
-            this.getCamera().getRenderer().getCullVisitor().setEnableFrustumCulling(true);
+            this.getCamera()
+                .getRenderer()
+                .getCullVisitor()
+                .setEnableFrustumCulling(true);
 
         // add a function to refresh the graph from the console
         if (options && options.debugGraph) {

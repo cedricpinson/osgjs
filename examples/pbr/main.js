@@ -222,8 +222,20 @@
         window.printCurrentCamera = function() {
             var eye = osg.vec3.create();
             var target = osg.vec3.create();
-            console.log('target ' + this._viewer.getManipulator().getTarget(target).toString());
-            console.log('eye ' + this._viewer.getManipulator().getEyePosition(eye).toString());
+            console.log(
+                'target ' +
+                    this._viewer
+                        .getManipulator()
+                        .getTarget(target)
+                        .toString()
+            );
+            console.log(
+                'eye ' +
+                    this._viewer
+                        .getManipulator()
+                        .getEyePosition(eye)
+                        .toString()
+            );
         }.bind(this);
     };
 
@@ -321,7 +333,13 @@
             var self = this;
             $('#loading').show();
 
-            if (files.length === 1 && files[0].name.split('.').pop().toLowerCase() === 'zip') {
+            if (
+                files.length === 1 &&
+                files[0].name
+                    .split('.')
+                    .pop()
+                    .toLowerCase() === 'zip'
+            ) {
                 return this.loadZipFile(files[0], files[0].name).then(function() {
                     $('#loading').hide();
                 });

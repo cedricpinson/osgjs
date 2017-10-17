@@ -28,7 +28,7 @@ var onLoad = function() {
         update: function(node, nv) {
             //every 5 seconds
             var currentTime = nv.getFrameStamp().getSimulationTime();
-            currentTime = currentTime % 5 / 5;
+            currentTime = (currentTime % 5) / 5;
             // light goes from black to red
             node.getLight().setDiffuse(osg.vec4.fromValues(currentTime, 0.0, 0.0, 0.0));
             node.traverse(nv);

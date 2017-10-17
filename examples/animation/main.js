@@ -253,9 +253,12 @@
 
         //Manage Args in url
         var queryDict = {};
-        window.location.search.substr(1).split('&').forEach(function(item) {
-            queryDict[item.split('=')[0]] = item.split('=')[1];
-        });
+        window.location.search
+            .substr(1)
+            .split('&')
+            .forEach(function(item) {
+                queryDict[item.split('=')[0]] = item.split('=')[1];
+            });
 
         var config = (this._config = {
             axis: false, //Debug axis on bone

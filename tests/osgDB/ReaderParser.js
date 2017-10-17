@@ -106,34 +106,37 @@ module.exports = function() {
             }
         };
 
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.getStateSet() !== undefined, 'check last StateSet');
-            assert.isOk(
-                result.getStateSet().getAttribute('BlendFunc') !== undefined,
-                'check BlendFunc'
-            );
-            var material = result.getStateSet().getAttribute('Material');
-            var materialCheck =
-                material !== undefined &&
-                mockup.checkNear(material.getAmbient(), [0.5, 0.5, 0.5, 1]) &&
-                mockup.checkNear(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) &&
-                mockup.checkNear(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) &&
-                mockup.checkNear(material.getSpecular(), [0.5, 0.7, 0.5, 1]) &&
-                mockup.checkNear(material.getShininess(), 2.5) &&
-                material.getName() === 'FloorBorder1';
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.getStateSet() !== undefined, 'check last StateSet');
+                assert.isOk(
+                    result.getStateSet().getAttribute('BlendFunc') !== undefined,
+                    'check BlendFunc'
+                );
+                var material = result.getStateSet().getAttribute('Material');
+                var materialCheck =
+                    material !== undefined &&
+                    mockup.checkNear(material.getAmbient(), [0.5, 0.5, 0.5, 1]) &&
+                    mockup.checkNear(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) &&
+                    mockup.checkNear(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) &&
+                    mockup.checkNear(material.getSpecular(), [0.5, 0.7, 0.5, 1]) &&
+                    mockup.checkNear(material.getShininess(), 2.5) &&
+                    material.getName() === 'FloorBorder1';
 
-            assert.isOk(materialCheck, 'check Material');
-            var texture = result.getStateSet().getTextureAttribute(0, 'Texture');
-            assert.isOk(texture !== undefined, 'Check texture');
-            assert.isOk(texture.getWrapS() === Texture.REPEAT, 'Check wraps texture');
-            assert.isOk(texture.getWrapT() === Texture.CLAMP_TO_EDGE, 'Check wrapt texture');
-            assert.isOk(
-                texture.getMinFilter() === Texture.LINEAR_MIPMAP_LINEAR,
-                'Check min filter texture'
-            );
-            assert.isOk(texture.getMagFilter() === Texture.LINEAR, 'Check mag filter texture');
-            done();
-        });
+                assert.isOk(materialCheck, 'check Material');
+                var texture = result.getStateSet().getTextureAttribute(0, 'Texture');
+                assert.isOk(texture !== undefined, 'Check texture');
+                assert.isOk(texture.getWrapS() === Texture.REPEAT, 'Check wraps texture');
+                assert.isOk(texture.getWrapT() === Texture.CLAMP_TO_EDGE, 'Check wrapt texture');
+                assert.isOk(
+                    texture.getMinFilter() === Texture.LINEAR_MIPMAP_LINEAR,
+                    'Check min filter texture'
+                );
+                assert.isOk(texture.getMagFilter() === Texture.LINEAR, 'Check mag filter texture');
+                done();
+            });
     });
 
     test('Geometry Cube UserData', function(done) {
@@ -408,36 +411,44 @@ module.exports = function() {
             }
         };
 
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.getStateSet() !== undefined, 'check geometry StateSet');
-            assert.isOk(
-                result.getStateSet().getUserData() !== undefined,
-                'check StateSet userdata'
-            );
-            assert.isOk(result.getPrimitiveSetList().length === 1, 'check primitives');
-            assert.isOk(
-                result.getPrimitiveSetList()[0].getMode() === primitiveSet.TRIANGLES,
-                'check triangles primitive'
-            );
-            assert.isOk(
-                result.getPrimitiveSetList()[0].getFirst() === 0,
-                'check triangles first index'
-            );
-            assert.isOk(
-                result.getPrimitiveSetList()[0].getIndices().getElements().length === 36,
-                'check triangles indices'
-            );
-            assert.isOk(
-                result.getPrimitiveSetList()[0].getIndices().getElements().length ===
-                    result.getPrimitiveSetList()[0].getCount(),
-                'check triangles count'
-            );
-            assert.isOk(
-                window.Object.keys(result.getVertexAttributeList()).length === 2,
-                'check vertex attributes'
-            );
-            done();
-        });
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.getStateSet() !== undefined, 'check geometry StateSet');
+                assert.isOk(
+                    result.getStateSet().getUserData() !== undefined,
+                    'check StateSet userdata'
+                );
+                assert.isOk(result.getPrimitiveSetList().length === 1, 'check primitives');
+                assert.isOk(
+                    result.getPrimitiveSetList()[0].getMode() === primitiveSet.TRIANGLES,
+                    'check triangles primitive'
+                );
+                assert.isOk(
+                    result.getPrimitiveSetList()[0].getFirst() === 0,
+                    'check triangles first index'
+                );
+                assert.isOk(
+                    result
+                        .getPrimitiveSetList()[0]
+                        .getIndices()
+                        .getElements().length === 36,
+                    'check triangles indices'
+                );
+                assert.isOk(
+                    result
+                        .getPrimitiveSetList()[0]
+                        .getIndices()
+                        .getElements().length === result.getPrimitiveSetList()[0].getCount(),
+                    'check triangles count'
+                );
+                assert.isOk(
+                    window.Object.keys(result.getVertexAttributeList()).length === 2,
+                    'check vertex attributes'
+                );
+                done();
+            });
     });
 
     test('MatrixTransform', function(done) {
@@ -472,11 +483,14 @@ module.exports = function() {
             }
         };
 
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.getName() === 'Lamp', 'check matrix transform');
-            assert.isOk(result.getMatrix()[0] === -0.2909, 'check matrix transform content');
-            done();
-        });
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.getName() === 'Lamp', 'check matrix transform');
+                assert.isOk(result.getMatrix()[0] === -0.2909, 'check matrix transform content');
+                done();
+            });
     });
 
     test('BasicAnimationManager', function(done) {
@@ -748,21 +762,24 @@ module.exports = function() {
         };
         var input = ReaderParser.registry().clone();
 
-        input.setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.getUpdateCallbackList().length === 1, 'check update callback');
-            assert.isOk(
-                result.getUpdateCallback().getAnimations()['Take 001'] !== undefined,
-                'check animation list'
-            );
-            var animation = result.getUpdateCallback().getAnimations()['Take 001'];
-            assert.isOk(animation.channels.length === 5, 'check channels');
-            assert.isOk(animation.channels[1].channel.name === 'rotateY', 'check channel 1');
-            assert.isOk(
-                animation.channels[1].channel.target === 'BetaHighResMeshes',
-                'check taget channel 1'
-            );
-            done();
-        });
+        input
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.getUpdateCallbackList().length === 1, 'check update callback');
+                assert.isOk(
+                    result.getUpdateCallback().getAnimations()['Take 001'] !== undefined,
+                    'check animation list'
+                );
+                var animation = result.getUpdateCallback().getAnimations()['Take 001'];
+                assert.isOk(animation.channels.length === 5, 'check channels');
+                assert.isOk(animation.channels[1].channel.name === 'rotateY', 'check channel 1');
+                assert.isOk(
+                    animation.channels[1].channel.target === 'BetaHighResMeshes',
+                    'check taget channel 1'
+                );
+                done();
+            });
     });
 
     test('FloatLerpChannel', function(done) {
@@ -855,12 +872,15 @@ module.exports = function() {
 
         var input = ReaderParser.registry().clone();
 
-        input.setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.keys.length === 28, 'Check keys FloatLerpChannel');
-            assert.isOk(result.times.length === 28, 'Check times FloatLerpChannel');
-            assert.isOk(result.target === 'Cube', 'Check TargetName FloatLerpChannel');
-            done();
-        });
+        input
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.keys.length === 28, 'Check keys FloatLerpChannel');
+                assert.isOk(result.times.length === 28, 'Check times FloatLerpChannel');
+                assert.isOk(result.target === 'Cube', 'Check TargetName FloatLerpChannel');
+                done();
+            });
     });
 
     test('QuatSlerpChannel', function(done) {
@@ -958,12 +978,15 @@ module.exports = function() {
         };
         var input = ReaderParser.registry().clone();
 
-        input.setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.keys.length === 28, 'Check keys QuatSlerpChannel');
-            assert.isOk(result.times.length === 7, 'Check times QuatSlerpChannel');
-            assert.isOk(result.target === 'Cube', 'Check TargetName QuatSlerpChannel');
-            done();
-        });
+        input
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.keys.length === 28, 'Check keys QuatSlerpChannel');
+                assert.isOk(result.times.length === 7, 'Check times QuatSlerpChannel');
+                assert.isOk(result.target === 'Cube', 'Check TargetName QuatSlerpChannel');
+                done();
+            });
     });
 
     test('QuatLerpChannel', function(done) {
@@ -1062,12 +1085,15 @@ module.exports = function() {
 
         var input = ReaderParser.registry().clone();
 
-        input.setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.keys.length === 28, 'Check keys QuatSlerpChannel');
-            assert.isOk(result.times.length === 7, 'Check times QuatSlerpChannel');
-            assert.isOk(result.target === 'Cube', 'Check TargetName QuatSlerpChannel');
-            done();
-        });
+        input
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.keys.length === 28, 'Check keys QuatSlerpChannel');
+                assert.isOk(result.times.length === 7, 'Check times QuatSlerpChannel');
+                assert.isOk(result.target === 'Cube', 'Check TargetName QuatSlerpChannel');
+                done();
+            });
     });
 
     test('FloatCubicBezierChannel', function(done) {
@@ -1122,15 +1148,18 @@ module.exports = function() {
 
         var input = ReaderParser.registry().clone();
 
-        input.setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.keys.length === 3, 'Check keys FloatCubicBezierChannel');
-            assert.isOk(result.times.length === 1, 'Check times FloatCubicBezierChannel');
-            assert.isOk(mockup.checkNear(result.keys[0], 3.5708), 'Ckeck Position');
-            assert.isOk(mockup.checkNear(result.keys[1], 1.5708), 'Check ControlIn');
-            assert.isOk(mockup.checkNear(result.keys[2], 2.5708), 'Check ControlOut');
-            assert.isOk(result.target === 'Box001', 'Check TargetName FloatCubicBezierChannel');
-            done();
-        });
+        input
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.keys.length === 3, 'Check keys FloatCubicBezierChannel');
+                assert.isOk(result.times.length === 1, 'Check times FloatCubicBezierChannel');
+                assert.isOk(mockup.checkNear(result.keys[0], 3.5708), 'Ckeck Position');
+                assert.isOk(mockup.checkNear(result.keys[1], 1.5708), 'Check ControlIn');
+                assert.isOk(mockup.checkNear(result.keys[2], 2.5708), 'Check ControlOut');
+                assert.isOk(result.target === 'Box001', 'Check TargetName FloatCubicBezierChannel');
+                done();
+            });
     });
 
     test('Vec3CubicBezierChannel', function(done) {
@@ -1251,13 +1280,16 @@ module.exports = function() {
 
         var input = ReaderParser.registry().clone();
 
-        input.setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.keys.length === 27, 'Check keys Vec3CubicBezierChannel');
-            assert.isOk(result.times.length === 3, 'Check times Vec3CubicBezierChannel');
-            assert.isOk(mockup.checkNear(result.keys[15], 0.92923402), 'Check value');
+        input
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.keys.length === 27, 'Check keys Vec3CubicBezierChannel');
+                assert.isOk(result.times.length === 3, 'Check times Vec3CubicBezierChannel');
+                assert.isOk(mockup.checkNear(result.keys[15], 0.92923402), 'Check value');
 
-            done();
-        });
+                done();
+            });
     });
 
     test('StackedTransform', function(done) {
@@ -1310,17 +1342,20 @@ module.exports = function() {
             }
         };
 
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(
-                result.getUpdateCallbackList().length === 1,
-                'check osgAnimation.UpdateMatrixTransform callback'
-            );
-            assert.isOk(
-                result.getUpdateCallback().getStackedTransforms().length === 5,
-                'check osgAnimation.UpdateMatrixTransform stacked transform'
-            );
-            done();
-        });
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(
+                    result.getUpdateCallbackList().length === 1,
+                    'check osgAnimation.UpdateMatrixTransform callback'
+                );
+                assert.isOk(
+                    result.getUpdateCallback().getStackedTransforms().length === 5,
+                    'check osgAnimation.UpdateMatrixTransform stacked transform'
+                );
+                done();
+            });
     });
 
     test('DrawArray', function(done) {
@@ -1445,10 +1480,13 @@ module.exports = function() {
             }
         };
 
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.getLight() !== undefined, 'check if LightSource has a light');
-            done();
-        });
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.getLight() !== undefined, 'check if LightSource has a light');
+                done();
+            });
     });
 
     test('Text', function(done) {
@@ -1464,16 +1502,19 @@ module.exports = function() {
                 Alignment: 'CENTER_BOTTOM'
             }
         };
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result.getText() === 'test', 'check text');
-            assert.isOk(result.getAutoRotateToScreen() === 1, 'check autoRotateToScreen');
-            assert.isOk(result.getCharacterSize() === 20, 'check characterSize');
-            assert.isOk(result.getPosition()[0] === 50, 'check Position');
-            assert.isOk(result.getColor()[0] === 1, 'check Color');
-            assert.isOk(result.getLayout() === 'ltr', 'check Layout');
-            assert.isOk(result.getAlignment() === 5, 'check Alignment');
-            done();
-        });
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result.getText() === 'test', 'check text');
+                assert.isOk(result.getAutoRotateToScreen() === 1, 'check autoRotateToScreen');
+                assert.isOk(result.getCharacterSize() === 20, 'check characterSize');
+                assert.isOk(result.getPosition()[0] === 50, 'check Position');
+                assert.isOk(result.getColor()[0] === 1, 'check Color');
+                assert.isOk(result.getLayout() === 'ltr', 'check Layout');
+                assert.isOk(result.getAlignment() === 5, 'check Alignment');
+                done();
+            });
     });
 
     test('PagedLOD', function(done) {
@@ -1494,21 +1535,24 @@ module.exports = function() {
                 UserCenter: [1, 2, 3, 10]
             }
         };
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(result._rangeMode === 1, 'check RangeMode');
-            assert.isOk(result._perRangeDataList.length === 2, 'check children number');
-            assert.isOk(
-                result._perRangeDataList[0].filename === 'cow.osgjs',
-                'check child 0 filename'
-            );
-            assert.isOk(
-                result._perRangeDataList[1].filename === 'cessna.osgjs',
-                'check child 1 filename'
-            );
-            assert.isOk(result._range.length === 2, 'check RangeList');
-            assert.isOk(result._radius === 10, 'check user defined radius');
-            done();
-        });
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(result._rangeMode === 1, 'check RangeMode');
+                assert.isOk(result._perRangeDataList.length === 2, 'check children number');
+                assert.isOk(
+                    result._perRangeDataList[0].filename === 'cow.osgjs',
+                    'check child 0 filename'
+                );
+                assert.isOk(
+                    result._perRangeDataList[1].filename === 'cessna.osgjs',
+                    'check child 1 filename'
+                );
+                assert.isOk(result._range.length === 2, 'check RangeList');
+                assert.isOk(result._radius === 10, 'check user defined radius');
+                done();
+            });
     });
 
     test('Node Children Ordering', function(done) {
@@ -1549,16 +1593,19 @@ module.exports = function() {
             }
         };
 
-        new Input().setJSON(tree).readObject().then(function(result) {
-            assert.isOk(
-                result.getChildren()[0].getName() === 'cow',
-                'the first node should be cow'
-            );
-            assert.isOk(
-                result.getChildren()[1].getName() === 'cessna',
-                'the second node should be cessna'
-            );
-            done();
-        });
+        new Input()
+            .setJSON(tree)
+            .readObject()
+            .then(function(result) {
+                assert.isOk(
+                    result.getChildren()[0].getName() === 'cow',
+                    'the first node should be cow'
+                );
+                assert.isOk(
+                    result.getChildren()[1].getName() === 'cessna',
+                    'the second node should be cessna'
+                );
+                done();
+            });
     });
 };

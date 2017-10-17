@@ -28,7 +28,10 @@ module.exports = function() {
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
-        var uv = viewer.getCamera().getRenderer().getCullVisitor();
+        var uv = viewer
+            .getCamera()
+            .getRenderer()
+            .getCullVisitor();
         var root = new Node();
         root.setName('a');
         var b = new Node();
@@ -540,8 +543,9 @@ module.exports = function() {
             rs.sort();
 
             assert.isOk(rs._bins.getMap()['10']._leafs[0]._depth === 10, 'Check transparent bin');
+            var binMap = rs._bins.getMap();
             assert.isOk(
-                rs._bins.getMap()['10'].getStateGraphList().getLength() === 0,
+                binMap[10].getStateGraphList().getLength() === 0,
                 'Check transparent bin StateGraphList'
             );
             assert.isOk(rs._leafs.length === 0, 'Check leafs for normal rendering bin');

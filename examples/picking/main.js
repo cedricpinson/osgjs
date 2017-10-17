@@ -213,7 +213,13 @@
                 )
             );
 
-            si.set(worldPoint, viewer.getSceneData().getBound().radius() * 0.1);
+            si.set(
+                worldPoint,
+                viewer
+                    .getSceneData()
+                    .getBound()
+                    .radius() * 0.1
+            );
             var iv = new osgUtil.IntersectionVisitor();
             iv.setIntersector(si);
             viewer.getSceneData().accept(iv);

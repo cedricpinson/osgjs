@@ -37,12 +37,10 @@ module.exports = function() {
             .readImageURL(ImageTest, {
                 readImageURL: readImageURLReplacement
             })
-            .then(
-                function(/*image*/) {
-                    assert.equal(called, true, 'check image src');
-                    done();
-                }
-            )
+            .then(function(/*image*/) {
+                assert.equal(called, true, 'check image src');
+                done();
+            })
             .catch(function(error) {
                 notify.error(error);
             });
@@ -105,15 +103,13 @@ module.exports = function() {
         var input = new Input(ba);
         input
             .readBufferArray()
-            .then(
-                function(/*value*/) {
-                    return input
-                        .setJSON({
-                            UniqueID: 10
-                        })
-                        .readBufferArray();
-                }
-            )
+            .then(function(/*value*/) {
+                return input
+                    .setJSON({
+                        UniqueID: 10
+                    })
+                    .readBufferArray();
+            })
             .then(function(o2) {
                 assert.isOk(o2.getElements()[2] === 3.0, 'readBufferArray check same unique id');
                 done();
@@ -131,16 +127,10 @@ module.exports = function() {
             .readBinaryArrayURL('toto', {
                 readBinaryArrayURL: readBinaryArrayURL
             })
-            .then(
-                function(/*value*/) {
-                    assert.isOk(
-                        calledBinaryArray,
-                        true,
-                        'readBinaryArray replacement has been called'
-                    );
-                    done();
-                }
-            );
+            .then(function(/*value*/) {
+                assert.isOk(calledBinaryArray, true, 'readBinaryArray replacement has been called');
+                done();
+            });
     });
 
     test('Input.readNodeURL with replacement option', function(done) {
@@ -154,12 +144,10 @@ module.exports = function() {
             .readNodeURL('toto', {
                 readNodeURL: readNodeURL
             })
-            .then(
-                function(/*value*/) {
-                    assert.isOk(calledNodeURL, true, 'readNodeURL replacement has been called');
-                    done();
-                }
-            );
+            .then(function(/*value*/) {
+                assert.isOk(calledNodeURL, true, 'readNodeURL replacement has been called');
+                done();
+            });
     });
 
     test('Input.getObjectWrapper', function() {
@@ -233,17 +221,15 @@ module.exports = function() {
         });
         input
             .readPrimitiveSet()
-            .then(
-                function(/*value */) {
-                    return input
-                        .setJSON({
-                            DrawArrays: {
-                                UniqueID: 10
-                            }
-                        })
-                        .readPrimitiveSet();
-                }
-            )
+            .then(function(/*value */) {
+                return input
+                    .setJSON({
+                        DrawArrays: {
+                            UniqueID: 10
+                        }
+                    })
+                    .readPrimitiveSet();
+            })
             .then(function(o2) {
                 assert.isOk(o2.getCount() === 3540, 'readPrimitiveSet check same unique id');
                 done();
@@ -312,12 +298,10 @@ module.exports = function() {
             };
             var input = new Input(ba);
             input.setProgressXHRCallback(progress);
-            return input.readBufferArray().then(
-                function(/*buffer*/) {
-                    assert.isOk(calledProgress === true, 'readBufferArray check progress callback');
-                    return P.resolve();
-                }
-            );
+            return input.readBufferArray().then(function(/*buffer*/) {
+                assert.isOk(calledProgress === true, 'readBufferArray check progress callback');
+                return P.resolve();
+            });
         })();
 
         P.all([a, b]).then(function() {

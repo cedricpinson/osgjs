@@ -62,7 +62,9 @@ var CompilerFragment = {
     createDefaultFragmentShaderGraph: function() {
         var fofd = this.getOrCreateConstant('vec4', 'fofd').setValue('vec4(1.0, 0.0, 1.0, 0.7)');
         var fragCol = this.getNode('glFragColor');
-        this.getNode('SetFromNode').inputs(fofd).outputs(fragCol);
+        this.getNode('SetFromNode')
+            .inputs(fofd)
+            .outputs(fragCol);
         return fragCol;
     },
 
@@ -83,14 +85,18 @@ var CompilerFragment = {
         var emission = this.getOrCreateMaterialEmission();
         if (emission) {
             var emit = this.createVariable('vec3');
-            this.getNode('Add').inputs(finalColor, emission).outputs(emit);
+            this.getNode('Add')
+                .inputs(finalColor, emission)
+                .outputs(emit);
             finalColor = emit;
         }
 
         var textureColor = this.getDiffuseColorFromTextures();
         if (textureColor) {
             var texColor = this.createVariable('vec3');
-            this.getNode('Mult').inputs(finalColor, textureColor).outputs(texColor);
+            this.getNode('Mult')
+                .inputs(finalColor, textureColor)
+                .outputs(texColor);
             finalColor = texColor;
         }
 
@@ -136,9 +142,12 @@ var CompilerFragment = {
             str += 'if ( %alpha == 0.0) discard;';
         }
 
-        this.getNode('InlineCode').code(str).inputs(inputs).outputs({
-            alpha: alpha
-        });
+        this.getNode('InlineCode')
+            .code(str)
+            .inputs(inputs)
+            .outputs({
+                alpha: alpha
+            });
 
         return alpha;
     },
@@ -320,7 +329,9 @@ var CompilerFragment = {
         if (texturesInput.length > 1) {
             var texAccum = this.createVariable('vec3', 'texDiffuseAccum');
 
-            this.getNode('Mult').inputs(texturesInput).outputs(texAccum);
+            this.getNode('Mult')
+                .inputs(texturesInput)
+                .outputs(texAccum);
             return texAccum;
         } else if (texturesInput.length === 1) {
             return texturesInput[0];
@@ -431,7 +442,10 @@ var CompilerFragment = {
             inputs.jitter = doJitter;
         }
 
-        this.getNode('ShadowReceive').inputs(inputs).outputs(outputs).addDefines(defines);
+        this.getNode('ShadowReceive')
+            .inputs(inputs)
+            .outputs(outputs)
+            .addDefines(defines);
 
         return shadowedOutput;
     },
@@ -474,7 +488,9 @@ var CompilerFragment = {
 
         var res = this.getLightingSeparate();
         var output = this.createVariable('vec3');
-        this.getNode('Add').inputs(res.diffuse, res.specular).outputs(output);
+        this.getNode('Add')
+            .inputs(res.diffuse, res.specular)
+            .outputs(output);
 
         return output;
     },
@@ -500,10 +516,14 @@ var CompilerFragment = {
             finalSpecular = specularSum[0];
         } else {
             finalDiffuse = this.createVariable('vec3');
-            this.getNode('Add').inputs(diffuseSum).outputs(finalDiffuse);
+            this.getNode('Add')
+                .inputs(diffuseSum)
+                .outputs(finalDiffuse);
 
             finalSpecular = this.createVariable('vec3');
-            this.getNode('Add').inputs(specularSum).outputs(finalSpecular);
+            this.getNode('Add')
+                .inputs(specularSum)
+                .outputs(finalSpecular);
         }
 
         return {
@@ -528,7 +548,9 @@ var CompilerFragment = {
 
         var ambient = this.getAmbientLight(light);
         if (ambient)
-            this.getNode('Add').inputs(outputs.diffuseOut, ambient).outputs(outputs.diffuseOut);
+            this.getNode('Add')
+                .inputs(outputs.diffuseOut, ambient)
+                .outputs(outputs.diffuseOut);
 
         return {
             diffuseOut: outputs.diffuseOut,
@@ -577,7 +599,9 @@ var CompilerFragment = {
             inputs.lightViewDirection = this.getOrCreateUniform(lightUniforms.viewDirection);
         }
 
-        this.getNode(nodeName).inputs(inputs).outputs(outputs);
+        this.getNode(nodeName)
+            .inputs(inputs)
+            .outputs(outputs);
         return outputs;
     },
 
@@ -606,7 +630,9 @@ var CompilerFragment = {
         }
 
         var outputs = this.getOutputsFromLight();
-        this.getNode(nodeName).inputs(inputs).outputs(outputs);
+        this.getNode(nodeName)
+            .inputs(inputs)
+            .outputs(outputs);
         return outputs;
     },
 
@@ -614,7 +640,9 @@ var CompilerFragment = {
         var ambient = this.createVariable('vec3');
         var lightAmbient = this.getOrCreateUniform(light.getOrCreateUniforms().ambient);
         var materialAmbient = this.getOrCreateMaterialAmbient();
-        this.getNode('Mult').inputs(materialAmbient, lightAmbient).outputs(ambient);
+        this.getNode('Mult')
+            .inputs(materialAmbient, lightAmbient)
+            .outputs(ambient);
         return ambient;
     },
 

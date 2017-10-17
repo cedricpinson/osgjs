@@ -50,7 +50,10 @@
         readZipContent: function(zip, url) {
             var promisesArray = [];
 
-            var envName = url.split('/').pop().split('.zip')[0];
+            var envName = url
+                .split('/')
+                .pop()
+                .split('.zip')[0];
             this.name = envName;
 
             Object.keys(zip.files).forEach(function(filename) {

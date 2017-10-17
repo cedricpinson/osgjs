@@ -93,7 +93,9 @@ utils.createPrototypeStateAttribute(
         apply: function() {
             if (!this._enable) return;
 
-            this.getOrCreateUniforms().uBones.getInternalArray().set(this._matrixPalette);
+            this.getOrCreateUniforms()
+                .uBones.getInternalArray()
+                .set(this._matrixPalette);
         }
     }),
     'osgAnimation',

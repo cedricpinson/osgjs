@@ -13,7 +13,10 @@ module.exports = function() {
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
-        var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+        var cullVisitor = viewer
+            .getCamera()
+            .getRenderer()
+            .getCullVisitor();
         var root = new Node();
 
         // dreaded camera no modelview
@@ -51,7 +54,10 @@ module.exports = function() {
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
-        var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+        var cullVisitor = viewer
+            .getCamera()
+            .getRenderer()
+            .getCullVisitor();
         var root = new Node();
 
         // dreaded camera no modelview
@@ -90,7 +96,10 @@ module.exports = function() {
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
-        var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+        var cullVisitor = viewer
+            .getCamera()
+            .getRenderer()
+            .getCullVisitor();
         var root = new Node();
 
         // dreaded camera no modelview
@@ -132,7 +141,10 @@ module.exports = function() {
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
-        var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+        var cullVisitor = viewer
+            .getCamera()
+            .getRenderer()
+            .getCullVisitor();
         var root = new Node();
 
         // dreaded camera no modelview
@@ -161,7 +173,10 @@ module.exports = function() {
         viewer.advance();
         viewer._updateVisitor.setFrameStamp(viewer.getFrameStamp());
 
-        viewer.getCamera().getRenderer().cull();
+        viewer
+            .getCamera()
+            .getRenderer()
+            .cull();
 
         console.profile();
         console.time('time');
@@ -169,7 +184,10 @@ module.exports = function() {
 
         var nCount = 20;
         for (var n = 0; n < nCount; n++) {
-            viewer.getCamera().getRenderer().draw();
+            viewer
+                .getCamera()
+                .getRenderer()
+                .draw();
         }
 
         timed = Timer.instance().tick() - timed;
@@ -185,7 +203,10 @@ module.exports = function() {
         viewer.setupManipulator();
         viewer.init();
         viewer.frame();
-        var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+        var cullVisitor = viewer
+            .getCamera()
+            .getRenderer()
+            .getCullVisitor();
         var root = new Node();
 
         // dreaded camera no modelview

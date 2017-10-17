@@ -310,9 +310,11 @@ var CompilerVertex = {
             inputs['target' + i] = this.getTarget(inputVertex.getVariable(), i);
         }
 
-        this.getNode('Morphing').inputs(inputs).outputs({
-            result: outputVertex
-        });
+        this.getNode('Morphing')
+            .inputs(inputs)
+            .outputs({
+                result: outputVertex
+            });
 
         return outputVertex;
     },
