@@ -234,15 +234,15 @@
             this.getCamera().frameBufferObjectTransparent = fbo;
         },
 
-        clearCameraColorDepth: function(gl) {
-            gl.clearColor(0.0, 0.0, 0.0, 0.0);
-            gl.depthMask(true);
-            gl.clearDepth(this.getClearDepth());
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        clearCameraColorDepth: function(state) {
+            state.clearColor(osg.vec4.ZERO);
+            state.depthMask(true);
+            state.clearDepth(this.getClearDepth());
+            state.clear(osg.Camera.COLOR_BUFFER_BIT | osg.Camera.DEPTH_BUFFER_BIT);
         },
 
-        clearCameraColor: function(gl) {
-            gl.clear(gl.COLOR_BUFFER_BIT);
+        clearCameraColor: function(state) {
+            state.clear(osg.Camera.COLOR_BUFFER_BIT);
         },
 
         drawImplementationEarlyZ: function(state, previousLeaf) {
@@ -277,8 +277,6 @@
                 );
             }
 
-            var gl = state.getGraphicContext();
-
             // check / init FBO
             var fbo = this.getCamera().frameBufferObject;
             if (!fbo) this.createCamera2RTT(state);
@@ -290,11 +288,11 @@
 
             // clear transparency
             this.useTransparencyRTT(state);
-            this.clearCameraColorDepth(gl);
+            this.clearCameraColorDepth(state);
 
             // clear opaque
             this.useOpaqueRTT(state);
-            this.clearCameraColor(gl);
+            this.clearCameraColor(state);
 
             if (this._positionedAttribute.length !== 0) {
                 this.applyPositionedAttribute(state, this._positionedAttribute);

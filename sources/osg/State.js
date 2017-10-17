@@ -138,7 +138,6 @@ var State = function(shaderGeneratorProxy) {
 utils.createPrototypeObject(
     State,
     utils.objectInherit(Object.prototype, {
-
         // excludeUniforms is a list of uniforms that will not be applied or checked automatically when applying a program
         // you should not add you uniforms in this list until you really know what you are doing.
         // The use case of the exclusions is because the RenderLeaf.drawGeometry will apply them without UniformStack and
