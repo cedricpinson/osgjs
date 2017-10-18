@@ -28,7 +28,7 @@
     "bluebird": "^3.0.5",
     "d3": "^4.9.1",
     "dagre": "^0.7.4",
-    "dat.gui": "dataarts/dat.gui#v0.6.5",
+    "dat.gui": "dataarts/dat.gui#v0.6.4",
     "extend": "*",
     "gl-matrix": "2.3.2",
     "glob": "*",
