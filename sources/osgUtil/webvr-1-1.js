@@ -4,9 +4,8 @@
 
 // Installs a shim that emulates functionality from the WebVR '1.1' spec if the
 // browser only exposes WebVR '1.0'.
-'use strict';
 
-var mat4 = require('osg/glMatrix').mat4;
+import { mat4 } from 'osg/glMatrix';
 
 if ('getVRDisplays' in navigator) {
     // A lot of Chrome builds to date don't have depthNear and depthFar, even

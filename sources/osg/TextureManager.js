@@ -1,6 +1,5 @@
-'use strict';
-var notify = require('osg/notify');
-var Timer = require('osg/Timer');
+import notify from 'osg/notify';
+import Timer from 'osg/Timer';
 
 var TextureProfile = function(target, internalFormat, width, height) {
     this._target = target;
@@ -21,7 +20,7 @@ TextureProfile.prototype = {
         );
     },
     computeSize: function() {
-        var Texture = require('osg/Texture');
+        var Texture = require('osg/Texture').default;
 
         var numBitsPerTexel = 0;
         switch (this._internalFormat) {
@@ -299,4 +298,4 @@ TextureManager.prototype = {
     }
 };
 
-module.exports = TextureManager;
+export default TextureManager;

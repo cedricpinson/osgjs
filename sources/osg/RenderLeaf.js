@@ -1,5 +1,4 @@
-'use strict';
-var StateGraph = require('osg/StateGraph');
+import StateGraph from 'osg/StateGraph';
 
 // just use inline function, it's faster than having the test in the code
 var applyUniformCache = [
@@ -207,4 +206,4 @@ RenderLeaf.prototype = {
     })()
 };
 
-module.exports = RenderLeaf;
+export default RenderLeaf;

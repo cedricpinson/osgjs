@@ -1,11 +1,10 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var BoundingBox = require('osg/BoundingBox');
-var ReaderParser = require('osgDB/readerParser');
-var vec3 = require('osg/glMatrix').vec3;
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import BoundingBox from 'osg/BoundingBox';
+import ReaderParser from 'osgDB/readerParser';
+import { vec3 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     test('BoundingBox', function() {
         (function() {
             var bb = new BoundingBox();
@@ -55,4 +54,4 @@ module.exports = function() {
             );
         })();
     });
-};
+}

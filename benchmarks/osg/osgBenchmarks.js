@@ -1,9 +1,8 @@
-'use strict';
-var MainPerformance = require('benchmarks/osg/mainPerformance');
-var Geometry = require('benchmarks/osg/Geometry');
-var Visitor = require('benchmarks/osg/Visitor');
+import MainPerformance from 'benchmarks/osg/mainPerformance';
+import Geometry from 'benchmarks/osg/Geometry';
+import Visitor from 'benchmarks/osg/Visitor';
 
-module.exports = function() {
+export default function() {
     suite('MainPerformance');
     MainPerformance();
 
@@ -12,4 +11,4 @@ module.exports = function() {
 
     suite('Geometry');
     Geometry();
-};
+}

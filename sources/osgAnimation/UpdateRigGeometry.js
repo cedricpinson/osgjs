@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var notify = require('osg/notify');
-var ObjectBase = require('osg/Object');
-var FindNearestParentSkeleton = require('osgAnimation/FindNearestParentSkeleton');
+import utils from 'osg/utils';
+import notify from 'osg/notify';
+import ObjectBase from 'osg/Object';
+import FindNearestParentSkeleton from 'osgAnimation/FindNearestParentSkeleton';
 
 // converted from C++ probably it could be merged into RigGeometry
 // it could probably inlined into RigGeometry code
@@ -56,4 +55,4 @@ utils.createPrototypeObject(
     'UpdateRigGeometry'
 );
 
-module.exports = UpdateRigGeometry;
+export default UpdateRigGeometry;

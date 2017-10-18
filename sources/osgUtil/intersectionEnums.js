@@ -1,5 +1,4 @@
-'use strict';
-module.exports = {
+export default {
     NO_LIMIT: 0,
     LIMIT_ONE_PER_DRAWABLE: 1,
     LIMIT_ONE: 2,

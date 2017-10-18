@@ -1,29 +1,28 @@
-'use strict';
-var Camera = require('osg/Camera');
-var CullVisitor = require('osg/CullVisitor');
-var BlendFunc = require('osg/BlendFunc');
-var Depth = require('osg/Depth');
-var FrameBufferObject = require('osg/FrameBufferObject');
-var mat4 = require('osg/glMatrix').mat4;
-var MatrixTransform = require('osg/MatrixTransform');
-var notify = require('osg/notify');
-var Shape = require('osg/shape');
-var StateAttribute = require('osg/StateAttribute');
-var StateSet = require('osg/StateSet');
-var Debug = require('osgUtil/debug');
-var Texture = require('osg/Texture');
-var Transform = require('osg/Transform');
-var Uniform = require('osg/Uniform');
-var utils = require('osg/utils');
-var primitiveSet = require('osg/primitiveSet');
-var vec3 = require('osg/glMatrix').vec3;
-var vec4 = require('osg/glMatrix').vec4;
-var Viewport = require('osg/Viewport');
-var WebGLCaps = require('osg/WebGLCaps');
-var ShadowReceiveAttribute = require('osgShadow/ShadowReceiveAttribute');
-var ShadowCastAttribute = require('osgShadow/ShadowCastAttribute');
-var ShadowTechnique = require('osgShadow/ShadowTechnique');
-var ShadowTexture = require('osgShadow/ShadowTexture');
+import Camera from 'osg/Camera';
+import CullVisitor from 'osg/CullVisitor';
+import BlendFunc from 'osg/BlendFunc';
+import Depth from 'osg/Depth';
+import FrameBufferObject from 'osg/FrameBufferObject';
+import { mat4 } from 'osg/glMatrix';
+import MatrixTransform from 'osg/MatrixTransform';
+import notify from 'osg/notify';
+import Shape from 'osg/shape';
+import StateAttribute from 'osg/StateAttribute';
+import StateSet from 'osg/StateSet';
+import Debug from 'osgUtil/debug';
+import Texture from 'osg/Texture';
+import Transform from 'osg/Transform';
+import Uniform from 'osg/Uniform';
+import utils from 'osg/utils';
+import primitiveSet from 'osg/primitiveSet';
+import { vec3 } from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
+import Viewport from 'osg/Viewport';
+import WebGLCaps from 'osg/WebGLCaps';
+import ShadowReceiveAttribute from 'osgShadow/ShadowReceiveAttribute';
+import ShadowCastAttribute from 'osgShadow/ShadowCastAttribute';
+import ShadowTechnique from 'osgShadow/ShadowTechnique';
+import ShadowTexture from 'osgShadow/ShadowTexture';
 
 // Custom camera cull callback
 // we customize it just to avoid to add extra 'virtual' function
@@ -1011,4 +1010,4 @@ utils.createPrototypeObject(
 
 ShadowMap.EPSILON = 5e-3;
 
-module.exports = ShadowMap;
+export default ShadowMap;

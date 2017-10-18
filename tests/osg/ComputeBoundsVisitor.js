@@ -1,14 +1,13 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor');
-var mat4 = require('osg/glMatrix').mat4;
-var MatrixTransform = require('osg/MatrixTransform');
-var Shape = require('osg/shape');
-var vec3 = require('osg/glMatrix').vec3;
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import ComputeBoundsVisitor from 'osg/ComputeBoundsVisitor';
+import { mat4 } from 'osg/glMatrix';
+import MatrixTransform from 'osg/MatrixTransform';
+import Shape from 'osg/shape';
+import { vec3 } from 'osg/glMatrix';
 
-module.exports = function() {
-    !test('ComputeBoundsVisitor translate', function() {
+export default function() {
+    test('ComputeBoundsVisitor translate', function() {
         var root = new MatrixTransform();
 
         var child1 = new MatrixTransform();
@@ -110,4 +109,4 @@ module.exports = function() {
             'Check Max of bounding box getBoundingBox'
         );
     });
-};
+}

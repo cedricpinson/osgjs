@@ -1,16 +1,15 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var BaseObject = require('osg/Object');
-var quat = require('osg/glMatrix').quat;
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
-var Channel = require('osgAnimation/channel');
-var Animation = require('osgAnimation/animation');
-var Interpolator = require('osgAnimation/interpolator');
-var CollectAnimationUpdateCallbackVisitor = require('osgAnimation/CollectAnimationUpdateCallbackVisitor');
-var Target = require('osgAnimation/target');
-var UpdateMorph = require('osgAnimation/UpdateMorph');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import BaseObject from 'osg/Object';
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import Channel from 'osgAnimation/channel';
+import Animation from 'osgAnimation/animation';
+import Interpolator from 'osgAnimation/interpolator';
+import CollectAnimationUpdateCallbackVisitor from 'osgAnimation/CollectAnimationUpdateCallbackVisitor';
+import Target from 'osgAnimation/target';
+import UpdateMorph from 'osgAnimation/UpdateMorph';
 
 var Float = {
     lerp: function(a, b, t) {
@@ -685,4 +684,4 @@ utils.createPrototypeObject(
 
 BasicAnimationManager.TypeToSize = TypeToSize;
 
-module.exports = BasicAnimationManager;
+export default BasicAnimationManager;

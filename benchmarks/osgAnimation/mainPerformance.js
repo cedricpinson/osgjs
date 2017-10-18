@@ -1,11 +1,10 @@
-'use strict';
-var QUnit = require('qunit');
-var mockup = require('tests/mockup/mockup');
-var reportStats = require('benchmarks/reportStats');
-var Timer = require('osg/Timer');
-var BasicAnimationManager = require('osgAnimation/BasicAnimationManager');
+import QUnit from 'qunit';
+import mockup from 'tests/mockup/ockup';
+import reportStats from 'benchmarks/reportStats';
+import Timer from 'osg/Timer';
+import BasicAnimationManager from 'osgAnimation/BasicAnimationManager';
 
-module.exports = function() {
+export default function() {
     QUnit.module('osg Animation Loop');
 
     QUnit.test('BasicAnimationManager Performance', function() {
@@ -84,4 +83,4 @@ module.exports = function() {
         module.fakeResult = fakeResult; // keep the variable on a scope to avoid JIT otimimization and remove code
         reportStats(timed, 'Animation Loop');
     });
-};
+}

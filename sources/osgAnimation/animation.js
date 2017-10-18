@@ -1,5 +1,4 @@
-'use strict';
-var Channel = require('osgAnimation/channel');
+import Channel from 'osgAnimation/channel';
 
 // create Animation data
 // Animation {
@@ -60,4 +59,4 @@ var Animation = function() {};
 Animation.createAnimation = createAnimation;
 Animation.createInstanceAnimation = createInstanceAnimation;
 
-module.exports = Animation;
+export default Animation;

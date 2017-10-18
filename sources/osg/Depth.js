@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 var Depth = function(func, near, far, writeMask) {
     StateAttribute.call(this);
@@ -66,4 +65,4 @@ utils.createPrototypeStateAttribute(
     'Depth'
 );
 
-module.exports = Depth;
+export default Depth;

@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
 
 var UpdateVisitor = function() {
     NodeVisitor.call(this);
@@ -49,4 +48,4 @@ utils.createPrototypeObject(
     'NodeVisitor'
 );
 
-module.exports = UpdateVisitor;
+export default UpdateVisitor;

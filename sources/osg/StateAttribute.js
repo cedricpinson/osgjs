@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var Object = require('osg/Object');
+import utils from 'osg/utils';
+import Object from 'osg/Object';
 
 var StateAttribute = function() {
     Object.call(this);
@@ -44,4 +43,4 @@ StateAttribute.OVERRIDE = 2;
 StateAttribute.PROTECTED = 4;
 StateAttribute.INHERIT = 8;
 
-module.exports = StateAttribute;
+export default StateAttribute;

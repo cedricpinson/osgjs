@@ -1,13 +1,12 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var TextureCubeMap = require('osg/TextureCubeMap');
-var Texture = require('osg/Texture');
-var State = require('osg/State');
-var ReaderParser = require('osgDB/readerParser');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import TextureCubeMap from 'osg/TextureCubeMap';
+import Texture from 'osg/Texture';
+import State from 'osg/State';
+import ReaderParser from 'osgDB/readerParser';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
 
-module.exports = function() {
+export default function() {
     test('TextureCubeMap', function() {
         var greyscale = ReaderParser.readImage('mockup/greyscale.png', {
             promise: false
@@ -53,4 +52,4 @@ module.exports = function() {
             'Check negative z'
         );
     });
-};
+}

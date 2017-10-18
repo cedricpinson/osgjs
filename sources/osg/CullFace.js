@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 /**
  *  Manage CullFace attribute
@@ -44,4 +43,4 @@ utils.createPrototypeStateAttribute(
     'CullFace'
 );
 
-module.exports = CullFace;
+export default CullFace;

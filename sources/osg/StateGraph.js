@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var PooledArray = require('osg/PooledArray');
-var PooledMap = require('osg/PooledMap');
-var PooledResource = require('osg/PooledResource');
+import utils from 'osg/utils';
+import PooledArray from 'osg/PooledArray';
+import PooledMap from 'osg/PooledMap';
+import PooledResource from 'osg/PooledResource';
 
 var StateGraph = function() {
     this._depth = 0;
@@ -150,4 +149,4 @@ StateGraph.moveStateGraph = (function() {
     };
 })();
 
-module.exports = StateGraph;
+export default StateGraph;

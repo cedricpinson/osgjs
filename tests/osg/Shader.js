@@ -1,9 +1,8 @@
-'use strict';
-var assert = require('chai').assert;
-var Shader = require('osg/Shader');
-var notify = require('osg/notify');
+import { assert } from 'chai';
+import Shader from 'osg/Shader';
+import notify from 'osg/notify';
 
-module.exports = function() {
+export default function() {
     test('Shader', function() {
         // catch logs
         var results = '';
@@ -46,4 +45,4 @@ module.exports = function() {
         assert.equal(resultsWarn.length, 624, 'test compilation warnings');
         assert.equal(resultsError.length, 90, 'test compilation error');
     });
-};
+}

@@ -1,5 +1,3 @@
-'use strict';
-
 var NodeVisitor = function(traversalMode) {
     /*jshint bitwise: false */
     this.traversalMask = ~0x0;
@@ -124,4 +122,4 @@ NodeVisitor.prototype = {
     }
 };
 
-module.exports = NodeVisitor;
+export default NodeVisitor;

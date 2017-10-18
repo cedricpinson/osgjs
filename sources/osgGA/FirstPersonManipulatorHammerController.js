@@ -1,4 +1,3 @@
-'use strict';
-var OrbitManipulatorHammerController = require('osgGA/OrbitManipulatorHammerController');
+import OrbitManipulatorHammerController from 'osgGA/OrbitManipulatorHammerController';
 
-module.exports = OrbitManipulatorHammerController;
+export default OrbitManipulatorHammerController;

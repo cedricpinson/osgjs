@@ -1,9 +1,7 @@
-'use strict';
-
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
-var vec4 = require('osg/glMatrix').vec4;
-var Uniform = require('osg/Uniform');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
+import { vec4 } from 'osg/glMatrix';
+import Uniform from 'osg/Uniform';
 
 // Define a material attribute
 var Material = function() {
@@ -105,4 +103,4 @@ utils.createPrototypeStateAttribute(
     'Material'
 );
 
-module.exports = Material;
+export default Material;

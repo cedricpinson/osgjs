@@ -1,8 +1,7 @@
-'use strict';
-var ShadowMap = require('tests/osgShadow/ShadowMap');
-var ShadowedScene = require('tests/osgShadow/ShadowedScene');
+import ShadowMap from 'tests/osgShadow/ShadowMap';
+import ShadowedScene from 'tests/osgShadow/ShadowedScene';
 
-module.exports = function() {
+export default function() {
     ShadowMap();
     ShadowedScene();
-};
+}

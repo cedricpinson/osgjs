@@ -1,8 +1,7 @@
-'use strict';
-var mat4 = require('osg/glMatrix').mat4;
-var quat = require('osg/glMatrix').quat;
-var vec3 = require('osg/glMatrix').vec3;
-var channelType = require('osgAnimation/channelType');
+import { mat4 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import channelType from 'osgAnimation/channelType';
 
 var target = {};
 target.InvalidTargetID = -1;
@@ -51,4 +50,4 @@ target.createVec3Target = createVec3Target;
 target.createFloatTarget = createFloatTarget;
 target.createMatrixTarget = createMatrixTarget;
 
-module.exports = target;
+export default target;

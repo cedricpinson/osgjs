@@ -1,19 +1,18 @@
-'use strict';
-var utils = require('osg/utils');
-var Node = require('osg/Node');
-var CullFace = require('osg/CullFace');
-var Depth = require('osg/Depth');
-var Texture = require('osg/Texture');
-var Uniform = require('osg/Uniform');
-var StateSet = require('osg/StateSet');
-var Camera = require('osg/Camera');
-var FrameBufferObject = require('osg/FrameBufferObject');
-var Viewport = require('osg/Viewport');
-var Program = require('osg/Program');
-var Shader = require('osg/Shader');
-var Shape = require('osg/shape');
-var TransformEnums = require('osg/transformEnums');
-var ShaderProcessor = require('osgShader/ShaderProcessor');
+import utils from 'osg/utils';
+import Node from 'osg/Node';
+import CullFace from 'osg/CullFace';
+import Depth from 'osg/Depth';
+import Texture from 'osg/Texture';
+import Uniform from 'osg/Uniform';
+import StateSet from 'osg/StateSet';
+import Camera from 'osg/Camera';
+import FrameBufferObject from 'osg/FrameBufferObject';
+import Viewport from 'osg/Viewport';
+import Program from 'osg/Program';
+import Shader from 'osg/Shader';
+import Shape from 'osg/shape';
+import TransformEnums from 'osg/transformEnums';
+import ShaderProcessor from 'osgShader/ShaderProcessor';
 
 /*
 This class creates a post-processing pipeline based on an user-defined list of passes and .glsl files.
@@ -1396,4 +1395,4 @@ utils.createPrototypeObject(
     'ComposerPostProcess'
 );
 
-module.exports = ComposerPostProcess;
+export default ComposerPostProcess;

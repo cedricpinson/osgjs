@@ -1,15 +1,17 @@
-'use strict';
-var assert = require('chai').assert;
-var ReaderParser = require('osgDB/readerParser');
-var Texture = require('osg/Texture');
-var Input = require('osgDB/Input');
-var mockup = require('tests/mockup/mockup');
-if (mockup.isNodeContext()) {
-    Input = require('tests/mockup/InputMockup');
-}
-var primitiveSet = require('osg/primitiveSet');
+import { assert } from 'chai';
+import ReaderParser from 'osgDB/readerParser';
+import Texture from 'osg/Texture';
+import mockup from 'tests/mockup/mockup';
+import primitiveSet from 'osg/primitiveSet';
 
-module.exports = function() {
+var Input;
+if (mockup.isNodeContext()) {
+    Input = require('tests/mockup/InputMockup').default;
+} else {
+    Input = require('osgDB/Input').default;
+}
+
+export default function() {
     test('StateSet - MultiTextures', function() {
         var tree = {
             stateset: {
@@ -1608,4 +1610,4 @@ module.exports = function() {
                 done();
             });
     });
-};
+}

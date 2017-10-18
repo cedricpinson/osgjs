@@ -1,7 +1,5 @@
 // jshint ignore: start
 
-'use strict';
-
 /*
  ** Copyright (c) 2012 The Khronos Group Inc.
  **
@@ -1719,4 +1717,4 @@ var WebGLDebugUtils = (function() {
     };
 })();
 
-module.exports = WebGLDebugUtils;
+export default WebGLDebugUtils;

@@ -1,6 +1,4 @@
-'use strict';
-
-var osgMath = require('osg/math');
+import osgMath from 'osg/math';
 
 var OrbitManipulatorHammerController = function(manipulator) {
     this._manipulator = manipulator;
@@ -207,4 +205,4 @@ OrbitManipulatorHammerController.prototype = {
         if (this._eventProxy) this._setListeners();
     }
 };
-module.exports = OrbitManipulatorHammerController;
+export default OrbitManipulatorHammerController;

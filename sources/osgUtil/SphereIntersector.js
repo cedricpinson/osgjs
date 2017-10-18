@@ -1,10 +1,8 @@
-'use strict';
-
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
-var Intersector = require('osgUtil/Intersector');
-var SphereIntersectFunctor = require('osgUtil/SphereIntersectFunctor');
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import Intersector from 'osgUtil/Intersector';
+import SphereIntersectFunctor from 'osgUtil/SphereIntersectFunctor';
 
 var SphereIntersector = function() {
     Intersector.call(this);
@@ -93,4 +91,4 @@ utils.createPrototypeObject(
     'SphereIntersector'
 );
 
-module.exports = SphereIntersector;
+export default SphereIntersector;

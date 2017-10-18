@@ -1,7 +1,6 @@
-'use strict';
-var osg = require('osgWrappers/serializers/osg');
-var osgAnimation = require('osgWrappers/serializers/osgAnimation');
-var osgText = require('osgWrappers/serializers/osgText');
+import osg from 'osgWrappers/serializers/osg';
+import osgAnimation from 'osgWrappers/serializers/osgAnimation';
+import osgText from 'osgWrappers/serializers/osgText';
 
 var osgWrappers = {};
 
@@ -9,4 +8,4 @@ osgWrappers.osg = osg;
 osgWrappers.osgAnimation = osgAnimation;
 osgWrappers.osgText = osgText;
 
-module.exports = osgWrappers;
+export default osgWrappers;

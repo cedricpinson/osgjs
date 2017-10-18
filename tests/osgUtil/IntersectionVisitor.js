@@ -1,14 +1,13 @@
-'use strict';
-var assert = require('chai').assert;
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var Camera = require('osg/Camera');
-var Viewport = require('osg/Viewport');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var Shape = require('osg/shape');
-var TransformEnums = require('osg/transformEnums');
+import { assert } from 'chai';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import Camera from 'osg/Camera';
+import Viewport from 'osg/Viewport';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import Shape from 'osg/shape';
+import TransformEnums from 'osg/transformEnums';
 
-module.exports = function() {
+export default function() {
     var DummyIntersector = function() {
         this.point = [0.5, 0.5, 0.5];
         this.stackTransforms = [];
@@ -114,4 +113,4 @@ module.exports = function() {
             'check end transform point'
         );
     });
-};
+}

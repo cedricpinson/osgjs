@@ -1,10 +1,9 @@
-'use strict';
-var BasicAnimationManager = require('tests/osgAnimation/BasicAnimationManager');
-var Interpolator = require('tests/osgAnimation/Interpolator');
-var StackedTransform = require('tests/osgAnimation/StackedTransform');
+import BasicAnimationManager from 'tests/osgAnimation/BasicAnimationManager';
+import Interpolator from 'tests/osgAnimation/Interpolator';
+import StackedTransform from 'tests/osgAnimation/StackedTransform';
 
-module.exports = function() {
+export default function() {
     BasicAnimationManager();
     Interpolator();
     StackedTransform();
-};
+}

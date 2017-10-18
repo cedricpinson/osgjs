@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var mat4 = require('osg/glMatrix').mat4;
-var PooledResource = require('osg/PooledResource');
-var PooledArray = require('osg/PooledArray');
-var TransformEnums = require('osg/transformEnums');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import { mat4 } from 'osg/glMatrix';
+import PooledResource from 'osg/PooledResource';
+import PooledArray from 'osg/PooledArray';
+import TransformEnums from 'osg/transformEnums';
 
 var IntersectionVisitor = function() {
     NodeVisitor.call(this);
@@ -220,4 +219,4 @@ utils.createPrototypeObject(
     'IntersectionVisitor'
 );
 
-module.exports = IntersectionVisitor;
+export default IntersectionVisitor;

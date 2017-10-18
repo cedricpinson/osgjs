@@ -1,5 +1,3 @@
-'use strict';
-
 var getScene = function() {
     return {
         children: [
@@ -38317,4 +38315,4 @@ var getScene = function() {
     };
 };
 
-module.exports = getScene;
+export default getScene;

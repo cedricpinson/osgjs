@@ -1,17 +1,16 @@
-'use strict';
-var CullVisitor = require('osg/CullVisitor');
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var vec4 = require('osg/glMatrix').vec4;
-var mat4 = require('osg/glMatrix').mat4;
-var AutoTransform = require('osg/AutoTransform');
-var MatrixTransform = require('osg/MatrixTransform');
-var Shape = require('osg/shape');
-var Texture = require('osg/Texture');
-var BlendFunc = require('osg/BlendFunc');
-var quat = require('osg/glMatrix').quat;
-var NodeVisitor = require('osg/NodeVisitor');
-var Node = require('osg/Node');
+import CullVisitor from 'osg/CullVisitor';
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import AutoTransform from 'osg/AutoTransform';
+import MatrixTransform from 'osg/MatrixTransform';
+import Shape from 'osg/shape';
+import Texture from 'osg/Texture';
+import BlendFunc from 'osg/BlendFunc';
+import { quat } from 'osg/glMatrix';
+import NodeVisitor from 'osg/NodeVisitor';
+import Node from 'osg/Node';
 /**
  *  @class Text: Text 2D using a Canvas2D as a texture for a textured quad.
  *  Notes: The OSGjs Text has been implemented like OSG osgText::Text as much as possible. However there are some
@@ -471,4 +470,4 @@ CullVisitor.registerApplyFunction(
     CullVisitor.getApplyFunction(AutoTransform.nodeTypeID)
 );
 
-module.exports = Text;
+export default Text;

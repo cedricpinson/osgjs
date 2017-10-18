@@ -1,57 +1,62 @@
-'use strict';
+import 'osg/polyfill';
+import osgNameSpace from 'osgNameSpace';
+import osg from 'osg/osg';
+import osgAnimation from 'osgAnimation/osgAnimation';
+import osgDB from 'osgDB/osgDB';
+import osgGA from 'osgGA/osgGA';
+import osgUtil from 'osgUtil/osgUtil';
+import osgViewer from 'osgViewer/osgViewer';
+import osgShader from 'osgShader/osgShader';
+import osgShadow from 'osgShadow/osgShadow';
+import osgStats from 'osgStats/osgStats';
+import osgText from 'osgText/osgText';
+import osgWrappers from 'osgWrappers/osgWrappers';
+import osgPlugins from 'osgPlugins/osgPlugins';
 
-// Check polyfill
-require('osg/polyfill');
+var OSG = osgNameSpace;
 
-var osgNameSpace = require('osgNameSpace');
-var osg = require('osg/osg');
-var osgAnimation = require('osgAnimation/osgAnimation');
-var osgDB = require('osgDB/osgDB');
-var osgGA = require('osgGA/osgGA');
-var osgUtil = require('osgUtil/osgUtil');
-var osgViewer = require('osgViewer/osgViewer');
-var osgShader = require('osgShader/osgShader');
-var osgShadow = require('osgShadow/osgShadow');
-var osgStats = require('osgStats/osgStats');
-var osgText = require('osgText/osgText');
-var osgWrappers = require('osgWrappers/osgWrappers');
-var osgPlugins = require('osgPlugins/osgPlugins');
-
-var openSceneGraph = osgNameSpace;
-
-openSceneGraph.osg = osg;
-openSceneGraph.osgAnimation = osgAnimation;
-openSceneGraph.osgDB = osgDB;
-openSceneGraph.osgGA = osgGA;
-openSceneGraph.osgUtil = osgUtil;
-openSceneGraph.osgViewer = osgViewer;
-openSceneGraph.osgShader = osgShader;
-openSceneGraph.osgShadow = osgShadow;
-openSceneGraph.osgStats = osgStats;
-openSceneGraph.osgText = osgText;
-openSceneGraph.osgWrappers = osgWrappers;
-openSceneGraph.osgPlugins = osgPlugins;
-
-var namespaces = [
-    'osg',
-    'osgAnimation',
-    'osgDB',
-    'osgGA',
-    'osgUtil',
-    'osgViewer',
-    'osgShader',
-    'osgShadow',
-    'osgStats',
-    'osgText',
-    'osgWrappers',
-    'osgPlugins'
-];
+OSG.osg = osg;
+OSG.osgAnimation = osgAnimation;
+OSG.osgDB = osgDB;
+OSG.osgGA = osgGA;
+OSG.osgUtil = osgUtil;
+OSG.osgViewer = osgViewer;
+OSG.osgShader = osgShader;
+OSG.osgShadow = osgShadow;
+OSG.osgStats = osgStats;
+OSG.osgText = osgText;
+OSG.osgWrappers = osgWrappers;
+OSG.osgPlugins = osgPlugins;
 
 // for backward compatibility
-openSceneGraph.globalify = function() {
-    namespaces.forEach(function(namespace) {
-        window[namespace] = openSceneGraph[namespace];
-    });
+OSG.globalify = function() {
+    window.osg = OSG.osg;
+    window.osgAnimation = OSG.osgAnimation;
+    window.osgDB = OSG.osgDB;
+    window.osgGA = OSG.osgGA;
+    window.osgUtil = OSG.osgUtil;
+    window.osgViewer = OSG.osgViewer;
+    window.osgShader = OSG.osgShader;
+    window.osgShadow = OSG.osgShadow;
+    window.osgStats = OSG.osgStats;
+    window.osgText = OSG.osgText;
+    window.osgWrappers = OSG.osgWrappers;
+    window.osgPlugins = OSG.osgPlugins;
 };
 
-module.exports = openSceneGraph;
+export {
+    osg,
+    osgAnimation,
+    osgDB,
+    osgGA,
+    osgUtil,
+    osgViewer,
+    osgShader,
+    osgShadow,
+    osgStats,
+    osgText,
+    osgWrappers,
+    osgPlugins
+};
+
+export default OSG;

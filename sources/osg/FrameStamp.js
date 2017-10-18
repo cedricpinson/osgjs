@@ -1,5 +1,3 @@
-'use strict';
-
 var FrameStamp = function() {
     this._frame = 0;
     this._startSimulation = 0.0;
@@ -34,4 +32,4 @@ FrameStamp.prototype = {
     }
 };
 
-module.exports = FrameStamp;
+export default FrameStamp;

@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 // Used to notify the Compiler to create a Depth Casting optimized shader
 var ShadowCastAttribute = function(disable, shadowReceiveAttribute) {
@@ -51,4 +50,4 @@ utils.createPrototypeStateAttribute(
     'ShadowCastAttribute'
 );
 
-module.exports = ShadowCastAttribute;
+export default ShadowCastAttribute;

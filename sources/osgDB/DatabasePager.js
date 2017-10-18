@@ -1,9 +1,8 @@
-'use strict';
-var P = require('bluebird');
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var PagedLOD = require('osg/PagedLOD');
-var Timer = require('osg/Timer');
+import P from 'bluebird';
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import PagedLOD from 'osg/PagedLOD';
+import Timer from 'osg/Timer';
 
 var FindPagedLODsVisitor = function() {
     NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
@@ -352,7 +351,7 @@ utils.createPrototypeObject(
         },
 
         loadNodeFromURL: function(url) {
-            var ReaderParser = require('osgDB/readerParser');
+            var ReaderParser = require('osgDB/readerParser').default;
             // Call to ReaderParser just in case there is a custom readNodeURL Callback
             // See osgDB/options.js and/or osgDB/Input.js
             // TODO: We should study if performance can be improved if separating the XHTTP request from
@@ -445,4 +444,4 @@ utils.createPrototypeObject(
     'DatabasePager'
 );
 
-module.exports = DatabasePager;
+export default DatabasePager;

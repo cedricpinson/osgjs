@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var KdTree = require('osg/KdTree');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import KdTree from 'osg/KdTree';
 
 var KdTreeBuilder = function(options) {
     NodeVisitor.call(this);
@@ -42,4 +41,4 @@ utils.createPrototypeObject(
     'KdTreeBuilder'
 );
 
-module.exports = KdTreeBuilder;
+export default KdTreeBuilder;

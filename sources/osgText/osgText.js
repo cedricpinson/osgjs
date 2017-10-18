@@ -1,7 +1,6 @@
-'use strict';
-var Text = require('osgText/Text');
+import Text from 'osgText/Text';
 
 var osgText = {};
 osgText.Text = Text;
 
-module.exports = osgText;
+export default osgText;

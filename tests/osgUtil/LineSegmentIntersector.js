@@ -1,24 +1,23 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
-var KdTreeBuilder = require('osg/KdTreeBuilder');
-var BoundingSphere = require('osg/BoundingSphere');
-var Node = require('osg/Node');
-var Geometry = require('osg/Geometry');
-var BufferArray = require('osg/BufferArray');
-var DrawArrays = require('osg/DrawArrays');
-var Viewport = require('osg/Viewport');
-var primitiveSet = require('osg/primitiveSet');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var MatrixTransform = require('osg/MatrixTransform');
-var Shape = require('osg/shape');
-var View = require('osgViewer/View');
-var ReaderParser = require('osgDB/readerParser');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
+import KdTreeBuilder from 'osg/KdTreeBuilder';
+import BoundingSphere from 'osg/BoundingSphere';
+import Node from 'osg/Node';
+import Geometry from 'osg/Geometry';
+import BufferArray from 'osg/BufferArray';
+import DrawArrays from 'osg/DrawArrays';
+import Viewport from 'osg/Viewport';
+import primitiveSet from 'osg/primitiveSet';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import MatrixTransform from 'osg/MatrixTransform';
+import Shape from 'osg/shape';
+import View from 'osgViewer/View';
+import ReaderParser from 'osgDB/readerParser';
 
-module.exports = function() {
+export default function() {
     test('LineSegmentIntersector simple test', function() {
         var lsi = new LineSegmentIntersector();
         var bs = new BoundingSphere();
@@ -186,4 +185,4 @@ module.exports = function() {
         result = view.computeIntersections(400, 300);
         assert.isOk(result.length === 1, 'Hits should be 1 and result is ' + result.length);
     });
-};
+}

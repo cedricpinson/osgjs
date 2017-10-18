@@ -1,8 +1,6 @@
-'use strict';
-
-var Depth = require('osg/Depth');
-var BlendFunc = require('osg/BlendFunc');
-var CullFace = require('osg/CullFace');
+import Depth from 'osg/Depth';
+import BlendFunc from 'osg/BlendFunc';
+import CullFace from 'osg/CullFace';
 
 var createStateBlendFunc = function() {
     return {
@@ -595,4 +593,4 @@ StateCache.prototype = {
     }
 };
 
-module.exports = StateCache;
+export default StateCache;

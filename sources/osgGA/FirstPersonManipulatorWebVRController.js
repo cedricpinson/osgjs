@@ -1,5 +1,3 @@
-'use strict';
-
 var FirstPersonManipulatorWebVRController = function(manipulator) {
     this._manipulator = manipulator;
     this.init();
@@ -12,4 +10,4 @@ FirstPersonManipulatorWebVRController.prototype = {
     }
 };
 
-module.exports = FirstPersonManipulatorWebVRController;
+export default FirstPersonManipulatorWebVRController;

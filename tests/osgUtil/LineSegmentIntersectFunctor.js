@@ -1,16 +1,15 @@
-'use strict';
-var assert = require('chai').assert;
-var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var vec3 = require('osg/glMatrix').vec3;
-var Shape = require('osg/shape');
-var DrawElements = require('osg/DrawElements');
-var DrawArrays = require('osg/DrawArrays');
-var primitiveSet = require('osg/primitiveSet');
-var BufferArray = require('osg/BufferArray');
-var Geometry = require('osg/Geometry');
+import { assert } from 'chai';
+import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import { vec3 } from 'osg/glMatrix';
+import Shape from 'osg/shape';
+import DrawElements from 'osg/DrawElements';
+import DrawArrays from 'osg/DrawArrays';
+import primitiveSet from 'osg/primitiveSet';
+import BufferArray from 'osg/BufferArray';
+import Geometry from 'osg/Geometry';
 
-module.exports = function() {
+export default function() {
     test('LineSegmentIntersectFunctor - check primitive type', function() {
         var checkPrimitive = function(geom, msg) {
             var lsi = new LineSegmentIntersector();
@@ -198,4 +197,4 @@ module.exports = function() {
             checkPrimitive(quad, 'TriangleFan not indexed');
         })();
     });
-};
+}

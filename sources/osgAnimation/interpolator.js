@@ -1,7 +1,6 @@
-'use strict';
-var vec3 = require('osg/glMatrix').vec3;
-var quat = require('osg/glMatrix').quat;
-var Channel = require('osgAnimation/channel');
+import { vec3 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import Channel from 'osgAnimation/channel';
 
 var vec3CopyKeyFrame = function(i, keys, result) {
     result[0] = keys[i++];
@@ -283,4 +282,4 @@ moduleInterpolator.FloatLerpInterpolator = FloatLerpInterpolator;
 moduleInterpolator.FloatCubicBezierInterpolator = FloatCubicBezierInterpolator;
 moduleInterpolator.Vec3CubicBezierInterpolator = Vec3CubicBezierInterpolator;
 
-module.exports = moduleInterpolator;
+export default moduleInterpolator;

@@ -1,5 +1,3 @@
-'use strict';
-
 var easeOutQuad = function(t) {
     return -(t * (t - 2.0));
 };
@@ -36,7 +34,7 @@ var easeOutBounce = function(t) {
     }
 };
 
-module.exports = {
+export default {
     easeOutQuad: easeOutQuad,
     easeInQuad: easeInQuad,
     easeOutCubic: easeOutCubic,

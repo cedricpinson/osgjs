@@ -1,9 +1,8 @@
-'use strict';
-var utils = require('osg/utils');
-var notify = require('osg/notify');
-var UpdateMatrixTransform = require('osgAnimation/UpdateMatrixTransform');
-var mat4 = require('osg/glMatrix').mat4;
-var NodeVisitor = require('osg/NodeVisitor');
+import utils from 'osg/utils';
+import notify from 'osg/notify';
+import UpdateMatrixTransform from 'osgAnimation/UpdateMatrixTransform';
+import { mat4 } from 'osg/glMatrix';
+import NodeVisitor from 'osg/NodeVisitor';
 
 /**
  *  UpdateBone
@@ -48,4 +47,4 @@ utils.createPrototypeObject(
     'UpdateBone'
 );
 
-module.exports = UpdateBone;
+export default UpdateBone;

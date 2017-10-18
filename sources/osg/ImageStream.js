@@ -1,7 +1,6 @@
-'use strict';
-var P = require('bluebird');
-var utils = require('osg/utils');
-var Image = require('osg/Image');
+import P from 'bluebird';
+import utils from 'osg/utils';
+import Image from 'osg/Image';
 
 var ImageStream = function(video) {
     Image.call(this, video);
@@ -73,4 +72,4 @@ utils.createPrototypeObject(
     'ImageStream'
 );
 
-module.exports = ImageStream;
+export default ImageStream;

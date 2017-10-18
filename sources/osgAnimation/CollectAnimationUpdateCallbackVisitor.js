@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var AnimationUpdateCallback = require('osgAnimation/AnimationUpdateCallback');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import AnimationUpdateCallback from 'osgAnimation/AnimationUpdateCallback';
 
 // search into a subgraph all target
 var CollectAnimationUpdateCallbackVisitor = function() {
@@ -34,4 +33,4 @@ utils.createPrototypeObject(
     'CollectAnimationUpdateCallbackVisitor'
 );
 
-module.exports = CollectAnimationUpdateCallbackVisitor;
+export default CollectAnimationUpdateCallbackVisitor;

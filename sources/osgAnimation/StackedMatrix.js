@@ -1,8 +1,7 @@
-'use strict';
-var utils = require('osg/utils');
-var Object = require('osg/Object');
-var mat4 = require('osg/glMatrix').mat4;
-var Target = require('osgAnimation/target');
+import utils from 'osg/utils';
+import Object from 'osg/Object';
+import { mat4 } from 'osg/glMatrix';
+import Target from 'osgAnimation/target';
 
 var StackedMatrix = function(name, matrix) {
     Object.call(this);
@@ -42,4 +41,4 @@ utils.createPrototypeObject(
     'StackedMatrix'
 );
 
-module.exports = StackedMatrix;
+export default StackedMatrix;

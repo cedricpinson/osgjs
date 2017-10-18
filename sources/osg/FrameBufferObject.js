@@ -1,10 +1,9 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var GLObject = require('osg/GLObject');
-var StateAttribute = require('osg/StateAttribute');
-var Timer = require('osg/Timer');
-var WebglCaps = require('osg/WebGLCaps');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import GLObject from 'osg/GLObject';
+import StateAttribute from 'osg/StateAttribute';
+import Timer from 'osg/Timer';
+import WebglCaps from 'osg/WebGLCaps';
 
 /**
  * FrameBufferObject manage fbo / rtt
@@ -433,4 +432,4 @@ utils.createPrototypeStateAttribute(
     'FrameBufferObject'
 );
 
-module.exports = FrameBufferObject;
+export default FrameBufferObject;

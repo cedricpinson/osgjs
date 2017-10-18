@@ -1,9 +1,7 @@
-'use strict';
-
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var Plane = require('osg/Plane');
-var IntersectFunctor = require('osgUtil/IntersectFunctor');
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import Plane from 'osg/Plane';
+import IntersectFunctor from 'osgUtil/IntersectFunctor';
 
 var PolytopeIntersection = function() {
     IntersectFunctor.Intersection.call(this);
@@ -170,4 +168,4 @@ utils.createPrototypeObject(
     'PolytopeIntersectFunctor'
 );
 
-module.exports = PolytopeIntersectFunctor;
+export default PolytopeIntersectFunctor;

@@ -1,24 +1,23 @@
-'use strict';
-var BufferArray = require('osg/BufferArray');
-var Camera = require('osg/Camera');
-var FrameStamp = require('osg/FrameStamp');
-var FrameBufferObject = require('osg/FrameBufferObject');
-var Light = require('osg/Light');
-var mat4 = require('osg/glMatrix').mat4;
-var Texture = require('osg/Texture');
-var Program = require('osg/Program');
-var Shader = require('osg/Shader');
-var Scissor = require('osg/Scissor');
-var vec3 = require('osg/glMatrix').vec3;
-var Viewport = require('osg/Viewport');
-var VertexArrayObject = require('osg/VertexArrayObject');
-var WebGLCaps = require('osg/WebGLCaps');
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
-var Renderer = require('osgViewer/Renderer');
-var Scene = require('osgViewer/Scene');
-var DisplayGraph = require('osgUtil/DisplayGraph');
-var notify = require('osg/notify');
+import BufferArray from 'osg/BufferArray';
+import Camera from 'osg/Camera';
+import FrameStamp from 'osg/FrameStamp';
+import FrameBufferObject from 'osg/FrameBufferObject';
+import Light from 'osg/Light';
+import { mat4 } from 'osg/glMatrix';
+import Texture from 'osg/Texture';
+import Program from 'osg/Program';
+import Shader from 'osg/Shader';
+import Scissor from 'osg/Scissor';
+import { vec3 } from 'osg/glMatrix';
+import Viewport from 'osg/Viewport';
+import VertexArrayObject from 'osg/VertexArrayObject';
+import WebGLCaps from 'osg/WebGLCaps';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
+import Renderer from 'osgViewer/Renderer';
+import Scene from 'osgViewer/Scene';
+import DisplayGraph from 'osgUtil/DisplayGraph';
+import notify from 'osg/notify';
 
 // View is normally inherited from osg/View. In osgjs we dont need it yet
 // this split, so everything is in osgViewer/View
@@ -353,4 +352,4 @@ View.prototype = {
     }
 };
 
-module.exports = View;
+export default View;

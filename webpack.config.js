@@ -12,7 +12,7 @@ var BUILD_PATH = path.join(ROOT_PATH, 'builds/dist/');
 var BUILD_TESTS_PATH = path.join(ROOT_PATH, 'builds/tests/');
 
 var resolve = {
-    root: [SOURCES_PATH, VENDORS_PATH, ROOT_PATH, NODE_PATH]
+    modules: [SOURCES_PATH, VENDORS_PATH, ROOT_PATH, NODE_PATH]
 };
 
 var externals = [
@@ -73,13 +73,12 @@ var mainlibConfig = {
     module: {
         loaders: [
             {
-                // shaders
                 test: /\.(frag|vert|glsl)$/,
                 loader: 'raw-loader'
             }
         ]
     },
-    devtool: 'source-map',
+    devtool: 'eval',
     plugins: [
         new webpack.BannerPlugin(
             ['OSGJS', 'Cedric Pinson <trigrou@trigrou.com> (http://cedricpinson.com)'].join('\n')
@@ -113,7 +112,7 @@ var testconfig = {
             }
         ]
     },
-    devtool: 'source-map',
+    devtool: 'eval',
     plugins: [
         new webpack.BannerPlugin(
             ['OSGJS', 'Cedric Pinson <trigrou@trigrou.com> (http://cedricpinson.com)'].join('\n')

@@ -1,9 +1,8 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var BufferArray = require('osg/BufferArray');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import BufferArray from 'osg/BufferArray';
 
-module.exports = function() {
+export default function() {
     test('BufferArray', function() {
         (function() {
             var gl = mockup.createFakeRenderer();
@@ -25,4 +24,4 @@ module.exports = function() {
             assert.equal(b.getItemSize(), 3, 'Check item size is 3');
         })();
     });
-};
+}

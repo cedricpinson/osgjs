@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 /**
  *  Manage Blending mode
@@ -147,4 +146,4 @@ utils.createPrototypeStateAttribute(
     'BlendFunc'
 );
 
-module.exports = BlendFunc;
+export default BlendFunc;

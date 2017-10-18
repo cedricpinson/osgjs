@@ -1,9 +1,8 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var Shape = require('osg/shape');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import Shape from 'osg/shape';
 
-module.exports = function() {
+export default function() {
     test('Viewer', function() {
         (function() {
             var canvas = mockup.createCanvas();
@@ -117,4 +116,4 @@ module.exports = function() {
             assert.isOk(renderCount === 1, 'no render after context Lost');
         })();
     });
-};
+}

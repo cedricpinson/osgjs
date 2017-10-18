@@ -1,5 +1,3 @@
-'use strict';
-
 var clamp = function(x, min, max) {
     // http://jsperf.com/math-clamp
     // http://jsperf.com/clamping-methods/2
@@ -20,7 +18,7 @@ var fastIsNaN = function(x) {
     return x !== x;
 };
 
-module.exports = {
+export default {
     clamp: clamp,
     smoothStep: smoothStep,
     isNaN: fastIsNaN

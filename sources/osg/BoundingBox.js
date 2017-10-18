@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 
 var BoundingBox = function() {
     this._min = vec3.create();
@@ -223,4 +222,4 @@ utils.createPrototypeObject(
     'BoundingBox'
 );
 
-module.exports = BoundingBox;
+export default BoundingBox;

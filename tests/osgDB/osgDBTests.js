@@ -1,10 +1,9 @@
-'use strict';
-var Input = require('tests/osgDB/Input');
-var ReaderParser = require('tests/osgDB/ReaderParser');
-var DatabasePager = require('tests/osgDB/DatabasePager');
+import Input from 'tests/osgDB/Input';
+import ReaderParser from 'tests/osgDB/ReaderParser';
+import DatabasePager from 'tests/osgDB/DatabasePager';
 
-module.exports = function() {
+export default function() {
     Input();
     ReaderParser();
     DatabasePager();
-};
+}

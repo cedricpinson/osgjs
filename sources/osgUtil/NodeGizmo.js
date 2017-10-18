@@ -1,20 +1,19 @@
-'use strict';
-var Node = require('osg/Node');
-var MatrixTransform = require('osg/MatrixTransform');
-var Depth = require('osg/Depth');
-var BlendFunc = require('osg/BlendFunc');
-var CullFace = require('osg/CullFace');
-var Uniform = require('osg/Uniform');
-var vec2 = require('osg/glMatrix').vec2;
-var vec3 = require('osg/glMatrix').vec3;
-var vec4 = require('osg/glMatrix').vec4;
-var mat4 = require('osg/glMatrix').mat4;
-var quat = require('osg/glMatrix').quat;
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var LineSegmentIntersector = require('osgUtil/LineSegmentIntersector');
-var GizmoGeometry = require('osgUtil/gizmoGeometry');
-var TransformEnums = require('osg/transformEnums');
-var utils = require('osg/utils');
+import Node from 'osg/Node';
+import MatrixTransform from 'osg/MatrixTransform';
+import Depth from 'osg/Depth';
+import BlendFunc from 'osg/BlendFunc';
+import CullFace from 'osg/CullFace';
+import Uniform from 'osg/Uniform';
+import { vec2 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
+import GizmoGeometry from 'osgUtil/gizmoGeometry';
+import TransformEnums from 'osg/transformEnums';
+import utils from 'osg/utils';
 
 var getCanvasCoord = function(vec, e) {
     vec[0] = e.offsetX === undefined ? e.layerX : e.offsetX;
@@ -1110,4 +1109,4 @@ utils.createPrototypeNode(
     'NodeGizmo'
 );
 
-module.exports = NodeGizmo;
+export default NodeGizmo;

@@ -1,4 +1,4 @@
-var utils = require('osg/utils');
+import utils from 'osg/utils';
 var performance = window.performance;
 
 var Counter = function(config) {
@@ -81,4 +81,4 @@ utils.createPrototypeObject(Counter, {
     }
 });
 
-module.exports = Counter;
+export default Counter;

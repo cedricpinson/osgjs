@@ -1,9 +1,8 @@
-'use strict';
-var utils = require('osg/utils');
-var Bone = require('osgAnimation/Bone');
-var NodeVisitor = require('osg/NodeVisitor');
-var notify = require('osg/notify');
-var Object = require('osg/Object');
+import utils from 'osg/utils';
+import Bone from 'osgAnimation/Bone';
+import NodeVisitor from 'osg/NodeVisitor';
+import notify from 'osg/notify';
+import Object from 'osg/Object';
 
 /**
  *  ValidateSkeletonVisitor
@@ -91,4 +90,4 @@ utils.createPrototypeObject(
     'UpdateSkeleton'
 );
 
-module.exports = UpdateSkeleton;
+export default UpdateSkeleton;

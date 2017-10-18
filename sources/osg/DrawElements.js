@@ -1,5 +1,4 @@
-'use strict';
-var primitiveSet = require('osg/primitiveSet');
+import primitiveSet from 'osg/primitiveSet';
 
 /**
  * DrawElements manage rendering of indexed primitives
@@ -73,4 +72,4 @@ DrawElements.prototype = {
     }
 };
 
-module.exports = DrawElements;
+export default DrawElements;

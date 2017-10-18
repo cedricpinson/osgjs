@@ -1,29 +1,28 @@
-'use strict';
-var notify = require('osg/notify');
-var mat4 = require('osg/glMatrix').mat4;
-var Options = require('osg/Options');
-var P = require('bluebird');
-var Timer = require('osg/Timer');
-var TimerGPU = require('osg/TimerGPU');
-var UpdateVisitor = require('osg/UpdateVisitor');
-var utils = require('osg/utils');
-var GLObject = require('osg/GLObject');
-var FrameBufferObject = require('osg/FrameBufferObject');
-var BufferArray = require('osg/BufferArray');
-var VertexArrayObject = require('osg/VertexArrayObject');
-var Shader = require('osg/Shader');
-var Program = require('osg/Program');
-var Texture = require('osg/Texture');
-var OrbitManipulator = require('osgGA/OrbitManipulator');
-var EventProxy = require('osgViewer/eventProxy/eventProxy');
-var View = require('osgViewer/View');
-var WebGLUtils = require('osgViewer/webgl-utils');
-var WebGLDebugUtils = require('osgViewer/webgl-debug');
-var requestFile = require('osgDB/requestFile');
-var Stats = require('osgStats/Stats');
-var defaultStats = require('osgStats/defaultStats');
-var glStats = require('osgStats/glStats');
-var browserStats = require('osgStats/browserStats');
+import notify from 'osg/notify';
+import { mat4 } from 'osg/glMatrix';
+import Options from 'osg/Options';
+import P from 'bluebird';
+import Timer from 'osg/Timer';
+import TimerGPU from 'osg/TimerGPU';
+import UpdateVisitor from 'osg/UpdateVisitor';
+import utils from 'osg/utils';
+import GLObject from 'osg/GLObject';
+import FrameBufferObject from 'osg/FrameBufferObject';
+import BufferArray from 'osg/BufferArray';
+import VertexArrayObject from 'osg/VertexArrayObject';
+import Shader from 'osg/Shader';
+import Program from 'osg/Program';
+import Texture from 'osg/Texture';
+import OrbitManipulator from 'osgGA/OrbitManipulator';
+import EventProxy from 'osgViewer/eventProxy/eventProxy';
+import View from 'osgViewer/View';
+import WebGLUtils from 'osgViewer/webgl-utils';
+import WebGLDebugUtils from 'osgViewer/webgl-debug';
+import requestFile from 'osgDB/requestFile';
+import Stats from 'osgStats/Stats';
+import defaultStats from 'osgStats/defaultStats';
+import glStats from 'osgStats/glStats';
+import browserStats from 'osgStats/browserStats';
 
 var getGLSLOptimizer = function() {
     return new P(function(resolve, reject) {
@@ -684,4 +683,4 @@ utils.createPrototypeObject(
     'Viewer'
 );
 
-module.exports = Viewer;
+export default Viewer;

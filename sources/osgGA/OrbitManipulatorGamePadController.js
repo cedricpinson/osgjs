@@ -1,5 +1,4 @@
-'use strict';
-var vec2 = require('osg/glMatrix').vec2;
+import { vec2 } from 'osg/glMatrix';
 
 var OrbitManipulatorGamePadController = function(manipulator) {
     this._manipulator = manipulator;
@@ -108,4 +107,4 @@ OrbitManipulatorGamePadController.prototype = {
         }
     }
 };
-module.exports = OrbitManipulatorGamePadController;
+export default OrbitManipulatorGamePadController;

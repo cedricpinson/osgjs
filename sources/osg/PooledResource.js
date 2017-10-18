@@ -1,5 +1,3 @@
-'use strict';
-
 var PooledResource = function(createFunction) {
     this._createFunction = createFunction;
     this._pool = [];
@@ -37,4 +35,4 @@ PooledResource.prototype = {
     }
 };
 
-module.exports = PooledResource;
+export default PooledResource;

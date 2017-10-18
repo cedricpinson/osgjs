@@ -1,5 +1,4 @@
-'use strict';
-var OrbitManipulator = require('osgGA/OrbitManipulator');
+import OrbitManipulator from 'osgGA/OrbitManipulator';
 
 var CADManipulatorStandardMouseKeyboardController = function(manipulator) {
     this._manipulator = manipulator;
@@ -169,4 +168,4 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
     }
 };
 
-module.exports = CADManipulatorStandardMouseKeyboardController;
+export default CADManipulatorStandardMouseKeyboardController;

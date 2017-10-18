@@ -1,13 +1,12 @@
-'use strict';
-var Light = require('osg/Light');
-var LightSource = require('osg/LightSource');
-var mat4 = require('osg/glMatrix').mat4;
-var MatrixTransform = require('osg/MatrixTransform');
-var Node = require('osg/Node');
-var Shape = require('osg/shape');
-var ShadowedScene = require('osgShadow/ShadowedScene');
-var ShadowSettings = require('osgShadow/ShadowSettings');
-var ShadowMap = require('osgShadow/ShadowMap');
+import Light from 'osg/Light';
+import LightSource from 'osg/LightSource';
+import { mat4 } from 'osg/glMatrix';
+import MatrixTransform from 'osg/MatrixTransform';
+import Node from 'osg/Node';
+import Shape from 'osg/shape';
+import ShadowedScene from 'osgShadow/ShadowedScene';
+import ShadowSettings from 'osgShadow/ShadowSettings';
+import ShadowMap from 'osgShadow/ShadowMap';
 
 var addScene = function(rootNode, count, shadows, culling) {
     var groundSubNode;
@@ -62,6 +61,6 @@ var addScene = function(rootNode, count, shadows, culling) {
     }
 };
 
-module.exports = {
+export default {
     addScene: addScene
 };

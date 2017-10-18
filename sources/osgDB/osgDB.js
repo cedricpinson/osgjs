@@ -1,13 +1,14 @@
-'use strict';
-var utils = require('osg/utils');
-var Input = require('osgDB/Input');
-var ReaderParser = require('osgDB/readerParser');
-var DatabasePager = require('osgDB/DatabasePager');
-var osgWrappers = require('osgWrappers/serializers/osg');
-var osgAnimationWrappers = require('osgWrappers/serializers/osgAnimation');
-var osgTextWrappers = require('osgWrappers/serializers/osgText');
-var Registry = require('osgDB/Registry');
-var FileHelper = require('osgDB/FileHelper');
+import utils from 'osg/utils';
+import Input from 'osgDB/Input';
+import ReaderParser from 'osgDB/readerParser';
+import DatabasePager from 'osgDB/DatabasePager';
+import osgWrappers from 'osgWrappers/serializers/osg';
+import osgAnimationWrappers from 'osgWrappers/serializers/osgAnimation';
+import osgTextWrappers from 'osgWrappers/serializers/osgText';
+import Registry from 'osgDB/Registry';
+import FileHelper from 'osgDB/FileHelper';
+import requestFile from 'osgDB/requestFile';
+import zlib from 'osgDB/zlib';
 
 var osgDB = {};
 osgDB.Input = Input;
@@ -18,9 +19,8 @@ osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
 osgDB.ObjectWrapper.serializers.osgText = osgTextWrappers;
 osgDB.Registry = Registry;
 osgDB.FileHelper = FileHelper;
-osgDB.requestFile = require('osgDB/requestFile');
+osgDB.requestFile = requestFile;
 
-var zlib = require('osgDB/zlib');
 utils.objectMix(osgDB, zlib);
 
-module.exports = osgDB;
+export default osgDB;

@@ -1,13 +1,12 @@
-'use strict';
-var vec3 = require('osg/glMatrix').vec3;
-var BufferArray = require('osg/BufferArray');
-var Geometry = require('osg/Geometry');
-var primitiveSet = require('osg/primitiveSet');
-var DrawArrays = require('osg/DrawArrays');
-var DrawElements = require('osg/DrawElements');
-var Program = require('osg/Program');
-var Shader = require('osg/Shader');
-var utils = require('osg/utils');
+import { vec3 } from 'osg/glMatrix';
+import BufferArray from 'osg/BufferArray';
+import Geometry from 'osg/Geometry';
+import primitiveSet from 'osg/primitiveSet';
+import DrawArrays from 'osg/DrawArrays';
+import DrawElements from 'osg/DrawElements';
+import Program from 'osg/Program';
+import Shader from 'osg/Shader';
+import utils from 'osg/utils';
 
 /**
  * Create a Textured Box on the given center with given size
@@ -823,7 +822,7 @@ var createBoundingBoxGeometry = function(col) {
     return g;
 };
 
-module.exports = {
+export default {
     createTexturedBoxGeometry: createTexturedBoxGeometry,
     createTexturedQuadGeometry: createTexturedQuadGeometry,
     createTexturedSphereGeometry: createTexturedSphere,

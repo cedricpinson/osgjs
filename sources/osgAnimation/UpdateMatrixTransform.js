@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var mat4 = require('osg/glMatrix').mat4;
-var AnimationUpdateCallback = require('osgAnimation/AnimationUpdateCallback');
+import utils from 'osg/utils';
+import { mat4 } from 'osg/glMatrix';
+import AnimationUpdateCallback from 'osgAnimation/AnimationUpdateCallback';
 
 /**
  *  UpdateMatrixTransform
@@ -49,4 +48,4 @@ utils.createPrototypeObject(
     'UpdateMatrixTransform'
 );
 
-module.exports = UpdateMatrixTransform;
+export default UpdateMatrixTransform;

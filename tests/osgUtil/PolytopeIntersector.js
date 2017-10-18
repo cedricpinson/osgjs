@@ -1,21 +1,20 @@
-'use strict';
-var assert = require('chai').assert;
-var utils = require('osg/utils');
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
-var PolytopeIntersector = require('osgUtil/PolytopeIntersector');
-var Camera = require('osg/Camera');
-var Viewport = require('osg/Viewport');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var Geometry = require('osg/Geometry');
-var BufferArray = require('osg/BufferArray');
-var DrawElements = require('osg/DrawElements');
-var DrawArrays = require('osg/DrawArrays');
-var primitiveSet = require('osg/primitiveSet');
-var KdTreeBuilder = require('osg/KdTreeBuilder');
-var intersectionEnums = require('osgUtil/intersectionEnums');
+import { assert } from 'chai';
+import utils from 'osg/utils';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import PolytopeIntersector from 'osgUtil/PolytopeIntersector';
+import Camera from 'osg/Camera';
+import Viewport from 'osg/Viewport';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import Geometry from 'osg/Geometry';
+import BufferArray from 'osg/BufferArray';
+import DrawElements from 'osg/DrawElements';
+import DrawArrays from 'osg/DrawArrays';
+import primitiveSet from 'osg/primitiveSet';
+import KdTreeBuilder from 'osg/KdTreeBuilder';
+import intersectionEnums from 'osgUtil/intersectionEnums';
 
-module.exports = function() {
+export default function() {
     var createLines = function(lineType) {
         var g = new Geometry();
         var vertexes = new utils.Float32Array(12);
@@ -432,4 +431,4 @@ module.exports = function() {
         assert.equalVector(uniquePoints[1], [-0.096225, 0.096225, 0]);
         assert.equalVector(uniquePoints[2], [0.096225, 0.096225, 0]);
     });
-};
+}

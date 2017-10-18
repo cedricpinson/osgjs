@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var quat = require('osg/glMatrix').quat;
-var notify = require('osg/notify');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import notify from 'osg/notify';
 
-module.exports = function() {
+export default function() {
     test('Matrix.makeRotateFromQuat', function() {
         var m = mat4.create();
         mat4.fromQuat(m, quat.fromValues(0.653281, 0.270598, -0.653281, 0.270598));
@@ -494,4 +493,4 @@ module.exports = function() {
         var res = mat4.fromScaling(mat4.create(), [500, 1, 2]);
         assert.isOk(mockup.checkNear(res, m), 'makeScale should be ' + m + ' and is ' + res);
     });
-};
+}

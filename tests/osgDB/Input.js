@@ -1,15 +1,17 @@
-'use strict';
-var assert = require('chai').assert;
-var P = require('bluebird');
-var Input = require('osgDB/Input');
-var mockup = require('tests/mockup/mockup');
-if (mockup.isNodeContext()) {
-    Input = require('tests/mockup/InputMockup');
-}
-var notify = require('osg/notify');
-var Image = require('osg/Image');
+import { assert } from 'chai';
+import P from 'bluebird';
+import mockup from 'tests/mockup/mockup';
+import notify from 'osg/notify';
+import Image from 'osg/Image';
 
-module.exports = function() {
+var Input;
+if (mockup.isNodeContext()) {
+    Input = require('tests/mockup/InputMockup').default;
+} else {
+    Input = require('osgDB/Input').default;
+}
+
+export default function() {
     var ImageTest = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 
     test('Input.readImageURL', function(done) {
@@ -394,4 +396,4 @@ module.exports = function() {
             });
         })();
     });
-};
+}

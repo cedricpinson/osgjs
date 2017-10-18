@@ -1,5 +1,3 @@
-'use strict';
-
 // This file contains needed polyfills mainly for IE11
 if (!Math.sign) {
     Math.sign = function(a) {

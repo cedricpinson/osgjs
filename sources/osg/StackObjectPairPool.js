@@ -1,4 +1,3 @@
-'use strict';
 var StackObjectPairPool = function() {
     this._globalDefault = undefined;
     this._lastApplied = undefined;
@@ -35,4 +34,4 @@ StackObjectPairPool.prototype = {
         return objectPair;
     }
 };
-module.exports = StackObjectPairPool;
+export default StackObjectPairPool;

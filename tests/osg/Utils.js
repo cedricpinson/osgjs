@@ -1,8 +1,7 @@
-'use strict';
-var assert = require('chai').assert;
-var utils = require('osg/utils');
+import { assert } from 'chai';
+import utils from 'osg/utils';
 
-module.exports = function() {
+export default function() {
     var checkBaseClass = function(BaseObject, libraryName, className) {
         var a = new BaseObject();
         assert.equal(a.className(), className, 'check className');
@@ -91,4 +90,4 @@ module.exports = function() {
 
         checkExtendedClass(BaseObjectOld, ExtendedObjectOld, 'toto1', 'LeRigolo1');
     });
-};
+}

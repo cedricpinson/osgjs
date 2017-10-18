@@ -1,5 +1,3 @@
-'use strict';
-
-module.exports = {
+export default {
     ArrayType: Float64Array
 };

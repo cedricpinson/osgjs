@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var Node = require('osg/Node');
-var NodeVisitor = require('osg/NodeVisitor');
-var Switch = require('osg/Switch');
-var Utils = require('osg/utils');
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import Node from 'osg/Node';
+import NodeVisitor from 'osg/NodeVisitor';
+import Switch from 'osg/Switch';
+import Utils from 'osg/utils';
 
-module.exports = function() {
+export default function() {
     test('Switch', function() {
         var switchNode = new Switch();
         assert.isOk(switchNode.children.length === 0, 'number of children must be 0');
@@ -40,4 +39,4 @@ module.exports = function() {
         var testVisitor = new TestVisitor();
         testVisitor.apply(switchNode);
     });
-};
+}

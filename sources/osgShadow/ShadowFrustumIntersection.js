@@ -1,16 +1,15 @@
-'use strict';
-var BoundingBox = require('osg/BoundingBox');
-var BoundingSphere = require('osg/BoundingSphere');
-var Camera = require('osg/Camera');
-var Geometry = require('osg/Geometry');
-var Light = require('osg/Light');
-var mat4 = require('osg/glMatrix').mat4;
-var PooledResource = require('osg/PooledResource');
-var PooledArray = require('osg/PooledArray');
-var MatrixTransform = require('osg/MatrixTransform');
-var NodeVisitor = require('osg/NodeVisitor');
-var Plane = require('osg/Plane');
-var utils = require('osg/utils');
+import BoundingBox from 'osg/BoundingBox';
+import BoundingSphere from 'osg/BoundingSphere';
+import Camera from 'osg/Camera';
+import Geometry from 'osg/Geometry';
+import Light from 'osg/Light';
+import { mat4 } from 'osg/glMatrix';
+import PooledResource from 'osg/PooledResource';
+import PooledArray from 'osg/PooledArray';
+import MatrixTransform from 'osg/MatrixTransform';
+import NodeVisitor from 'osg/NodeVisitor';
+import Plane from 'osg/Plane';
+import utils from 'osg/utils';
 
 /**
  * [ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum]
@@ -177,4 +176,4 @@ utils.createPrototypeObject(
     'ComputeMultiFrustumBoundsVisitor'
 );
 
-module.exports = ComputeMultiFrustumBoundsVisitor;
+export default ComputeMultiFrustumBoundsVisitor;

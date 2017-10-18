@@ -1,9 +1,8 @@
-'use strict';
-var assert = require('chai').assert;
-var BufferArrayProxy = require('osg/BufferArrayProxy');
-var BufferArray = require('osg/BufferArray');
+import { assert } from 'chai';
+import BufferArrayProxy from 'osg/BufferArrayProxy';
+import BufferArray from 'osg/BufferArray';
 
-module.exports = function() {
+export default function() {
     test('BufferArrayProxy', function() {
         (function() {
             var bufferArrayA = new BufferArray();
@@ -39,4 +38,4 @@ module.exports = function() {
             );
         })();
     });
-};
+}

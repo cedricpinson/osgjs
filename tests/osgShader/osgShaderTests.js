@@ -1,8 +1,7 @@
-'use strict';
-var Compiler = require('tests/osgShader/Compiler');
-var ShaderGenerator = require('tests/osgShader/ShaderGenerator');
+import Compiler from 'tests/osgShader/Compiler';
+import ShaderGenerator from 'tests/osgShader/ShaderGenerator';
 
-module.exports = function() {
+export default function() {
     Compiler();
     ShaderGenerator();
-};
+}

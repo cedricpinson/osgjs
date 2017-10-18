@@ -1,8 +1,6 @@
-'use strict';
-
-var DisplayGraphRenderer = require('osgUtil/DisplayGraphRenderer');
-var DisplayGraphNode = require('osgUtil/DisplayGraphNode');
-var notify = require('osg/notify');
+import DisplayGraphRenderer from 'osgUtil/DisplayGraphRenderer';
+import DisplayGraphNode from 'osgUtil/DisplayGraphNode';
+import notify from 'osg/notify';
 
 var $;
 
@@ -145,7 +143,7 @@ DisplayGraph.prototype = {
             this.displayGraph();
         } else {
             // circular dependency
-            require('osgViewer/Renderer').debugGraph = true;
+            require('osgViewer/Renderer').default.debugGraph = true;
         }
     },
 
@@ -296,4 +294,4 @@ DisplayGraph.prototype = {
     }
 };
 
-module.exports = DisplayGraph;
+export default DisplayGraph;

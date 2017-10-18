@@ -1,10 +1,9 @@
-'use strict';
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var BoundingBox = require('osg/BoundingBox');
-var mat4 = require('osg/glMatrix').mat4;
-var MatrixTransform = require('osg/MatrixTransform');
-var UpdateBone = require('osgAnimation/UpdateBone');
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import BoundingBox from 'osg/BoundingBox';
+import { mat4 } from 'osg/glMatrix';
+import MatrixTransform from 'osg/MatrixTransform';
+import UpdateBone from 'osgAnimation/UpdateBone';
 
 /**
  *  Bone
@@ -82,4 +81,4 @@ utils.createPrototypeNode(
     'Bone'
 );
 
-module.exports = Bone;
+export default Bone;

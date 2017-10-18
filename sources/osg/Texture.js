@@ -1,13 +1,12 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
-var Uniform = require('osg/Uniform');
-var Image = require('osg/Image');
-var GLObject = require('osg/GLObject');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
+import Uniform from 'osg/Uniform';
+import Image from 'osg/Image';
+import GLObject from 'osg/GLObject';
 
-var TextureManager = require('osg/TextureManager');
-var WebglCaps = require('osg/WebGLCaps');
+import TextureManager from 'osg/TextureManager';
+import WebglCaps from 'osg/WebGLCaps';
 
 var ImageBitmap = window.ImageBitmap || function() {};
 
@@ -904,4 +903,4 @@ Texture.createFromCanvas = function(canvas, format) {
     return Texture.createFromImage(canvas, format);
 };
 
-module.exports = Texture;
+export default Texture;

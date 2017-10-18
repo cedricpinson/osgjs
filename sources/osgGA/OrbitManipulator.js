@@ -1,15 +1,13 @@
-'use strict';
-
-var utils = require('osg/utils');
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
-var Manipulator = require('osgGA/Manipulator');
-var OrbitManipulatorDeviceOrientationController = require('osgGA/OrbitManipulatorDeviceOrientationController');
-var OrbitManipulatorGamePadController = require('osgGA/OrbitManipulatorGamePadController');
-var OrbitManipulatorHammerController = require('osgGA/OrbitManipulatorHammerController');
-var OrbitManipulatorStandardMouseKeyboardController = require('osgGA/OrbitManipulatorStandardMouseKeyboardController');
-var OrbitManipulatorWebVRController = require('osgGA/OrbitManipulatorWebVRController');
-var DelayInterpolator = require('osgUtil/DelayInterpolator');
+import utils from 'osg/utils';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import Manipulator from 'osgGA/Manipulator';
+import OrbitManipulatorDeviceOrientationController from 'osgGA/OrbitManipulatorDeviceOrientationController';
+import OrbitManipulatorGamePadController from 'osgGA/OrbitManipulatorGamePadController';
+import OrbitManipulatorHammerController from 'osgGA/OrbitManipulatorHammerController';
+import OrbitManipulatorStandardMouseKeyboardController from 'osgGA/OrbitManipulatorStandardMouseKeyboardController';
+import OrbitManipulatorWebVRController from 'osgGA/OrbitManipulatorWebVRController';
+import DelayInterpolator from 'osgUtil/DelayInterpolator';
 
 /**
  *  OrbitManipulator
@@ -409,4 +407,4 @@ OrbitManipulator.Hammer = OrbitManipulatorHammerController;
 OrbitManipulator.WebVR = OrbitManipulatorWebVRController;
 OrbitManipulator.StandardMouseKeyboard = OrbitManipulatorStandardMouseKeyboardController;
 
-module.exports = OrbitManipulator;
+export default OrbitManipulator;

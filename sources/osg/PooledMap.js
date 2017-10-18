@@ -1,5 +1,4 @@
-'use strict';
-var PooledArray = require('osg/PooledArray');
+import PooledArray from 'osg/PooledArray';
 
 var PooledMap = function() {
     this._keys = new PooledArray();
@@ -43,4 +42,4 @@ PooledMap.prototype = {
     }
 };
 
-module.exports = PooledMap;
+export default PooledMap;

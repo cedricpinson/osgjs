@@ -1,6 +1,5 @@
-'use strict';
-var DisplayGraphNode = require('osgUtil/DisplayGraphNode');
-var RenderBin = require('osg/RenderBin');
+import DisplayGraphNode from 'osgUtil/DisplayGraphNode';
+import RenderBin from 'osg/RenderBin';
 
 var DisplayGraphRenderer = function(selectables) {
     this._selectables = selectables;
@@ -231,4 +230,4 @@ DisplayGraphRenderer.prototype = {
     }
 };
 
-module.exports = DisplayGraphRenderer;
+export default DisplayGraphRenderer;

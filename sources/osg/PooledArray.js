@@ -1,5 +1,3 @@
-'use strict';
-
 var PooledArray = function() {
     this._pool = [];
     this._length = 0;
@@ -39,4 +37,4 @@ PooledArray.prototype = {
     }
 };
 
-module.exports = PooledArray;
+export default PooledArray;

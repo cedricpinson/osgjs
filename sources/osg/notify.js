@@ -1,5 +1,3 @@
-'use strict';
-
 var notify = {};
 
 // Range of notify levels from DEBUG through to FATAL
@@ -100,4 +98,4 @@ notify.setConsole = function(replacement) {
     notify.console = replacement;
 };
 
-module.exports = notify;
+export default notify;

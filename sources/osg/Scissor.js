@@ -1,6 +1,5 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
 
 var Scissor = function(x, y, w, h) {
     StateAttribute.call(this);
@@ -52,4 +51,4 @@ utils.createPrototypeStateAttribute(
     'Scissor'
 );
 
-module.exports = Scissor;
+export default Scissor;

@@ -1,7 +1,6 @@
-'use strict';
-var Object = require('osg/Object');
-var StateAttribute = require('osg/StateAttribute');
-var utils = require('osg/utils');
+import Object from 'osg/Object';
+import StateAttribute from 'osg/StateAttribute';
+import utils from 'osg/utils';
 
 /** Stores a set of modes and attributes which represent a set of OpenGL state.
  *  Notice that a \c StateSet contains just a subset of the whole OpenGL state.
@@ -358,4 +357,4 @@ utils.createPrototypeObject(
     'StateSet'
 );
 
-module.exports = StateSet;
+export default StateSet;

@@ -1,9 +1,8 @@
-'use strict';
-var notify = require('osg/notify');
-var quat = require('osg/glMatrix').quat;
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
-require('osgUtil/webvr-1-1'); // polyfill
+import notify from 'osg/notify';
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import 'osgUtil/webvr-1-1'; // polyfill
 
 var WebVR = function(viewer) {
     this._viewer = viewer;
@@ -120,4 +119,4 @@ WebVR.prototype = {
         return this._hmd;
     }
 };
-module.exports = WebVR;
+export default WebVR;

@@ -1,6 +1,4 @@
-'use strict';
-
-var intersectionEnums = require('osgUtil/intersectionEnums');
+import intersectionEnums from 'osgUtil/intersectionEnums';
 
 var Intersector = function() {
     this._intersections = [];
@@ -65,4 +63,4 @@ Intersector.prototype = {
     intersect: function(/*iv, node*/) {}
 };
 
-module.exports = Intersector;
+export default Intersector;

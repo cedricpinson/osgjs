@@ -1,5 +1,4 @@
-'use strict';
-var notify = require('osg/notify');
+import notify from 'osg/notify';
 
 var instance = 0;
 var Node = function() {
@@ -159,4 +158,4 @@ Node.prototype = {
     }
 };
 
-module.exports = Node;
+export default Node;

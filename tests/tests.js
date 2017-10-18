@@ -1,15 +1,14 @@
-require('OSG');
-
-var osg = require('tests/osg/osgTests');
-var osgAnimation = require('tests/osgAnimation/osgAnimationTests');
-var osgDB = require('tests/osgDB/osgDBTests');
-var osgGA = require('tests/osgGA/osgGATests');
-var osgUtil = require('tests/osgUtil/osgUtilTests');
-var osgViewer = require('tests/osgViewer/osgViewerTests');
-var osgShader = require('tests/osgShader/osgShaderTests');
-var osgShadow = require('tests/osgShadow/osgShadowTests');
-var osgText = require('tests/osgText/osgTextTests');
-var osgWrappers = require('tests/osgWrappers/osgWrappersTests');
+import 'OSG';
+import osg from 'tests/osg/osgTests';
+import osgAnimation from 'tests/osgAnimation/osgAnimationTests';
+import osgDB from 'tests/osgDB/osgDBTests';
+import osgGA from 'tests/osgGA/osgGATests';
+import osgUtil from 'tests/osgUtil/osgUtilTests';
+import osgViewer from 'tests/osgViewer/osgViewerTests';
+import osgShader from 'tests/osgShader/osgShaderTests';
+import osgShadow from 'tests/osgShadow/osgShadowTests';
+import osgText from 'tests/osgText/osgTextTests';
+import osgWrappers from 'tests/osgWrappers/osgWrappersTests';
 
 suite('osgWrappers');
 osgWrappers();

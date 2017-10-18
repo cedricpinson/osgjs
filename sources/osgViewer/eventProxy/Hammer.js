@@ -1,5 +1,4 @@
-'use strict';
-var Hammer = require('hammer');
+import Hammer from 'hammer';
 
 var HammerController = function(viewer) {
     this._enable = true;
@@ -66,4 +65,4 @@ HammerController.prototype = {
         this.getManipulatorController().removeEventProxy(this._hammer);
     }
 };
-module.exports = HammerController;
+export default HammerController;

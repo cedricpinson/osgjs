@@ -1,12 +1,10 @@
-'use strict';
-
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
-var Uniform = require('osg/Uniform');
-var mat3 = require('osg/glMatrix').mat3;
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var vec4 = require('osg/glMatrix').vec4;
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
+import Uniform from 'osg/Uniform';
+import { mat3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
 
 // use the same kind of opengl lights
 // see http://www.glprogramming.com/red/chapter05.html
@@ -318,4 +316,4 @@ utils.createPrototypeStateAttribute(
     'Light'
 );
 
-module.exports = Light;
+export default Light;

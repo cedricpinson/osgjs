@@ -1,10 +1,9 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var Interpolator = require('osgAnimation/interpolator');
-var Channel = require('osgAnimation/channel');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import Interpolator from 'osgAnimation/interpolator';
+import Channel from 'osgAnimation/channel';
 
-module.exports = function() {
+export default function() {
     test('Vec3LerpInterpolator', function() {
         var keys = mockup.createVec3Keyframes();
         var timeArray = [-1, 3, 0.5, 1.5, 5.0];
@@ -316,4 +315,4 @@ module.exports = function() {
         Interpolator.FloatLerpInterpolator(time, iChan);
         assert.isOk(iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key);
     });
-};
+}

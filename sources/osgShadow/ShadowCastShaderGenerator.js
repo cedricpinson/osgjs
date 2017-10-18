@@ -1,6 +1,5 @@
-'use strict';
-var ShaderGenerator = require('osgShader/ShaderGenerator');
-var ShadowCompiler = require('osgShadow/ShadowCastCompiler');
+import ShaderGenerator from 'osgShader/ShaderGenerator';
+import ShadowCompiler from 'osgShadow/ShadowCastCompiler';
 
 var ShaderGeneratorShadowCast = function() {
     ShaderGenerator.apply(this, arguments);
@@ -9,4 +8,4 @@ var ShaderGeneratorShadowCast = function() {
 
 ShaderGeneratorShadowCast.prototype = ShaderGenerator.prototype;
 
-module.exports = ShaderGeneratorShadowCast;
+export default ShaderGeneratorShadowCast;

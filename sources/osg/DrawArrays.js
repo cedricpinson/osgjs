@@ -1,5 +1,4 @@
-'use strict';
-var primitiveSet = require('osg/primitiveSet');
+import primitiveSet from 'osg/primitiveSet';
 
 /**
  * DrawArrays manage rendering primitives
@@ -47,4 +46,4 @@ DrawArrays.prototype = {
     }
 };
 
-module.exports = DrawArrays;
+export default DrawArrays;

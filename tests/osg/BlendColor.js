@@ -1,11 +1,10 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var BlendColor = require('osg/BlendColor');
-var State = require('osg/State');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import BlendColor from 'osg/BlendColor';
+import State from 'osg/State';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
 
-module.exports = function() {
+export default function() {
     test('BlendColor', function() {
         var n = new BlendColor();
         assert.isOk(
@@ -30,4 +29,4 @@ module.exports = function() {
 
         n.apply(state);
     });
-};
+}

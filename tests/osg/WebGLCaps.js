@@ -1,10 +1,9 @@
-'use strict';
-var assert = require('chai').assert;
-var Texture = require('osg/Texture');
-var WebGLCaps = require('osg/WebGLCaps');
-var mockup = require('tests/mockup/mockup');
+import { assert } from 'chai';
+import Texture from 'osg/Texture';
+import WebGLCaps from 'osg/WebGLCaps';
+import mockup from 'tests/mockup/mockup';
 
-module.exports = function() {
+export default function() {
     test('WebGLCaps', function() {
         var canvas = mockup.createCanvas(true);
         var gl = canvas.getContext();
@@ -16,4 +15,4 @@ module.exports = function() {
         var hFloat = webglCaps.hasFloatRTT(gl);
         assert.isOk(hFloat, 'float detect');
     });
-};
+}

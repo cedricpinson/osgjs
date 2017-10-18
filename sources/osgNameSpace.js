@@ -1,8 +1,6 @@
-'use strict';
+import pkg from 'json-loader!../package.json';
 
-var pkg = require('json-loader!../package.json');
-
-module.exports = {
+export default {
     name: pkg.name,
     version: pkg.version,
     author: pkg.author

@@ -1,11 +1,10 @@
-'use strict';
-var utils = require('osg/utils');
-var Transform = require('osg/Transform');
-var CullSettings = require('osg/CullSettings');
-var mat4 = require('osg/glMatrix').mat4;
-var Texture = require('osg/Texture');
-var TransformEnums = require('osg/transformEnums');
-var vec4 = require('osg/glMatrix').vec4;
+import utils from 'osg/utils';
+import Transform from 'osg/Transform';
+import CullSettings from 'osg/CullSettings';
+import { mat4 } from 'osg/glMatrix';
+import Texture from 'osg/Texture';
+import TransformEnums from 'osg/transformEnums';
+import { vec4 } from 'osg/glMatrix';
 
 /**
  * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
@@ -250,4 +249,4 @@ utils.createPrototypeNode(
     'Camera'
 );
 
-module.exports = Camera;
+export default Camera;

@@ -1,7 +1,6 @@
-'use strict';
-var BoundingBox = require('osg/BoundingBox');
-var vec3 = require('osg/glMatrix').vec3;
-var mat4 = require('osg/glMatrix').mat4;
+import BoundingBox from 'osg/BoundingBox';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 
 var BoundingSphere = function() {
     this._center = vec3.create();
@@ -175,4 +174,4 @@ BoundingSphere.prototype = {
     })()
 };
 
-module.exports = BoundingSphere;
+export default BoundingSphere;

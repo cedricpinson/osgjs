@@ -1,11 +1,10 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var CullFace = require('osg/CullFace');
-var State = require('osg/State');
-var ShaderGeneratorProxy = require('osgShader/ShaderGeneratorProxy');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import CullFace from 'osg/CullFace';
+import State from 'osg/State';
+import ShaderGeneratorProxy from 'osgShader/ShaderGeneratorProxy';
 
-module.exports = function() {
+export default function() {
     test('CullFace', function() {
         var n = new CullFace();
         assert.isOk(n.getMode() === CullFace.BACK, 'Check default mode');
@@ -21,4 +20,4 @@ module.exports = function() {
         var n2 = new CullFace('FRONT');
         assert.isOk(n2.getMode() === CullFace.FRONT, 'Check string parameter');
     });
-};
+}

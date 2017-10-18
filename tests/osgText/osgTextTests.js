@@ -1,6 +1,5 @@
-'use strict';
-var Text = require('tests/osgText/Text');
+import Text from 'tests/osgText/Text';
 
-module.exports = function() {
+export default function() {
     Text();
-};
+}

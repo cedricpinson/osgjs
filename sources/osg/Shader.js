@@ -1,8 +1,7 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
-var Timer = require('osg/Timer');
-var GLObject = require('osg/GLObject');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
+import Timer from 'osg/Timer';
+import GLObject from 'osg/GLObject';
 
 /**
  * Shader manage shader for vertex and fragment, you need both to create a glsl program.
@@ -218,4 +217,4 @@ utils.createPrototypeObject(
     'Shader'
 );
 
-module.exports = Shader;
+export default Shader;

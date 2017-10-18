@@ -1,8 +1,7 @@
-'use strict';
-var vec3 = require('osg/glMatrix').vec3;
-var primitiveSet = require('osg/primitiveSet');
-var DrawElements = require('osg/DrawElements');
-var DrawArrays = require('osg/DrawArrays');
+import { vec3 } from 'osg/glMatrix';
+import primitiveSet from 'osg/primitiveSet';
+import DrawElements from 'osg/DrawElements';
+import DrawArrays from 'osg/DrawArrays';
 
 /**
  * PrimitiveFunctor emulates the TemplatePrimitiveFunctor class in OSG and can
@@ -354,4 +353,4 @@ var primitiveFunctor = function(geom, cb, vertices) {
     }
 };
 
-module.exports = primitiveFunctor;
+export default primitiveFunctor;

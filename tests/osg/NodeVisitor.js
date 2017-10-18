@@ -1,10 +1,9 @@
-'use strict';
-var assert = require('chai').assert;
-var NodeVisitor = require('osg/NodeVisitor');
-var Node = require('osg/Node');
-var utils = require('osg/utils');
+import { assert } from 'chai';
+import NodeVisitor from 'osg/NodeVisitor';
+import Node from 'osg/Node';
+import utils from 'osg/utils';
 
-module.exports = function() {
+export default function() {
     test('NodeVisitor', function() {
         var FindItemAnchor = function(search) {
             NodeVisitor.call(this);
@@ -71,4 +70,4 @@ module.exports = function() {
             assert.isOk(visit.node.getName() === 'root', 'Should get the root node');
         })();
     });
-};
+}

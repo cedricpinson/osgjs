@@ -1,14 +1,13 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var MatrixTransform = require('osg/MatrixTransform');
-var BasicAnimationManager = require('osgAnimation/BasicAnimationManager');
-var UpdateMatrixTransform = require('osgAnimation/UpdateMatrixTransform');
-var StackedRotateAxis = require('osgAnimation/StackedRotateAxis');
-var StackedMatrix = require('osgAnimation/StackedMatrix');
-var mat4 = require('osg/glMatrix').mat4;
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import MatrixTransform from 'osg/MatrixTransform';
+import BasicAnimationManager from 'osgAnimation/BasicAnimationManager';
+import UpdateMatrixTransform from 'osgAnimation/UpdateMatrixTransform';
+import StackedRotateAxis from 'osgAnimation/StackedRotateAxis';
+import StackedMatrix from 'osgAnimation/StackedMatrix';
+import { mat4 } from 'osg/glMatrix';
 
-module.exports = function() {
+export default function() {
     test('BasicAnimationManager', function() {
         var animation = mockup.createAnimation('AnimationTest');
         var cbMap = mockup.createAnimationUpdateCallback([animation]);
@@ -478,4 +477,4 @@ module.exports = function() {
         assert.isOk(a.value === 3, 'Check channel a at t = ' + time);
         assert.isOk(b.value === 1, 'Check channel b at t = ' + time);
     });
-};
+}

@@ -1,8 +1,7 @@
-'use strict';
-var mat4 = require('osg/glMatrix').mat4;
-var StateAttribute = require('osg/StateAttribute');
-var SkinningAttribute = require('osgAnimation/SkinningAttribute');
-var CollectBoneVisitor = require('osgAnimation/CollectBoneVisitor');
+import { mat4 } from 'osg/glMatrix';
+import StateAttribute from 'osg/StateAttribute';
+import SkinningAttribute from 'osgAnimation/SkinningAttribute';
+import CollectBoneVisitor from 'osgAnimation/CollectBoneVisitor';
 
 /**
  * Hardware implementation for rigGeometry
@@ -118,4 +117,4 @@ RigTransformHardware.prototype = {
     }
 };
 
-module.exports = RigTransformHardware;
+export default RigTransformHardware;

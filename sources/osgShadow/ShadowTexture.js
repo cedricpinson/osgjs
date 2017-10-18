@@ -1,10 +1,8 @@
-'use strict';
-
-var notify = require('osg/notify');
-var Texture = require('osg/Texture');
-var Uniform = require('osg/Uniform');
-var utils = require('osg/utils');
-var vec4 = require('osg/glMatrix').vec4;
+import notify from 'osg/notify';
+import Texture from 'osg/Texture';
+import Uniform from 'osg/Uniform';
+import utils from 'osg/utils';
+import { vec4 } from 'osg/glMatrix';
 
 /**
  * ShadowTexture Attribute encapsulate Texture webgl object
@@ -145,4 +143,4 @@ utils.createPrototypeStateAttribute(
     'ShadowTexture'
 );
 
-module.exports = ShadowTexture;
+export default ShadowTexture;

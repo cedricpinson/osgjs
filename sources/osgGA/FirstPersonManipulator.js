@@ -1,15 +1,14 @@
-'use strict';
-var utils = require('osg/utils');
-var Manipulator = require('osgGA/Manipulator');
-var mat4 = require('osg/glMatrix').mat4;
-var vec2 = require('osg/glMatrix').vec2;
-var vec3 = require('osg/glMatrix').vec3;
-var quat = require('osg/glMatrix').quat;
-var FirstPersonManipulatorDeviceOrientationController = require('osgGA/FirstPersonManipulatorDeviceOrientationController');
-var FirstPersonManipulatorHammerController = require('osgGA/FirstPersonManipulatorHammerController');
-var FirstPersonManipulatorWebVRController = require('osgGA/FirstPersonManipulatorWebVRController');
-var FirstPersonManipulatorStandardMouseKeyboardController = require('osgGA/FirstPersonManipulatorStandardMouseKeyboardController');
-var DelayInterpolator = require('osgUtil/DelayInterpolator');
+import utils from 'osg/utils';
+import Manipulator from 'osgGA/Manipulator';
+import { mat4 } from 'osg/glMatrix';
+import { vec2 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import FirstPersonManipulatorDeviceOrientationController from 'osgGA/FirstPersonManipulatorDeviceOrientationController';
+import FirstPersonManipulatorHammerController from 'osgGA/FirstPersonManipulatorHammerController';
+import FirstPersonManipulatorWebVRController from 'osgGA/FirstPersonManipulatorWebVRController';
+import FirstPersonManipulatorStandardMouseKeyboardController from 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController';
+import DelayInterpolator from 'osgUtil/DelayInterpolator';
 
 /**
  * Authors:
@@ -299,4 +298,4 @@ FirstPersonManipulator.Hammer = FirstPersonManipulatorHammerController;
 FirstPersonManipulator.WebVR = FirstPersonManipulatorWebVRController;
 FirstPersonManipulator.StandardMouseKeyboard = FirstPersonManipulatorStandardMouseKeyboardController;
 
-module.exports = FirstPersonManipulator;
+export default FirstPersonManipulator;

@@ -1,9 +1,6 @@
-'use strict';
 /* eslint-env node, mocha */
 process.chdir(__dirname);
-var mockupForNode = require('./mockup/mockupForNode.js');
-mockupForNode();
-
+require('./mockup/mockupForNode.js');
 var Mocha = require('mocha');
 
 var mocha = new Mocha({

@@ -1,12 +1,11 @@
-'use strict';
-var assert = require('chai').assert;
-var DatabasePager = require('osgDB/DatabasePager');
-var PagedLOD = require('osg/PagedLOD');
-var Node = require('osg/Node');
-var FrameStamp = require('osg/FrameStamp');
-var notify = require('osg/notify');
+import { assert } from 'chai';
+import DatabasePager from 'osgDB/DatabasePager';
+import PagedLOD from 'osg/PagedLOD';
+import Node from 'osg/Node';
+import FrameStamp from 'osg/FrameStamp';
+import notify from 'osg/notify';
 
-module.exports = function() {
+export default function() {
     var dbpager = new DatabasePager();
     // Modify the processRequest
     dbpager.processRequest = function(dbrequest) {
@@ -124,4 +123,4 @@ module.exports = function() {
                 notify.error(error);
             });
     });
-};
+}

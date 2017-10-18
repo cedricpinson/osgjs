@@ -1,7 +1,6 @@
-'use strict';
-var utils = require('osg/utils');
-var StateAttribute = require('osg/StateAttribute');
-var vec4 = require('osg/glMatrix').vec4;
+import utils from 'osg/utils';
+import StateAttribute from 'osg/StateAttribute';
+import { vec4 } from 'osg/glMatrix';
 
 /**
  *  Manage BlendColor attribute
@@ -53,4 +52,4 @@ utils.createPrototypeStateAttribute(
     'BlendColor'
 );
 
-module.exports = BlendColor;
+export default BlendColor;

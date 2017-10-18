@@ -1,6 +1,5 @@
-'use strict';
-var notify = require('osg/notify');
-var utils = require('osg/utils');
+import notify from 'osg/notify';
+import utils from 'osg/utils';
 
 var OptionsDefault = {
     antialias: true, // activate MSAA
@@ -128,4 +127,4 @@ Options.prototype = {
     }
 };
 
-module.exports = Options;
+export default Options;

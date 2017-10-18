@@ -1,11 +1,10 @@
-'use strict';
-var assert = require('chai').assert;
-require('tests/mockup/mockup');
-var Camera = require('osg/Camera');
-var mat4 = require('osg/glMatrix').mat4;
-var TransformEnums = require('osg/transformEnums');
+import { assert } from 'chai';
+import 'tests/mockup/mockup';
+import Camera from 'osg/Camera';
+import { mat4 } from 'osg/glMatrix';
+import TransformEnums from 'osg/transformEnums';
 
-module.exports = function() {
+export default function() {
     test('Camera', function() {
         var matrix = mat4.ortho(mat4.create(), -1, 1, -1, 1, -2, 2);
         var camera = new Camera();
@@ -54,4 +53,4 @@ module.exports = function() {
         camera.computeWorldToLocalMatrix(test);
         assert.equalVector(test, invRotation, 'Should expect invRotation');
     });
-};
+}

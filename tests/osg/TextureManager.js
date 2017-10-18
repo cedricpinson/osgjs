@@ -1,10 +1,9 @@
-'use strict';
-var assert = require('chai').assert;
-var mockup = require('tests/mockup/mockup');
-var TextureManager = require('osg/TextureManager');
-var Texture = require('osg/Texture');
+import { assert } from 'chai';
+import mockup from 'tests/mockup/mockup';
+import TextureManager from 'osg/TextureManager';
+import Texture from 'osg/Texture';
 
-module.exports = function() {
+export default function() {
     test('TextureManager', function() {
         var tm = new TextureManager();
         var gl = mockup.createFakeRenderer();
@@ -155,4 +154,4 @@ module.exports = function() {
             'check orphan 1024x1024 empty delete'
         );
     });
-};
+}

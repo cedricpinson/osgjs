@@ -1,18 +1,17 @@
-'use strict';
-var utils = require('osg/utils');
-var NodeVisitor = require('osg/NodeVisitor');
-var Geometry = require('osg/Geometry');
-var RigGeometry = require('osgAnimation/RigGeometry');
-var Uniform = require('osg/Uniform');
-var StateSet = require('osg/StateSet');
-var vec3 = require('osg/glMatrix').vec3;
-var ShaderGenerator = require('osgShader/ShaderGenerator');
-var Compiler = require('osgShader/Compiler');
-var BufferArray = require('osg/BufferArray');
-var DrawArrays = require('osg/DrawArrays');
-var primitiveSet = require('osg/primitiveSet');
-var MatrixTransform = require('osg/MatrixTransform');
-var Depth = require('osg/Depth');
+import utils from 'osg/utils';
+import NodeVisitor from 'osg/NodeVisitor';
+import Geometry from 'osg/Geometry';
+import RigGeometry from 'osgAnimation/RigGeometry';
+import Uniform from 'osg/Uniform';
+import StateSet from 'osg/StateSet';
+import { vec3 } from 'osg/glMatrix';
+import ShaderGenerator from 'osgShader/ShaderGenerator';
+import Compiler from 'osgShader/Compiler';
+import BufferArray from 'osg/BufferArray';
+import DrawArrays from 'osg/DrawArrays';
+import primitiveSet from 'osg/primitiveSet';
+import MatrixTransform from 'osg/MatrixTransform';
+import Depth from 'osg/Depth';
 
 ////////////////////////
 // COMPILER DEBUG GEOMETRY
@@ -269,4 +268,4 @@ utils.createPrototypeObject(
     'GeometryColorDebugVisitor'
 );
 
-module.exports = GeometryColorDebugVisitor;
+export default GeometryColorDebugVisitor;

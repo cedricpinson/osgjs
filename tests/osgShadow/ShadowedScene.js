@@ -1,15 +1,14 @@
-'use strict';
-var assert = require('chai').assert;
-var Camera = require('osg/Camera');
-var mat4 = require('osg/glMatrix').mat4;
-var vec3 = require('osg/glMatrix').vec3;
-var Node = require('osg/Node');
-var Shape = require('osg/shape');
-var Viewport = require('osg/Viewport');
-var ShadowedScene = require('osgShadow/ShadowedScene');
-var IntersectionVisitor = require('osgUtil/IntersectionVisitor');
+import { assert } from 'chai';
+import Camera from 'osg/Camera';
+import { mat4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import Node from 'osg/Node';
+import Shape from 'osg/shape';
+import Viewport from 'osg/Viewport';
+import ShadowedScene from 'osgShadow/ShadowedScene';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
 
-module.exports = function() {
+export default function() {
     test('ShadowedScene', function() {
         var pShadow = new ShadowedScene();
         assert.isOk(pShadow.children.length === 0, 'number of children must be 0');
@@ -64,4 +63,4 @@ module.exports = function() {
             'check end transform point'
         );
     });
-};
+}

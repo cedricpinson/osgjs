@@ -1,8 +1,6 @@
-'use strict';
-
-var primitiveSet = require('osg/primitiveSet');
-var DrawElements = require('osg/DrawElements');
-var DrawArrays = require('osg/DrawArrays');
+import primitiveSet from 'osg/primitiveSet';
+import DrawElements from 'osg/DrawElements';
+import DrawArrays from 'osg/DrawArrays';
 
 // This class can be used to visit all the triangles of a geometry
 var TriangleIndexFunctor = function() {};
@@ -90,4 +88,4 @@ TriangleIndexFunctor.prototype = {
     }
 };
 
-module.exports = TriangleIndexFunctor;
+export default TriangleIndexFunctor;

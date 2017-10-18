@@ -1,8 +1,7 @@
-'use strict';
-var assert = require('chai').assert;
-var Uniform = require('osg/Uniform');
+import { assert } from 'chai';
+import Uniform from 'osg/Uniform';
 
-module.exports = function() {
+export default function() {
     test('Uniform', function() {
         (function() {
             var testInt = Uniform.createInt1(12, 'int_uniform');
@@ -23,4 +22,4 @@ module.exports = function() {
             assert.isOk(Uniform.isUniform(65) === false, 'is not uniform');
         })();
     });
-};
+}
