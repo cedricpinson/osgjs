@@ -55,18 +55,18 @@ var checkUniformCache = [
     }
 ];
 
-var STANDARD_UNIFORMS = {
-    uProjectionMatrix: true,
-    uModelMatrix: true,
-    uViewMatrix: true,
-    uModelViewMatrix: true,
-    uModelNormalMatrix: true,
-    uModelViewNormalMatrix: true,
-    uArrayColorEnabled: true
-};
-
 var State = function(shaderGeneratorProxy) {
     Object.call(this);
+
+    this._excludeUniforms = {
+        uProjectionMatrix: true,
+        uModelMatrix: true,
+        uViewMatrix: true,
+        uModelViewMatrix: true,
+        uModelNormalMatrix: true,
+        uModelViewNormalMatrix: true,
+        uArrayColorEnabled: true
+    };
 
     this._graphicContext = undefined;
     this._shaderGeneratorProxy = shaderGeneratorProxy;
@@ -136,6 +136,17 @@ var State = function(shaderGeneratorProxy) {
 utils.createPrototypeObject(
     State,
     utils.objectInherit(Object.prototype, {
+        // excludeUniforms is a list of uniforms that will not be applied or checked automatically when applying a program
+        // you should not add you uniforms in this list until you really know what you are doing.
+        // The use case of the exclusions is because the RenderLeaf.drawGeometry will apply them without UniformStack and
+        // it should be applied automatically because you will apply them RenderLeaf.drawGeometry.
+        // If you are writing a custom renderStage or overriding RenderLeaf.drawGeometry and add new uniform and custom
+        // behavior then it can make sense to add uniforms here.
+        // To make it work you should add your uniforms before the rendering (usually before viewer.run())
+        getExcludeUniforms: function() {
+            return this._excludeUniforms;
+        },
+
         resetCaches: function() {
             this._currentVAO = null;
             this._currentIndexVBO = null;
@@ -1266,11 +1277,11 @@ utils.createPrototypeObject(
                 return;
             }
 
-            if (STANDARD_UNIFORMS[uniformName]) {
+            if (this._excludeUniforms[uniformName]) {
                 return;
             }
 
-            STANDARD_UNIFORMS[uniformName] = 1; // avoid multiple spammy errors
+            this._excludeUniforms[uniformName] = 1; // avoid multiple spammy errors
 
             notify.error('Uniform not in the scene hierarchy : ' + uniformName);
         },
@@ -1283,7 +1294,7 @@ utils.createPrototypeObject(
 
                 // filter 'standard' uniform matrix that will be applied for all shader
                 if (location !== undefined && activeUniformMap[keyUniform] === undefined) {
-                    if (!STANDARD_UNIFORMS[keyUniform]) {
+                    if (!this._excludeUniforms[keyUniform]) {
                         foreignUniforms.push(keyUniform);
                     }
                 }
