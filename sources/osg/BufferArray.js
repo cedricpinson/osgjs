@@ -126,9 +126,8 @@ utils.createPrototypeObject(
             this._itemSize = size;
         },
         isValid: function() {
-            if (this._buffer !== undefined || this._elements !== undefined) {
-                return true;
-            }
+            if (this._buffer) return true;
+            if (this._elements && this._elements.length) return true;
             return false;
         },
 
