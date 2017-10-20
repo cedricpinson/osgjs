@@ -9,7 +9,6 @@ import Texture from 'osg/Texture';
 import FrameBufferObject from 'osg/FrameBufferObject';
 import Uniform from 'osg/Uniform';
 import Viewport from 'osg/Viewport';
-import Scissor from 'osg/Scissor';
 
 /**
  *  ShadowMapAtlas provides an implementation of shadow textures.
@@ -290,16 +289,6 @@ utils.createPrototypeObject(
 
                 var x = mapSizeX * (i % numShadowWidth);
                 var y = mapSizeY * Math.floor(i / numShadowHeight);
-
-                var camera = shadowMap.getCamera();
-
-                var scissor = camera.getScissor();
-                if (!scissor) {
-                    scissor = new Scissor(x, y, mapSizeX, mapSizeY);
-                    camera.setScissor(scissor);
-                } else {
-                    scissor.setScissor(x, y, mapSizeX, mapSizeY);
-                }
 
                 if (this._viewportDimension.length <= i) {
                     this._viewportDimension.push(vec4.fromValues(x, y, mapSizeX, mapSizeY));

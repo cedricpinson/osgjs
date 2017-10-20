@@ -23,6 +23,7 @@ import ShadowReceiveAttribute from 'osgShadow/ShadowReceiveAttribute';
 import ShadowCastAttribute from 'osgShadow/ShadowCastAttribute';
 import ShadowTechnique from 'osgShadow/ShadowTechnique';
 import ShadowTexture from 'osgShadow/ShadowTexture';
+import Scissor from 'osg/Scissor';
 
 // Custom camera cull callback
 // we customize it just to avoid to add extra 'virtual' function
@@ -442,6 +443,17 @@ utils.createPrototypeObject(
                 }
 
                 if (viewportDimension) {
+
+                    var scissor = camera.getScissor();
+                    if (!scissor) {
+                        scissor = new Scissor(
+                            viewportDimension[0],
+                            viewportDimension[1],
+                            viewportDimension[2],
+                            viewportDimension[3]);
+                        camera.setScissor(scissor);
+                    }
+
                     // if texture size changed update the camera rtt params
                     if (
                         vp.x() !== viewportDimension[0] ||
@@ -456,6 +468,12 @@ utils.createPrototypeObject(
                             viewportDimension[2],
                             viewportDimension[3]
                         );
+
+                        scissor.setScissor(
+                            viewportDimension[0],
+                            viewportDimension[1],
+                            viewportDimension[2],
+                            viewportDimension[3]);
                     }
                 } else if (
                     vp.width() !== texture.getWidth() ||
