@@ -66,7 +66,7 @@ Launch:
 
     grunt test
 
-OpenSceneGraph osgjs plugin
-----------------------------
+Convert file to osgjs
+---------------------
 
-There is a plugin on my openscengraph branch https://github.com/cedricpinson/osg. This plugin will help you to export data from osg to osgjs. More instructions are available on the [wiki](https://github.com/cedricpinson/osgjs/wiki/Convert-model-with-OSG)
+You can easily convert 3D file with osgconv tool. To do that you can get the docker image here https://hub.docker.com/r/trigrou/osg/ and use it to convert a 3d file into osgjs file format. There is more infos on [wiki](https://github.com/cedricpinson/osgjs/wiki/Convert-model-with-OSG)
