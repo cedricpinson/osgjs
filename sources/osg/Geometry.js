@@ -1,4 +1,5 @@
 import utils from 'osg/utils';
+import notify from 'osg/notify';
 import Node from 'osg/Node';
 import WebGLCaps from 'osg/WebGLCaps';
 import DrawElements from 'osg/DrawElements';
@@ -96,22 +97,22 @@ utils.createPrototypeNode(
         },
 
         /**
-     * Return the primitiveset list
-     * If you modify something inside this array
-     * you must call dirty() on the Geometry
-     */
+         * Return the primitiveset list
+         * If you modify something inside this array
+         * you must call dirty() on the Geometry
+         */
         getPrimitiveSetList: function() {
             return this._primitives;
         },
 
         /**
-     * Set the buffer array on the attribute name key
-     * key is often something like Vertex, Normal, Color, ...
-     * for classic geometry
-     *
-     * if you change a buffer a dirty will be automatically
-     * called to rebuild the VAO if needed.
-     */
+         * Set the buffer array on the attribute name key
+         * key is often something like Vertex, Normal, Color, ...
+         * for classic geometry
+         *
+         * if you change a buffer a dirty will be automatically
+         * called to rebuild the VAO if needed.
+         */
         setVertexAttribArray: function(key, array) {
             if (this._attributes[key] !== array) {
                 this._attributes[key] = array;
@@ -182,9 +183,9 @@ utils.createPrototypeNode(
         },
 
         /**
-     *  Generate a function specific to the Geometry/Program
-     *  two version one using VAO and a regular one
-     */
+         *  Generate a function specific to the Geometry/Program
+         *  two version one using VAO and a regular one
+         */
         generateDrawCommand: (function() {
             var validAttributeList = [];
             var validAttributeKeyList = [];
@@ -341,10 +342,26 @@ utils.createPrototypeNode(
                 return;
             }
 
+            if (!this._primitives.length) {
+                notify.warn(
+                    'geometry with instanceID' + this._instanceID + ' has not primitives'
+                );
+                return;
+            } else {
+                for (var i = 0; i < this._primitives.length; i++) {
+                    var primitive = this._primitives[0];
+                    if (primitive instanceof DrawElements) {
+                        if (!primitive.getIndices() || !primitive.getIndices().isValid()) {
+                            notify.warn(
+                                'geometry with instanceID' + this._instanceID + ' has invalid primitives'
+                            );
+                            return;
+                        }
+                    }
+                }
+            }
+
             // generate cachedDraw
-
-            if (!this._primitives.length) return;
-
             if (this._useVAO === undefined && Geometry.enableVAO) {
                 // will be null if not supported
                 this._useVAO = WebGLCaps.instance().hasVAO();
