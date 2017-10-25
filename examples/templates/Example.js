@@ -101,7 +101,8 @@
                     }
                     this._config[property] = n;
                 } catch (e) {
-                    osg.log('cannot parse url option: ' + property);
+                    this._config[property] = value;
+                    osg.log('cannot parse url option: ' + property + ' = ' + value );
                 }
             }
         },
