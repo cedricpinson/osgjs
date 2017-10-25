@@ -297,7 +297,12 @@ ShaderGenerator.prototype = {
             this._cache[hash] = program;
             return program;
         };
-    })()
+    })(),
+
+    resetCache: function(){
+        this._cache = {};
+    }
+
 };
 
 export default ShaderGenerator;

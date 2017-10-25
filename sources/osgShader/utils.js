@@ -288,17 +288,17 @@ var createNode = function(res, fileName) {
         this._missingArgs = false;
     };
 
-    var globalDeclare = '#pragma include "' + fileName + '"';
     utils.createPrototypeObject(
         NodeCustom,
         utils.objectInherit(Node.prototype, {
             type: res.nodeName,
             signatures: [res.signature],
+            globalDeclare: '#pragma include "' + fileName + '"',
 
             checkInputsOutputs: function() {},
 
             globalFunctionDeclaration: function() {
-                return globalDeclare;
+                return this.globalDeclare;
             },
 
             addExtensions: function(exts) {
@@ -428,21 +428,35 @@ var createNode = function(res, fileName) {
     return NodeCustom;
 };
 
+var shaderNodeClassGlobal = {};
+
 var extractFunctions = function(shaderLib, fileName) {
-    var objOut = {};
     var signatures = shaderLib[fileName].split(/#pragma DECLARE_FUNCTION(.*)[\r\n|\r|\n]/);
     var nbSignatures = (signatures.length - 1) / 2;
+
+    var shaderNodeClassLocal = {};
     for (var i = 0; i < nbSignatures; ++i) {
         var result = extractSignature(signatures[i * 2 + 1], signatures[i * 2 + 2]);
-        var shaderNode = objOut[result.nodeName];
+        var nodeName = result.nodeName;
+        var shaderNode = shaderNodeClassLocal[nodeName];
         if (shaderNode) {
             shaderNode.prototype.signatures.push(result.signature);
-        } else {
-            objOut[result.nodeName] = createNode(result, fileName);
+            continue;
         }
+        // new shadernode in this local shaderLib
+        shaderNode = shaderNodeClassGlobal[nodeName];
+        if (shaderNode) {
+            // replace shader node globally
+            shaderNode.prototype.signatures = [result.signature];
+            shaderNode.prototype.globalDeclare = '#pragma include "' + fileName + '"';
+        } else {
+            shaderNode = createNode(result, fileName);
+        }
+        shaderNodeClassLocal[nodeName] = shaderNode;
+        shaderNodeClassGlobal[nodeName] = shaderNode;
     }
 
-    return objOut;
+    return shaderNodeClassLocal;
 };
 
 export default {
