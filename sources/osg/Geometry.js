@@ -325,15 +325,13 @@ utils.createPrototypeNode(
             state.drawGeometry(this);
             var cachedDraw = this._cacheDrawCall[prgID];
 
-            if (this._useVAO) {
-                if (!this._vao[prgID]) {
-                    state.setVertexArrayObject(null);
-                } else {
-                    if (this._vao[prgID].isDirty()) {
-                        // need vertex array recreation
-                        // ie: lost context
-                        cachedDraw = undefined;
-                    }
+            if (!this._vao[prgID]) {
+                state.setVertexArrayObject(null);
+            } else {
+                if (this._vao[prgID].isDirty()) {
+                    // need vertex array recreation
+                    // ie: lost context
+                    cachedDraw = undefined;
                 }
             }
 
