@@ -37,7 +37,8 @@ float shadowReceive(const in bool lighted,
                     const in mat4 shadowProjectionMatrix,
                     const in mat4 shadowViewMatrix,
                     const in vec4 shadowDepthRange,
-                    const in float shadowBias
+                    const in float shadowBias,
+                    const in float pcfKernel
                     OPT_ARG_atlasSize
                     OPT_ARG_normalBias
                     OPT_ARG_outDistance
@@ -191,7 +192,8 @@ float shadowReceive(const in bool lighted,
                                  shadowUV,
                                  shadowReceiverZ,
                                  shadowBiasPCF,
-                                 clampDimension
+                                 clampDimension,
+                                 pcfKernel
                                  OPT_INSTANCE_ARG_outDistance
                                  OPT_INSTANCE_ARG_jitter);
 #ifdef _OUT_DISTANCE
