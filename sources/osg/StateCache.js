@@ -2,6 +2,24 @@ import Depth from 'osg/Depth';
 import BlendFunc from 'osg/BlendFunc';
 import CullFace from 'osg/CullFace';
 
+// To avoid to apply duplicate states we cache them and apply them only
+// when there is a draw commands it means when calling state.drawGeometry
+// called from Geometry.drawImplementation or state.clear
+
+// Here what it does:
+// state.applyCullFaceAttribute(cullFaceDisableAttribute);
+// state.applyCullFaceAttribute(cullFaceEnableAttribute);
+// state.applyCullFaceAttribute(cullFaceDisableAttribute);
+// state.applyCullFaceAttribute(cullFaceEnableAttribute);
+// state.drawGeometry()
+
+//     in this case only the cullFaceEnableAttribute will be applied not the previous one
+
+// Internal implementation use 2 buffers:
+//     - buffer, it contains the required field that will be applied when executing a draw command
+//     - state, that contains the last state appied to webgl, it's used to compare if a
+//              change happend from the incoming attribute
+
 var createStateBlendFunc = function() {
     return {
         buffer: {
@@ -316,6 +334,7 @@ StateCache.prototype = {
             state.width !== attribute._width ||
             state.height !== attribute._height
         ) {
+            buffer.enable = enable;
             buffer.x = attribute._x;
             buffer.y = attribute._y;
             buffer.width = attribute._width;
@@ -370,6 +389,7 @@ StateCache.prototype = {
         if (!enable) return;
 
         if (state.mode !== attribute._mode) {
+            buffer.enable = enable;
             buffer.mode = attribute._mode;
             data.changed = true;
         }
@@ -414,12 +434,13 @@ StateCache.prototype = {
 
         if (!enable) return;
 
-        if (state.func !== attribute._func) {
+        if (
+            state.func !== attribute._func ||
+            state.near !== attribute._near ||
+            state.far !== attribute._far
+        ) {
+            buffer.enable = enable;
             buffer.func = attribute._func;
-            data.changed = true;
-        }
-
-        if (state.near !== attribute._near || state.far !== attribute._far) {
             buffer.far = attribute._far;
             buffer.near = attribute._near;
             data.changed = true;
@@ -471,26 +492,17 @@ StateCache.prototype = {
 
         if (!enable) return;
 
-        buffer.separate = attribute._separate;
-        if (buffer.separate) {
-            if (
-                state.sourceFactor !== attribute._sourceFactor ||
-                state.destinationFactor !== attribute._destinationFactor ||
-                state.sourceFactorAlpha !== attribute._sourceFactorAlpha ||
-                state.destinationFactorAlpha !== attribute._destinationFactorAlpha
-            ) {
-                buffer.sourceFactor = attribute._sourceFactor;
-                buffer.destinationFactor = attribute._destinationFactor;
-                buffer.sourceFactorAlpha = attribute._sourceFactorAlpha;
-                buffer.destinationFactorAlpha = attribute._destinationFactorAlpha;
-                data.changed = true;
-            }
-        } else if (
+        if (
             state.sourceFactor !== attribute._sourceFactor ||
-            state.destinationFactor !== attribute._destinationFactor
+            state.destinationFactor !== attribute._destinationFactor ||
+            state.sourceFactorAlpha !== attribute._sourceFactorAlpha ||
+            state.destinationFactorAlpha !== attribute._destinationFactorAlpha
         ) {
+            buffer.separate = attribute._separate;
             buffer.sourceFactor = attribute._sourceFactor;
             buffer.destinationFactor = attribute._destinationFactor;
+            buffer.sourceFactorAlpha = attribute._sourceFactorAlpha;
+            buffer.destinationFactorAlpha = attribute._destinationFactorAlpha;
             data.changed = true;
         }
     },
