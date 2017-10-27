@@ -6,7 +6,8 @@ float getShadowPCF(
     const in vec2 uv,
     const in float compare,
     const in vec2 biasPCF,
-    const in vec4 clampDimension
+    const in vec4 clampDimension,
+    const in float pcfKernel
     OPT_ARG_outDistance
     OPT_ARG_jitter) {
 
@@ -14,10 +15,7 @@ float getShadowPCF(
 
      res += texture2DShadowLerp(depths, size, uv + biasPCF, compare, clampDimension OPT_INSTANCE_ARG_outDistance OPT_INSTANCE_ARG_jitter);
 
-
-#if defined(_PCFx1)
-
-#else
+     if (pcfKernel <= 1.0) return res;
 
     float dx0 = -size.z;
     float dy0 = -size.w;
@@ -30,11 +28,8 @@ float getShadowPCF(
     res += TSF(dx0, .0);
     res += TSF(dx0, dx1);
 
-#if defined(_PCFx4)
+    if (pcfKernel <= 4.0) return res / 4.0;
 
-    res /=4.0;
-
-#elif defined(_PCFx9)
     res += TSF(.0, dx0);
     res += TSF(.0, dx1);
 
@@ -43,9 +38,7 @@ float getShadowPCF(
     res += TSF(dx1, dx1);
 
 
-    res /=9.0;
-
-#elif defined(_PCFx25)
+    if (pcfKernel <= 9.0) return res / 9.0;
 
     float dx02 = -2.0*size.z;
     float dy02 = -2.0*size.w;
@@ -75,14 +68,9 @@ float getShadowPCF(
     res += TSF(dx2, dx1);
     res += TSF(dx2, dx2);
 
-
-    res/=25.0;
-
-#endif
+    return  res / 25.0;
 
 #undef TSF
 
-#endif
-    return res;
 }
 /////// end Tap
