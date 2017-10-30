@@ -183,16 +183,17 @@ StateCache.prototype = {
         var state = data.state;
         data.changed = false;
 
+        buffer.red = array[0];
+        buffer.green = array[1];
+        buffer.blue = array[2];
+        buffer.alpha = array[3];
+
         if (
             state.red !== array[0] ||
             state.green !== array[1] ||
             state.blue !== array[2] ||
             state.alpha !== array[3]
         ) {
-            buffer.red = array[0];
-            buffer.green = array[1];
-            buffer.blue = array[2];
-            buffer.alpha = array[3];
             data.changed = true;
         }
     },
@@ -215,8 +216,9 @@ StateCache.prototype = {
         var state = data.state;
         data.changed = false;
 
+        buffer.value = value;
+
         if (state.value !== value) {
-            buffer.value = value;
             data.changed = true;
         }
     },
@@ -236,8 +238,9 @@ StateCache.prototype = {
         var state = data.state;
         data.changed = false;
 
+        buffer.value = value;
+
         if (state.value !== value) {
-            buffer.value = value;
             data.changed = true;
         }
     },
@@ -261,11 +264,12 @@ StateCache.prototype = {
         var state = data.state;
         data.changed = false;
 
+        buffer.x = x;
+        buffer.y = y;
+        buffer.width = width;
+        buffer.height = height;
+
         if (state.x !== x || state.y !== y || state.width !== width || state.height !== height) {
-            buffer.x = x;
-            buffer.y = y;
-            buffer.width = width;
-            buffer.height = height;
             data.changed = true;
         }
     },
@@ -288,16 +292,17 @@ StateCache.prototype = {
         var state = data.state;
         data.changed = false;
 
+        buffer.red = attribute._red;
+        buffer.green = attribute._green;
+        buffer.blue = attribute._blue;
+        buffer.alpha = attribute._alpha;
+
         if (
             state.red !== attribute._red ||
             state.green !== attribute._green ||
             state.blue !== attribute._blue ||
             state.alpha !== attribute._alpha
         ) {
-            buffer.red = attribute._red;
-            buffer.green = attribute._green;
-            buffer.blue = attribute._blue;
-            buffer.alpha = attribute._alpha;
             data.changed = true;
         }
     },
@@ -321,24 +326,17 @@ StateCache.prototype = {
         var state = data.state;
         data.changed = false;
 
-        if (state.enable !== enable) {
-            buffer.enable = enable;
-            data.changed = true;
-        }
+        buffer.enable = enable;
+        buffer.x = attribute._x;
+        buffer.y = attribute._y;
+        buffer.width = attribute._width;
+        buffer.height = attribute._height;
 
-        if (!enable) return;
-
-        if (
+        if (state.enable !== enable ||
             state.x !== attribute._x ||
             state.y !== attribute._y ||
             state.width !== attribute._width ||
-            state.height !== attribute._height
-        ) {
-            buffer.enable = enable;
-            buffer.x = attribute._x;
-            buffer.y = attribute._y;
-            buffer.width = attribute._width;
-            buffer.height = attribute._height;
+            state.height !== attribute._height ) {
             data.changed = true;
         }
     },
@@ -381,16 +379,10 @@ StateCache.prototype = {
         var enable = attribute._mode !== CullFace.DISABLE;
         data.changed = false;
 
-        if (state.enable !== enable) {
-            buffer.enable = enable;
-            data.changed = true;
-        }
+        buffer.enable = enable;
+        buffer.mode = attribute._mode;
 
-        if (!enable) return;
-
-        if (state.mode !== attribute._mode) {
-            buffer.enable = enable;
-            buffer.mode = attribute._mode;
+        if (state.enable !== enable || state.mode !== attribute._mode) {
             data.changed = true;
         }
     },
@@ -425,26 +417,19 @@ StateCache.prototype = {
         var state = data.state;
         data.changed = false;
 
-        if (state.enable !== enable) {
-            buffer.enable = enable;
+        buffer.enable = enable;
+        buffer.func = attribute._func;
+        buffer.far = attribute._far;
+        buffer.near = attribute._near;
+
+        if (state.enable !== enable ||
+            state.func !== attribute._func ||
+            state.near !== attribute._near ||
+            state.far !== attribute._far ) {
             data.changed = true;
         }
 
         this.depthMask(attribute._writeMask);
-
-        if (!enable) return;
-
-        if (
-            state.func !== attribute._func ||
-            state.near !== attribute._near ||
-            state.far !== attribute._far
-        ) {
-            buffer.enable = enable;
-            buffer.func = attribute._func;
-            buffer.far = attribute._far;
-            buffer.near = attribute._near;
-            data.changed = true;
-        }
     },
 
     applyDepth: function(gl) {
@@ -485,24 +470,19 @@ StateCache.prototype = {
             attribute._destinationFactor !== BlendFunc.DISABLE;
         data.changed = false;
 
-        if (state.enable !== enable) {
-            buffer.enable = enable;
-            data.changed = true;
-        }
+        buffer.enable = enable;
+        buffer.separate = attribute._separate;
+        buffer.sourceFactor = attribute._sourceFactor;
+        buffer.destinationFactor = attribute._destinationFactor;
+        buffer.sourceFactorAlpha = attribute._sourceFactorAlpha;
+        buffer.destinationFactorAlpha = attribute._destinationFactorAlpha;
 
-        if (!enable) return;
-
-        if (
+        if (state.enable !== enable ||
             state.sourceFactor !== attribute._sourceFactor ||
             state.destinationFactor !== attribute._destinationFactor ||
             state.sourceFactorAlpha !== attribute._sourceFactorAlpha ||
             state.destinationFactorAlpha !== attribute._destinationFactorAlpha
         ) {
-            buffer.separate = attribute._separate;
-            buffer.sourceFactor = attribute._sourceFactor;
-            buffer.destinationFactor = attribute._destinationFactor;
-            buffer.sourceFactorAlpha = attribute._sourceFactorAlpha;
-            buffer.destinationFactorAlpha = attribute._destinationFactorAlpha;
             data.changed = true;
         }
     },
