@@ -214,6 +214,63 @@ utils.createPrototypeStateAttribute(
                 this._program = undefined;
             },
 
+            _rebuildProgramFromSpector: function(
+                vertexShaderText,
+                fragmentShaderText,
+                onCompiled,
+                onError
+            ) {
+                this._dirty = true;
+                this._vertex.invalidate();
+                this._fragment.invalidate();
+                this.invalidate();
+                this._vertex.setText(vertexShaderText);
+                this._fragment.setText(fragmentShaderText);
+                this._spectorOnCompiled = onCompiled;
+                this._spectorOnError = onError;
+            },
+
+            _onErrorToSpector: function(errLink) {
+                if (!this._spectorOnError) return false;
+                this._spectorOnError(errLink);
+                return true;
+            },
+
+            _onCompilationToSpector: function() {
+                if (!this._spectorOnCompiled) return;
+                this._spectorOnCompiled(this.program);
+            },
+
+            _bindProgramToSpector: function() {
+                if (!window || !window.spector || this._program.__SPECTOR_rebuildProgram) return;
+                this._program.__SPECTOR_rebuildProgram = this._rebuildProgramFromSpector.bind(this);
+            },
+
+            _logDebugShader: function(gl, errLink) {
+                if (errLink !== 'Failed to create D3D shaders.\n') return;
+                // rawgl trick is for webgl inspector
+                var debugShader = gl.rawgl !== undefined ? gl.rawgl : gl;
+                if (debugShader === undefined || debugShader.getExtension !== undefined) return;
+                debugShader = debugShader.getExtension('WEBGL_debug_shaders');
+                if (!debugShader) return;
+                notify.error(debugShader.getTranslatedShaderSource(this._vertex.shader));
+                notify.error(debugShader.getTranslatedShaderSource(this._fragment.shader));
+            },
+
+            _activateFailSafe: function(gl) {
+                var program = gl.createProgram();
+                this._vertex.failSafe(gl, this._vertex.getText());
+                this._fragment.failSafe(gl, this._fragment.getText());
+
+                gl.attachShader(program, this._vertex.shader);
+                gl.attachShader(program, this._fragment.shader);
+                gl.linkProgram(program);
+                gl.validateProgram(program);
+
+                notify.warn('FailSafe shader Activated ');
+                this._program = program;
+            },
+
             apply: function(state) {
                 if (this._nullProgram) return;
 
@@ -261,44 +318,21 @@ utils.createPrototypeStateAttribute(
                                     this._fragment.text
                             );
 
-                            // rawgl trick is for webgl inspector
-                            var debugShader = gl.rawgl !== undefined ? gl.rawgl : gl;
-                            if (debugShader !== undefined && debugShader.getExtension !== undefined)
-                                debugShader = debugShader.getExtension('WEBGL_debug_shaders');
-                            if (debugShader && errLink === 'Failed to create D3D shaders.\n') {
-                                notify.error(
-                                    debugShader.getTranslatedShaderSource(this._vertex.shader)
-                                );
-                                notify.error(
-                                    debugShader.getTranslatedShaderSource(this._fragment.shader)
-                                );
-                            }
-
+                            if (this._onErrorToSpector(errLink)) return;
+                            this._logDebugShaders(gl, errLink);
                             compileClean = false;
+                        } else {
+                            this._onCompilationToSpector(this.program);
                         }
-                        // TODO: better usage of validate.
-                        // as it's intended at shader program usage
-                        // validating against current gl state
-                        // Not for compilation stage
-                        // gl.validateProgram( this._program );
                     }
 
                     if (!compileClean) {
                         // Any error, Any
                         // Pink must die.
-
-                        var program = gl.createProgram();
-                        this._vertex.failSafe(gl, this._vertex.getText());
-                        this._fragment.failSafe(gl, this._fragment.getText());
-
-                        gl.attachShader(program, this._vertex.shader);
-                        gl.attachShader(program, this._fragment.shader);
-                        gl.linkProgram(program);
-                        gl.validateProgram(program);
-
-                        notify.warn('FailSafe shader Activated ');
-                        this._program = program;
+                        this._activateFailSafe(gl);
                     }
+
+                    this._bindProgramToSpector();
 
                     this._uniformsCache = {};
                     this._attributesCache = {};
