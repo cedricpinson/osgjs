@@ -25,7 +25,8 @@ var ShadowReceiveAttribute = function(lightNum, disable) {
     this._precision = 'UNSIGNED_BYTE';
     // kernel size & type for pcf
     this._kernelSizePCF = undefined;
-    this._pcfKernel = 1.0;
+
+    this._fakePCF = true;
 
     this._jitterOffset = 'none';
 
@@ -96,22 +97,7 @@ utils.createPrototypeStateAttribute(
 
         setKernelSizePCF: function(v) {
             this._kernelSizePCF = v;
-            var pcf = this.getKernelSizePCF();
-            switch (pcf) {
-                case '4Tap(16texFetch)':
-                    this._pcfKernel = 4.0;
-                    break;
-                case '9Tap(36texFetch)':
-                    this._pcfKernel = 9.0;
-                    break;
-                case '16Tap(64texFetch)':
-                    this._pcfKernel = 25.0;
-                    break;
-                default:
-                case '1Tap(4texFetch)':
-                    this._pcfKernel = 1.0;
-                    break;
-            }
+            this._dirtyHash = true;
         },
 
         setPrecision: function(precision) {
@@ -138,8 +124,7 @@ utils.createPrototypeStateAttribute(
 
             obj.uniforms[typeMember] = {
                 bias: Uniform.createFloat(this.getUniformName('bias')),
-                normalBias: Uniform.createFloat(this.getUniformName('normalBias')),
-                pcfKernel: Uniform.createFloat(this.getUniformName('pcfKernel'))
+                normalBias: Uniform.createFloat(this.getUniformName('normalBias'))
             };
 
             return obj.uniforms[typeMember];
@@ -149,6 +134,23 @@ utils.createPrototypeStateAttribute(
         // (used by shadowMap and shadow node shader)
         getDefines: function() {
             var defines = [];
+
+            var pcf = this.getKernelSizePCF();
+            switch (pcf) {
+                case '4Tap(16texFetch)':
+                    defines.push('#define _PCFx4');
+                    break;
+                case '9Tap(36texFetch)':
+                    defines.push('#define _PCFx9');
+                    break;
+                case '16Tap(64texFetch)':
+                    defines.push('#define _PCFx25');
+                    break;
+                default:
+                case '1Tap(4texFetch)':
+                    defines.push('#define _PCFx1');
+                    break;
+            }
 
             if (this.getPrecision() !== 'UNSIGNED_BYTE') defines.push('#define _FLOATTEX');
             if (this.getAtlas()) defines.push('#define _ATLAS_SHADOW');
@@ -165,7 +167,6 @@ utils.createPrototypeStateAttribute(
 
             uniformMap.normalBias.setFloat(this._normalBias);
             uniformMap.bias.setFloat(this._bias);
-            uniformMap.pcfKernel.setFloat(this._pcfKernel);
         },
 
         // need a isEnabled to let the ShaderGenerator to filter
