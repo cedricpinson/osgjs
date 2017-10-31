@@ -29,7 +29,7 @@ export default function() {
             );
             var defines = compiler.evaluateAndGatherField(root, 'getDefines');
             assert.isOk(
-                defines.length === 0,
+                defines.length === 1,
                 'Compiler Evaluate And Gather Field: defines rightly so'
             );
 

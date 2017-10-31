@@ -384,8 +384,7 @@ var CompilerFragment = {
             ),
             shadowViewMatrix: this.getOrCreateUniform(textureUniforms['ViewMatrix' + suffix]),
             shadowDepthRange: this.getOrCreateUniform(textureUniforms['DepthRange' + suffix]),
-            shadowBias: this.getOrCreateUniform(shadowUniforms.bias),
-            pcfKernel: this.getOrCreateUniform(shadowUniforms.pcfKernel)
+            shadowBias: this.getOrCreateUniform(shadowUniforms.bias)
         };
 
         if (shadowReceive.getAtlas())
