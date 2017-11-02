@@ -7,6 +7,7 @@ import Timer from 'osg/Timer';
 
 // singleton
 var sp = new ShaderProcessor();
+var errorCallback;
 
 /**
  * Program encapsulate an vertex and fragment shader
@@ -283,11 +284,11 @@ utils.createPrototypeStateAttribute(
                     var compileClean;
 
                     if (!this._vertex.shader) {
-                        compileClean = this._vertex.compile(gl);
+                        compileClean = this._vertex.compile(gl, errorCallback);
                     }
 
                     if (!this._fragment.shader) {
-                        compileClean = this._fragment.compile(gl);
+                        compileClean = this._fragment.compile(gl, errorCallback);
                     }
 
                     // do cpu operation before getting async compilation results
@@ -323,8 +324,12 @@ utils.createPrototypeStateAttribute(
                                     this._fragment.text
                             );
 
+                            this._logDebugShader(gl, errLink);
+                            if (errorCallback) {
+                                errorCallback(this._vertex.text, this._fragment.text, errLink);
+                            }
                             if (this._onErrorToSpector(errLink)) return;
-                            this._logDebugShaders(gl, errLink);
+
                             compileClean = false;
                         } else {
                             this._onCompilationToSpector(this.program);
@@ -383,5 +388,9 @@ utils.createPrototypeStateAttribute(
     'osg',
     'Program'
 );
+
+Program.registerErrorCallback = function(callback) {
+    errorCallback = callback;
+};
 
 export default Program;
