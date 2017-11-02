@@ -40,25 +40,26 @@ var Program = function(vShader, fShader) {
     this._dirty = true;
 };
 
-var getAttributeList = function(vertexShader) {
+var attributesRegexp = /(in|attribute)\s+\w+\s+(\w+)\s*;/g;
+var getAttributeList = function(shaderText) {
     var attributeMap = {};
-
-    var i, l, attr;
-    var r = vertexShader.match(/attribute\s+\w+\s+\w+/g);
-    if (r !== null) {
-        for (i = 0, l = r.length; i < l; i++) {
-            attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
-            attributeMap[attr] = true;
-        }
-    } else {
-        r = vertexShader.match(/in\s+\w+\s+\w+\s*;/g);
-        for (i = 0, l = r.length; i < l; i++) {
-            attr = r[i].match(/in\s+\w+\s+(\w+)\s*;/)[1];
-            attributeMap[attr] = true;
-        }
+    var r, attr;
+    while ((r = attributesRegexp.exec(shaderText)) !== null) {
+        attr = r[2];
+        attributeMap[attr] = true;
     }
 
     return attributeMap;
+};
+var uniformRegexp = /uniform\s+\w+\s+(\w+)((\s)?\[(.*?)\])?/g;
+var getUniformList = function(shaderText) {
+    var uniformMap = {};
+    var r;
+    while ((r = uniformRegexp.exec(shaderText)) !== null) {
+        var uniform = r[1];
+        uniformMap[uniform] = true;
+    }
+    return uniformMap;
 };
 
 // static cache of glPrograms flagged for deletion, which will actually
@@ -289,7 +290,11 @@ utils.createPrototypeStateAttribute(
                         compileClean = this._fragment.compile(gl);
                     }
 
+                    // do cpu operation before getting async compilation results
                     var attributeMap = getAttributeList(this._vertex.getText());
+                    var attributeArray = window.Object.keys(attributeMap);
+                    var uniformMap = getUniformList(this._vertex.text + '\n' + this._fragment.text);
+                    var uniformArray = window.Object.keys(uniformMap);
 
                     if (compileClean) {
                         this._program = gl.createProgram();
@@ -337,10 +342,8 @@ utils.createPrototypeStateAttribute(
                     this._uniformsCache = {};
                     this._attributesCache = {};
 
-                    this.cacheUniformList(gl, this._vertex.text);
-                    this.cacheUniformList(gl, this._fragment.text);
-
-                    this.cacheAttributeList(gl, window.Object.keys(attributeMap));
+                    this.cacheUniformList(gl, uniformArray);
+                    this.cacheAttributeList(gl, attributeArray);
 
                     this._dirty = false;
                 }
@@ -348,18 +351,15 @@ utils.createPrototypeStateAttribute(
                 state.applyProgram(this._program);
             },
 
-            cacheUniformList: function(gl, str) {
-                var r = str.match(/uniform\s+\w+\s+\w+((\s)?\[(.*?)\])?/g);
+            cacheUniformList: function(gl, uniformList) {
                 var map = this._uniformsCache;
-                if (r !== null) {
-                    for (var i = 0, l = r.length; i < l; i++) {
-                        var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
-                        var uniformName = r[i].match(/uniform\s+\w+\s+(\w+)(\s?\[.*?\])?/)[1];
-                        var location = gl.getUniformLocation(this._program, uniform);
-                        if (location !== undefined && location !== null) {
-                            if (map[uniformName] === undefined) {
-                                map[uniformName] = location;
-                            }
+                for (var i = 0, l = uniformList.length; i < l; i++) {
+                    var uniform = uniformList[i];
+                    var location = gl.getUniformLocation(this._program, uniform);
+
+                    if (location !== undefined && location !== null) {
+                        if (map[uniform] === undefined) {
+                            map[uniform] = location;
                         }
                     }
                 }
