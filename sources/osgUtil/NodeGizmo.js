@@ -831,6 +831,8 @@ utils.createPrototypeNode(
             getCanvasCoord(this._downCanvasCoord, e);
             if (!this._hoverNode || !this._attachedNode) return;
 
+            e.preventDefault();
+
             this._enableMouseBack = this._eventMouse.getEnable();
             this._eventMouse.setEnable(false);
 
