@@ -149,6 +149,7 @@ var NodeGizmo = function(viewer) {
     this._lastDistToEye = 0.0; // see updateGizmo comment
 
     this._attachedNode = null;
+    this._pivotOffset = vec3.create(); // to center the gizmo and rotation pivot when inserting MT
     this.attachToNode(null);
 
     // Intersectors
@@ -323,21 +324,27 @@ utils.createPrototypeNode(
 
         attachToNodePath: function(nodepath) {
             var editNode = this._findEditNodeFromNodePath(nodepath);
-            this._attachEditNode(editNode);
+            this._attachEditNode(editNode, nodepath && nodepath[nodepath.length - 1]);
         },
 
         attachToNode: function(node) {
             var editNode = this._findEditNodeFromNode(node);
-            this._attachEditNode(editNode);
+            this._attachEditNode(editNode, node);
         },
 
-        _attachEditNode: function(editNode) {
+        _attachEditNode: function(editNode, userNode) {
             this._attachedNode = editNode;
+
+            if (userNode && userNode !== editNode) {
+                vec3.copy(this._pivotOffset, userNode.getBoundingSphere().center());
+            }
+
             this.updateGizmoMask();
         },
 
         updateGizmoMask: function() {
             if (!this._attachedNode) {
+                vec3.init(this._pivotOffset);
                 this.setNodeMask(0x0);
                 return;
             }
@@ -657,7 +664,8 @@ utils.createPrototypeNode(
         },
 
         getAttachedNodeWorldMatrix: function() {
-            return this._attachedNode.getWorldMatrix(undefined, _TMP_MAT);
+            var worldMat = this._attachedNode.getWorldMatrix(undefined, _TMP_MAT);
+            return mat4.translate(worldMat, worldMat, this._pivotOffset);
         },
 
         update: (function() {
@@ -1003,6 +1011,7 @@ utils.createPrototypeNode(
             var vecX = vec3.fromValues(1.0, 0.0, 0.0);
             var vecY = vec3.fromValues(0.0, 1.0, 0.0);
             var vecZ = vec3.fromValues(0.0, 0.0, 1.0);
+            var negatePivot = vec3.create();
 
             return function(e) {
                 var origin = this._editLineOrigin;
@@ -1038,7 +1047,9 @@ utils.createPrototypeNode(
                 // rotate around origin pivot (geometry center)
                 // the classic rotation around pivot : -T * R * T
                 var attMat = this._attachedNode.getMatrix();
+                mat4.translate(attMat, this._editLocal, this._pivotOffset);
                 mat4.mul(attMat, attMat, mrot);
+                mat4.translate(attMat, attMat, vec3.negate(negatePivot, this._pivotOffset));
 
                 this._attachedNode.dirtyBound();
             };
