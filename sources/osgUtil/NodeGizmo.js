@@ -1,14 +1,11 @@
 import Node from 'osg/Node';
+import NodeVisitor from 'osg/NodeVisitor';
 import MatrixTransform from 'osg/MatrixTransform';
 import Depth from 'osg/Depth';
 import BlendFunc from 'osg/BlendFunc';
 import CullFace from 'osg/CullFace';
 import Uniform from 'osg/Uniform';
-import { vec2 } from 'osg/glMatrix';
-import { vec3 } from 'osg/glMatrix';
-import { vec4 } from 'osg/glMatrix';
-import { mat4 } from 'osg/glMatrix';
-import { quat } from 'osg/glMatrix';
+import { vec2, vec3, vec4, mat4, quat } from 'osg/glMatrix';
 import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
 import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
 import GizmoGeometry from 'osgUtil/gizmoGeometry';
@@ -86,6 +83,9 @@ utils.createPrototypeObject(
     'LineCustomIntersector'
 );
 
+// for getWorldMatrix
+var _TMP_MAT = mat4.create();
+
 // The MT node can be detected as such because they
 // have a '_nbAxis' property on them (x=0, y=1, z=2)
 //
@@ -107,9 +107,10 @@ var NodeGizmo = function(viewer) {
 
     this._tmask = 1; // traversal mask when picking the scene
 
-    // We can set this boolean to true if we want to insert a MatrixTransform just
-    // before the picked geometry.
-    // Otherwise, we simply select the first MatrixTransform with an 'editMask' property
+    // When attaching the gizmo on a node, there's 2 ways:
+    // - if _autoInsertMT is true and no direct parent has an editMask
+    //   we insert a matrixTransform that we are going to edit
+    // - otherwise we look for the nearest MatrixTransform with an editMask on the graph
     this._autoInsertMT = false;
 
     this._viewer = viewer;
@@ -148,7 +149,7 @@ var NodeGizmo = function(viewer) {
     this._lastDistToEye = 0.0; // see updateGizmo comment
 
     this._attachedNode = null;
-    this.attachToGeometry(null);
+    this.attachToNode(null);
 
     // Intersectors
     this._lsi = new LineCustomIntersector();
@@ -187,6 +188,36 @@ NodeGizmo.PICK_PLANE = NodeGizmo.PICK_PLANE_X | NodeGizmo.PICK_PLANE_Y | NodeGiz
 
 NodeGizmo.PICK_GIZMO = NodeGizmo.PICK_ARC | NodeGizmo.PICK_ARROW | NodeGizmo.PICK_PLANE;
 
+// retrieve nearest editable node
+var GetNearestEditableNode = function() {
+    NodeVisitor.call(this, NodeVisitor.TRAVERSE_PARENTS);
+    this._editableNode = null;
+};
+
+utils.createPrototypeObject(
+    GetNearestEditableNode,
+    utils.objectInherit(NodeVisitor.prototype, {
+        reset: function() {
+            NodeVisitor.prototype.reset.call(this);
+            this._editableNode = null;
+        },
+        getEditableNode: function() {
+            return this._editableNode;
+        },
+        apply: function(node) {
+            if (this._editableNode) return;
+
+            var editMask = node.editMask;
+            if (editMask && editMask & NodeGizmo.PICK_GIZMO) {
+                this._editableNode = node;
+                return;
+            }
+
+            this.traverse(node);
+        }
+    })
+);
+
 utils.createPrototypeNode(
     NodeGizmo,
     utils.objectInherit(MatrixTransform.prototype, {
@@ -202,6 +233,10 @@ utils.createPrototypeNode(
             this._tmask = tmask;
         },
 
+        setAutoMatrixTransformInsertion: function(bool) {
+            this._autoInsertMT = bool;
+        },
+
         isEditing: function() {
             return this._isEditing;
         },
@@ -210,11 +245,7 @@ utils.createPrototypeNode(
             this.getOrCreateStateSet().setAttributeAndModes(new Depth(Depth.DISABLE));
             this.getOrCreateStateSet().setAttributeAndModes(new CullFace(CullFace.DISABLE));
 
-            var UpdateCallback = function() {};
-            UpdateCallback.prototype = {
-                update: this.updateGizmo.bind(this)
-            };
-            this.addUpdateCallback(new UpdateCallback());
+            this.addUpdateCallback(this);
             this.addChild(this.initNodeTranslate());
             this.addChild(this.initNodeTranslatePlane());
             this.addChild(this.initNodeRotate());
@@ -231,64 +262,77 @@ utils.createPrototypeNode(
             canvas.addEventListener('mouseout', this.onMouseUp.bind(this));
         },
 
-        attachToNodePath: function(nodepath) {
-            var node;
-            if (nodepath) {
+        _insertEditNode: function(parent, node) {
+            var mtInsert = new MatrixTransform();
+            mtInsert.editMask = NodeGizmo.PICK_GIZMO;
+            parent.addChild(mtInsert);
+            parent.removeChild(node);
+            mtInsert.addChild(node);
+
+            mtInsert._isInserted = true;
+
+            return mtInsert;
+        },
+
+        _findEditNodeFromNodePath: function(nodepath) {
+            if (!nodepath) return null;
+
+            var node = nodepath[nodepath.length - 1];
+            if (node.editMask) return node;
+
+            if (!this._autoInsertMT) {
                 for (var i = nodepath.length - 1; i >= 0; --i) {
-                    var editMask = nodepath[i].editMask || 0;
-                    if (editMask & NodeGizmo.PICK_GIZMO) {
-                        node = nodepath[i];
-                        break;
-                    }
+                    var editMask = nodepath[i].editMask;
+                    if (editMask && editMask & NodeGizmo.PICK_GIZMO) return nodepath[i];
                 }
-            }
-            if (!node) {
-                this._attachedNode = null;
-                this.setNodeMask(0x0);
-                return;
+
+                return null;
             }
 
-            this._attachedNode = node;
-            this.updateGizmoMask();
+            var parent = nodepath[nodepath.length - 2];
+            // direct parent is already an editable node
+            if (parent.editMask) return parent;
+            return this._insertEditNode(parent, node);
         },
 
-        attachToMatrixTransform: function(node) {
-            if (!node) {
-                this._attachedNode = null;
-                this.setNodeMask(0x0);
-                return;
-            }
-            if (node.editMask === undefined) node.editMask = NodeGizmo.PICK_GIZMO;
+        _findEditNodeFromNode: function(node) {
+            if (!node) return null;
+            if (node.editMask) return node;
 
-            this._attachedNode = node;
-            this.updateGizmoMask();
-        },
-
-        attachToGeometry: function(argNode) {
-            var node = argNode;
-
-            if (!node) {
-                this._attachedNode = null;
-                this.setNodeMask(0x0);
-                return;
-            }
-
-            // insert MatrixTransform node before geometry node
-            var pr = node.getParents();
-            if (pr[0].editMask === undefined) {
-                var imt = new MatrixTransform();
-                while (pr.length > 0) {
-                    pr[0].addChild(imt);
-                    pr[0].removeChild(node);
+            if (this._autoInsertMT) {
+                var parents = node.getParents();
+                // direct parent is already an editable node
+                for (var i = 0; i < parents.length; ++i) {
+                    var editMask = parents[i].editMask;
+                    if (editMask && editMask & NodeGizmo.PICK_GIZMO) return parents[i];
                 }
-                imt.addChild(node);
-                imt.editMask = NodeGizmo.PICK_GIZMO;
-                node = imt;
+
+                // we have to choose an arbitrary parent here
+                return this._insertEditNode(parents[0], node);
+            }
+
+            if (!this._getEditNodeVisitor) {
+                this._getEditNodeVisitor = new GetNearestEditableNode();
             } else {
-                node = pr[0];
+                this._getEditNodeVisitor.reset();
             }
 
-            this._attachedNode = node;
+            node.accept(this._getEditNodeVisitor);
+            return this._getEditNodeVisitor.getEditableNode();
+        },
+
+        attachToNodePath: function(nodepath) {
+            var editNode = this._findEditNodeFromNodePath(nodepath);
+            this._attachEditNode(editNode);
+        },
+
+        attachToNode: function(node) {
+            var editNode = this._findEditNodeFromNode(node);
+            this._attachEditNode(editNode);
+        },
+
+        _attachEditNode: function(editNode) {
+            this._attachedNode = editNode;
             this.updateGizmoMask();
         },
 
@@ -599,45 +643,45 @@ utils.createPrototypeNode(
             };
         })(),
 
-        getTransformType: function(node) {
-            var n = node;
-            while (n.getParents().length > 0) {
-                if (
-                    n.referenceFrame !== undefined &&
-                    n.referenceFrame === TransformEnums.ABSOLUTE_RF
-                )
+        getTransformType: function(nodeIn) {
+            // should probably be a visitor with traverse parents instead
+            var node = nodeIn;
+            while (node.getParents().length > 0) {
+                var refFrame = node.referenceFrame;
+                if (refFrame !== undefined && refFrame === TransformEnums.ABSOLUTE_RF) {
                     return TransformEnums.ABSOLUTE_RF;
-                n = n.getParents()[0];
+                }
+                node = node.getParents()[0];
             }
             return TransformEnums.RELATIVE_RF;
         },
 
-        updateGizmo: (function() {
+        getAttachedNodeWorldMatrix: function() {
+            return this._attachedNode.getWorldMatrix(undefined, _TMP_MAT);
+        },
+
+        update: (function() {
             var eye = vec3.create();
-            var trVec = vec3.create();
+            var worldTrans = vec3.create();
             var tmpVec = vec3.create();
 
-            var temp = mat4.create();
-            var trWorld = mat4.create();
-            var invScale = mat4.create();
-            var scGiz = mat4.create();
+            var tmpMat = mat4.create();
 
             return function() {
                 if (!this._attachedNode) return;
+
                 var ttype = this.getTransformType(this._attachedNode);
                 this.setReferenceFrame(ttype);
                 this.setCullingActive(ttype === TransformEnums.RELATIVE_RF);
-                var worldMat = this._attachedNode.getWorldMatrices()[0];
+                var worldMat = this.getAttachedNodeWorldMatrix();
 
                 // world trans
-                mat4.getTranslation(trVec, worldMat);
-                mat4.fromTranslation(trWorld, trVec);
+                mat4.getTranslation(worldTrans, worldMat);
 
                 // normalize gizmo size
                 var scaleFactor = 3.0;
                 if (ttype === TransformEnums.ABSOLUTE_RF) {
                     eye[0] = eye[1] = eye[2] = 0.0;
-                    tmpVec[0] = tmpVec[1] = tmpVec[2] = 1.0;
                 } else {
                     // normalize gizmo size relative to screen size
                     var proj = this._viewer.getCamera().getProjectionMatrix();
@@ -648,36 +692,40 @@ utils.createPrototypeNode(
                     // a constant screen size (for example an icon)
                     this._lastDistToEye = this._isEditing
                         ? this._lastDistToEye
-                        : vec3.distance(trVec, eye);
+                        : vec3.distance(worldTrans, eye);
                     scaleFactor *= this._lastDistToEye / scaleFov;
                 }
-                mat4.fromScaling(scGiz, [scaleFactor, scaleFactor, scaleFactor]);
 
-                // gizmo node
-                mat4.mul(this.getMatrix(), trWorld, scGiz);
+                // set the position of gizmo
+                var gizmoMatrix = this.getMatrix();
+                mat4.fromTranslation(gizmoMatrix, worldTrans);
 
-                vec3.sub(eye, eye, trVec);
+                // set scale of gizmo
+                vec3.set(tmpVec, scaleFactor, scaleFactor, scaleFactor);
+                mat4.mul(gizmoMatrix, gizmoMatrix, mat4.fromScaling(tmpMat, tmpVec));
+
+                vec3.sub(eye, eye, worldTrans);
                 vec3.normalize(eye, eye);
 
                 // rotate node
                 if (this._rotateInLocal || this._translateInLocal) {
                     // world scale
                     mat4.getScale(tmpVec, worldMat);
-                    mat4.fromScaling(invScale, tmpVec);
+                    var invScale = mat4.fromScaling(tmpMat, tmpVec);
                     mat4.invert(invScale, invScale);
 
-                    mat4.mul(temp, worldMat, invScale);
-                    temp[12] = temp[13] = temp[14] = 0.0;
+                    var worldRot = mat4.mul(worldMat, worldMat, invScale);
+                    worldRot[12] = worldRot[13] = worldRot[14] = 0.0;
 
                     if (this._translateInLocal) {
-                        mat4.copy(this._translateNode.getMatrix(), temp);
-                        mat4.copy(this._planeNode.getMatrix(), temp);
+                        mat4.copy(this._translateNode.getMatrix(), worldRot);
+                        mat4.copy(this._planeNode.getMatrix(), worldRot);
                     }
 
                     if (this._rotateInLocal) {
-                        mat4.copy(this._rotateNode.getMatrix(), temp);
-                        mat4.invert(temp, temp);
-                        vec3.transformMat4(eye, eye, temp);
+                        mat4.copy(this._rotateNode.getMatrix(), worldRot);
+                        mat4.invert(worldRot, worldRot);
+                        vec3.transformMat4(eye, eye, worldRot);
                     }
                 } else {
                     mat4.identity(this._rotateNode.getMatrix());
@@ -689,8 +737,9 @@ utils.createPrototypeNode(
                 this._translateNode.dirtyBound();
                 this._planeNode.dirtyBound();
 
-                if (this._isEditing)
+                if (this._isEditing) {
                     mat4.copy(this._showAngle.getMatrix(), this._hoverNode.getMatrix());
+                }
             };
         })(),
 
@@ -799,7 +848,7 @@ utils.createPrototypeNode(
         saveEditMatrices: function() {
             mat4.copy(this._editLocal, this._attachedNode.getMatrix());
             // save the world translation
-            var wm = this._attachedNode.getWorldMatrices()[0];
+            var wm = this.getAttachedNodeWorldMatrix();
             mat4.fromTranslation(this._editWorldTrans, vec3.fromValues(wm[12], wm[13], wm[14]));
             // save the inv of world rotation + scale
             mat4.copy(this._editWorldScaleRot, wm);
@@ -809,7 +858,7 @@ utils.createPrototypeNode(
         },
 
         startRotateEdit: function(e) {
-            var gizmoMat = this._rotateNode.getWorldMatrices()[0];
+            var gizmoMat = this._rotateNode.getWorldMatrix(undefined, _TMP_MAT);
 
             // center of gizmo on screen
             var projCenter = vec3.create();
@@ -855,7 +904,7 @@ utils.createPrototypeNode(
             var dir = this._editLineDirection;
 
             // 3d origin (center of gizmo)
-            var gizmoMat = this._translateNode.getWorldMatrices()[0];
+            var gizmoMat = this._translateNode.getWorldMatrix(undefined, _TMP_MAT);
             mat4.getTranslation(origin, gizmoMat);
 
             // 3d direction
@@ -883,7 +932,7 @@ utils.createPrototypeNode(
             var origin = this._editLineOrigin; // just used to determine the 2d offset
 
             // 3d origin (center of gizmo)
-            var gizmoMat = this._planeNode.getWorldMatrices()[0];
+            var gizmoMat = this._planeNode.getWorldMatrix(undefined, _TMP_MAT);
             mat4.getTranslation(origin, gizmoMat);
 
             // project on canvas
@@ -909,9 +958,7 @@ utils.createPrototypeNode(
         pickAndSelect: function(e) {
             this.setNodeMask(0x0);
             var hit = this.computeNearestIntersection(e, this._tmask);
-            if (this._autoInsertMT)
-                this.attachToGeometry(hit ? hit._nodePath[hit._nodePath.length - 1] : hit);
-            else this.attachToNodePath(hit ? hit._nodePath : hit);
+            this.attachToNodePath(hit ? hit._nodePath : hit);
         },
 
         onMouseUp: function(e) {
@@ -953,9 +1000,10 @@ utils.createPrototypeNode(
         updateRotateEdit: (function() {
             var mrot = mat4.create();
             var vec = vec2.create();
-            var right = vec3.fromValues(1.0, 0.0, 0.0);
-            var upy = vec3.fromValues(0.0, 1.0, 0.0);
-            var upz = vec3.fromValues(0.0, 0.0, 1.0);
+            var vecX = vec3.fromValues(1.0, 0.0, 0.0);
+            var vecY = vec3.fromValues(0.0, 1.0, 0.0);
+            var vecZ = vec3.fromValues(0.0, 0.0, 1.0);
+
             return function(e) {
                 var origin = this._editLineOrigin;
                 var dir = this._editLineDirection;
@@ -964,33 +1012,33 @@ utils.createPrototypeNode(
                 vec2.sub(vec, vec, origin);
                 var dist = vec2.dot(vec, dir);
 
-                if (this._debugNode)
-                    this.drawLineCanvasDebug(
-                        origin[0],
-                        origin[1],
-                        origin[0] + dir[0] * dist,
-                        origin[1] + dir[1] * dist
-                    );
+                if (this._debugNode) {
+                    var ox = origin[0];
+                    var oy = origin[1];
+                    this.drawLineCanvasDebug(ox, oy, ox + dir[0] * dist, oy + dir[1] * dist);
+                }
 
-                var angle =
-                    7 * dist / Math.min(this._canvas.clientWidth, this._canvas.clientHeight);
+                var minClient = Math.min(this._canvas.clientWidth, this._canvas.clientHeight);
+                var angle = 7 * dist / minClient;
                 angle %= Math.PI * 2;
-                var nbAxis = this._hoverNode._nbAxis;
-                if (nbAxis === 0) mat4.fromRotation(mrot, -angle, right);
-                else if (nbAxis === 1) mat4.fromRotation(mrot, -angle, upy);
-                else if (nbAxis === 2) mat4.fromRotation(mrot, -angle, upz);
 
-                this._showAngle
-                    .getOrCreateStateSet()
-                    .getUniform('uAngle')
-                    .setFloat(nbAxis === 0 ? -angle : angle);
+                var nbAxis = this._hoverNode._nbAxis;
+                if (nbAxis === 0) mat4.fromRotation(mrot, -angle, vecX);
+                else if (nbAxis === 1) mat4.fromRotation(mrot, -angle, vecY);
+                else if (nbAxis === 2) mat4.fromRotation(mrot, -angle, vecZ);
+
+                var uAngle = this._showAngle.getOrCreateStateSet().getUniform('uAngle');
+                uAngle.setFloat(nbAxis === 0 ? -angle : angle);
 
                 if (!this._rotateInLocal) {
                     mat4.mul(mrot, this._editInvWorldScaleRot, mrot);
                     mat4.mul(mrot, mrot, this._editWorldScaleRot);
                 }
 
-                mat4.mul(this._attachedNode.getMatrix(), this._editLocal, mrot);
+                // rotate around origin pivot (geometry center)
+                // the classic rotation around pivot : -T * R * T
+                var attMat = this._attachedNode.getMatrix();
+                mat4.mul(attMat, attMat, mrot);
 
                 this._attachedNode.dirtyBound();
             };
