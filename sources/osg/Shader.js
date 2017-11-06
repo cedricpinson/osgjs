@@ -153,7 +153,7 @@ utils.createPrototypeObject(
             }
         },
 
-        compile: function(gl) {
+        compile: function(gl, errorCallback) {
             if (!this._gl) this.setGraphicContext(gl);
             this.shader = gl.createShader(this.type);
 
@@ -187,6 +187,8 @@ utils.createPrototypeObject(
             gl.compileShader(this.shader);
             if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
                 var err = gl.getShaderInfoLog(this.shader);
+
+
                 this.processErrors(err, shaderText);
 
                 var tmpText = shaderText;
@@ -197,6 +199,7 @@ utils.createPrototypeObject(
                 }
                 // still logging whole source but folded
                 notify.errorFold("can't compile shader", newText);
+                if (errorCallback) errorCallback(this.shaderText, newText, err);
 
                 return false;
             }
