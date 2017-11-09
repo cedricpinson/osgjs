@@ -124,6 +124,12 @@ var getOrCreateShaderQuadCircle = function() {
     return programQC;
 };
 
+var resetPrograms = function () {
+    program = undefined;
+    program2D = undefined;
+    programQC = undefined;
+};
+
 var createDebugLineGeometry = function() {
     var g = new Geometry();
     g.getAttributes().Vertex = new BufferArray(BufferArray.ARRAY_BUFFER, new Float32Array(4), 2);
@@ -349,5 +355,6 @@ GizmoGeometry.createTorusGeometry = createTorusGeometry;
 GizmoGeometry.createDebugLineGeometry = createDebugLineGeometry;
 GizmoGeometry.createPlaneGeometry = createPlaneGeometry;
 GizmoGeometry.createQuadCircleGeometry = createQuadCircleGeometry;
+GizmoGeometry.resetPrograms = resetPrograms;
 
 export default GizmoGeometry;
