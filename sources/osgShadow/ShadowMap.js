@@ -43,6 +43,11 @@ utils.createPrototypeObject(
             var near = nv.getComputedNear(),
                 far = nv.getComputedFar();
 
+            if (near === Infinity && far === -Infinity) {
+                this._shadowTechnique.markSceneAsNoShadow();
+                return false;
+            }
+
             mat4.getFrustumPlanes(
                 cs.getFrustum().getPlanes(),
                 m,
@@ -50,7 +55,6 @@ utils.createPrototypeObject(
                 false
             );
             cs.getFrustum().setupMask(6);
-
             this._shadowTechnique.setLightFrustum(cs.getFrustum(), near, far);
 
             return false;
@@ -443,14 +447,14 @@ utils.createPrototypeObject(
                 }
 
                 if (viewportDimension) {
-
                     var scissor = camera.getScissor();
                     if (!scissor) {
                         scissor = new Scissor(
                             viewportDimension[0],
                             viewportDimension[1],
                             viewportDimension[2],
-                            viewportDimension[3]);
+                            viewportDimension[3]
+                        );
                         camera.setScissor(scissor);
                     }
 
@@ -473,7 +477,8 @@ utils.createPrototypeObject(
                             viewportDimension[0],
                             viewportDimension[1],
                             viewportDimension[2],
-                            viewportDimension[3]);
+                            viewportDimension[3]
+                        );
                     }
                 } else if (
                     vp.width() !== texture.getWidth() ||
@@ -635,15 +640,7 @@ utils.createPrototypeObject(
             var distance = vec3.distance(center, eyePos);
             // inside or not have influence
             // on using radius for fov
-            if (distance < -radius) {
-                // won't render anything the object  is behind..
-                this._emptyCasterScene = true;
-            } else if (distance <= 0.0) {
-                // shhh.. we're inside !
-                // sphere center is behind
-                zNear = epsilon;
-                zFar = distance + radius;
-            } else if (distance < radius) {
+            if (distance <= radius) {
                 // shhh.. we're inside !
                 // sphere center is in front
                 zNear = epsilon;
@@ -847,11 +844,12 @@ utils.createPrototypeObject(
             mat4.copy(camera.getProjectionMatrix(), this._projectionMatrix);
             mat4.copy(camera.getViewMatrix(), this._viewMatrix);
 
-            this.setShadowUniformsDepthValue(false);
+            this.setShadowUniformsReceive(false);
         },
 
-        setShadowUniformsDepthValue: function(noDepth) {
+        setShadowUniformsReceive: function(noDepth) {
             if (noDepth) {
+                // receiver shader can read and early out
                 vec4.set(this._depthRange, 0.0, 0.0, 0.0, 0.0);
             } else {
                 // set values now
@@ -862,28 +860,25 @@ utils.createPrototypeObject(
             if (this._lightNumberArrayIndex !== -1) {
                 var lightNumber = this._light.getLightNumber();
                 this._texture.setViewMatrix(lightNumber, this._viewMatrix);
+                if (noDepth) return;
                 this._texture.setProjectionMatrix(lightNumber, this._projectionMatrix);
                 this._texture.setDepthRange(lightNumber, this._depthRange);
             } else {
                 this._texture.setViewMatrix(this._viewMatrix);
+                if (noDepth) return;
                 this._texture.setProjectionMatrix(this._projectionMatrix);
                 this._texture.setDepthRange(this._depthRange);
             }
         },
 
-        noDraw: function() {
-            var castUniforms = this._casterStateSet.getUniformList();
-            castUniforms.uShadowDepthRange.getUniform().setVec4(this._depthRange);
-
-            var camera = this._cameraShadow;
-
-            // make sure it's not modified outside our computations
-            // camera matrix can be modified by cullvisitor afterwards...
-            mat4.copy(this._projectionMatrix, camera.getProjectionMatrix());
-            mat4.copy(this._viewMatrix, camera.getViewMatrix());
-
-            this.setShadowUniformsDepthValue(true);
-
+        // we know the scene is empty so we don't draw it
+        // but we still camera clear it.
+        // but we want to mark the uniform so that receiver shader can do
+        // an early out.
+        // ie: in shader, no texfetch
+        markSceneAsNoShadow: function() {
+            this.setShadowUniformsReceive(true);
+            // we still clear the shadow so we filled it
             this._filledOnce = true;
         },
 
@@ -904,8 +899,10 @@ utils.createPrototypeObject(
             this.aimShadowCastingCamera(cullVisitor, bbox);
 
             if (this._emptyCasterScene) {
-                // nothing to draw Early out.
-                this.noDraw();
+                // nothing to draw, tell receiver to do early out
+                // ie: in shader, no texfetch
+                this.markSceneAsNoShadow();
+                // Early out, no need to traverse scene either
                 return;
             }
 

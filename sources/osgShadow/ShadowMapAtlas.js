@@ -458,7 +458,6 @@ utils.createPrototypeObject(
             this._texture = undefined;
             this._shadowedScene = undefined;
         },
-
         setDebug: function(enable, lightNum) {
             if (!lightNum) {
                 for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
@@ -466,6 +465,11 @@ utils.createPrototypeObject(
                 }
             } else {
                 this._shadowMaps[lightNum].setDebug(enable);
+            }
+        },
+        markSceneAsNoShadow: function() {
+            for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
+                this._shadowMaps[i].markSceneAsNoShadow();
             }
         }
     }),
