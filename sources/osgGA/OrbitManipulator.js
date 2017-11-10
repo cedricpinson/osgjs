@@ -245,24 +245,26 @@ utils.createPrototypeObject(
             var rightDir = vec3.fromValues(1.0, 0.0, 0.0);
 
             return function(dx, dy) {
-                var pitch = Math.atan(-this._rotation[6] / this._rotation[5]) + dy / 10.0;
-                pitch = Math.min(Math.max(pitch, this._limitPitchDown), this._limitPitchUp);
+                var prevPitch = Math.atan(-this._rotation[6] / this._rotation[5]);
+                var pitch = this._computePitch(prevPitch, dy);
 
                 var deltaYaw = dx / 10.0;
                 var previousYaw = Math.atan2(this._rotation[4], this._rotation[0]);
-                var yaw = this._computeYaw(
-                    previousYaw,
-                    deltaYaw,
-                    this._limitYawLeft,
-                    this._limitYawRight
-                );
+                var yaw = this._computeYaw(previousYaw, deltaYaw);
                 mat4.fromRotation(this._rotation, -pitch, rightDir);
                 mat4.rotate(this._rotation, this._rotation, -yaw, this._upz);
             };
         })(),
 
-        _computeYaw: function(previousYaw, deltaYaw, left, right) {
+        _computePitch: function(prevPitch, dy) {
+            var pitch = prevPitch + dy / 10.0;
+            return Math.min(Math.max(pitch, this._limitPitchDown), this._limitPitchUp);
+        },
+
+        _computeYaw: function(previousYaw, deltaYaw) {
             var yaw = previousYaw + deltaYaw;
+            var left = this._limitYawLeft;
+            var right = this._limitYawRight;
 
             if (right !== Math.PI || left !== -Math.PI) {
                 if (right < left) {
