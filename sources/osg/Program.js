@@ -7,10 +7,12 @@ import ShaderProcessor from 'osgShader/ShaderProcessor';
 import Timer from 'osg/Timer';
 
 var shaderStats = Options.getOptionsURL().shaderStats ? {} : undefined;
+var forceSyncCompilation = Options.getOptionsURL().syncCompile;
 
+// finish should be enough but on chrome it's identical to flush,
+// so we use readPixel instead
 var dummy = new Uint8Array(4);
 var glSync = function(gl) {
-    // finish should be enough but on chrome it's identical to flush, so we use readPixel instead
     gl.flush();
     gl.finish();
     gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, dummy);
@@ -69,6 +71,11 @@ var Program = function(vShader, fShader) {
     this._activeUniforms = undefined;
     this._foreignUniforms = undefined;
     this._trackAttributes = undefined;
+
+    // async compilations
+    this._asyncCompilation = undefined;
+
+    this._compileClean = undefined;
 
     if (vShader) this.setVertexShader(vShader);
     if (fShader) this.setFragmentShader(fShader);
@@ -276,33 +283,35 @@ utils.createPrototypeStateAttribute(
                 var program = gl.createProgram();
                 this._vertex.failSafe(gl, this._vertex.getText());
                 this._fragment.failSafe(gl, this._fragment.getText());
-                this._glAttachAndCompile(gl, program, this._vertex, this._fragment);
+                this._glAttachAndLink(gl, program, this._vertex, this._fragment);
                 notify.warn('FailSafe shader Activated ');
                 this._program = program;
             },
 
-            _glAttachAndCompile: function(gl, programGL, vertexShader, fragmentShader) {
+            _glAttachAndLink: function(gl, programGL, vertexShader, fragmentShader) {
                 gl.attachShader(programGL, vertexShader.shader);
                 gl.attachShader(programGL, fragmentShader.shader);
                 gl.linkProgram(programGL);
             },
 
             _glShaderCompile: function(gl, shader) {
-                if (shader.shader) return true;
-
+                if (shader.shader) return;
                 if (shaderStats) {
                     if (shader === this._vertex) shaderStats.vert = Timer.tick();
                     else shaderStats.frag = Timer.tick();
                 }
+                shader.compile(gl, errorCallback);
+                return;
+            },
 
-                var success = shader.compile(gl, errorCallback);
-
+            _glShaderCompilationResult: function(gl, shader) {
+                if (shader.shader) return true;
+                var success = shader.getCompilationResult(gl, errorCallback);
                 if (shaderStats) {
-                    glSync(gl);
+                    if (this._asyncCompilation === undefined) glSync(gl);
                     if (shader === this._vertex) shaderStats.vert = Timer.tick() - shaderStats.vert;
                     else shaderStats.frag = Timer.tick() - shaderStats.frag;
                 }
-
                 return success;
             },
 
@@ -314,57 +323,94 @@ utils.createPrototypeStateAttribute(
 
                 this._attributeMap = getAttributeList(vertexText);
                 this._uniformMap = getUniformList(fragmentText + '\n' + vertexText);
+                // compile both vertex even if the first one fail (error reporting)
+                this._glShaderCompile(gl, this._vertex);
+                this._glShaderCompile(gl, this._fragment);
+            },
 
+            getShaderName: function() {
+                if (this._shaderName) return this._shaderName;
+                if (!this._fragment || !this._fragment.getText()) return;
+                var shaderName = this._fragment.getText().match(/^#define\s+SHADER_NAME\s+(.*)$/m);
+                this._shaderName = shaderName && shaderName[1] ? shaderName[1] : '';
+                return this._shaderName;
+            },
+
+            getCompilationResultAndLink: function(gl) {
+                if (this._compileClean) return true;
                 if (shaderStats) {
                     shaderStats.vert = 0;
                     shaderStats.frag = 0;
                     shaderStats.link = 0;
                     shaderStats.total = 0;
-                    glSync(gl);
+                    if (this._asyncCompilation === undefined) glSync(gl);
                     shaderStats.total = Timer.tick();
+                    notify.log(this.getShaderName() + ' start');
+                    notify.timeStamp(this.getShaderName() + ' start');
                 }
 
-                // compile both vertex even if the first one fail (error reporting)
-                var success = this._glShaderCompile(gl, this._vertex);
-                success = this._glShaderCompile(gl, this._fragment) && success;
-                if (!success) return false;
-
-                if (shaderStats) shaderStats.link = Timer.tick();
-
-                this._program = gl.createProgram();
-
-                // force Vertex to be on 0
-                if (this._attributeMap.Vertex) gl.bindAttribLocation(this._program, 0, 'Vertex');
-                this._glAttachAndCompile(gl, this._program, this._vertex, this._fragment);
+                this._compileClean = this._glShaderCompilationResult(gl, this._vertex);
+                this._compileClean =
+                    this._glShaderCompilationResult(gl, this._fragment) && this._compileClean;
 
                 if (shaderStats) {
-                    gl.getProgramParameter(this._program, gl.LINK_STATUS);
-                    glSync(gl);
-
-                    shaderStats.link = Timer.tick() - shaderStats.link;
-                    shaderStats.total = Timer.tick() - shaderStats.total;
-
-                    var shaderName = fragmentText.match(/^#define\s+SHADER_NAME\s+(.*)$/m);
-                    shaderName = shaderName && shaderName[1] ? shaderName[1] : '';
-                    var groupName = shaderName + ' - ' + shaderStats.total.toFixed(2) + 'ms';
-
-                    console.group(groupName);
-                    console.log('vertex : ' + shaderStats.vert.toFixed(2) + 'ms');
-                    console.log('fragment : ' + shaderStats.frag.toFixed(2) + 'ms');
-                    console.log('link : ' + shaderStats.link.toFixed(2) + 'ms');
-                    console.log('total : ' + shaderStats.total.toFixed(2) + 'ms');
-                    console.groupEnd(groupName);
+                    notify.log(this.getShaderName() + ' compilation');
+                    notify.timeStamp(this.getShaderName() + ' compilation');
                 }
+                if (!this._compileClean) return false;
 
+                this._program = gl.createProgram();
+                // force Vertex to be on 0
+                if (this._attributeMap.Vertex) gl.bindAttribLocation(this._program, 0, 'Vertex');
+                this._glAttachAndLink(gl, this._program, this._vertex, this._fragment);
                 return true;
             },
 
-            getCompilationResult: function(compileClean, gl) {
-                if (compileClean) {
-                    if (
-                        !gl.getProgramParameter(this._program, gl.LINK_STATUS) &&
-                        !gl.isContextLost()
-                    ) {
+            getAsyncCompiling: function() {
+                return this._asyncCompilation;
+            },
+
+            _logShaderStats: function(gl) {
+                if (this._asyncCompilation === undefined) glSync(gl);
+
+                shaderStats.link = Timer.tick() - shaderStats.link;
+                if (shaderStats.link) {
+                    shaderStats.total = Timer.tick() - shaderStats.total;
+                    if (this._placeHolder) {
+                        shaderStats.total = shaderStats.vert + shaderStats.frag + shaderStats.link;
+                    }
+
+                    var groupName =
+                        (this._placeHolder ? 'Async' : '') +
+                        this.getShaderName() +
+                        ' - ' +
+                        shaderStats.total.toFixed(2) +
+                        'ms';
+
+                    notify.group(groupName);
+                    notify.log('vertex : ' + shaderStats.vert.toFixed(2) + 'ms');
+                    notify.log('fragment : ' + shaderStats.frag.toFixed(2) + 'ms');
+                    notify.log('link : ' + shaderStats.link.toFixed(2) + 'ms');
+                    notify.log('total : ' + shaderStats.total.toFixed(2) + 'ms');
+                    notify.groupEnd(groupName);
+                }
+            },
+
+            getLinkResult: function(gl) {
+                if (this._compileClean) {
+                    if (shaderStats) {
+                        shaderStats.link = Timer.tick();
+                        notify.log(this.getShaderName() + ' link');
+                        notify.timeStamp(this.getShaderName() + ' link');
+                    }
+
+                    var compileResult = gl.getProgramParameter(this._program, gl.LINK_STATUS);
+
+                    if (shaderStats) {
+                        this._logShaderStats(gl);
+                    }
+
+                    if (!compileResult && !gl.isContextLost()) {
                         var errLink = gl.getProgramInfoLog(this._program);
 
                         notify.errorFold(
@@ -379,17 +425,27 @@ utils.createPrototypeStateAttribute(
                         if (errorCallback) {
                             errorCallback(this._vertex.text, this._fragment.text, errLink);
                         }
-                        compileClean = false;
+                        this._compileClean = false;
                         if (this._onErrorToSpector(errLink)) return;
                     } else {
+                        /*develblock:start*/
+                        this._gl.validateProgram(this._program);
+                        var validationLogProgram = this._gl.getProgramInfoLog(this._program);
+                        if (validationLogProgram && validationLogProgram !== '') {
+                            notify.log(this.getShaderName() + '\n' + validationLogProgram);
+                        }
+                        /*develblock:end*/
                         this._onCompilationToSpector(this._program);
                     }
                 }
 
+                this._dirty = false;
+                this._asyncCompilation = -1;
+                this._placeHolder = undefined;
                 this._uniformsCache = {};
                 this._attributesCache = {};
 
-                if (!compileClean) {
+                if (!this._compileClean) {
                     // Any error, Any
                     // Pink must die.
                     this._activateFailSafe(gl);
@@ -398,7 +454,12 @@ utils.createPrototypeStateAttribute(
                     this.cacheUniformList(gl, window.Object.keys(this._uniformMap));
                 }
                 this._bindProgramToSpector();
-                return compileClean;
+                return this._compileClean;
+            },
+
+            enableAsyncCompilation: function(placeHolder, frameNum) {
+                this._placeHolder = placeHolder;
+                this._asyncCompilation = frameNum;
             },
 
             apply: function(state) {
@@ -413,10 +474,24 @@ utils.createPrototypeStateAttribute(
                     return;
                 }
 
-                this._compileClean = this.compile();
-                this.getCompilationResult(this._compileClean, this._gl);
-                state.applyProgram(this._program);
-                this._dirty = false;
+                if (this._placeHolder) {
+                    this._placeHolder.apply(state);
+                    return;
+                }
+
+                this.compile();
+
+                if (
+                    forceSyncCompilation ||
+                    this._fragment.getText().indexOf('#pragma compilationAsync') === -1
+                ) {
+                    this.getCompilationResultAndLink(this._gl);
+                    this.getLinkResult(this._gl);
+                    state.applyProgram(this._program);
+                    this._dirty = false;
+                    return;
+                }
+                this._asyncCompilation = 1;
             },
 
             cacheUniformList: function(gl, uniformList) {

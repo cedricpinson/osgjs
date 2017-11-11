@@ -4,6 +4,7 @@ import Program from 'osg/Program';
 import Shader from 'osg/Shader';
 import Compiler from 'osgShader/Compiler';
 import ShaderProcessor from 'osgShader/ShaderProcessor';
+
 var ShaderGenerator = function() {
     this._cache = {};
 
@@ -237,68 +238,94 @@ ShaderGenerator.prototype = {
         CompilerShader._validTextureAttributeTypeMemberCache = cache;
     },
 
+    _createWaitingProgram: function(state, attributes, textureAttributes) {
+        var vsDefault =
+            'attribute vec3 Vertex;uniform mat4 uModelViewMatrix;uniform mat4 uProjectionMatrix;void main(void) {  gl_Position = vec4(10.0,10.0,10.0,1.0);}\n';
+
+        var fsDefault =
+            '#define SHADER_NAME WaitSafe\nprecision lowp float; void main(void) { gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);}\n';
+
+        var program = new Program(
+            new Shader(Shader.VERTEX_SHADER, vsDefault),
+            new Shader(Shader.FRAGMENT_SHADER, fsDefault)
+        );
+
+        this.getActiveAttributeList(state, attributes);
+        program.setActiveUniforms(this.getActiveUniforms(state, attributes, textureAttributes));
+        program.generated = true;
+        program.apply(state);
+        return program;
+    },
+
     getOrCreateProgram: (function() {
         var textureAttributes = [];
         var attributes = [];
 
         return function(state) {
             // extract valid attributes
-
-            // use ShaderCompiler, it can be overrided by a custom one
-            var ShaderCompiler = this._ShaderCompiler;
-
             var hash =
                 this.getActiveAttributeListCache(state) +
                 this.getActiveTextureAttributeListCache(state);
 
-            var cache = this._cache[hash];
-            if (cache !== undefined) return cache;
+            var cachedProgram = this._getProgram(hash, state, attributes, textureAttributes);
+            if (cachedProgram !== undefined) {
+                return cachedProgram;
+            }
 
-            // slow path to generate shader
-            attributes.length = 0;
-            textureAttributes.length = 0;
+            var program = this._createProgram(hash, state, attributes, textureAttributes);
 
-            this.getActiveAttributeList(state, attributes);
-            this.getActiveTextureAttributeList(state, textureAttributes);
-
-            var shaderGen = new ShaderCompiler(
-                attributes,
-                textureAttributes,
-                this._shaderProcessor
-            );
-
-            /* develblock:start */
-            // Logs hash, attributes and compiler
-            notify.debug('New Compilation ', false, true);
-            notify.debug(
-                {
-                    Attributes: attributes,
-                    Texture: textureAttributes,
-                    Hash: hash,
-                    Compiler: shaderGen.getFragmentShaderName()
-                },
-                false,
-                true
-            );
-            /* develblock:end */
-
-            var fragmentshader = shaderGen.createFragmentShader();
-            var vertexshader = shaderGen.createVertexShader();
-
-            var program = new Program(
-                new Shader(Shader.VERTEX_SHADER, vertexshader),
-                new Shader(Shader.FRAGMENT_SHADER, fragmentshader)
-            );
-
-            program.hash = hash;
-            program.setActiveUniforms(this.getActiveUniforms(state, attributes, textureAttributes));
-            program.generated = true;
-
-            this._cache[hash] = program;
             return program;
         };
     })(),
 
+    _getProgram: function(hash) {
+        return this._cache[hash];
+    },
+
+    // slow path to generate shader
+    _createProgram: function(hash, state, attributes, textureAttributes) {
+        attributes.length = 0;
+        textureAttributes.length = 0;
+
+        this.getActiveAttributeList(state, attributes);
+        this.getActiveTextureAttributeList(state, textureAttributes);
+
+        // use ShaderCompiler, it can be overrided by a custom one
+        var ShaderCompiler = this._ShaderCompiler;
+        var shaderGen = new ShaderCompiler(attributes, textureAttributes, this._shaderProcessor);
+
+        /* develblock:start */
+        // Logs hash, attributes and compiler
+        notify.debug('New Compilation ', false, true);
+        notify.debug(
+            {
+                Attributes: attributes,
+                Texture: textureAttributes,
+                Hash: hash,
+                Compiler: shaderGen.getFragmentShaderName()
+            },
+            false,
+            true
+        );
+        /* develblock:end */
+
+        var fragmentshader = shaderGen.createFragmentShader();
+        var vertexshader = shaderGen.createVertexShader();
+
+        var program = new Program(
+            new Shader(Shader.VERTEX_SHADER, vertexshader),
+            new Shader(Shader.FRAGMENT_SHADER, fragmentshader)
+        );
+
+        program.hash = hash;
+        program.setActiveUniforms(this.getActiveUniforms(state, attributes, textureAttributes));
+        program.generated = true;
+        this._cache[hash] = program;
+
+        program.apply(state);
+
+        return program;
+    },
     resetCache: function() {
         this._cache = {};
     }
