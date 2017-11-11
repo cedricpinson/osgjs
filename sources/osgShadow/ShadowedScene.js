@@ -190,9 +190,11 @@ utils.createPrototypeNode(
                 var hasCastingScene = this.computeShadowedSceneBounds(nv);
                 if (!hasCastingScene) {
                     // no shadow but still may need to clear
+                    // and makes sure shadow receiver shader
+                    // uses optimized early out codepath
                     for (i = 0; i < lt; i++) {
                         st = this._shadowTechniques[i];
-                        st.noDraw();
+                        st.markSceneAsNoShadow();
                     }
 
                     return;
