@@ -237,6 +237,27 @@ ShaderGenerator.prototype = {
         CompilerShader._validTextureAttributeTypeMemberCache = cache;
     },
 
+    _createWaitingProgram: function(state, attributes, textureAttributes) {
+        var vsDefault =
+            'attribute vec3 Vertex;uniform mat4 uModelViewMatrix;uniform mat4 uProjectionMatrix;void main(void) {  gl_Position = uProjectionMatrix * (uModelViewMatrix * vec4(Vertex, 1.0));}\n';
+
+        var fsDefault =
+            ' #define SHADE_NAME WaitSafe\nprecision lowp float; void main(void) { gl_FragColor = vec4(1.0, 0.6, 0.6, 1.0);}\n';
+
+        var program = new Program(
+            new Shader(Shader.VERTEX_SHADER, vsDefault),
+            new Shader(Shader.FRAGMENT_SHADER, fsDefault)
+        );
+
+        this.getActiveAttributeList(state, attributes);
+        program.setActiveUniforms(this.getActiveUniforms(state, attributes, textureAttributes));
+        program.generated = true;
+        program.apply(state);
+        program._asyncCompilation = 1000.0;
+        program.apply(state);
+        return program;
+    },
+
     getOrCreateProgram: (function() {
         var textureAttributes = [];
         var attributes = [];
@@ -251,9 +272,62 @@ ShaderGenerator.prototype = {
                 this.getActiveAttributeListCache(state) +
                 this.getActiveTextureAttributeListCache(state);
 
-            var cache = this._cache[hash];
-            if (cache !== undefined) return cache;
+            var cachedProgram = this._cache[hash];
+            if (cachedProgram !== undefined && !cachedProgram.getAsyncCompiling()) {
+                return cachedProgram;
+            }
 
+            var waitingProgram;
+            var asyncShader = true;
+            var synchronizedCompilation = !asyncShader;
+            if (!synchronizedCompilation) {
+                // udrawOpaque error
+                // add if (!uniformsCache) return;
+                // in renderstageskfb drawgeom
+                if (!this._waitingProgram) {
+                    this._waitingProgram = this._createWaitingProgram(
+                        state,
+                        attributes,
+                        textureAttributes
+                    );
+                }
+                if (!cachedProgram) {
+                    waitingProgram = this._waitingProgram;
+                } else if (cachedProgram.getAsyncCompiling()) {
+                    // apply once for first compilation (async)
+                    // and reapply for waiting until it's finished
+                    cachedProgram.apply(state);
+
+                    // is it still async after that apply
+                    if (cachedProgram.getAsyncCompiling()) {
+                        if (cachedProgram.previous) {
+                            // how can handle that
+                            // same stateset but a "change" in hash ?
+                            // stateset cache of programs ?
+                            return cachedProgram.previous;
+                        }
+
+                        if (!this._waitingProgram) {
+                            this._createWaitingProgram(state);
+                        }
+
+                        return this._waitingProgram;
+                    } else {
+                        // compilation finished \o/
+                        attributes.length = 0;
+                        textureAttributes.length = 0;
+
+                        this.getActiveAttributeList(state, attributes);
+                        this.getActiveTextureAttributeList(state, textureAttributes);
+
+                        cachedProgram.setActiveUniforms(
+                            this.getActiveUniforms(state, attributes, textureAttributes)
+                        );
+
+                        return cachedProgram;
+                    }
+                }
+            }
             // slow path to generate shader
             attributes.length = 0;
             textureAttributes.length = 0;
@@ -295,14 +369,17 @@ ShaderGenerator.prototype = {
             program.generated = true;
 
             this._cache[hash] = program;
-            return program;
+
+            // first sync compilation
+            program.apply(state);
+
+            return waitingProgram || program;
         };
     })(),
 
-    resetCache: function(){
+    resetCache: function() {
         this._cache = {};
     }
-
 };
 
 export default ShaderGenerator;
