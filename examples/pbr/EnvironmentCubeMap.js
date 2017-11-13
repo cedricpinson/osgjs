@@ -140,9 +140,7 @@ window.EnvironmentCubeMap = (function() {
             if (this._data) {
                 return readInputArray(this._data);
             } else {
-                var input = new osgDB.Input();
-                return input
-                    .requestFile(this._file, {
+                return osgDB.fileHelper.requestURI(this._file, {
                         responseType: 'arraybuffer'
                     })
                     .then(readInputArray);

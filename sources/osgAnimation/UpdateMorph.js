@@ -28,35 +28,44 @@ var funcWeights = function(a, b) {
 utils.createPrototypeObject(
     UpdateMorph,
     utils.objectInherit(AnimationUpdateCallback.prototype, {
+
+        _initNode: function(geom) {
+            var morph;
+            if (geom instanceof MorphGeometry) {
+                morph = geom;
+            } else if (
+                geom instanceof RigGeometry &&
+                    geom.getSourceGeometry() instanceof MorphGeometry
+            ) {
+                morph = geom.getSourceGeometry();
+            }
+
+            if (!morph) return;
+
+            if (morph.getName() === this.getName()) {
+                if (!morph.isInitialized()) morph.init();
+
+                this._morphs.push(morph);
+                this._maxMorphGPU = Math.min(
+                    this._maxMorphGPU,
+                    morph.getMaximumPossibleMorphGPU()
+                );
+            }
+        },
+
         init: function(node) {
             this._maxMorphGPU = MorphGeometry.MAX_MORPH_GPU;
             this._morphs.length = 0;
 
             //Find the morph geometry & init it
             var children = node.getChildren();
+            if (!children.length ) {
+                this._initNode(node);
+                return;
+            }
+
             for (var i = 0, l = children.length; i < l; i++) {
-                var geom = children[i];
-                var morph;
-                if (geom instanceof MorphGeometry) {
-                    morph = geom;
-                } else if (
-                    geom instanceof RigGeometry &&
-                    geom.getSourceGeometry() instanceof MorphGeometry
-                ) {
-                    morph = geom.getSourceGeometry();
-                }
-
-                if (!morph) continue;
-
-                if (morph.getName() === this.getName()) {
-                    if (!morph.isInitialized()) morph.init();
-
-                    this._morphs.push(morph);
-                    this._maxMorphGPU = Math.min(
-                        this._maxMorphGPU,
-                        morph.getMaximumPossibleMorphGPU()
-                    );
-                }
+                this._initNode(children[i]);
             }
         },
 

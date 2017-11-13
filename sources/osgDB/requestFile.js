@@ -5,8 +5,11 @@ var requestFileFromURL = function(url, options) {
         var req = new XMLHttpRequest();
         req.open('GET', url, true);
 
+        var responseType =
+            options && options.responseType ? options.responseType.toLowerCase() : undefined;
+
         // handle responseType
-        if (options && options.responseType) req.responseType = options.responseType;
+        if (responseType) req.responseType = responseType;
 
         if (options && options.progress) {
             req.addEventListener('progress', options.progress, false);
@@ -26,20 +29,17 @@ var requestFileFromURL = function(url, options) {
 
 var requestFileFromReader = function(file, options) {
     return new P(function(resolve) {
+        var responseType =
+            options && options.responseType ? options.responseType.toLowerCase() : undefined;
         var reader = new window.FileReader();
         reader.onload = function(data) {
-            if (options.responseType === 'blob') {
-                var img = new window.Image();
-                img.src = data.target.result;
-                resolve(img);
-            } else {
-                resolve(data.target.result);
-            }
+            resolve(data.target.result);
         };
         // handle responseType
-        if (options && options.responseType) {
-            if (options.responseType === 'arraybuffer') reader.readAsArrayBuffer(file);
-            else if (options.responseType === 'string') reader.readAsText(file);
+        if (responseType) {
+            if (responseType === 'arraybuffer') reader.readAsArrayBuffer(file);
+            else if (responseType === 'blob') resolve(file);
+            else if (responseType === 'string') reader.readAsText(file);
             else reader.readAsDataURL(file);
         } else {
             reader.readAsText(file);

@@ -1,9 +1,9 @@
 import notify from 'osg/notify';
 import utils from 'osg/utils';
 import BaseObject from 'osg/Object';
-import { quat } from 'osg/glMatrix';
-import { vec3 } from 'osg/glMatrix';
-import { mat4 } from 'osg/glMatrix';
+import {quat} from 'osg/glMatrix';
+import {vec3} from 'osg/glMatrix';
+import {mat4} from 'osg/glMatrix';
 import Channel from 'osgAnimation/channel';
 import Animation from 'osgAnimation/animation';
 import Interpolator from 'osgAnimation/interpolator';
@@ -389,7 +389,7 @@ utils.createPrototypeObject(
             var targetMap = this._targetMap;
             var targets = this._targets;
 
-            var registerTarget = function(uniqueTargetName, target, name) {
+            var registerTarget = function(uniqueTargetName, target) {
                 if (!targetMap[uniqueTargetName]) {
                     targetMap[uniqueTargetName] = target;
                     // assign an id that will be an index into a array
@@ -403,7 +403,9 @@ utils.createPrototypeObject(
                     // unique target name. It's a problem
                     if (target !== targetMap[uniqueTargetName])
                         notify.warn(
-                            'detected differents target instance with the same name (' + name + ')'
+                            'detected differents target instance with the same name (' +
+                                uniqueTargetName +
+                                ')'
                         );
                 }
             }.bind(this);
