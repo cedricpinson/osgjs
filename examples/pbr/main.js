@@ -133,7 +133,7 @@
 
     var modelList = ['sphere', 'model'];
 
-    var defaultEnvironment = 'textures/parking.zip';
+    var defaultEnvironment = '../media/environments/parking.zip';
     var envURL = defaultEnvironment;
     if (optionsURL.env) {
         if (optionsURL.env.indexOf('http') !== -1) envURL = optionsURL.env;
