@@ -19,17 +19,9 @@ samples:
         image: assets/img/camera.jpg
         link: examples/camera
     -
-        title: Camera motion
-        image: assets/img/camera_switch.jpg
-        link: examples/camera-gallery
-    -
         title: Cube Motion
         image: assets/img/cubemotion.jpg
         link: examples/cubemotion
-    -
-        title: Cube Map
-        image: assets/img/cubemap.jpg
-        link: examples/cubemap
     -
         title: WebVR
         image: assets/img/dualcam.jpg
@@ -39,21 +31,9 @@ samples:
         image: assets/img/frustum-culling.jpg
         link: examples/frustum-culling
     -
-        title: High Dynamic Range
-        image: assets/img/hdr.jpg
-        link: examples/hdr
-    -
-        title: Fog
-        image: assets/img/fog.jpg
-        link: examples/fog
-    -
         title: Gizmo
         image: assets/img/gizmo.jpg
         link: examples/gizmo
-    -
-        title: Ground
-        image: assets/img/ground.jpg
-        link: examples/ground
     -
         title: Lights
         image: assets/img/lights.jpg

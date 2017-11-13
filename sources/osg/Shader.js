@@ -158,30 +158,6 @@ utils.createPrototypeObject(
             this.shader = gl.createShader(this.type);
 
             var shaderText = this.text;
-            if (Shader.enableGLSLOptimizer && Shader.glslOptimizer) {
-                var shaderTypeString = this.type === Shader.VERTEX_SHADER ? 'vertex' : 'fragment';
-                notify.infoFold(shaderTypeString + ' shader before optimization', shaderText);
-                // 1: opengl
-                // 2: opengl es 2.0
-                // 3: opengl es 3.0
-                var optimized = Shader.glslOptimizer(
-                    shaderText,
-                    '2',
-                    this.type === Shader.VERTEX_SHADER
-                );
-                if (optimized.indexOf('Error:') !== -1) {
-                    notify.error(optimized);
-                } else if (optimized.length <= 1) {
-                    notify.warnFold(
-                        'glsl optimizer returned an empty shader, the original will be used',
-                        shaderText
-                    );
-                } else {
-                    notify.infoFold(shaderTypeString + ' shader after optimization', optimized);
-                    shaderText = optimized;
-                }
-            }
-
             gl.shaderSource(this.shader, shaderText);
             utils.timeStamp('osgjs.metrics:compileShader');
             gl.compileShader(this.shader);

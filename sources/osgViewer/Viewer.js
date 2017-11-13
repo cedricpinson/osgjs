@@ -18,55 +18,11 @@ import EventProxy from 'osgViewer/eventProxy/eventProxy';
 import View from 'osgViewer/View';
 import WebGLUtils from 'osgViewer/webgl-utils';
 import WebGLDebugUtils from 'osgViewer/webgl-debug';
-import requestFile from 'osgDB/requestFile';
 import Stats from 'osgStats/Stats';
 import defaultStats from 'osgStats/defaultStats';
 import glStats from 'osgStats/glStats';
 import browserStats from 'osgStats/browserStats';
 
-var getGLSLOptimizer = function() {
-    return new P(function(resolve, reject) {
-        window.deferOptimizeGLSL = resolve;
-        var mod = [
-            '        var Module = {',
-            '            preRun: [],',
-            '            postRun: [ function () {',
-            '                var func = Module.cwrap( "optimize_glsl", "string", [ "string", "number", "number" ] );',
-            '                window.deferOptimizeGLSL( func );',
-            '            } ],',
-            '            print: function ( text ) {',
-            '                notify.debug( text );',
-            '            },',
-            '            printErr: function ( text ) {',
-            '                notify.debug( text );',
-            '            },',
-            '            setStatus: function ( text ) {',
-            '                notify.debug( text );',
-            '            },',
-            '            totalDependencies: 0,',
-            '            monitorRunDependencies: function ( left ) {',
-            '                this.totalDependencies = Math.max( this.totalDependencies, left );',
-            '                Module.setStatus( left ? "GLSL optimizer preparing... (" + ( this.totalDependencies - left ) + "/" + this.totalDependencies + ")" : "All downloads complete." );',
-            '            },',
-            '            memoryInitializerPrefixURL: "https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/"',
-            '        };'
-        ].join('\n');
-
-        notify.log('try to load glsl optimizer');
-        var url =
-            'https://raw.githubusercontent.com/zz85/glsl-optimizer/gh-pages/glsl-optimizer.js';
-        var promise = requestFile(url);
-        promise
-            .then(function(script) {
-                /*jshint evil: true */
-                eval(mod + script);
-                /*jshint evil: false */
-            })
-            .catch(function() {
-                reject();
-            });
-    });
-};
 
 var Viewer = function(canvas, userOptions, error) {
     View.call(this);
@@ -74,7 +30,7 @@ var Viewer = function(canvas, userOptions, error) {
     this._startTick = Timer.instance().tick();
     this._stats = undefined;
     this._done = false;
-    this._runPromise = P.resolve();
+
     // keep reference so that you still have it
     // when gl context is lost
     this._canvas = canvas;
@@ -85,7 +41,6 @@ var Viewer = function(canvas, userOptions, error) {
     if (!gl) throw 'No WebGL implementation found';
 
     this.initDeviceEvents(options, canvas);
-    this.initRun(options);
     this._updateVisitor = new UpdateVisitor();
 
     this.setUpView(gl.canvas, options);
@@ -191,24 +146,6 @@ utils.createPrototypeObject(
             this.setGraphicContext(gl);
 
             return gl;
-        },
-
-        initRun: function(options) {
-            if (options.getBoolean('GLSLOptimizer') === true) {
-                Shader.enableGLSLOptimizer = true;
-
-                this._runPromise = getGLSLOptimizer();
-                this._runPromise
-                    .then(function(glslOptimizer) {
-                        Shader.glslOptimizer = glslOptimizer;
-                        if (Shader.glslOptimizer)
-                            notify.log('uses glsl optimizer, use ?log=info to see shader output');
-                        else notify.error('failed to load glsl optimizer');
-                    })
-                    .catch(function(error) {
-                        notify.error(error);
-                    });
-            }
         },
 
         // allow user to acknowledge the context lost
@@ -506,14 +443,7 @@ utils.createPrototypeObject(
         },
 
         run: function() {
-            var self = this;
-            this._runPromise
-                .then(function() {
-                    self._runImplementation();
-                })
-                .catch(function() {
-                    self._runImplementation();
-                });
+            this._runImplementation();
         },
 
         setVRDisplay: function(hmd) {

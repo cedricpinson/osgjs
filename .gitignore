@@ -18,6 +18,7 @@ test/lighting
 *.orig
 *Thumbs.db
 .hooks
+.tern-port
 builds
 builds/active
 builds/active/OSG.js
