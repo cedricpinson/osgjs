@@ -59,7 +59,6 @@ function createScene() {
 
 var main = function() {
     // from require to global var
-    OSG.globalify();
     // The 3D canvas.
     var canvas = document.getElementById('View');
     var viewer;

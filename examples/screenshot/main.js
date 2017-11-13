@@ -2,12 +2,9 @@
 
 // from require to global var
 var OSG = window.OSG;
-
-OSG.globalify();
-
-var osg = window.osg;
-var osgViewer = window.osgViewer;
-var osgGA = window.osgGA;
+var osg = OSG.osg;
+var osgViewer = OSG.osgViewer;
+var osgGA = OSG.osgGA;
 
 var SimpleUpdateCallback = function() {};
 
@@ -67,7 +64,6 @@ function createScene() {
 
 var main = function() {
     // from require to global var
-    OSG.globalify();
 
     // The 3D canvas.
     var canvas = document.getElementById('View');
