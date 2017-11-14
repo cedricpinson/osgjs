@@ -21,13 +21,15 @@ export default function() {
         var yaw;
 
         //small angle no offset
-        yaw = orbit._computeYaw(0, 0.01, -0.2, 0.2);
+        orbit.setLimitYawLeft(-0.2);
+        orbit.setLimitYawRight(0.2);
+        yaw = orbit._computeYaw(0, 0.01);
         assert.isOk(
             yaw === 0.01,
             'Small angle no offset / small inc inside range. Yaw is ' + yaw + ' and should be 0.01'
         );
 
-        yaw = orbit._computeYaw(0.19, 0.02, -0.2, 0.2);
+        yaw = orbit._computeYaw(0.19, 0.02);
         assert.isOk(
             yaw === 0.2,
             'Small angle no offset / small inc outside range (right). Yaw is ' +
@@ -35,7 +37,7 @@ export default function() {
                 ' and should be 0.2'
         );
 
-        yaw = orbit._computeYaw(0, 0.3, -0.2, 0.2);
+        yaw = orbit._computeYaw(0, 0.3);
         assert.isOk(
             yaw === 0.2,
             'Small angle no offset / big inc outside range (right). Yaw is ' +
@@ -43,7 +45,7 @@ export default function() {
                 ' and should be 0.2'
         );
 
-        yaw = orbit._computeYaw(-0.19, -0.02, -0.2, 0.2);
+        yaw = orbit._computeYaw(-0.19, -0.02);
         assert.isOk(
             yaw === -0.2,
             'Small angle no offset / small inc outside range (left). Yaw is ' +
@@ -51,7 +53,7 @@ export default function() {
                 ' and should be -0.2'
         );
 
-        yaw = orbit._computeYaw(0, -0.3, -0.2, 0.2);
+        yaw = orbit._computeYaw(0, -0.3);
         assert.isOk(
             yaw === -0.2,
             'Small angle no offset / big inc outside range (left). Yaw is ' +
@@ -60,13 +62,15 @@ export default function() {
         );
 
         //big angle no offset
-        yaw = orbit._computeYaw(0, 0.01, -3.0, 3.0);
+        orbit.setLimitYawLeft(-3.0);
+        orbit.setLimitYawRight(3.0);
+        yaw = orbit._computeYaw(0, 0.01);
         assert.isOk(
             yaw === 0.01,
             'Big angle no offset / small inc inside range. Yaw is ' + yaw + ' and should be 0.01'
         );
 
-        yaw = orbit._computeYaw(2.99, 0.02, -3.0, 3.0);
+        yaw = orbit._computeYaw(2.99, 0.02);
         assert.isOk(
             yaw === 3.0,
             'Big angle no offset / small inc outside range (right). Yaw is ' +
@@ -74,7 +78,7 @@ export default function() {
                 ' and should be 3.0'
         );
 
-        yaw = orbit._computeYaw(2.5, 0.6, -3.0, 3.0);
+        yaw = orbit._computeYaw(2.5, 0.6);
         assert.isOk(
             yaw === 3.0,
             'Big angle no offset / big inc outside range (right). Yaw is ' +
@@ -82,7 +86,7 @@ export default function() {
                 ' and should be 3.0'
         );
 
-        yaw = orbit._computeYaw(-2.99, -0.02, -3.0, 3.0);
+        yaw = orbit._computeYaw(-2.99, -0.02);
         assert.isOk(
             yaw === -3.0,
             'Big angle no offset / small inc outside range (left). Yaw is ' +
@@ -90,7 +94,7 @@ export default function() {
                 ' and should be -3.0'
         );
 
-        yaw = orbit._computeYaw(-2.5, -0.6, -3.0, 3.0);
+        yaw = orbit._computeYaw(-2.5, -0.6);
         assert.isOk(
             yaw === -3.0,
             'Big angle no offset / big inc outside range (left). Yaw is ' +
@@ -99,13 +103,15 @@ export default function() {
         );
 
         //small angle 180 offset (left right inverted)'
-        yaw = orbit._computeYaw(-2.5, 0.0, 3.0, -3.0);
+        orbit.setLimitYawLeft(3.0);
+        orbit.setLimitYawRight(-3.0);
+        yaw = orbit._computeYaw(-2.5, 0.0);
         assert.isOk(
             yaw === -3.0,
             'Small angle 180 offset / snap to right. Yaw is ' + yaw + ' and should be -3.0'
         );
 
-        yaw = orbit._computeYaw(-3.01, 0.02, 3.0, -3.0);
+        yaw = orbit._computeYaw(-3.01, 0.02);
         assert.isOk(
             yaw === -3.0,
             'Small angle 180 offset / small inc outside range (right). Yaw is ' +
@@ -113,7 +119,7 @@ export default function() {
                 ' and should be -3.0'
         );
 
-        yaw = orbit._computeYaw(-3.14, 0.3, 3.0, -3.0);
+        yaw = orbit._computeYaw(-3.14, 0.3);
         assert.isOk(
             yaw === -3.0,
             'Small angle 180 offset / big inc outside range (right). Yaw is ' +
@@ -121,7 +127,7 @@ export default function() {
                 ' and should be -3.0'
         );
 
-        yaw = orbit._computeYaw(3.01, -0.02, 3.0, -3.0);
+        yaw = orbit._computeYaw(3.01, -0.02);
         assert.isOk(
             yaw === 3.0,
             'Small angle 180 offset / small inc outside range (left). Yaw is ' +
@@ -129,7 +135,7 @@ export default function() {
                 ' and should be 3.0'
         );
 
-        yaw = orbit._computeYaw(-3.14, -0.3, 3.0, -3.0);
+        yaw = orbit._computeYaw(-3.14, -0.3);
         assert.isOk(
             yaw === 3.0,
             'Small angle 180 offset / big inc outside range (left). Yaw is ' +
@@ -138,13 +144,15 @@ export default function() {
         );
 
         //right left both positive
-        yaw = orbit._computeYaw(1.5, 0.0, 2.0, 3.0);
+        orbit.setLimitYawLeft(2.0);
+        orbit.setLimitYawRight(3.0);
+        yaw = orbit._computeYaw(1.5, 0.0);
         assert.isOk(
             yaw === 2.0,
             'Right left same quadrant / snap to left. Yaw is ' + yaw + ' and should be 2.0'
         );
 
-        yaw = orbit._computeYaw(2.5, 0.02, 2.0, 3.0);
+        yaw = orbit._computeYaw(2.5, 0.02);
         assert.isOk(
             yaw === 2.52,
             'Right left same quadrant / small inc inside range. Yaw is ' +
@@ -152,7 +160,7 @@ export default function() {
                 ' and should be 2.52'
         );
 
-        yaw = orbit._computeYaw(2.99, 0.02, 2.0, 3.0);
+        yaw = orbit._computeYaw(2.99, 0.02);
         assert.isOk(
             yaw === 3.0,
             'Right left same quadrant / small inc outside range (right). Yaw is ' +
@@ -160,7 +168,7 @@ export default function() {
                 ' and should be 3.0'
         );
 
-        yaw = orbit._computeYaw(2.01, -0.02, 2.0, 3.0);
+        yaw = orbit._computeYaw(2.01, -0.02);
         assert.isOk(
             yaw === 2.0,
             'Right left same quadrant / small inc outside range (left). Yaw is ' +
@@ -169,11 +177,11 @@ export default function() {
         );
 
         //edge case when prev yaw is slightly over limit
+        orbit.setLimitYawLeft(1.8500490071139892);
+        orbit.setLimitYawRight(1.9198621771937625);
         yaw = orbit._computeYaw(
             1.9198621771937627,
-            0.00296099990606308,
-            1.8500490071139892,
-            1.9198621771937625
+            0.00296099990606308
         );
         assert.isOk(
             yaw === 1.9198621771937625,
