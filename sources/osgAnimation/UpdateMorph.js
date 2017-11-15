@@ -135,7 +135,7 @@ utils.createPrototypeObject(
                 if (gpuMorphed[j] === true) continue;
 
                 var weight = targets[j].value;
-                if (Math.abs(weight) < MorphGeometry.EFFECTIVE_EPS) continue;
+                if (Math.abs(weight) <= MorphGeometry.EFFECTIVE_EPS) continue;
 
                 weight /= extraWeightSum;
 
@@ -163,7 +163,7 @@ utils.createPrototypeObject(
                 if (gpuMorphed[i] === true) continue;
 
                 var weight = targets[i].value;
-                if (Math.abs(weight) < MorphGeometry.EFFECTIVE_EPS) continue;
+                if (Math.abs(weight) <= MorphGeometry.EFFECTIVE_EPS) continue;
 
                 sum += weight;
             }
@@ -245,7 +245,7 @@ utils.createPrototypeObject(
 
             // check more than 4 targets, we compute all the extra targets influence and merge in the last 4th morphs targets
             var extraEpsilon = Math.abs(sortedTargets[this._maxMorphGPU].value);
-            var extraMorphCPU = extraEpsilon >= MorphGeometry.EFFECTIVE_EPS;
+            var extraMorphCPU = extraEpsilon > MorphGeometry.EFFECTIVE_EPS;
             gpuMorphed[indexMap[this._maxMorphGPU - 1]] = !extraMorphCPU;
 
             this._remapBufferArrays();
