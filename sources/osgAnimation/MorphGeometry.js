@@ -32,7 +32,7 @@ var MorphGeometry = function() {
 };
 
 // sync with UpdateMorph
-var EFFECTIVE_EPS = (MorphGeometry.EFFECTIVE_EPS = 0.05);
+MorphGeometry.EFFECTIVE_EPS = 0.05;
 
 // this should be constant, if you change it only do it at parse time, otherwise it's better to call setMaximumPossibleMorphGPU
 MorphGeometry.MAX_MORPH_GPU = 4;
@@ -143,7 +143,7 @@ utils.createPrototypeNode(
             var weights = this._targetWeights;
             for (var i = 0, nb = weights.length; i < nb; ++i) {
                 var weight = weights[i];
-                if (Math.abs(weight) < EFFECTIVE_EPS) continue;
+                if (Math.abs(weight) < MorphGeometry.EFFECTIVE_EPS) continue;
 
                 sum += weight;
             }
@@ -169,7 +169,7 @@ utils.createPrototypeNode(
 
             for (var j = 0, nb = weights.length; j < nb; ++j) {
                 var weight = weights[j];
-                if (Math.abs(weight) < EFFECTIVE_EPS) continue;
+                if (Math.abs(weight) < MorphGeometry.EFFECTIVE_EPS) continue;
 
                 var morphElts = vList['Vertex_' + j].getElements();
                 out[0] += weight * morphElts[id3];
@@ -198,7 +198,7 @@ utils.createPrototypeNode(
 
             for (var j = 0, nb = weights.length; j < nb; ++j) {
                 var weight = weights[j];
-                if (Math.abs(weight) < EFFECTIVE_EPS) continue;
+                if (Math.abs(weight) < MorphGeometry.EFFECTIVE_EPS) continue;
 
                 // important : we should not take getInitialBufferArray as we should take the partially computed cpu morph from UpdateMorph
                 var morphElts = vList['Vertex_' + j].getElements();

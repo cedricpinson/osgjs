@@ -20,8 +20,6 @@ var UpdateMorph = function() {
     this._maxMorphGPU = -1;
 };
 
-var EFFECTIVE_EPS = MorphGeometry.EFFECTIVE_EPS; // in case we have more than 4 morphs, we can skip low effective weights
-
 // for sorting
 var funcWeights = function(a, b) {
     return Math.abs(b.value) - Math.abs(a.value);
@@ -137,7 +135,7 @@ utils.createPrototypeObject(
                 if (gpuMorphed[j] === true) continue;
 
                 var weight = targets[j].value;
-                if (Math.abs(weight) < EFFECTIVE_EPS) continue;
+                if (Math.abs(weight) < MorphGeometry.EFFECTIVE_EPS) continue;
 
                 weight /= extraWeightSum;
 
@@ -165,7 +163,7 @@ utils.createPrototypeObject(
                 if (gpuMorphed[i] === true) continue;
 
                 var weight = targets[i].value;
-                if (Math.abs(weight) < EFFECTIVE_EPS) continue;
+                if (Math.abs(weight) < MorphGeometry.EFFECTIVE_EPS) continue;
 
                 sum += weight;
             }
@@ -246,7 +244,8 @@ utils.createPrototypeObject(
             }
 
             // check more than 4 targets, we compute all the extra targets influence and merge in the last 4th morphs targets
-            var extraMorphCPU = Math.abs(sortedTargets[this._maxMorphGPU].value) >= EFFECTIVE_EPS;
+            var extraEpsilon = Math.abs(sortedTargets[this._maxMorphGPU].value);
+            var extraMorphCPU = extraEpsilon >= MorphGeometry.EFFECTIVE_EPS;
             gpuMorphed[indexMap[this._maxMorphGPU - 1]] = !extraMorphCPU;
 
             this._remapBufferArrays();
