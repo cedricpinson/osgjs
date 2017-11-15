@@ -143,7 +143,9 @@ Input.prototype = {
         // crossOrigin does not work for inline data image
         var isInlineImage = url.substring(0, checkInlineImage.length) === checkInlineImage;
         var img = new window.Image();
-
+        if (!isInlineImage && options.imageCrossOrigin) {
+            img.crossOrigin = options.imageCrossOrigin;
+        }
         image.setURL(url);
         image.setImage(img);
         img.src = url;
@@ -154,10 +156,6 @@ Input.prototype = {
                 image.setImage(Input.imageFallback);
                 resolve(image);
             };
-
-            if (!isInlineImage && options.imageCrossOrigin) {
-                img.crossOrigin = options.imageCrossOrigin;
-            }
 
             img.onload = function() {
                 if (options.imageOnload) options.imageOnload.call(image);
