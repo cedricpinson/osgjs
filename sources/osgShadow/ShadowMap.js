@@ -857,15 +857,15 @@ utils.createPrototypeObject(
                 this._depthRange[3] = 1.0 / this._depthRange[2];
             }
 
+            // even if noDepth, need to call those to make sure they are created
+            // in shadowTexture / shadowTextureAtlas
             if (this._lightNumberArrayIndex !== -1) {
                 var lightNumber = this._light.getLightNumber();
                 this._texture.setViewMatrix(lightNumber, this._viewMatrix);
-                if (noDepth) return;
                 this._texture.setProjectionMatrix(lightNumber, this._projectionMatrix);
                 this._texture.setDepthRange(lightNumber, this._depthRange);
             } else {
                 this._texture.setViewMatrix(this._viewMatrix);
-                if (noDepth) return;
                 this._texture.setProjectionMatrix(this._projectionMatrix);
                 this._texture.setDepthRange(this._depthRange);
             }
