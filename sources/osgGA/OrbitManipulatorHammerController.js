@@ -59,17 +59,21 @@ OrbitManipulatorHammerController.prototype = {
     _setListeners: function() {
         var hammer = this._eventProxy;
 
-        // Set a minimal thresold on pinch event, to be detected after pan
-        hammer.get('pinch').set({
-            threshold: 0.1
-        });
         // Let the pan be detected with two fingers.
         // 2 => pan, 1 -> rotate
         hammer.get('pan').set({
             threshold: 0,
             pointers: 0
         });
-        hammer.get('pinch').recognizeWith(hammer.get('pan'));
+
+        var pinch = hammer.get('pinch');
+        if (pinch) {
+            // Set a minimal thresold on pinch event, to be detected after pan
+            pinch.set({
+                threshold: 0.1
+            });
+            pinch.recognizeWith(hammer.get('pan'));
+        }
 
         hammer.on('panstart ', this._cbPanStart);
         hammer.on('panmove', this._cbPanMove);
