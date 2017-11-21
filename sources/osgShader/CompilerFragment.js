@@ -42,7 +42,7 @@ var CompilerFragment = {
     cleanAfterFragment: function() {
         // reset for next
         this._variables = {};
-        this._activeNodeList = {};
+        this._activeNodeMap = {};
 
         // clean texture cache variable (for vertex shader re-usage)
         for (var keyTexture in this._texturesByName) {
@@ -52,7 +52,7 @@ var CompilerFragment = {
         for (var keyVarying in this._varyings) {
             var varying = this._varyings[keyVarying];
             varying.reset();
-            this._activeNodeList[varying.getID()] = varying;
+            this._activeNodeMap[varying.getID()] = varying;
             this._variables[keyVarying] = varying;
         }
     },
@@ -597,6 +597,7 @@ var CompilerFragment = {
         this.getNode(nodeName)
             .inputs(inputs)
             .outputs(outputs);
+
         return outputs;
     },
 
@@ -617,6 +618,10 @@ var CompilerFragment = {
             lighted: this.createVariable('bool')
         };
 
+        // the light glsl function always output this boolean
+        // even if no shadowmaping (so the variable ends up unused)
+        outputs.lighted.silenceWarning = true;
+
         return outputs;
     },
 
@@ -626,13 +631,8 @@ var CompilerFragment = {
 
         var texel = this.createVariable('vec4');
         this.getNode('TextureRGBA')
-            .inputs({
-                tex: textureSampler,
-                uv: texCoord
-            })
-            .outputs({
-                result: texel
-            });
+            .inputs({ tex: textureSampler, uv: texCoord })
+            .outputs({ result: texel });
 
         return texel;
     }

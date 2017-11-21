@@ -11,9 +11,9 @@ var Compiler = function(attributes, textureAttributes, shaderProcessor) {
 
     this._fragmentShaderMode = false; // current context
 
-    this._activeNodeList = {};
-    this._compiledNodeList = {};
-    this._traversedNodeList = {};
+    this._activeNodeMap = {};
+    this._compiledNodeMap = {};
+    this._traversedNodeMap = {};
 
     this._variables = {};
     this._varyings = {};
@@ -255,7 +255,7 @@ Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
 
     // The Compiler Main Code called on Vertex or Fragment Shader Graph
     createShaderFromGraphs: function(roots) {
-        this._compiledNodeList = {};
+        this._compiledNodeMap = {};
 
         // list all vars
         var variables = [];
@@ -311,31 +311,55 @@ Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
 
         /*develblock:start*/
         // Check
-        var compiledNodes = window.Object.keys(this._compiledNodeList);
-        var activeNodes = window.Object.keys(this._activeNodeList);
-        activeNodes.filter(function(i) {
-            var found = compiledNodes.indexOf(i) !== -1;
-            if (!found) {
-                var node = this._activeNodeList[i];
-                var name = node.getName();
-                if (name === 'Variable')
-                    name += ' ' + node.getVariable() + ' (' + node.getType() + ')';
-                this.logWarn(
-                    'Nodes requested, but not compiled: ' + i + ' ' + name + ' ' + node.toString()
-                );
+        var compiledNodes = this._compiledNodeMap;
+        var activeNodes = this._activeNodeMap;
+        var messages = [];
+        for (var key in activeNodes) {
+            if (compiledNodes[key]) continue;
+
+            var node = activeNodes[key];
+            if (node.silenceWarning) continue;
+
+            var msg = '[' + node.toString() + ']:';
+            var nodeInputs = node.getInputs();
+            for (var i = 0; i < nodeInputs.length; ++i) {
+                var nodeInput = nodeInputs[i];
+                msg += '\n - Computed by ' + nodeInput.getType();
+
+                var argOutputs = nodeInput.getOutputs();
+                for (var keyOutput in argOutputs) {
+                    if (argOutputs[keyOutput] === node) {
+                        msg += ' - as ' + keyOutput;
+                    }
+                }
             }
-            return found;
-        }, this);
+
+            messages.push(msg);
+        }
+
+        if (messages.length) {
+            this.logWarn('Nodes requested, but not compiled:\n' + messages.join('\n\n'));
+        }
         /*develblock:end*/
 
         return shader;
+    },
+
+    _logLookForVariable: function(args, variable) {
+        var res = [];
+        for (var key in args) {
+            if (args[key] === variable) {
+                res.push(key);
+            }
+        }
+        return res;
     },
 
     getNode: function(/*name, arg1, etc*/) {
         var n = factory.getNode.apply(factory, arguments);
         if (!n) notify.error('Unknown Node type : ' + arguments[0]);
         var cacheID = n.getID();
-        this._activeNodeList[cacheID] = n;
+        this._activeNodeMap[cacheID] = n;
         return n;
     },
 
@@ -534,8 +558,8 @@ Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
 
     markNodeAsVisited: function(n) {
         var cacheID = n.getID();
-        if (this._activeNodeList[cacheID] === n) {
-            this._compiledNodeList[cacheID] = n;
+        if (this._activeNodeMap[cacheID] === n) {
+            this._compiledNodeMap[cacheID] = n;
         } else {
             this.logWarn(
                 'Node not requested by using Compiler getNode and/or not registered in nodeFactory ' +
@@ -547,10 +571,10 @@ Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
     // make sure we traverse once per evaluation of graph
     checkOrMarkNodeAsTraversed: function(n) {
         var cacheID = n.getID();
-        if (this._traversedNodeList[cacheID]) {
+        if (this._traversedNodeMap[cacheID]) {
             return true;
         }
-        this._traversedNodeList[cacheID] = n;
+        this._traversedNodeMap[cacheID] = n;
         return false;
     },
 
@@ -582,7 +606,7 @@ Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
     },
 
     _getAndInitFunctor: function(func) {
-        this._traversedNodeList = {};
+        this._traversedNodeMap = {};
 
         var map = {};
         var text = [];
