@@ -742,6 +742,128 @@ Compiler.prototype = utils.extend({}, CompilerVertex, CompilerFragment, {
 
     evaluateExtensions: function(roots) {
         return this.evaluateAndGatherField(roots, 'getExtensions');
+    },
+
+    /////////////////////
+    // Model space varying
+    /////////////////////
+    getOrCreateModelVertex: function() {
+        if (this._fragmentShaderMode) {
+            return this.getOrCreateVarying('vec3', 'vModelVertex');
+        }
+
+        var out = this._variables.modelVertex;
+        if (out) return out;
+        out = this.createVariable('vec3', 'modelVertex');
+
+        this.getNode('MatrixMultPosition')
+            .inputs({
+                matrix: this.getOrCreateUniform('mat4', 'uModelMatrix'),
+                vec: this.getOrCreateLocalVertex()
+            })
+            .outputs({ vec: out });
+
+        return out;
+    },
+
+    getOrCreateModelNormal: function() {
+        if (this._fragmentShaderMode) {
+            return this.getOrCreateVarying('vec3', 'vModelNormal');
+        }
+
+        var out = this._variables.modelNormal;
+        if (out) return out;
+        out = this.createVariable('vec3', 'modelNormal');
+
+        this.getNode('MatrixMultDirection')
+            .inputs({
+                matrix: this.getOrCreateUniform('mat3', 'uModelNormalMatrix'),
+                vec: this.getOrCreateLocalNormal()
+            })
+            .outputs({ vec: out });
+
+        return out;
+    },
+
+    getOrCreateModelTangent: function() {
+        if (this._fragmentShaderMode) {
+            return this.getOrCreateVarying('vec4', 'vModelTangent');
+        }
+
+        var out = this._variables.modelTangent;
+        if (out) return out;
+        out = this.createVariable('vec4', 'modelTangent');
+
+        this.getNode('MatrixMultDirection')
+            .setOverwriteW(false)
+            .inputs({
+                matrix: this.getOrCreateUniform('mat3', 'uModelNormalMatrix'),
+                vec: this.getOrCreateLocalTangent()
+            })
+            .outputs({ vec: out });
+
+        return out;
+    },
+
+    /////////////////////
+    // View space varying
+    /////////////////////
+    getOrCreateViewVertex: function() {
+        if (this._fragmentShaderMode) {
+            return this.getOrCreateVarying('vec4', 'vViewVertex');
+        }
+
+        var out = this._variables.viewVertex;
+        if (out) return out;
+        out = this.createVariable('vec4', 'viewVertex');
+
+        this.getNode('MatrixMultPosition')
+            .inputs({
+                matrix: this.getOrCreateUniform('mat4', 'uModelViewMatrix'),
+                vec: this.getOrCreateLocalVertex()
+            })
+            .outputs({ vec: out });
+
+        return out;
+    },
+
+    getOrCreateViewNormal: function() {
+        if (this._fragmentShaderMode) {
+            return this.getOrCreateVarying('vec3', 'vViewNormal');
+        }
+
+        var out = this._variables.viewNormal;
+        if (out) return out;
+        out = this.createVariable('vec3', 'viewNormal');
+
+        this.getNode('MatrixMultDirection')
+            .inputs({
+                matrix: this.getOrCreateUniform('mat3', 'uModelViewNormalMatrix'),
+                vec: this.getOrCreateLocalNormal()
+            })
+            .outputs({ vec: out });
+
+        return out;
+    },
+
+    getOrCreateViewTangent: function() {
+        if (this._fragmentShaderMode) {
+            return this.getOrCreateVarying('vec4', 'vViewTangent');
+        }
+
+        var out = this._variables.viewTangent;
+        if (out) return out;
+        out = this.createVariable('vec4', 'viewTangent');
+
+        this.getNode('MatrixMultDirection')
+            .setOverwriteW(false)
+            .inputs({
+                matrix: this.getOrCreateUniform('mat3', 'uModelViewNormalMatrix'),
+                vec: this.getOrCreateLocalTangent()
+            })
+            .outputs({ vec: out });
+
+        return out;
     }
 });
 

@@ -156,12 +156,8 @@ var CompilerFragment = {
         out = this.createVariable('vec4', 'frontViewTangent');
 
         this.getNode('FrontNormal')
-            .inputs({
-                normal: this.getOrCreateVarying('vec4', 'vViewTangent')
-            })
-            .outputs({
-                result: out
-            });
+            .inputs({ normal: this.getOrCreateViewTangent() })
+            .outputs({ result: out });
 
         return out;
     },
@@ -172,12 +168,8 @@ var CompilerFragment = {
         out = this.createVariable('vec3', 'frontViewNormal');
 
         this.getNode('FrontNormal')
-            .inputs({
-                normal: this.getOrCreateVarying('vec3', 'vViewNormal')
-            })
-            .outputs({
-                result: out
-            });
+            .inputs({ normal: this.getOrCreateViewNormal() })
+            .outputs({ result: out });
 
         return out;
     },
@@ -188,20 +180,17 @@ var CompilerFragment = {
         out = this.createVariable('vec3', 'eyeVector');
 
         this.getNode('SetFromNode')
-            .inputs(this.getOrCreateVarying('vec4', 'vViewVertex'))
+            .inputs(this.getOrCreateViewVertex())
             .outputs(out);
 
         this.getNode('Normalize')
-            .inputs({
-                vec: out
-            })
-            .outputs({
-                result: out
-            });
+            .inputs({ vec: out })
+            .outputs({ result: out });
 
         this.getNode('Mult')
             .inputs(out, this.createVariable('float').setValue('-1.0'))
             .outputs(out);
+
         return out;
     },
 
@@ -211,12 +200,8 @@ var CompilerFragment = {
         out = this.createVariable('vec3', 'nFrontViewNormal');
 
         this.getNode('Normalize')
-            .inputs({
-                vec: this.getOrCreateFrontViewNormal()
-            })
-            .outputs({
-                result: out
-            });
+            .inputs({ vec: this.getOrCreateFrontViewNormal() })
+            .outputs({ result: out });
 
         return out;
     },
@@ -227,12 +212,8 @@ var CompilerFragment = {
         out = this.createVariable('vec3', 'frontModelNormal');
 
         this.getNode('FrontNormal')
-            .inputs({
-                normal: this.getOrCreateVarying('vec3', 'vModelNormal')
-            })
-            .outputs({
-                result: out
-            });
+            .inputs({ normal: this.getOrCreateModelNormal() })
+            .outputs({ result: out });
 
         return out;
     },
@@ -243,12 +224,8 @@ var CompilerFragment = {
         out = this.createVariable('vec3', 'nFrontModelNormal');
 
         this.getNode('Normalize')
-            .inputs({
-                vec: this.getOrCreateFrontModelNormal()
-            })
-            .outputs({
-                result: out
-            });
+            .inputs({ vec: this.getOrCreateFrontModelNormal() })
+            .outputs({ result: out });
 
         return out;
     },
@@ -259,13 +236,8 @@ var CompilerFragment = {
         var premultAlpha = this.createVariable('vec4');
 
         this.getNode('PreMultAlpha')
-            .inputs({
-                color: finalColor,
-                alpha: alpha
-            })
-            .outputs({
-                result: premultAlpha
-            });
+            .inputs({ color: finalColor, alpha: alpha })
+            .outputs({ result: premultAlpha });
 
         return premultAlpha;
     },
@@ -273,12 +245,8 @@ var CompilerFragment = {
     getColorsRGB: function(finalColor) {
         var finalSrgbColor = this.createVariable('vec3');
         this.getNode('LinearTosRGB')
-            .inputs({
-                color: finalColor
-            })
-            .outputs({
-                color: finalSrgbColor
-            });
+            .inputs({ color: finalColor })
+            .outputs({ color: finalSrgbColor });
 
         return finalSrgbColor;
     },
@@ -302,9 +270,7 @@ var CompilerFragment = {
                 hasVertexColor: vertexColorUniform,
                 vertexColor: vertexColor
             })
-            .outputs({
-                color: tmp
-            })
+            .outputs({ color: tmp })
             .comment('diffuse color = diffuse color * vertex color');
 
         return tmp;
@@ -376,7 +342,7 @@ var CompilerFragment = {
         var inputs = {
             lighted: lighted,
             normalWorld: this.getOrCreateNormalizedFrontModelNormal(),
-            vertexWorld: this.getOrCreateVarying('vec3', 'vModelVertex'),
+            vertexWorld: this.getOrCreateModelVertex(),
             shadowTexture: this.getOrCreateSampler('sampler2D', 'Texture' + tUnit),
             shadowSize: this.getOrCreateUniform(textureUniforms['RenderSize']),
             shadowProjectionMatrix: this.getOrCreateUniform(
@@ -580,13 +546,13 @@ var CompilerFragment = {
         if (lightType === Light.POINT) {
             nodeName = 'PrecomputePoint';
 
-            inputs.viewVertex = this.getOrCreateVarying('vec4', 'vViewVertex');
+            inputs.viewVertex = this.getOrCreateViewVertex();
             inputs.lightAttenuation = this.getOrCreateUniform(lightUniforms.attenuation);
             inputs.lightViewPosition = this.getOrCreateUniform(lightUniforms.viewPosition);
         } else if (lightType === Light.SPOT) {
             nodeName = 'PrecomputeSpot';
 
-            inputs.viewVertex = this.getOrCreateVarying('vec4', 'vViewVertex');
+            inputs.viewVertex = this.getOrCreateViewVertex();
             inputs.lightViewDirection = this.getOrCreateUniform(lightUniforms.viewDirection);
             inputs.lightAttenuation = this.getOrCreateUniform(lightUniforms.attenuation);
             inputs.lightSpotCutOff = this.getOrCreateUniform(lightUniforms.spotCutOff);
