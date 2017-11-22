@@ -42,7 +42,7 @@ utils.createPrototypeObject(
     FirstPersonManipulator,
     utils.objectInherit(Manipulator.prototype, {
         computeHomePosition: function(boundStrategy) {
-            var bs = this.getHomeBound(boundStrategy);
+            var bs = this.getHomeBoundingSphere(boundStrategy);
             if (!bs || !bs.valid()) return;
 
             this._distance = this.getHomeDistance(bs);

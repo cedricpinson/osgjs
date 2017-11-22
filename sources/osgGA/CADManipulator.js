@@ -206,7 +206,7 @@ utils.createPrototypeObject(
             var u = vec3.create();
             var result = mat4.create();
             return function(boundStrategy) {
-                var bs = this.getHomeBound(boundStrategy);
+                var bs = this.getHomeBoundingSphere(boundStrategy);
                 if (!bs) return;
                 this.setDistance(this.getHomeDistance(bs));
                 this.setTarget(bs.center());

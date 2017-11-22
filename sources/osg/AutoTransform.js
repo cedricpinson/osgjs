@@ -1,9 +1,7 @@
+import notify from 'osg/notify';
 import utils from 'osg/utils';
 import Transform from 'osg/Transform';
-import { vec3 } from 'osg/glMatrix';
-import { vec4 } from 'osg/glMatrix';
-import { quat } from 'osg/glMatrix';
-import { mat4 } from 'osg/glMatrix';
+import { vec3, vec4, quat, mat4 } from 'osg/glMatrix';
 import NodeVisitor from 'osg/NodeVisitor';
 import TransformEnums from 'osg/transformEnums';
 import Node from 'osg/Node';
@@ -71,10 +69,15 @@ utils.createPrototypeNode(
         },
 
         setScale: function(scale) {
-            this.setScaleFromvec3(vec3.fromValues(scale, scale, scale));
+            this.setScaleFromVec3(vec3.fromValues(scale, scale, scale));
         },
 
         setScaleFromvec3: function(scaleVec) {
+            notify.warn('deprecated, use setScaleFromVec3');
+            this.setScaleFromVec3(scaleVec);
+        },
+
+        setScaleFromVec3: function(scaleVec) {
             this._scale = scaleVec;
             this._matrixDirty = true;
             this.dirtyBound();

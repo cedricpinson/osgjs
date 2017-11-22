@@ -1,11 +1,13 @@
+import notify from 'osg/notify';
 import BoundingSphere from 'osg/BoundingSphere';
 import { mat4 } from 'osg/glMatrix';
 
 // Base class for Camera / User manipulator
 var Manipulator = function(boundStrategy) {
     this._boundStrategy = boundStrategy;
-    if (this._boundStrategy === undefined)
+    if (this._boundStrategy === undefined) {
         this._boundStrategy = Manipulator.COMPUTE_HOME_USING_SPHERE;
+    }
 
     this._controllerList = {};
     this._inverseMatrix = mat4.create();
@@ -13,6 +15,9 @@ var Manipulator = function(boundStrategy) {
     this._node = undefined;
     this._frustum = {};
     this._computeBoundNodeMaskOverride = ~0x0;
+
+    // for getHomeBoundingSphere
+    this._tmpSphere = new BoundingSphere();
 };
 
 Manipulator.prototype = {
@@ -33,18 +38,16 @@ Manipulator.prototype = {
     },
 
     // overrideStrat should be a bounding volume calculation strategy
-    getHomeBound: function(overrideStrat) {
+    getHomeBoundingSphere: function(overrideStrat) {
         var node = this._node;
         if (!node) return;
 
         var type = overrideStrat !== undefined ? overrideStrat : this._boundStrategy;
 
         if (type & Manipulator.COMPUTE_HOME_USING_BBOX) {
-            var bs = new BoundingSphere();
-
-            var bb = null;
+            var box;
             if (this._computeBoundNodeMaskOverride === ~0x0) {
-                bb = node.getBoundingBox();
+                box = node.getBoundingBox();
             } else {
                 var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor').default;
                 var cbv = new ComputeBoundsVisitor();
@@ -52,25 +55,34 @@ Manipulator.prototype = {
                 cbv.reset();
 
                 cbv.apply(node);
-                bb = cbv.getBoundingBox();
+                box = cbv.getBoundingBox();
             }
 
-            if (bb.valid()) bs.expandByBoundingBox(bb);
+            if (!box.valid()) return node.getBoundingSphere();
 
             // minimum between sphere and box
             if (type & Manipulator.COMPUTE_HOME_USING_SPHERE) {
-                var boundSphere = node.getBound();
-                if (boundSphere.radius() < bs.radius()) return boundSphere;
+                var bsphere = node.getBoundingSphere();
+                if (bsphere.valid() && bsphere.volume() < box.volume()) {
+                    return bsphere;
+                }
             }
 
-            return bs;
+            this._tmpSphere.copyBoundingBox(box);
+            return this._tmpSphere;
         }
 
-        return node.getBound();
+        return node.getBoundingSphere();
     },
-    getHomeDistance: function(bs) {
+
+    getHomeBound: function(overrideStrat) {
+        notify.warn('Please use getHomeBoundingSphere instead');
+        return this.getHomeBoundingSphere(overrideStrat);
+    },
+
+    getHomeDistance: function(bound) {
         var frustum = this._frustum;
-        var dist = bs.radius();
+        var dist = bound.radius();
         if (this._camera && mat4.getFrustum(frustum, this._camera.getProjectionMatrix())) {
             var vertical2 = Math.abs(frustum.right - frustum.left) / frustum.zNear / 2;
             var horizontal2 = Math.abs(frustum.top - frustum.bottom) / frustum.zNear / 2;

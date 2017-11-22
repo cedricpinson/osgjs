@@ -12,10 +12,10 @@ export default function() {
             var bb1 = [1, 0, -1];
             var bb2 = [0, 1, -0.5];
             var bb3 = [1, 2, -0.8];
-            bb.expandByvec3(bb0);
-            bb.expandByvec3(bb1);
-            bb.expandByvec3(bb2);
-            bb.expandByvec3(bb3);
+            bb.expandByVec3(bb0);
+            bb.expandByVec3(bb1);
+            bb.expandByVec3(bb2);
+            bb.expandByVec3(bb3);
 
             var bbTestOk =
                 bb._max[0] === 1 &&

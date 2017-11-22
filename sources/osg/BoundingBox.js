@@ -1,12 +1,13 @@
+import notify from 'osg/notify';
 import utils from 'osg/utils';
-import { vec3 } from 'osg/glMatrix';
-import { mat4 } from 'osg/glMatrix';
+import { vec3, mat4 } from 'osg/glMatrix';
 
 var BoundingBox = function() {
     this._min = vec3.create();
     this._max = vec3.create();
     this.init();
 };
+
 utils.createPrototypeObject(
     BoundingBox,
     {
@@ -15,18 +16,16 @@ utils.createPrototypeObject(
             vec3.copy(this._max, vec3.NEGATIVE_INFINITY);
         },
 
-        copy: function(bbox) {
-            var min = this._min;
-            var bmin = bbox._min;
-            min[0] = bmin[0];
-            min[1] = bmin[1];
-            min[2] = bmin[2];
+        volume: function() {
+            var v = this._max[0] - this._min[0];
+            v *= this._max[1] - this._min[1];
+            v *= this._max[2] - this._min[2];
+            return v;
+        },
 
-            var max = this._max;
-            var bmax = bbox._max;
-            max[0] = bmax[0];
-            max[1] = bmax[1];
-            max[2] = bmax[2];
+        copy: function(box) {
+            vec3.copy(this._min, box._min);
+            vec3.copy(this._max, box._max);
         },
 
         valid: function() {
@@ -57,6 +56,11 @@ utils.createPrototypeObject(
         },
 
         expandByvec3: function(v) {
+            notify.warn('deprecated, use expandByVec3');
+            this.expandByVec3(v);
+        },
+
+        expandByVec3: function(v) {
             var min = this._min;
             var max = this._max;
             min[0] = Math.min(min[0], v[0]);
