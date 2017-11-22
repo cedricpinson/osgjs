@@ -51,31 +51,41 @@ var CompilerVertex = {
     declareVertexVaryings: function(roots) {
         var varyings = this._varyings;
 
-        if (varyings.vModelVertex)
+        if (varyings.vModelVertex) {
             this.getNode('SetFromNode')
                 .inputs(this.getOrCreateModelVertex())
                 .outputs(varyings.vModelVertex);
-        if (varyings.vModelNormal)
+        }
+
+        if (varyings.vModelNormal) {
             this.getNode('SetFromNode')
                 .inputs(this.getOrCreateModelNormal())
                 .outputs(varyings.vModelNormal);
-        if (varyings.vModelTangent)
+        }
+
+        if (varyings.vModelTangent) {
             this.getNode('SetFromNode')
                 .inputs(this.getOrCreateModelTangent())
                 .outputs(varyings.vModelTangent);
+        }
 
-        if (varyings.vViewVertex)
+        if (varyings.vViewVertex) {
             this.getNode('SetFromNode')
                 .inputs(this.getOrCreateViewVertex())
                 .outputs(varyings.vViewVertex);
-        if (varyings.vViewNormal)
+        }
+
+        if (varyings.vViewNormal) {
             this.getNode('SetFromNode')
                 .inputs(this.getOrCreateViewNormal())
                 .outputs(varyings.vViewNormal);
-        if (varyings.vViewTangent)
+        }
+
+        if (varyings.vViewTangent) {
             this.getNode('SetFromNode')
                 .inputs(this.getOrCreateViewTangent())
                 .outputs(varyings.vViewTangent);
+        }
 
         if (varyings.vVertexColor) {
             this.getNode('InlineCode')
@@ -107,110 +117,6 @@ var CompilerVertex = {
         if (this._isBillboard) this.declareVertexTransformBillboard(glPosition);
         else this.declareScreenVertex(glPosition);
         return glPosition;
-    },
-
-    getOrCreateModelVertex: function() {
-        var out = this._variables.modelVertex;
-        if (out) return out;
-        out = this.createVariable('vec3', 'modelVertex');
-
-        this.getNode('MatrixMultPosition')
-            .inputs({
-                matrix: this.getOrCreateUniform('mat4', 'uModelMatrix'),
-                vec: this.getOrCreateLocalVertex()
-            })
-            .outputs({
-                vec: out
-            });
-
-        return out;
-    },
-
-    getOrCreateModelNormal: function() {
-        var out = this._variables.modelNormal;
-        if (out) return out;
-        out = this.createVariable('vec3', 'modelNormal');
-
-        this.getNode('MatrixMultDirection')
-            .inputs({
-                matrix: this.getOrCreateUniform('mat3', 'uModelNormalMatrix'),
-                vec: this.getOrCreateLocalNormal()
-            })
-            .outputs({
-                vec: out
-            });
-
-        return out;
-    },
-
-    getOrCreateModelTangent: function() {
-        var out = this._variables.modelTangent;
-        if (out) return out;
-        out = this.createVariable('vec4', 'modelTangent');
-
-        this.getNode('MatrixMultDirection')
-            .setOverwriteW(false)
-            .inputs({
-                matrix: this.getOrCreateUniform('mat3', 'uModelNormalMatrix'),
-                vec: this.getOrCreateLocalTangent()
-            })
-            .outputs({
-                vec: out
-            });
-
-        return out;
-    },
-
-    getOrCreateViewVertex: function() {
-        var out = this._variables.viewVertex;
-        if (out) return out;
-        out = this.createVariable('vec4', 'viewVertex');
-
-        this.getNode('MatrixMultPosition')
-            .inputs({
-                matrix: this.getOrCreateUniform('mat4', 'uModelViewMatrix'),
-                vec: this.getOrCreateLocalVertex()
-            })
-            .outputs({
-                vec: out
-            });
-
-        return out;
-    },
-
-    getOrCreateViewNormal: function() {
-        var out = this._variables.viewNormal;
-        if (out) return out;
-        out = this.createVariable('vec3', 'viewNormal');
-
-        this.getNode('MatrixMultDirection')
-            .inputs({
-                matrix: this.getOrCreateUniform('mat3', 'uModelViewNormalMatrix'),
-                vec: this.getOrCreateLocalNormal()
-            })
-            .outputs({
-                vec: out
-            });
-
-        return out;
-    },
-
-    getOrCreateViewTangent: function() {
-        var out = this._variables.viewTangent;
-        if (out) return out;
-        out = this.createVariable('vec4', 'viewTangent');
-
-        this.getNode('MatrixMultDirection')
-            .setOverwriteW(false)
-            .inputs({
-                matrix: this.getOrCreateUniform('mat3', 'uModelViewNormalMatrix'),
-                vec: this.getOrCreateLocalTangent()
-            })
-            .outputs({
-                vec: out
-            });
-
-        return out;
     },
 
     declareScreenVertex: function(glPosition) {

@@ -33,9 +33,9 @@ utils.createPrototypeObject(
         },
 
         toString: function() {
-            var str = 'prefix : ' + this._prefix;
-            str += ', name : ' + this._prefix;
-            if (this.type) str += ' (' + this.type + ')';
+            var str = this._name + ' ' + this._prefix;
+            if (this._type) str += ' (' + this._type + ')';
+            str += ' - id:' + this._id;
             return str;
         },
 

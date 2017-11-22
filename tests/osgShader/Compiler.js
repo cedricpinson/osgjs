@@ -20,6 +20,7 @@ export default function() {
                 [[shadowTexture]]
             );
 
+            compiler._fragmentShaderMode = true;
             var root = compiler.createFragmentShaderGraph();
 
             var extensions = compiler.evaluateAndGatherField(root, 'getExtensions');

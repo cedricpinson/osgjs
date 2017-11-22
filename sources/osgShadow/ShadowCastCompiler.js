@@ -43,14 +43,14 @@ utils.createPrototypeObject(
         createShadowCastDepth: function(out) {
             var defines = this._shadowCastAttribute.getDefines();
 
-            this.getNode('ShadowCast')
+            var node = this.getNode('ShadowCast')
                 .inputs({
                     shadowDepthRange: this.getOrCreateUniform('vec4', 'uShadowDepthRange'),
-                    fragEye: this.getOrCreateVarying('vec4', 'vViewVertex')
+                    fragEye: this.getOrCreateViewVertex()
                 })
-                .outputs({
-                    result: out
-                }).getDefines = function() {
+                .outputs({ result: out });
+
+            node.getDefines = function() {
                 return defines;
             };
 
