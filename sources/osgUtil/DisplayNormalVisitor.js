@@ -180,22 +180,24 @@ utils.createPrototypeObject(
             this._normalStateSet.setAttributeAndModes(new Depth(bool ? Depth.LESS : Depth.NEVER));
         },
         apply: function(node) {
-            var list = node.getUpdateCallbackList();
-            // dirty the UpdateMorph so that they detect the normal/tangent geometry and update the target/weights correctly
-            for (var i = 0, nbCB = list.length; i < nbCB; ++i) {
-                if (list[i] instanceof UpdateMorph) {
-                    list[i]._isInitialized = false;
-                }
-            }
-
             if (node._isVisitedNormalDebug) return;
-
             node._isVisitedNormalDebug = true;
 
-            if (node instanceof Geometry === false) return this.traverse(node);
+            if (node instanceof Geometry) {
+                this._createDebugGeom(node, 'Normal', this._normalStateSet);
+                this._createDebugGeom(node, 'Tangent', this._tangentStateSet);
+                return;
+            }
 
-            this._createDebugGeom(node, 'Normal', this._normalStateSet);
-            this._createDebugGeom(node, 'Tangent', this._tangentStateSet);
+            this.traverse(node);
+
+            var list = node.getUpdateCallbackList();
+            // reference the new morph geometry on the UpdateMorph callbacks
+            for (var i = 0, nbCB = list.length; i < nbCB; ++i) {
+                if (list[i] instanceof UpdateMorph) {
+                    list[i].init(node);
+                }
+            }
         },
         _createDoubleOffsetArray: function(nbVertices) {
             // 0 means original vertex pos
