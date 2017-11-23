@@ -8,11 +8,47 @@ import Program from 'osg/Program';
 import Shader from 'osg/Shader';
 import Transform from 'osg/Transform';
 import Texture from 'osg/Texture';
-import { mat4 } from 'osg/glMatrix';
+import {mat4} from 'osg/glMatrix';
 import BufferStats from 'osgStats/BufferStats';
 import Counter from 'osgStats/Counter';
 import Graph from 'osgStats/Graph';
 import TextGenerator from 'osgStats/TextGenerator';
+
+// Stats usages:
+// url usable in Options
+//
+// to active the stats: ?stats=1
+//
+// to filter content in the stats: statsFilter=cull;myGroup;webgl
+//
+// to change the fontSize: statsFontSize=40
+//
+// You can also change the configuration before running the viewer to adds counters
+// var config = {
+//     values: {
+//         myCounter: {
+//             caption: 'my uber counter',
+//             average: true,
+//             graph: true,
+//             over: 16
+//         },
+//         myCounter2: {
+//             caption: 'a second counter',
+//             graph: true,
+//             below: 16
+//         }
+//         groups: [
+//             {
+//                 name: myGroup,
+//                 caption: 'blah my group',
+//                 values: [ 'myCounter', 'myCounter2' ]
+//             }
+//         ]
+//     };
+//     getViewerStats().addConfig(config)
+//     getViewerStats().setShowFilter(['cull', 'myGroup']) // will display only cull
+//     and myGroup groups
+//     getViewerStats().setFontSize(50)
 
 var createShader = function() {
     var vertexshader = [
@@ -65,15 +101,16 @@ var createShader = function() {
     );
 };
 
-var Stats = function(viewport, options) {
+var Stats = function(viewer, options) {
     this._captionsBuffer = undefined;
     this._valuesBuffer = undefined;
 
     this._dirtyCaptions = true;
     this._dirtyValues = true;
 
+    this._viewer = viewer;
     this._labelMaxWidth = 0;
-    this._viewport = viewport;
+    this._viewport = viewer.getCamera().getViewport();
 
     this._node = undefined;
     this._text = undefined;
@@ -88,6 +125,8 @@ var Stats = function(viewport, options) {
     this._width = 0;
     this._height = 0;
 
+    this._maxCaptionTextLength = 32;
+
     this._lineFactor = 1.1;
     this._displayFilter = [];
 
@@ -98,6 +137,10 @@ var Stats = function(viewport, options) {
     this._historyGraph = {};
 
     this._graphToDisplay = [];
+
+    this._valuesMaxWidth = 6 * 12;
+
+    this._showGraph = false;
 
     this._init(options);
 };
@@ -130,7 +173,8 @@ utils.createPrototypeObject(Stats, {
                 var groupConfig = config.groups[i];
                 var group = {
                     caption: groupConfig.caption,
-                    values: groupConfig.values
+                    values: groupConfig.values,
+                    textCursorY: new Float32Array(groupConfig.values.length)
                 };
 
                 var name = groupConfig.name ? groupConfig.name : groupConfig.caption;
@@ -197,7 +241,7 @@ utils.createPrototypeObject(Stats, {
 
         this._text = new TextGenerator();
 
-        var fontSize = 16;
+        var fontSize = 12;
         if (options) {
             var statsGroupList = options.getString('statsFilter');
             if (statsGroupList) {
@@ -206,12 +250,14 @@ utils.createPrototypeObject(Stats, {
             }
             var statsFontSize = options.getNumber('statsFontSize');
             if (statsFontSize !== undefined) fontSize = statsFontSize;
+
+            this._showGraph = options.getBoolean('statsShowGraph');
         }
 
         var texture = new Texture();
         texture.setMinFilter(Texture.NEAREST);
         texture.setMagFilter(Texture.NEAREST);
-        this._text.setFontSize(fontSize);
+        this._text.setFontSize(fontSize * this._viewer.getCanvasPixelRatio());
         this._text.getCanvas().then(
             function(canvas) {
                 this._dirtyCaptions = true;
@@ -266,17 +312,25 @@ utils.createPrototypeObject(Stats, {
                 var counter = this._counters[counterName];
                 if (!counter || !counter.isDisplayable()) continue;
 
+                group.textCursorY[j] = textCursorY;
+
                 var text = counter._caption;
-                textWidth = this._bufferStats.generateText(
-                    textCursorX,
-                    textCursorY,
-                    text,
-                    this._text,
-                    BufferStats.whiteColor
-                );
-                this._labelMaxWidth = Math.max(textWidth, this._labelMaxWidth);
-                textCursorX = initialX;
-                textCursorY -= characterHeight;
+                // could need to split the label on multi line
+                var nbSplits = text.length / this._maxCaptionTextLength;
+                for ( var c = 0; c < nbSplits; c++) {
+                    var start = c * this._maxCaptionTextLength;
+                    var splitText = text.substr(start, this._maxCaptionTextLength);
+                    textWidth = this._bufferStats.generateText(
+                        textCursorX,
+                        textCursorY,
+                        splitText,
+                        this._text,
+                        BufferStats.whiteColor
+                    );
+                    this._labelMaxWidth = Math.max(textWidth, this._labelMaxWidth);
+                    textCursorY -= characterHeight;
+                    textCursorX = initialX;
+                }
             }
             textCursorY -= characterHeight;
         }
@@ -285,18 +339,18 @@ utils.createPrototypeObject(Stats, {
     _generateValues: function() {
         var characterWidth = this._text.getCharacterWidth();
         var valuesOffsetX = this._labelMaxWidth + 2 * characterWidth;
-        var graphOffsetX = characterWidth * 6;
+        var graphOffsetX = this._valuesMaxWidth + 2 * characterWidth;
         var characterHeight = this._text.getCharacterHeight();
         var textCursorX = valuesOffsetX;
-        var textCursorY = this._viewport.height() - characterHeight;
+        var textCursorY;
 
         var filters = this._displayFilter;
+        var valuesMaxWidth = 0;
         for (var groupName in this._groups) {
             if (groupName && filters.length && filters.indexOf(groupName) === -1) continue;
 
             var group = this._groups[groupName];
             textCursorX = valuesOffsetX;
-            textCursorY -= this._lineFactor * characterHeight;
 
             for (var j = 0; j < group.values.length; j++) {
                 var counterName = group.values[j];
@@ -311,15 +365,24 @@ utils.createPrototypeObject(Stats, {
                     text = value.toString();
                 }
 
+                textCursorY = group.textCursorY[j];
                 var color = BufferStats.whiteColor;
                 var over = counter.getOver();
                 var below = counter.getBelow();
                 if (over !== 0) color = value > over ? BufferStats.redColor : color;
                 else if (below !== 0) color = value < below ? BufferStats.redColor : color;
 
-                this._bufferStats.generateText(textCursorX, textCursorY, text, this._text, color);
+                var valueWidth = this._bufferStats.generateText(
+                    textCursorX,
+                    textCursorY,
+                    text,
+                    this._text,
+                    color
+                );
+                valuesMaxWidth = Math.max(valueWidth, valuesMaxWidth);
 
-                if (counter._graph) {
+
+                if (this._showGraph && counter._graph) {
                     if (!this._historyGraph[counterName]) {
                         this._historyGraph[counterName] = new Graph();
                     }
@@ -332,12 +395,11 @@ utils.createPrototypeObject(Stats, {
                 }
 
                 textCursorX = valuesOffsetX;
-                textCursorY -= characterHeight;
             }
-            textCursorY -= characterHeight;
         }
-
         this._bufferStats.valuesEnd();
+
+        this._valuesMaxWidth = valuesMaxWidth;
 
         for (var g = 0; g < this._graphToDisplay.length; g++) {
             var graph = this._graphToDisplay[g];
@@ -347,7 +409,7 @@ utils.createPrototypeObject(Stats, {
         var totalWidth = valuesOffsetX + graphOffsetX;
 
         if (this._graphToDisplay.length) totalWidth += Graph.maxGraphValue * 2 + 1;
-        var totalHeight = this._viewport.height() - textCursorY - 2 * characterHeight;
+        var totalHeight = this._viewport.height() - textCursorY;
 
         if (this._backgroundWidth !== totalWidth || this._backgroundHeight !== totalHeight) {
             this._backgroundWidth = totalWidth;

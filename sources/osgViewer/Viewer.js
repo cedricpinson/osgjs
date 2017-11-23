@@ -245,7 +245,7 @@ utils.createPrototypeObject(
                 return;
             }
 
-            this._stats = new Stats(this.getCamera().getViewport(), options);
+            this._stats = new Stats(this, options);
             this._stats.addConfig(defaultStats);
             this._stats.addConfig(glStats);
             this._stats.addConfig(browserStats);
