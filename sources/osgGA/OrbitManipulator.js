@@ -175,7 +175,7 @@ utils.createPrototypeObject(
         })(),
 
         computeHomePosition: function(boundStrategy) {
-            var bs = this.getHomeBound(boundStrategy);
+            var bs = this.getHomeBoundingSphere(boundStrategy);
             if (!bs || !bs.valid()) return;
 
             this.setDistance(this.getHomeDistance(bs));

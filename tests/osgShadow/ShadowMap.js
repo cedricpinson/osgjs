@@ -30,10 +30,10 @@ export default function() {
         /// TEST SPOT
 
         //SPOT INSIDE BOUNDINGBOX
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(8.9969263076782231, 6.6672196388244632, 10.771773338317871)
         );
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(-7.3858900070190431, -9.332790374755862, -0.39151200652122503)
         );
 
@@ -106,10 +106,10 @@ export default function() {
 
         //SPOT OUTSIDE BOUNDINGBOX
 
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(8.9969263076782231, 6.6672196388244632, 10.771773338317871)
         );
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(-7.3858900070190431, -9.332790374755862, -0.391512006521225)
         );
 
@@ -218,10 +218,10 @@ export default function() {
         /// TEST Directional
 
         // DIRECTIONAL LOOKING DOWN
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(8.996926307678223, 6.667219638824462, 10.77177333831787)
         );
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(-7.385890007019043, -9.332790374755858, -0.3915120065212249)
         );
 
@@ -293,10 +293,10 @@ export default function() {
 
         // DIRECTIONAL LOOKING UP
 
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(8.9969263076782261, 6.6672196388244632, 10.771773338317875)
         );
-        frustumBound.expandByvec3(
+        frustumBound.expandByVec3(
             vec3.fromValues(-7.3858900070190481, -9.332790374755862, -0.39151200652122586)
         );
 

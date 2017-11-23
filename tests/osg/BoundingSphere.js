@@ -16,10 +16,10 @@ export default function() {
         assert.isOk(simpleBoundingSphere.valid() !== 1, 'BoundingSphere is invalid');
 
         var bs0 = new BoundingSphere();
-        bs0.expandByvec3(vec3.fromValues(1.0, 4.0, 0.0));
-        bs0.expandByvec3(vec3.fromValues(2.0, 3.0, 0.0));
-        bs0.expandByvec3(vec3.fromValues(3.0, 2.0, 0.0));
-        bs0.expandByvec3(vec3.fromValues(4.0, 1.0, 0.0));
+        bs0.expandByVec3(vec3.fromValues(1.0, 4.0, 0.0));
+        bs0.expandByVec3(vec3.fromValues(2.0, 3.0, 0.0));
+        bs0.expandByVec3(vec3.fromValues(3.0, 2.0, 0.0));
+        bs0.expandByVec3(vec3.fromValues(4.0, 1.0, 0.0));
 
         var cbs0 = vec3.fromValues(2.5, 2.5, 0);
         var rbs0 = 2.12132;
@@ -28,10 +28,10 @@ export default function() {
             mockup.checkNear(rbs0, bs0._radius, 0.0001);
         assert.isOk(centerisequalbs0, 'Expanding by vec3 -> bounding sphere test 1');
         var bs1 = new BoundingSphere();
-        bs1.expandByvec3(vec3.fromValues(-1.0, 0.0, 0.0));
-        bs1.expandByvec3(vec3.fromValues(2.0, -3.0, 2.0));
-        bs1.expandByvec3(vec3.fromValues(3.0, 3.0, 1.0));
-        bs1.expandByvec3(vec3.fromValues(5.0, 5.0, 0.0));
+        bs1.expandByVec3(vec3.fromValues(-1.0, 0.0, 0.0));
+        bs1.expandByVec3(vec3.fromValues(2.0, -3.0, 2.0));
+        bs1.expandByVec3(vec3.fromValues(3.0, 3.0, 1.0));
+        bs1.expandByVec3(vec3.fromValues(5.0, 5.0, 0.0));
 
         var cbs1 = vec3.fromValues(2.00438, 0.862774, 0.784302);
         var rbs1 = 5.16774;

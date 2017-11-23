@@ -1,3 +1,5 @@
+import notify from 'osg/notify';
+
 /**
  *  OrbitManipulator
  *  @class
@@ -71,7 +73,11 @@ SwitchManipulator.prototype = {
         }
     },
     getHomeBound: function(boundStrategy) {
-        return this.getCurrentManipulator().getHomeBound(boundStrategy);
+        notify.warn('Please use getHomeBoundingSphere instead');
+        return this.getHomeBoundingSphere(boundStrategy);
+    },
+    getHomeBoundingSphere: function(boundStrategy) {
+        return this.getCurrentManipulator().getHomeBoundingSphere(boundStrategy);
     },
     getHomeDistance: function(bs) {
         return this.getCurrentManipulator().getHomeDistance(bs);

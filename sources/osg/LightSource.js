@@ -43,7 +43,7 @@ utils.createPrototypeNode(
                     var position = this._light.getPosition();
 
                     if (position[3] !== 0.0) {
-                        bsphere.expandByvec3(vec3.scale(tmp, position, 1.0 / position[3]));
+                        bsphere.expandByVec3(vec3.scale(tmp, position, 1.0 / position[3]));
                     }
                 }
 
