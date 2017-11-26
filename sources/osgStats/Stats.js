@@ -3,16 +3,20 @@ import BlendFunc from 'osg/BlendFunc';
 import Camera from 'osg/Camera';
 import CullFace from 'osg/CullFace';
 import Depth from 'osg/Depth';
-import Node from 'osg/Node';
+import MatrixTransform from 'osg/MatrixTransform';
 import Program from 'osg/Program';
 import Shader from 'osg/Shader';
 import Transform from 'osg/Transform';
 import Texture from 'osg/Texture';
-import {mat4} from 'osg/glMatrix';
+import {mat4, vec2, vec3} from 'osg/glMatrix';
 import BufferStats from 'osgStats/BufferStats';
 import Counter from 'osgStats/Counter';
 import Graph from 'osgStats/Graph';
 import TextGenerator from 'osgStats/TextGenerator';
+import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
+import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
+import shape from 'osg/shape';
+import BoundingBox from 'osg/BoundingBox';
 
 // Stats usages:
 // url usable in Options
@@ -49,6 +53,13 @@ import TextGenerator from 'osgStats/TextGenerator';
 //     getViewerStats().setShowFilter(['cull', 'myGroup']) // will display only cull
 //     and myGroup groups
 //     getViewerStats().setFontSize(50)
+
+var getCanvasCoord = function(vec, e) {
+    vec[0] = e.offsetX === undefined ? e.layerX : e.offsetX;
+    vec[1] = e.offsetY === undefined ? e.layerY : e.offsetY;
+};
+
+var PICKING_NODEMASK = 0x8000;
 
 var createShader = function() {
     var vertexshader = [
@@ -142,6 +153,14 @@ var Stats = function(viewer, options) {
 
     this._showGraph = false;
 
+    // inputs data
+    this._backgroundPicking = shape.createTexturedQuadGeometry(0, 0, 0, 10, 0, 0, 0, 10, 0);
+    this._dragStop = vec2.create();
+    this._dragStart = vec2.create();
+    this._eventMouse = viewer._eventProxy.StandardMouseKeyboard;
+    this._eventTouch = viewer._eventProxy.Hammer;
+    this._startTransformation = mat4.create();
+
     this._init(options);
 };
 
@@ -234,11 +253,16 @@ utils.createPrototypeObject(Stats, {
         camera.setRenderOrder(Camera.POST_RENDER, 0);
         camera.setReferenceFrame(Transform.ABSOLUTE_RF);
         camera.setClearMask(0x0); // dont clear anything
-        var node = new Node();
+        var node = new MatrixTransform();
+        node.setName('StatsNode');
+        node.addChild(this._backgroundPicking);
+        this._nodeTransform = node;
+        this._backgroundPicking.setNodeMask(0);
+
         camera.addChild(node);
         camera.setName('osgStats');
+        camera.setViewport(this._viewport);
         this._node = camera;
-
         this._text = new TextGenerator();
 
         var fontSize = 12;
@@ -261,19 +285,114 @@ utils.createPrototypeObject(Stats, {
         this._text.getCanvas().then(
             function(canvas) {
                 this._dirtyCaptions = true;
-                node.addChild(this._bufferStats.getGeometry());
+                var geometry = this._bufferStats.getGeometry();
+                geometry.setName('StatsGeometry');
+                geometry.setNodeMask(~PICKING_NODEMASK);
+                node.addChild(geometry);
                 texture.setImage(canvas);
+                // invalidate the bounding box, we dont want it
+                // to be used
+                geometry.setBound(new BoundingBox());
             }.bind(this)
         );
 
         node.getOrCreateStateSet().setAttributeAndModes(createShader());
         node.getOrCreateStateSet().setAttributeAndModes(new CullFace(CullFace.DISABLE));
-        node
-            .getOrCreateStateSet()
-            .setAttributeAndModes(new BlendFunc('SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA'));
+        var blendFunc = new BlendFunc('SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA');
+        node.getOrCreateStateSet().setAttributeAndModes(blendFunc);
         node.getOrCreateStateSet().setAttributeAndModes(new Depth(Depth.DISABLE));
         node.getOrCreateStateSet().setTextureAttributeAndModes(0, texture);
+
+        var canvas = this._viewer.getGraphicContext().canvas;
+
+        this._canvas = canvas;
+
+        canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+        canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+        canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+        canvas.addEventListener('mouseout', this.onMouseUp.bind(this));
+
+        canvas.addEventListener('touchmove', this.onMouseMove.bind(this));
+        canvas.addEventListener('touchstart', this.onMouseDown.bind(this));
+        canvas.addEventListener('touchend', this.onMouseUp.bind(this));
+        canvas.addEventListener('touchcancel', this.onMouseUp.bind(this));
     },
+    onMouseDown: function(e) {
+        var hits = this.computeNearestIntersection(e);
+        this._onStats = !!hits.length;
+
+        e.preventDefault();
+        this._eventMouse.setEnable(false);
+        this._eventTouch.setEnable(false);
+        mat4.copy(this._startTransformation, this._nodeTransform.getMatrix());
+        getCanvasCoord(this._dragStart, e);
+        this._dragStop[1] = this._dragStart[1];
+    },
+    onMouseMove: (function() {
+        return function(e) {
+            if (!this._onStats) return;
+
+            getCanvasCoord(this._dragStop, e);
+            var dy = this._dragStop[1] - this._dragStart[1];
+            mat4.translate(
+                this._nodeTransform.getMatrix(),
+                this._startTransformation,
+                vec3.fromValues(0, dy, 0)
+            );
+        };
+    })(),
+    onMouseUp: function(e) {
+        this._onStats = false;
+        this._eventMouse.setEnable(true);
+        this._eventTouch.setEnable(true);
+        this._eventMouse.mouseup(e);
+    },
+
+    computeNearestIntersection: (function() {
+        var coord = vec2.create();
+        var lsi = new LineSegmentIntersector();
+        var origIntersect = vec3.create();
+        var dstIntersect = vec3.create();
+        var iv = new IntersectionVisitor();
+        iv.setIntersector(lsi);
+        return function(e) {
+            getCanvasCoord(coord, e);
+
+            // canvas to webgl coord
+            var viewer = this._viewer;
+            var canvas = this._canvas;
+            var x = coord[0] * (viewer._canvasWidth / canvas.clientWidth);
+            var y = (canvas.clientHeight - coord[1]) * (viewer._canvasHeight / canvas.clientHeight);
+
+            lsi.reset();
+            lsi.set(vec3.set(origIntersect, x, y, 0.0), vec3.set(dstIntersect, x, y, 1.0));
+            iv.reset();
+
+            this._backgroundPicking.setNodeMask(PICKING_NODEMASK);
+            iv.setTraversalMask(PICKING_NODEMASK);
+            this._node.accept(iv);
+            var hits = lsi.getIntersections();
+            this._backgroundPicking.setNodeMask(0x0);
+
+            return hits;
+        };
+    })(),
+    _updateBackgroundPicking: function(x, y, w, h) {
+        var vertexes = this._backgroundPicking.getVertexAttributeList().Vertex.getElements();
+        vertexes[0] = x;
+        vertexes[1] = y + h;
+
+        vertexes[3] = x;
+        vertexes[4] = y;
+
+        vertexes[6] = x + w;
+        vertexes[7] = y;
+
+        vertexes[9] = x + w;
+        vertexes[10] = y + h;
+        this._backgroundPicking.dirtyBound();
+    },
+
     _generateCaptions: function() {
         var initialX = 0;
         var characterHeight = this._text.getCharacterHeight();
@@ -284,6 +403,13 @@ utils.createPrototypeObject(Stats, {
 
         // generate background
         this._bufferStats.generateBackground(
+            0,
+            this._viewport.height() - this._backgroundHeight,
+            this._backgroundWidth,
+            this._backgroundHeight
+        );
+
+        this._updateBackgroundPicking(
             0,
             this._viewport.height() - this._backgroundHeight,
             this._backgroundWidth,
@@ -317,7 +443,7 @@ utils.createPrototypeObject(Stats, {
                 var text = counter._caption;
                 // could need to split the label on multi line
                 var nbSplits = text.length / this._maxCaptionTextLength;
-                for ( var c = 0; c < nbSplits; c++) {
+                for (var c = 0; c < nbSplits; c++) {
                     var start = c * this._maxCaptionTextLength;
                     var splitText = text.substr(start, this._maxCaptionTextLength);
                     textWidth = this._bufferStats.generateText(
@@ -380,7 +506,6 @@ utils.createPrototypeObject(Stats, {
                     color
                 );
                 valuesMaxWidth = Math.max(valueWidth, valuesMaxWidth);
-
 
                 if (this._showGraph && counter._graph) {
                     if (!this._historyGraph[counterName]) {
