@@ -1,5 +1,7 @@
-import { quat } from 'osg/glMatrix';
-import { vec3 } from 'osg/glMatrix';
+import Controller from 'osgGA/Controller';
+import utils from 'osg/utils';
+import {quat} from 'osg/glMatrix';
+import {vec3} from 'osg/glMatrix';
 
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
@@ -50,7 +52,7 @@ var makeRotateFromEuler = function(q, x, y, z, order) {
 };
 
 var FirstPersonManipulatorDeviceOrientationController = function(manipulator) {
-    this._manipulator = manipulator;
+    Controller.call(this, manipulator);
     this.init();
 };
 
@@ -106,21 +108,24 @@ FirstPersonManipulatorDeviceOrientationController.computeQuaternion = (function(
     };
 })();
 
-FirstPersonManipulatorDeviceOrientationController.prototype = {
-    init: function() {
-        this._stepFactor = 1.0; // meaning radius*stepFactor to move
-        this._quat = quat.create();
-        this._pos = vec3.create();
-    },
+utils.createPrototypeObject(
+    FirstPersonManipulatorDeviceOrientationController,
+    utils.objectInherit(Controller.prototype, {
+        init: function() {
+            this._stepFactor = 1.0; // meaning radius*stepFactor to move
+            this._quat = quat.create();
+            this._pos = vec3.create();
+        },
 
-    update: function(deviceOrientation, screenOrientation) {
-        FirstPersonManipulatorDeviceOrientationController.computeQuaternion(
-            this._quat,
-            deviceOrientation,
-            screenOrientation
-        );
-        this._manipulator.setPoseVR(this._quat, this._pos);
-    }
-};
+        update: function(deviceOrientation, screenOrientation) {
+            FirstPersonManipulatorDeviceOrientationController.computeQuaternion(
+                this._quat,
+                deviceOrientation,
+                screenOrientation
+            );
+            this._manipulator.setPoseVR(this._quat, this._pos);
+        }
+    })
+);
 
 export default FirstPersonManipulatorDeviceOrientationController;

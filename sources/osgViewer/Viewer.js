@@ -597,6 +597,15 @@ utils.createPrototypeObject(
             View.prototype.setManipulator.call(this, manipulator);
         },
 
+        setEnableManipulator: function(bool) {
+            if (!this._manipulator) return;
+
+            var controllerMap = this._manipulator.getControllerList();
+            for (var name in controllerMap) {
+                controllerMap[name].setEnable(bool);
+            }
+        },
+
         removeEventProxy: function() {
             var list = this._eventProxy;
             for (var key in list) {

@@ -1,4 +1,4 @@
-import { vec2 } from 'osg/glMatrix';
+import {vec2} from 'osg/glMatrix';
 
 var StandardMouseKeyboard = function(viewer) {
     this._enable = true;
@@ -88,15 +88,17 @@ StandardMouseKeyboard.prototype = {
     },
 
     isValid: function() {
-        if (
-            this._enable &&
-            this._viewer.getManipulator() &&
-            this._viewer.getManipulator().getControllerList()[this._type]
-        ) {
-            return true;
-        }
-        return false;
+        if (!this._enable) return false;
+
+        var manipulator = this._viewer.getManipulator();
+        if (!manipulator) return false;
+
+        var controller = manipulator.getControllerList()[this._type];
+        if (!controller || !controller.isEnabled()) return false;
+
+        return true;
     },
+
     getManipulatorController: function() {
         return this._viewer.getManipulator().getControllerList()[this._type];
     },
