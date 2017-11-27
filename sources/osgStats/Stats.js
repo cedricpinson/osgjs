@@ -157,8 +157,6 @@ var Stats = function(viewer, options) {
     this._backgroundPicking = shape.createTexturedQuadGeometry(0, 0, 0, 10, 0, 0, 0, 10, 0);
     this._dragStop = vec2.create();
     this._dragStart = vec2.create();
-    this._eventMouse = viewer._eventProxy.StandardMouseKeyboard;
-    this._eventTouch = viewer._eventProxy.Hammer;
     this._startTransformation = mat4.create();
 
     this._init(options);
@@ -320,10 +318,11 @@ utils.createPrototypeObject(Stats, {
     onMouseDown: function(e) {
         var hits = this.computeNearestIntersection(e);
         this._onStats = !!hits.length;
+        if (!this._onStats) return;
+
+        this._viewer.setEnableManipulator(false);
 
         e.preventDefault();
-        this._eventMouse.setEnable(false);
-        this._eventTouch.setEnable(false);
         mat4.copy(this._startTransformation, this._nodeTransform.getMatrix());
         getCanvasCoord(this._dragStart, e);
         this._dragStop[1] = this._dragStart[1];
@@ -337,17 +336,14 @@ utils.createPrototypeObject(Stats, {
             mat4.translate(
                 this._nodeTransform.getMatrix(),
                 this._startTransformation,
-                vec3.fromValues(0, dy, 0)
+                vec3.fromValues(0, -dy, 0)
             );
         };
     })(),
-    onMouseUp: function(e) {
+    onMouseUp: function() {
+        this._viewer.setEnableManipulator(true);
         this._onStats = false;
-        this._eventMouse.setEnable(true);
-        this._eventTouch.setEnable(true);
-        this._eventMouse.mouseup(e);
     },
-
     computeNearestIntersection: (function() {
         var coord = vec2.create();
         var lsi = new LineSegmentIntersector();

@@ -159,10 +159,6 @@ var NodeGizmo = function(viewer) {
     this._iv = new IntersectionVisitor();
     this._iv.setIntersector(this._lsi);
 
-    // disable mouse camera event when interacting with gizmo
-    this._eventMouse = viewer._eventProxy.StandardMouseKeyboard;
-    this._enableMouseBack = false;
-
     this.init();
 };
 
@@ -833,8 +829,7 @@ utils.createPrototypeNode(
 
             e.preventDefault();
 
-            this._enableMouseBack = this._eventMouse.getEnable();
-            this._eventMouse.setEnable(false);
+            this._viewer.setEnableManipulator(false);
 
             this.saveEditMatrices();
             var nm = this._hoverNode.getParents()[0].getNodeMask();
@@ -972,12 +967,7 @@ utils.createPrototypeNode(
         },
 
         onMouseUp: function(e) {
-            if (this._enableMouseBack) {
-                this._enableMouseBack = false;
-                this._eventMouse.setEnable(true);
-                this._eventMouse.mouseup(e);
-            }
-
+            this._viewer.setEnableManipulator(true);
             if (this._debugNode) this._debugNode.setNodeMask(0x0);
 
             var v = vec2.create();
