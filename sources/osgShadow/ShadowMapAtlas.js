@@ -378,8 +378,33 @@ utils.createPrototypeObject(
             this._cameraClear.accept(cullVisitor);
 
             for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
-                this._shadowMaps[i].cullShadowCasting(cullVisitor, bbox);
+                var shadowMap = this._shadowMaps[i];
+                if (shadowMap.isEnabled() || !shadowMap.isFilledOnce()) {
+                    shadowMap.cullShadowCasting(cullVisitor, bbox);
+                }
             }
+        },
+
+        isEnabled: function() {
+            // need at least one shadow to be enabled
+            // so that shadowedScene will continue shadowCasting
+            for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
+                if (this._shadowMaps[i].isEnabled()) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        isFilledOnce: function() {
+            // need at least one shadow not Filled
+            // so that shadowedScene will continue shadowCasting
+            for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
+                if (!this._shadowMaps[i].isFilledOnce()) {
+                    return false;
+                }
+            }
+            return true;
         },
 
         removeShadowMap: function(shadowMap) {
