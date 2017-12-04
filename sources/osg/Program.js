@@ -348,18 +348,17 @@ utils.createPrototypeStateAttribute(
 
                 this._bindProgramToSpector();
 
+                this._uniformsCache = {};
+                this._attributesCache = {};
+
                 if (!compileClean) {
                     // Any error, Any
                     // Pink must die.
                     this._activateFailSafe(gl);
+                } else {
+                    this.cacheAttributeList(gl, window.Object.keys(this._attributeMap));
+                    this.cacheUniformList(gl, window.Object.keys(this._uniformMap));
                 }
-
-                this._uniformsCache = {};
-                this._attributesCache = {};
-
-                this.cacheAttributeList(gl, window.Object.keys(this._attributeMap));
-                this.cacheUniformList(gl, window.Object.keys(this._uniformMap));
-
                 return compileClean;
             },
 
