@@ -400,10 +400,10 @@ utils.createPrototypeObject(
         // each time a texture is sampled, the usage is decremented
         // when is reaches 0 it means that the texture won't be used anymore so it can be reused
         // besides the usage number, the divisor, internal type and the filtering of the texture are used to make sure it can safely be reused
-        _hasFreeTexture: function(name, filter, out) {
+        _hasFreeTexture: function(passName, filter, out) {
             // passName that directly matches a texture name
-            if (name === out.name && this._texturePool[name]) {
-                return name;
+            if (passName === out.name && this._texturePool[passName]) {
+                return passName;
             }
 
             if (out.immuable) {
@@ -413,58 +413,67 @@ utils.createPrototypeObject(
             for (var key in this._texturePool) {
                 var poolTexture = this._texturePool[key];
 
-                if (
-                    poolTexture.reusable &&
-                    poolTexture.usage <= 0 &&
-                    poolTexture.texture.divisor === out.divisor &&
-                    poolTexture.texture.getInternalFormatType() === out.type
-                ) {
-                    if (poolTexture.usage === -1) {
-                        if (poolTexture.texture.getMinFilter() !== filter) {
-                            poolTexture.texture.setMinFilter(filter);
-                            poolTexture.texture.setMagFilter(filter);
-                        }
+                // not reusable (could be used after postprocess)
+                if (!poolTexture.reusable) continue;
 
-                        return key;
-                    } else {
-                        if (poolTexture.texture.getMinFilter() === filter) {
-                            return key;
-                        }
+                // still required for a future postprocess pass
+                if (poolTexture.usage > 0) continue;
+
+                // different resolution
+                if (poolTexture.texture.divisor !== out.divisor) continue;
+
+                // different type (/!\ important, we could change type runtime, that way we cause lot of memory)
+                if (poolTexture.texture.getInternalFormatType() !== out.type) continue;
+
+                // first usage
+                if (poolTexture.usage === -1) {
+                    if (poolTexture.texture.getMinFilter() !== filter) {
+                        poolTexture.texture.setMinFilter(filter);
+                        poolTexture.texture.setMagFilter(filter);
                     }
+
+                    return key;
+                }
+
+                // reuse
+                if (poolTexture.texture.getMinFilter() === filter) {
+                    return key;
                 }
             }
 
-            return '';
+            return;
         },
 
-        _setOrCreateTextureKey: function(usage, name, out) {
-            var isLinear = this._textures[name].filter === 'linear';
+        _setOrCreateTextureKey: function(usage, passName, out) {
+            var isLinear = this._textures[passName].filter === 'linear';
             var filterEnum = isLinear ? Texture.LINEAR : Texture.NEAREST;
 
-            var poolKey = this._hasFreeTexture(name, filterEnum, out);
-            if (poolKey === '') {
-                if (out.immuable) {
-                    poolKey = name;
-                } else {
-                    poolKey = 'key' + this._currentPoolIndex++;
-                }
-
-                this._texturePool[poolKey] = {
-                    usage: usage,
-                    texture: this._createTexture(name, out.divisor, out.type, filterEnum),
-                    immuable: out.immuable,
-                    reusable: out.reusable
-                };
-
-                if (out.divisor === -1) {
-                    this._texturePool[poolKey].width = out.width;
-                    this._texturePool[poolKey].height = out.height;
-                }
-            } else {
+            var poolKey = this._hasFreeTexture(passName, filterEnum, out);
+            if (poolKey) {
                 this._texturePool[poolKey].usage = usage;
+                this._textures[passName].key = poolKey;
+                return;
             }
 
-            this._textures[name].key = poolKey;
+            if (out.immuable) {
+                poolKey = passName;
+            } else {
+                poolKey = 'key' + this._currentPoolIndex++;
+            }
+
+            this._texturePool[poolKey] = {
+                usage: usage,
+                texture: this._createTexture(passName, out.divisor, out.type, filterEnum),
+                immuable: out.immuable,
+                reusable: out.reusable
+            };
+
+            if (out.divisor === -1) {
+                this._texturePool[poolKey].width = out.width;
+                this._texturePool[poolKey].height = out.height;
+            }
+
+            this._textures[passName].key = poolKey;
         },
 
         _addStateSet: function(pass, stateSet) {
@@ -537,97 +546,102 @@ utils.createPrototypeObject(
             }
         },
 
-        build: function(userPasses) {
-            this._usages = {};
-            var usages = this._usages;
-            var passes = this._processUserPasses(userPasses);
+        _buildPass: function(index, passes) {
+            var pass = passes[index];
+            var passName = pass.out.name;
 
-            this._checkInferredParameters();
+            this._setOrCreateTextureKey(this._usages[passName], passName, pass.out);
 
-            for (var i = 0; i < passes.length; i++) {
-                var pass = passes[i];
-                var passName = pass.out.name;
+            var feedbackName = pass.out.name + 'FeedbackTexture';
 
-                this._setOrCreateTextureKey(usages[passName], passName, pass.out);
+            if (pass.feedbackLoop) {
+                this._setOrCreateTextureKey(this._usages[feedbackName], feedbackName, pass.out);
+            }
 
-                var feedbackName = pass.out.name + 'FeedbackTexture';
+            // internal pass (user texture)
+            if (!pass.funcs.length) {
+                var key = this._textures[passName].key;
+                this._userTextures[passName] = this._texturePool[key].texture;
+                return;
+            }
 
-                if (pass.feedbackLoop) {
-                    this._setOrCreateTextureKey(usages[feedbackName], feedbackName, pass.out);
+            var stateSet = new StateSet();
+            this._addStateSet(pass, stateSet);
+
+            var i;
+            for (i = 0; i < pass.uniforms.length; i++) {
+                stateSet.addUniform(pass.uniforms[i]);
+            }
+
+            var uniforms = [];
+
+            var previousTextureUnit = undefined;
+
+            for (i = 0; i < pass.textures.length; i++) {
+                var texInfo = pass.textures[i];
+
+                var isFeedback = texInfo.name === feedbackName;
+                if (!isFeedback && !this._externalTextures[texInfo.name]) {
+                    var poolKey = this._textures[texInfo.name].key;
+                    this._texturePool[poolKey].usage--;
                 }
 
-                // internal pass (user texture)
-                if (!pass.funcs.length) {
-                    var key = this._textures[passName].key;
-                    this._userTextures[passName] = this._texturePool[key].texture;
+                var unit = this._addTextureToStateSet(texInfo, stateSet, i, uniforms, isFeedback);
+                if (unit !== undefined) {
+                    previousTextureUnit = unit;
+                }
+
+                if (this._feedbackData[texInfo.name] === undefined) {
                     continue;
                 }
 
-                var stateSet = new StateSet();
-                this._addStateSet(pass, stateSet);
+                var nextPass = {
+                    stateSet: stateSet,
+                    textureUnit: i
+                };
 
-                var j;
-                for (j = 0; j < pass.uniforms.length; j++) {
-                    stateSet.addUniform(pass.uniforms[j]);
-                }
-
-                var uniforms = [];
-
-                var previousTextureUnit = undefined;
-
-                for (j = 0; j < pass.textures.length; j++) {
-                    var texInfo = pass.textures[j];
-
-                    var isFeedback = texInfo.name === feedbackName;
-                    if (!isFeedback && !this._externalTextures[texInfo.name]) {
-                        var poolKey = this._textures[texInfo.name].key;
-                        this._texturePool[poolKey].usage--;
-                    }
-
-                    var unit = this._addTextureToStateSet(
-                        texInfo,
-                        stateSet,
-                        j,
-                        uniforms,
-                        isFeedback
-                    );
-                    if (unit !== undefined) {
-                        previousTextureUnit = unit;
-                    }
-
-                    if (this._feedbackData[texInfo.name] === undefined) {
-                        continue;
-                    }
-
-                    var nextPass = {
-                        stateSet: stateSet,
-                        textureUnit: j
-                    };
-
-                    this._feedbackData[texInfo.name].nextPasses.push(nextPass);
-                }
-
-                var outputTexture = undefined;
-                if (i !== passes.length - 1) {
-                    var outputKey = this._textures[passName].key;
-                    outputTexture = this._texturePool[outputKey].texture;
-                }
-
-                this._addTextureUniforms('TextureOutput', outputTexture, stateSet, uniforms);
-
-                stateSet.setAttributeAndModes(this._createProgram(pass, uniforms));
-
-                if (pass.feedbackLoop) {
-                    this._feedbackData[passName] = this._createFeedbackLoopCameras(
-                        passName,
-                        stateSet,
-                        outputTexture,
-                        previousTextureUnit
-                    );
-                } else {
-                    this.addChild(this._createCamera(passName, stateSet, outputTexture));
-                }
+                this._feedbackData[texInfo.name].nextPasses.push(nextPass);
             }
+
+            var outputTexture = undefined;
+            if (index !== passes.length - 1) {
+                var outputKey = this._textures[passName].key;
+                outputTexture = this._texturePool[outputKey].texture;
+            }
+
+            this._addTextureUniforms('TextureOutput', outputTexture, stateSet, uniforms);
+
+            stateSet.setAttributeAndModes(this._createProgram(pass, uniforms));
+
+            if (pass.feedbackLoop) {
+                this._feedbackData[passName] = this._createFeedbackLoopCameras(
+                    passName,
+                    stateSet,
+                    outputTexture,
+                    previousTextureUnit
+                );
+            } else {
+                this.addChild(this._createCamera(passName, stateSet, outputTexture));
+            }
+        },
+
+        _buildGraphFromPasses: function(passes) {
+            for (var i = 0; i < passes.length; i++) {
+                this._buildPass(i, passes);
+            }
+        },
+
+        build: function(userPasses) {
+            this._usages = {};
+
+            // process array of passes
+            var passes = this._processUserPasses(userPasses);
+
+            // fallback on inferred information for srgb/rgbm/filter
+            this._checkInferredParameters(passes);
+
+            // create textures, cameras and shader
+            this._buildGraphFromPasses(passes);
 
             this.resize(this._screenWidth, this._screenHeight);
         },
