@@ -37,10 +37,15 @@ HammerController.prototype = {
     },
 
     isValid: function() {
-        if (this._enable && this.getManipulatorController()) {
-            return true;
-        }
-        return false;
+        if (!this._enable) return false;
+
+        var manipulator = this._viewer.getManipulator();
+        if (!manipulator) return false;
+
+        var controller = manipulator.getControllerList()[this._type];
+        if (!controller || !controller.isEnabled()) return false;
+
+        return true;
     },
 
     getManipulatorController: function() {

@@ -245,7 +245,7 @@ utils.createPrototypeObject(
                 return;
             }
 
-            this._stats = new Stats(this.getCamera().getViewport(), options);
+            this._stats = new Stats(this, options);
             this._stats.addConfig(defaultStats);
             this._stats.addConfig(glStats);
             this._stats.addConfig(browserStats);
@@ -595,6 +595,15 @@ utils.createPrototypeObject(
             if (!manipulator.getCamera()) manipulator.setCamera(this.getCamera());
 
             View.prototype.setManipulator.call(this, manipulator);
+        },
+
+        setEnableManipulator: function(bool) {
+            if (!this._manipulator) return;
+
+            var controllerMap = this._manipulator.getControllerList();
+            for (var name in controllerMap) {
+                controllerMap[name].setEnable(bool);
+            }
         },
 
         removeEventProxy: function() {

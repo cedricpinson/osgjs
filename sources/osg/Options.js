@@ -6,10 +6,13 @@ var OptionsDefault = {
     //'overrideDevicePixelRatio': 1, // if specified override the device pixel ratio
     fullscreen: true,
     enableFrustumCulling: false,
-    stats: false, // display canvas with stats for the viewer
     scrollwheel: true,
     webgl2: false,
-    powerPreference: 'high-performance'
+    powerPreference: 'high-performance',
+    stats: false // display stats, check in osgStats/Stats for all url options
+    // statsFilter=cull;myGroup;webgl filters groups to display
+    // statsFontSize=12 change the size of the fonts default 12
+    // statsShowGraph=1 display graph
 };
 
 var Options = function() {

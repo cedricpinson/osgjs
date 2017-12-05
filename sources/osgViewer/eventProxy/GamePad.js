@@ -24,8 +24,8 @@ GamePad.prototype = {
         var manipulator = this._viewer.getManipulator();
         if (!manipulator) return false;
 
-        var constrollerList = manipulator.getControllerList();
-        if (!constrollerList[this._type]) return false;
+        var controller = manipulator.getControllerList()[this._type];
+        if (!controller || !controller.isEnabled()) return false;
 
         return true;
     },
