@@ -401,8 +401,13 @@ utils.createPrototypeObject(
         // when is reaches 0 it means that the texture won't be used anymore so it can be reused
         // besides the usage number, the divisor, internal type and the filtering of the texture are used to make sure it can safely be reused
         _hasFreeTexture: function(name, filter, out) {
+            // passName that directly matches a texture name
+            if (name === out.name && this._texturePool[name]) {
+                return name;
+            }
+
             if (out.immuable) {
-                return this._texturePool[name] !== undefined ? name : '';
+                return;
             }
 
             for (var key in this._texturePool) {
@@ -805,8 +810,8 @@ utils.createPrototypeObject(
                 pass.out.divisor = pass.out.divisor || 1.0;
 
                 pass.out.type = pass.out.type || Texture.UNSIGNED_BYTE;
-                pass.out.immuable = pass.out.immuable || false;
-                pass.out.reusable = pass.out.reusable || true;
+                if (pass.out.immuable === undefined) pass.out.immuable = false;
+                if (pass.out.reusable === undefined) pass.out.reusable = true;
 
                 if (pass.feedbackLoop || pass.out.divisor === -1) {
                     pass.out.immuable = true;
