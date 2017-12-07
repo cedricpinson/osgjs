@@ -24,14 +24,14 @@ vec3 randJitter(const in vec3 p2) {
 // simulates linear fetch like texture2d shadow
 float texture2DShadowLerp(
     const in sampler2D depths,
-    const in vec4 size,
+    const in vec2 size,
     const in vec2 uv,
     const in float compare,
     const in vec4 clampDimension
     OPT_ARG_outDistance
     OPT_ARG_jitter){
 
-    vec2 centroidCoord = uv * size.xy;
+    vec2 centroidCoord = uv / size.xy;
 
 #ifdef _JITTER_OFFSET
     if (jitter > 0.0){
@@ -41,14 +41,14 @@ float texture2DShadowLerp(
 
     centroidCoord = centroidCoord + 0.5;
     vec2 f = fract(centroidCoord);
-    vec2 centroidUV = floor(centroidCoord) * size.zw;
+    vec2 centroidUV = floor(centroidCoord) * size.xy;
 
     vec4 fetches;
     const vec2 shift  = vec2(1.0, 0.0);
-    fetches.x = texture2DCompare(depths, centroidUV + size.zw * shift.yy, compare, clampDimension);
-    fetches.y = texture2DCompare(depths, centroidUV + size.zw * shift.yx, compare, clampDimension);
-    fetches.z = texture2DCompare(depths, centroidUV + size.zw * shift.xy, compare, clampDimension);
-    fetches.w = texture2DCompare(depths, centroidUV + size.zw * shift.xx, compare, clampDimension);
+    fetches.x = texture2DCompare(depths, centroidUV + size.xy * shift.yy, compare, clampDimension);
+    fetches.y = texture2DCompare(depths, centroidUV + size.xy * shift.yx, compare, clampDimension);
+    fetches.z = texture2DCompare(depths, centroidUV + size.xy * shift.xy, compare, clampDimension);
+    fetches.w = texture2DCompare(depths, centroidUV + size.xy * shift.xx, compare, clampDimension);
 
 
 

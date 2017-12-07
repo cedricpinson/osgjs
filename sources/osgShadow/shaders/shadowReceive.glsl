@@ -32,11 +32,18 @@
 float shadowReceive(const in bool lighted,
                     const in vec3 normalWorld,
                     const in vec3 vertexWorld,
+
                     const in sampler2D shadowTexture,
-                    const in vec4 shadowSize,
-                    const in mat4 shadowProjectionMatrix,
-                    const in mat4 shadowViewMatrix,
-                    const in vec4 shadowDepthRange,
+
+                    const in vec2 shadowSize,
+                    const in vec3 shadowProjection,
+
+                    const in vec4 shadowViewRight,
+                    const in vec4 shadowViewUp,
+                    const in vec4 shadowViewLook,
+
+
+                    const in vec2 shadowDepthRange,
                     const in float shadowBias
                     OPT_ARG_atlasSize
                     OPT_ARG_normalBias
@@ -66,29 +73,104 @@ float shadowReceive(const in bool lighted,
     vec4 shadowVertexProjected;
     vec2 shadowUV;
     float N_Dot_L;
+    float invDepthRange;
 
     if (!earlyOut) {
 
-        shadowVertexEye =  shadowViewMatrix *  vec4(vertexWorld, 1.0);
+        shadowVertexEye.x = dot(shadowViewRight.xyz, vertexWorld.xyz) + shadowViewRight.w;
+        shadowVertexEye.y = dot(shadowViewUp.xyz, vertexWorld.xyz) + shadowViewUp.w;
+        shadowVertexEye.z = dot(shadowViewLook.xyz, vertexWorld.xyz) + shadowViewLook.w;
+        shadowVertexEye.w = 1.0;
 
-        vec3 shadowLightDir = vec3(0.0, 0.0, 1.0); // in shadow view light is camera
-        vec4 normalFront = vec4(normalWorld, 0.0);
-        shadowNormalEye =  shadowViewMatrix * normalFront;
-        N_Dot_L = dot(shadowNormalEye.xyz, shadowLightDir);
+
+        // derivated, only need z.
+        //vec3 shadowLightDir = vec3(0.0, 0.0, 1.0); // in shadow view light is camera
+        //shadowNormalEye =  shadowViewMatrix * normalFront;
+        //shadowNormalEye.x = dot(shadowViewRight.xyz, normalWorld.xyz);
+        //shadowNormalEye.y = dot(shadowViewUp.xyz, normalWorld.xyz);
+        shadowNormalEye.z = dot(shadowViewLook.xyz, normalWorld.xyz);
+        //shadowNormalEye.w = 0.0;
+
+        //N_Dot_L = dot(shadowNormalEye.xyz, shadowLightDir);
+        N_Dot_L = shadowNormalEye.z;
 
         if (!earlyOut) {
 
+            invDepthRange = 1.0 / (shadowDepthRange.y - shadowDepthRange.x);
+
 #ifdef _NORMAL_OFFSET
+
             // http://www.dissidentlogic.com/old/images/NormalOffsetShadows/GDC_Poster_NormalOffset.png
             float normalOffsetScale = clamp(1.0  - N_Dot_L, 0.0 , 1.0);
-            normalOffsetScale *= abs((shadowVertexEye.z - shadowDepthRange.x) * shadowDepthRange.w);
-            normalOffsetScale *= max(shadowProjectionMatrix[0][0], shadowProjectionMatrix[1][1]);
-            normalOffsetScale *= normalBias * shadowDepthRange.w;
-            shadowNormalEye =  shadowViewMatrix *  (normalFront * normalOffsetScale);
-            shadowVertexProjected = shadowProjectionMatrix * (shadowVertexEye + shadowNormalEye);
+            normalOffsetScale *= abs((shadowVertexEye.z - shadowDepthRange.x) * invDepthRange);
+            normalOffsetScale *= max(shadowProjection.x, shadowProjection.y);
+            normalOffsetScale *= normalBias * invDepthRange;
+
+
+            vec4 shadowNormalShift =  vec4(normalWorld, 0.0) * normalOffsetScale;
+            shadowNormalEye.x = dot(shadowViewRight.xyz, shadowNormalShift.xyz);
+            shadowNormalEye.y = dot(shadowViewUp.xyz, shadowNormalShift.xyz);
+            shadowNormalEye.z = dot(shadowViewLook.xyz, shadowNormalShift.xyz);
+            shadowNormalEye.w = 0.0;
+
+            vec4 viewShadow = shadowVertexEye + shadowNormalEye;
 #else
-            shadowVertexProjected = shadowProjectionMatrix * shadowVertexEye;
+            vec4 viewShadow = shadowVertexEye;
 #endif
+
+
+            if (shadowProjection.z == 0.0){
+
+               // X, 0, 0, 0,
+               // 0, Y, 0, 0,
+               // 0, 0, -1, -1,
+               // 0, 0, -2.0*znear, 0
+               // mat4 shadowProjectionMatrix;
+               // shadowProjectionMatrix[0] = vec4(shadowProjection.x, 0.0, 0.0, 0.0 );
+               // shadowProjectionMatrix[1] = vec4(0.0, shadowProjection.y, 0.0, 0.0 );
+               // shadowProjectionMatrix[2] = vec4(0.0, 0.0, -1.0, -1.0 );
+               // shadowProjectionMatrix[3] = vec4(0.0, 0.0, -2.0*shadowDepthRange.x, 0.0 );
+               // shadowVertexProjected = shadowProjectionMatrix * shadowVertexEye;
+
+               // derivated optimisation
+               shadowVertexProjected.x = shadowProjection.x * viewShadow.x;
+               shadowVertexProjected.y = shadowProjection.y * viewShadow.y;
+
+               shadowVertexProjected.z = - viewShadow.z - (2.0 * shadowDepthRange.x * viewShadow.w);
+               shadowVertexProjected.w = - viewShadow.z;
+
+            }
+            else{
+                // lr = 1/(left-right);
+                // bt = 1/(bottom-top);
+                // nf = 1/(near-far);
+                // -2*lr,           0,               0,              0,
+                // 0,               -2*bt,           0,              0,
+                // 0,               0,               2*nf,           0.0,
+                // (left+right)*lr, (top+bottom)*bt, (far+near)*nf), 1
+                // here left = -right && top = -bottom
+                // float lr = 1.0 / (-2.0 * shadowProjection.x);
+                // float bt = 1.0 / (-2.0 * shadowProjection.y);
+                // float nf = 1.0 / (shadowDepthRange.x - shadowDepthRange.y);
+                float nfNeg = 1.0 / (shadowDepthRange.x - shadowDepthRange.y);
+                float nfPos = (shadowDepthRange.x + shadowDepthRange.y)*nfNeg;
+
+                //mat4 shadowProjectionMatrix;
+                //shadowProjectionMatrix[0] = vec4(1.0 / shadowProjection.x, 0.0,     0.0,  0.0 );
+                //shadowProjectionMatrix[1] = vec4(0.0,     1.0 / shadowProjection.y, 0.0,  0.0 );
+                //shadowProjectionMatrix[2] = vec4(0.0,     0.0, 2.0*nfNeg, 0.0 );
+                //shadowProjectionMatrix[3] = vec4(0.0,     0.0, nfPos, 1.0 );
+                //shadowdertexProjected = shadowProjectionMatrix * shadowVertexEye;
+
+                // derivated optimisation
+                shadowVertexProjected.x = viewShadow.x / shadowProjection.x;
+                shadowVertexProjected.y = viewShadow.y / shadowProjection.y;
+
+                shadowVertexProjected.z = 2.0 * nfNeg* viewShadow.z + nfPos * viewShadow.w;
+                shadowVertexProjected.w = viewShadow.w;
+
+            }
+
 
             if (shadowVertexProjected.w < 0.0) {
                 earlyOut = true; // notably behind camera
@@ -107,7 +189,7 @@ float shadowReceive(const in bool lighted,
 
             // most precision near 0, make sure we are near 0 and in [0,1]
             shadowReceiverZ = - shadowVertexEye.z;
-            shadowReceiverZ =  (shadowReceiverZ - shadowDepthRange.x) * shadowDepthRange.w;
+            shadowReceiverZ =  (shadowReceiverZ - shadowDepthRange.x) * invDepthRange;
 
             if(shadowReceiverZ < 0.0) {
                 earlyOut = true; // notably behind camera
@@ -131,7 +213,7 @@ float shadowReceive(const in bool lighted,
     biasUV *= 1.0 / ((texCoordDX.x * texCoordDY.y) - (texCoordDX.y * texCoordDY.x));
 
     // Static depth biasing to make up for incorrect fractional sampling on the shadow map grid
-    float fractionalSamplingError = dot(vec2(1.0, 1.0) * shadowSize.zw, abs(biasUV));
+    float fractionalSamplingError = dot(vec2(1.0, 1.0) * shadowSize.xy, abs(biasUV));
     float receiverDepthBias = min(fractionalSamplingError, 0.01);
 
     shadowBiasPCF.x = biasUV.x;
@@ -140,8 +222,8 @@ float shadowReceive(const in bool lighted,
     shadowReceiverZ += receiverDepthBias;
 
 #else // _RECEIVERPLANEDEPTHBIAS
-    shadowBiasPCF.x = clamp(dFdx(shadowReceiverZ)* shadowSize.z, -1.0, 1.0 );
-    shadowBiasPCF.y = clamp(dFdy(shadowReceiverZ)* shadowSize.w, -1.0, 1.0 );
+    shadowBiasPCF.x = clamp(dFdx(shadowReceiverZ) * shadowSize.x, -1.0, 1.0 );
+    shadowBiasPCF.y = clamp(dFdy(shadowReceiverZ) * shadowSize.y, -1.0, 1.0 );
 #endif
 
 #endif // GL_OES_standard_derivatives
@@ -150,13 +232,13 @@ float shadowReceive(const in bool lighted,
     vec4 clampDimension;
 
 #ifdef _ATLAS_SHADOW
-    shadowUV.xy  = ((shadowUV.xy * atlasSize.zw ) + atlasSize.xy) / shadowSize.xy;
+    shadowUV.xy  = ((shadowUV.xy * atlasSize.zw ) + atlasSize.xy) * shadowSize.xy;
 
     // clamp uv bias/filters by half pixel to avoid point filter on border
     clampDimension.xy = atlasSize.xy + vec2(0.5);
     clampDimension.zw = (atlasSize.xy + atlasSize.zw) - vec2(0.5);
 
-    clampDimension = clampDimension / (shadowSize.xyxy);
+    clampDimension = clampDimension * shadowSize.xyxy;
 #else
     clampDimension = vec4(0.0, 0.0, 1.0, 1.0);
 #endif // _RECEIVERPLANEDEPTHBIAS
@@ -196,7 +278,7 @@ float shadowReceive(const in bool lighted,
                                  OPT_INSTANCE_ARG_jitter);
 #ifdef _OUT_DISTANCE
         if (lighted) shadow = res;
-        outDistance *= shadowDepthRange.z; // world space distance
+        outDistance *= shadowDepthRange.y - shadowDepthRange.x; // world space distance
 #else
         shadow = res;
 #endif  // _OUT_DISTANCE
