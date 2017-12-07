@@ -15,8 +15,7 @@ import Transform from 'osg/Transform';
 import Uniform from 'osg/Uniform';
 import utils from 'osg/utils';
 import primitiveSet from 'osg/primitiveSet';
-import { vec3 } from 'osg/glMatrix';
-import { vec4 } from 'osg/glMatrix';
+import { vec2, vec3, vec4 } from 'osg/glMatrix';
 import Viewport from 'osg/Viewport';
 import WebGLCaps from 'osg/WebGLCaps';
 import ShadowReceiveAttribute from 'osgShadow/ShadowReceiveAttribute';
@@ -72,6 +71,7 @@ var ShadowMap = function(settings, shadowTexture) {
     ShadowTechnique.call(this);
 
     this._projectionMatrix = mat4.create();
+    this._projection = vec3.create();
     this._viewMatrix = mat4.create();
     this._lightNumberArrayIndex = -1;
     this._lightUp = vec3.fromValues(0.0, 0.0, 1.0);
@@ -139,8 +139,6 @@ var ShadowMap = function(settings, shadowTexture) {
     this._depthRange = unifRange.getInternalArray();
     this._depthRange[0] = near;
     this._depthRange[1] = far;
-    this._depthRange[2] = far - near;
-    this._depthRange[3] = 1.0 / (far - near);
 
     this._worldLightPos = vec4.create();
     this._worldLightPos[3] = 0;
@@ -687,6 +685,10 @@ utils.createPrototypeObject(
                 );
             }
 
+            this._projection[0] = this._projectionMatrix[0];
+            this._projection[1] = this._projectionMatrix[5];
+            this._projection[2] = 0.0;
+
             mat4.lookAtDirection(view, eyePos, eyeDir, up);
         },
 
@@ -719,6 +721,10 @@ utils.createPrototypeObject(
             top = radius;
             right = top;
             mat4.ortho(projection, -right, right, -top, top, zNear, zFar);
+
+            this._projection[0] = right;
+            this._projection[1] = top;
+            this._projection[2] = 1.0;
 
             this._depthRange[0] = zNear;
             this._depthRange[1] = zFar;
@@ -850,23 +856,18 @@ utils.createPrototypeObject(
         setShadowUniformsReceive: function(noDepth) {
             if (noDepth) {
                 // receiver shader can read and early out
-                vec4.set(this._depthRange, 0.0, 0.0, 0.0, 0.0);
-            } else {
-                // set values now
-                this._depthRange[2] = this._depthRange[1] - this._depthRange[0];
-                this._depthRange[3] = 1.0 / this._depthRange[2];
+                vec2.set(this._depthRange, 0.0, 0.0);
             }
-
             // even if noDepth, need to call those to make sure they are created
             // in shadowTexture / shadowTextureAtlas
             if (this._lightNumberArrayIndex !== -1) {
                 var lightNumber = this._light.getLightNumber();
                 this._texture.setViewMatrix(lightNumber, this._viewMatrix);
-                this._texture.setProjectionMatrix(lightNumber, this._projectionMatrix);
+                this._texture.setProjection(lightNumber, this._projection);
                 this._texture.setDepthRange(lightNumber, this._depthRange);
             } else {
                 this._texture.setViewMatrix(this._viewMatrix);
-                this._texture.setProjectionMatrix(this._projectionMatrix);
+                this._texture.setProjection(this._projection);
                 this._texture.setDepthRange(this._depthRange);
             }
         },
