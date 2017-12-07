@@ -361,8 +361,10 @@ WebGLCaps.prototype = {
     },
 
     applyExtension: function(gl, name) {
-        // Borrowed from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
         var ext = gl.getExtension(name);
+        // Borrowed from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
+        // make "generalized" functions and name
+        // so that can be used in webgl1 & wegbl2
         var suffix = name.split('_')[0];
         var prefix = '_' + suffix;
         var suffixRE = new RegExp(suffix + '$');
@@ -372,7 +374,7 @@ WebGLCaps.prototype = {
             if (typeof val === 'function') {
                 // remove suffix (eg: bindVertexArrayOES -> bindVertexArray)
                 var unsuffixedKey = key.replace(suffixRE, '');
-                if (key.substring) gl[unsuffixedKey] = ext[key].bind(ext);
+                if (gl[unsuffixedKey] === undefined) gl[unsuffixedKey] = ext[key].bind(ext);
             } else {
                 var unprefixedKey = key.replace(prefixRE, '');
                 if (gl[unprefixedKey] === undefined) gl[unprefixedKey] = ext[key];

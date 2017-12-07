@@ -45,8 +45,10 @@ if (!Float32Array.prototype.slice) {
     Float64Array.prototype.slice = _slicePolyfill;
 }
 
-// IE11 does not support Set with constructing arguments. May 2017.
 (function() {
+    // prevent crash on old browser
+    if (!window.Set) return;
+    // IE11 does not support Set with constructing arguments. May 2017.
     var setTest = new window.Set(['test']);
     var hasConstructorParameterSupport = setTest.has('test');
     if (hasConstructorParameterSupport) return;

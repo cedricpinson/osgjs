@@ -1,4 +1,4 @@
-import {vec2} from 'osg/glMatrix';
+import { vec2 } from 'osg/glMatrix';
 
 var StandardMouseKeyboard = function(viewer) {
     this._enable = true;
@@ -10,6 +10,7 @@ var StandardMouseKeyboard = function(viewer) {
     this._keyboardEventNode = undefined;
     this._eventList = ['mousedown', 'mouseup', 'mouseout', 'mousemove', 'dblclick'];
     this._mousePosition = vec2.create();
+    this._eventBinded = false;
 };
 
 StandardMouseKeyboard.prototype = {
@@ -47,8 +48,6 @@ StandardMouseKeyboard.prototype = {
             keydown: this.keydown.bind(this),
             keyup: this.keyup.bind(this)
         };
-
-        this.addEventListeners();
     },
 
     _addOrRemoveEventListeners: function(remove) {
@@ -77,6 +76,7 @@ StandardMouseKeyboard.prototype = {
             cbKeyboard('keydown', callbacks.keydown, false);
             cbKeyboard('keyup', callbacks.keyup, false);
         }
+        this._eventBinded = !remove;
     },
 
     addEventListeners: function() {
@@ -220,6 +220,7 @@ StandardMouseKeyboard.prototype = {
         }
 
         this.getManipulatorController().setEventProxy(this);
+        if (!this._eventBinded) this.addEventListeners();
     }
 };
 export default StandardMouseKeyboard;
