@@ -3,6 +3,7 @@ import Texture from 'osg/Texture';
 import Uniform from 'osg/Uniform';
 import utils from 'osg/utils';
 import { vec4 } from 'osg/glMatrix';
+import { vec2 } from 'osg/glMatrix';
 
 /**
  * ShadowTexture Attribute encapsulate Texture webgl object
@@ -17,7 +18,7 @@ var ShadowTexture = function() {
 
     this._uniforms = {};
     this._mapSize = vec4.create();
-    this._renderSize = vec4.create();
+    this._renderSize = vec2.create();
     this._lightNumber = -1; // default for a valid cloneType
     this._dirtyHash = true;
     this._hash = '';
@@ -68,11 +69,13 @@ utils.createPrototypeStateAttribute(
             if (obj.uniforms[unit] !== undefined) return obj.uniforms[unit];
 
             var uniforms = (obj.uniforms[unit] = {
-                ViewMatrix: Uniform.createMat4(this.getUniformName('viewMatrix')),
-                ProjectionMatrix: Uniform.createMat4(this.getUniformName('projectionMatrix')),
-                DepthRange: Uniform.createFloat4(this.getUniformName('depthRange')),
+                ViewRight: Uniform.createFloat4(this.getUniformName('viewRight')),
+                ViewUp: Uniform.createFloat4(this.getUniformName('viewUp')),
+                ViewLook: Uniform.createFloat4(this.getUniformName('viewLook')),
+                Projection: Uniform.createFloat3(this.getUniformName('projection')),
+                DepthRange: Uniform.createFloat2(this.getUniformName('depthRange')),
                 MapSize: Uniform.createFloat4(this.getUniformName('mapSize')),
-                RenderSize: Uniform.createFloat4(this.getUniformName('renderSize'))
+                RenderSize: Uniform.createFloat2(this.getUniformName('renderSize'))
             });
 
             // Dual Uniform of texture, needs:
@@ -90,8 +93,8 @@ utils.createPrototypeStateAttribute(
             this._viewMatrix = viewMatrix;
         },
 
-        setProjectionMatrix: function(projectionMatrix) {
-            this._projectionMatrix = projectionMatrix;
+        setProjection: function(projection) {
+            this._projection = projection;
         },
 
         setDepthRange: function(depthRange) {
@@ -106,10 +109,31 @@ utils.createPrototypeStateAttribute(
             this._mapSize[2] = 1.0 / w;
             this._mapSize[3] = 1.0 / h;
 
-            this._renderSize[0] = w;
-            this._renderSize[1] = h;
-            this._renderSize[2] = 1.0 / w;
-            this._renderSize[3] = 1.0 / h;
+            this._renderSize[0] = 1.0 / w;
+            this._renderSize[1] = 1.0 / h;
+        },
+
+        // optimize a mat4 into 3 vec4 unforms
+        _updateViewMatrixUniforms: function(viewMatrix, viewRight, viewUp, viewLook) {
+            var v;
+            var m = viewMatrix;
+            v = viewRight.getInternalArray();
+            v[0] = m[0];
+            v[1] = m[4];
+            v[2] = m[8];
+            v[3] = m[12];
+
+            v = viewUp.getInternalArray();
+            v[0] = m[1];
+            v[1] = m[5];
+            v[2] = m[9];
+            v[3] = m[13];
+
+            v = viewLook.getInternalArray();
+            v[0] = m[2];
+            v[1] = m[6];
+            v[2] = m[10];
+            v[3] = m[14];
         },
 
         apply: function(state, texNumber) {
@@ -120,11 +144,17 @@ utils.createPrototypeStateAttribute(
 
             // update Uniforms
             var uniformMap = this.getOrCreateUniforms(texNumber);
-            uniformMap.ViewMatrix.setMatrix4(this._viewMatrix);
-            uniformMap.ProjectionMatrix.setMatrix4(this._projectionMatrix);
-            uniformMap.DepthRange.setFloat4(this._depthRange);
+
+            this._updateViewMatrixUniforms(
+                this._viewMatrix,
+                uniformMap.ViewRight,
+                uniformMap.ViewUp,
+                uniformMap.ViewLook
+            );
+            uniformMap.Projection.setFloat3(this._projection);
+            uniformMap.DepthRange.setFloat2(this._depthRange);
             uniformMap.MapSize.setFloat4(this._mapSize);
-            uniformMap.RenderSize.setFloat4(this._renderSize);
+            uniformMap.RenderSize.setFloat2(this._renderSize);
         },
 
         getHash: function() {
