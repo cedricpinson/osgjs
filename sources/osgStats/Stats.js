@@ -8,7 +8,7 @@ import Program from 'osg/Program';
 import Shader from 'osg/Shader';
 import Transform from 'osg/Transform';
 import Texture from 'osg/Texture';
-import {mat4, vec2, vec3} from 'osg/glMatrix';
+import { mat4, vec2, vec3 } from 'osg/glMatrix';
 import BufferStats from 'osgStats/BufferStats';
 import Counter from 'osgStats/Counter';
 import Graph from 'osgStats/Graph';
@@ -55,8 +55,14 @@ import BoundingBox from 'osg/BoundingBox';
 //     getViewerStats().setFontSize(50)
 
 var getCanvasCoord = function(vec, e) {
-    vec[0] = e.offsetX === undefined ? e.layerX : e.offsetX;
-    vec[1] = e.offsetY === undefined ? e.layerY : e.offsetY;
+    if (e.touches && e.touches.length) {
+        var touch = e.touches[0];
+        vec[0] = touch.pageX;
+        vec[1] = touch.pageY;
+    } else {
+        vec[0] = e.offsetX === undefined ? e.layerX : e.offsetX;
+        vec[1] = e.offsetY === undefined ? e.layerY : e.offsetY;
+    }
 };
 
 var PICKING_NODEMASK = 0x8000;
