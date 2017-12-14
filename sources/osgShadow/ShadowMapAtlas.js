@@ -379,7 +379,7 @@ utils.createPrototypeObject(
 
             for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
                 var shadowMap = this._shadowMaps[i];
-                if (shadowMap.isEnabled() || !shadowMap.isFilledOnce()) {
+                if (shadowMap.isEnabled() && !shadowMap.isFilledOnce()) {
                     shadowMap.cullShadowCasting(cullVisitor, bbox);
                 }
             }
