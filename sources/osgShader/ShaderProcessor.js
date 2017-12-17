@@ -69,6 +69,11 @@ ShaderProcessor.prototype = {
         return '\n#line ' + 0 + ' ' + sourceID + '\n' + content;
     },
 
+    hasShader: function(shaderName) {
+        // unlike getShaderTextPure, doesn't log an erreur if the shader doesn't exist
+        return this._shadersText[shaderName] !== undefined;
+    },
+
     getShaderTextPure: function(shaderName) {
         var preShader = this._shadersText[shaderName];
 

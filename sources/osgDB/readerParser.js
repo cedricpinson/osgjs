@@ -47,7 +47,7 @@ ReaderParser.registry = function() {
 
 ReaderParser.parseSceneGraph = function(node, options) {
     if (node.Version !== undefined && node.Version > 0) {
-        utils.time('osgjs.metric:ReaderParser.parseSceneGraph');
+        utils.time('osgjs.metric:ReaderParser.parseSceneGraph', notify.INFO);
 
         var key;
         for (var prop in node) {
@@ -70,15 +70,15 @@ ReaderParser.parseSceneGraph = function(node, options) {
             );
             input.setOptions(opt);
             var object = input.readObject();
-            utils.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
+            utils.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph', notify.INFO);
             return object;
         } else {
-            notify.log("can't parse scenegraph " + node);
+            notify.log("can't parse scenegraph " + node, notify.INFO);
         }
     } else {
-        utils.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+        utils.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated', notify.INFO);
         var nodeOld = ReaderParser.parseSceneGraphDeprecated(node);
-        utils.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+        utils.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated', notify.INFO);
         return nodeOld;
     }
     return undefined;
