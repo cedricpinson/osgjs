@@ -10,16 +10,15 @@ utils.createPrototypeObject(
     FirstPersonManipulatorStandardMouseKeyboardController,
     utils.objectInherit(Controller.prototype, {
         init: function() {
-            this.releaseButton();
             this._delay = 0.15;
             this._stepFactor = 1.0; // meaning radius*stepFactor to move
-            this._buttonup = false;
+            this._buttonup = true;
         },
         // called to enable/disable controller
         setEnable: function(bool) {
             if (!bool) {
                 // reset mode if we disable it
-                this._buttonup = false;
+                this._buttonup = true;
             }
             Controller.prototype.setEnable.call(this, bool);
         },
