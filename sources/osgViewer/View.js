@@ -342,8 +342,8 @@ View.prototype = {
     flushAllDeletedGLObjects: function() {
         // Flush all deleted OpenGL objects
         var gl = this.getGraphicContext();
-        BufferArray.flushAllDeletedGLVertexArrayObjects(gl);
-        VertexArrayObject.flushAllDeletedGLBufferArrays(gl);
+        VertexArrayObject.flushAllDeletedGLVertexArrayObjects(gl);
+        BufferArray.flushAllDeletedGLBufferArrays(gl);
         Texture.getTextureManager(gl).flushAllDeletedTextureObjects(gl);
         Program.flushAllDeletedGLPrograms(gl);
         Shader.flushAllDeletedGLShaders(gl);
