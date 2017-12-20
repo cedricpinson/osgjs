@@ -16,6 +16,7 @@ import OrbitManipulatorStandardMouseKeyboardController from 'osgGA/OrbitManipula
 import OrbitManipulatorWebVRController from 'osgGA/OrbitManipulatorWebVRController';
 import SwitchManipulator from 'osgGA/SwitchManipulator';
 import OrbitManipulatorEnums from 'osgGA/orbitManipulatorEnums';
+import Controller from 'osgGA/Controller';
 
 var osgGA = {};
 
@@ -64,5 +65,7 @@ osgGA.SwitchManipulator = SwitchManipulator;
 osgGA.OrbitManipulator.Rotate = OrbitManipulatorEnums.ROTATE;
 osgGA.OrbitManipulator.Pan = OrbitManipulatorEnums.PAN;
 osgGA.OrbitManipulator.Zoom = OrbitManipulatorEnums.ZOOM;
+
+osgGA.Controller = Controller;
 
 export default osgGA;
