@@ -95,6 +95,42 @@ export default function() {
         return g;
     };
 
+    var createBigTriangle = function() {
+        var g = new Geometry();
+        var vertexes = new utils.Float32Array(9);
+        vertexes[0] = -400.0;
+        vertexes[1] = 600.0;
+        vertexes[2] = 0.0;
+
+        vertexes[3] = 0.0;
+        vertexes[4] = -300.0;
+        vertexes[5] = 0.0;
+
+        vertexes[6] = 400.0;
+        vertexes[7] = 600.0;
+        vertexes[8] = 0.0;
+
+        var normal = new utils.Float32Array(9);
+        normal[0] = 0;
+        normal[1] = 0;
+        normal[2] = 1;
+
+        normal[3] = 0;
+        normal[4] = 0;
+        normal[5] = 1;
+
+        normal[6] = 0;
+        normal[7] = 0;
+        normal[8] = 1;
+
+        g.getAttributes().Vertex = new BufferArray(BufferArray.ARRAY_BUFFER, vertexes, 3);
+        g.getAttributes().Normal = new BufferArray(BufferArray.ARRAY_BUFFER, normal, 3);
+
+        var primitive = new DrawArrays(primitiveSet.TRIANGLES, 0, vertexes.length / 3);
+        g.getPrimitives().push(primitive);
+        return g;
+    };
+
     var createPoints = function() {
         var g = new Geometry();
 
@@ -256,8 +292,8 @@ export default function() {
             'numPoints should be 3 and result is ' + pi._intersections[0]._numIntersectionPoints
         );
         assert.equalVector(pi._intersections[0]._localIntersectionPoint, [-0.06415, 0.06415, 0]);
-        assert.equalVector(pi._intersections[0]._intersectionPoints[0], [0.0, 0.0, 0.0]);
-        assert.equalVector(pi._intersections[0]._intersectionPoints[1], [-0.096225, 0.096225, 0]);
+        assert.equalVector(pi._intersections[0]._intersectionPoints[0], [-0.096225, 0.096225, 0]);
+        assert.equalVector(pi._intersections[0]._intersectionPoints[1], [0.0, 0.0, 0.0]);
         assert.equalVector(pi._intersections[0]._intersectionPoints[2], [-0.096225, 0.096225, 0]);
         // Test dimension masks
         pi.reset();
@@ -347,8 +383,8 @@ export default function() {
             uniquePoints.length === 3,
             'numPoints should be 3 and result is ' + uniquePoints.length
         );
-        assert.equalVector(uniquePoints[0], [0, 0, 0]);
-        assert.equalVector(uniquePoints[1], [-0.096225, 0.096225, 0]);
+        assert.equalVector(uniquePoints[0], [-0.096225, 0.096225, 0]);
+        assert.equalVector(uniquePoints[1], [0, 0, 0]);
         assert.equalVector(uniquePoints[2], [0.096225, 0.096225, 0]);
 
         // Test dimension mask
@@ -369,6 +405,74 @@ export default function() {
             'Hits should be 1 and result is ' + pi._intersections.length
         );
     });
+
+    test('PolytopeIntersector polytope inside Triangle ', function() {
+        var camera = new Camera();
+        camera.setViewport(new Viewport());
+        camera.setViewMatrix(mat4.lookAt(mat4.create(), [0, 0, -10], [0, 0, 0], [0, 1, 0]));
+        camera.setProjectionMatrix(
+            mat4.perspective(mat4.create(), Math.PI / 180 * 60, 800 / 600, 0.1, 100.0)
+        );
+
+        var scene = createBigTriangle();
+        camera.addChild(scene);
+        var pi = new PolytopeIntersector();
+
+        pi.setPolytopeFromWindowCoordinates(395, 295, 405, 305);
+        var iv = new IntersectionVisitor();
+        iv.setIntersector(pi);
+        camera.accept(iv);
+        assert.isOk(
+            pi._intersections.length === 1,
+            'Hits should be 1 and result is ' + pi._intersections.length
+        );
+        assert.isOk(
+            pi._intersections[0]._nodePath.length === 2,
+            'NodePath should be 2 and result is ' + pi._intersections[0]._nodePath.length
+        );
+
+        // unify points because of the precision issues between browser / node tests
+        var uniquePoints = [];
+        for (var i = 0; i < pi._intersections[0]._numIntersectionPoints; i++) {
+            var p = pi._intersections[0]._intersectionPoints[i];
+            var alreadyInserted = false;
+
+            for (var j = 0; j < uniquePoints.length; j++) {
+                if (vec3.equals(uniquePoints[j], p)) {
+                    alreadyInserted = true;
+                    break;
+                }
+            }
+            if (!alreadyInserted) uniquePoints.push(p);
+        }
+
+        assert.isOk(
+            uniquePoints.length === 2,
+            'numPoints should be 2 and result is ' + uniquePoints.length
+        );
+
+        assert.equalVector(uniquePoints[0], [0.096225, -0.096225, 0]);
+        assert.equalVector(uniquePoints[1], [0.096225, 0.096225, 0]);
+
+        // Test dimension mask
+        pi.reset();
+        pi.setPrimitiveMask(intersectionEnums.POINT_PRIMITIVES);
+        camera.accept(iv);
+        assert.isOk(
+            pi._intersections.length === 0,
+            'Hits should be 0 and result is ' + pi._intersections.length
+        );
+        // Test polytope going trough the triangle without containing any point of it
+        pi.reset();
+        pi.setPrimitiveMask(intersectionEnums.ALL_PRIMITIVES);
+        pi.setPolytopeFromWindowCoordinates(395, 295, 405, 305);
+        camera.accept(iv);
+        assert.isOk(
+            pi._intersections.length === 1,
+            'Hits should be 1 and result is ' + pi._intersections.length
+        );
+    });
+
 
     test('PolytopeIntersector with kdtree and camera', function() {
         // This test will never work with kdtree
@@ -427,8 +531,8 @@ export default function() {
             uniquePoints.length === 3,
             'numPoints should be 3 and result is ' + uniquePoints.length
         );
-        assert.equalVector(uniquePoints[0], [0, 0, 0]);
-        assert.equalVector(uniquePoints[1], [-0.096225, 0.096225, 0]);
+        assert.equalVector(uniquePoints[0], [-0.096225, 0.096225, 0]);
+        assert.equalVector(uniquePoints[1], [0, 0, 0]);
         assert.equalVector(uniquePoints[2], [0.096225, 0.096225, 0]);
     });
 }
