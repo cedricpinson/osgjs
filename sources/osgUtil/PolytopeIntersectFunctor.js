@@ -87,9 +87,9 @@ utils.createPrototypeObject(
 
                 this._dest = [];
                 var plane = planeList[i];
-                var vPrevious = this._src[1];
+                var vPrevious = this._src[0];
                 var dPrevious = Plane.distanceToPlane(plane, vPrevious);
-                for (var j = 0; j < this._src.length; ++j) {
+                for (var j = 1; j < this._src.length; ++j) {
                     var vCurrent = this._src[j];
                     var dCurrent = Plane.distanceToPlane(plane, vCurrent);
                     if (dPrevious >= 0.0) {
@@ -139,7 +139,7 @@ utils.createPrototypeObject(
             this._src = [];
             this._src[0] = v0;
             this._src[1] = v1;
-
+            this._src[2] = v0;
             return this.contains();
         },
 
@@ -149,6 +149,7 @@ utils.createPrototypeObject(
             this._src[0] = v0;
             this._src[1] = v1;
             this._src[2] = v2;
+            this._src[3] = v0;
             return this.contains();
         },
 
