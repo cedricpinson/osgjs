@@ -4,15 +4,15 @@ import utils from 'osg/utils';
  *  Object class
  *  @class Object
  */
-var Object = function() {
+var OSGObject = function() {
     this._name = undefined;
     this._userdata = undefined;
-    this._instanceID = Object.getInstanceID();
+    this._instanceID = OSGObject.getInstanceID();
 };
 
 /** @lends Object.prototype */
 utils.createPrototypeObject(
-    Object,
+    OSGObject,
     {
         // this method works only if constructor is set correctly
         // see issue https://github.com/cedricpinson/osgjs/issues/494
@@ -47,9 +47,9 @@ utils.createPrototypeObject(
 
 // get an instanceID for each object
 var instanceID = 0;
-Object.getInstanceID = function() {
+OSGObject.getInstanceID = function() {
     instanceID += 1;
     return instanceID;
 };
 
-export default Object;
+export default OSGObject;
