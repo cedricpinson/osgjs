@@ -379,32 +379,32 @@ utils.createPrototypeObject(
 
             for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
                 var shadowMap = this._shadowMaps[i];
-                if (shadowMap.isEnabled() && !shadowMap.isFilledOnce()) {
+                if (shadowMap.isContinuousUpdate() || shadowMap.needRedraw()) {
                     shadowMap.cullShadowCasting(cullVisitor, bbox);
                 }
             }
         },
 
-        isEnabled: function() {
+        isContinuousUpdate: function() {
             // need at least one shadow to be enabled
             // so that shadowedScene will continue shadowCasting
             for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
-                if (this._shadowMaps[i].isEnabled()) {
+                if (this._shadowMaps[i].isContinuousUpdate()) {
                     return true;
                 }
             }
             return false;
         },
 
-        isFilledOnce: function() {
-            // need at least one shadow not Filled
+        needRedraw: function() {
+            // need at least one shadow not dirty
             // so that shadowedScene will continue shadowCasting
             for (var i = 0, l = this._shadowMaps.length; i < l; i++) {
-                if (!this._shadowMaps[i].isFilledOnce()) {
-                    return false;
+                if (this._shadowMaps[i].needRedraw()) {
+                    return true;
                 }
             }
-            return true;
+            return false;
         },
 
         removeShadowMap: function(shadowMap) {
