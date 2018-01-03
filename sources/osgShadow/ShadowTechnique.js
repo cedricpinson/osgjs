@@ -11,10 +11,9 @@ var ShadowTechnique = function() {
 
     this._shadowedScene = undefined;
     this._dirty = false;
-    // need to be computed
-    this._enabled = true;
+    this._continuousUpdate = true;
     // since dirtied, handy for static shadow map
-    this._filledOnce = false;
+    this._needRedraw = true;
 };
 
 /** @lends ShadowTechnique.prototype */
@@ -29,20 +28,20 @@ utils.createPrototypeObject(
             return this._shadowedScene;
         },
 
-        setEnabled: function(enabled) {
-            this._enabled = enabled;
+        setContinuousUpdate: function(enabled) {
+            this._continuousUpdate = enabled;
         },
 
-        isEnabled: function() {
-            return this._enabled;
+        isContinuousUpdate: function() {
+            return this._continuousUpdate;
         },
 
-        isFilledOnce: function() {
-            return this._filledOnce;
+        needRedraw: function() {
+            return this._needRedraw;
         },
 
         requestRedraw: function() {
-            this._filledOnce = false;
+            this._needRedraw = true;
         },
 
         setShadowedScene: function(shadowedScene) {

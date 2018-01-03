@@ -183,7 +183,7 @@ utils.createPrototypeNode(
                         st.init();
                     }
 
-                    if (st.isEnabled() || !st.isFilledOnce()) isDirty = true;
+                    if (st.isContinuousUpdate() || st.needRedraw()) isDirty = true;
                 }
                 if (!isDirty) return;
 
@@ -209,7 +209,7 @@ utils.createPrototypeNode(
                 // cull Casters
                 for (i = 0; i < lt; i++) {
                     st = this._shadowTechniques[i];
-                    if (st.isEnabled() || !st.isFilledOnce()) {
+                    if (st.isContinuousUpdate() || st.needRedraw()) {
                         st.updateShadowTechnique(nv);
                         st.cullShadowCasting(nv, bbox);
                     }

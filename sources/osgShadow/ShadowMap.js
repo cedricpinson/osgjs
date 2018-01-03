@@ -338,7 +338,7 @@ utils.createPrototypeObject(
         init: function(atlasTexture, lightIndex, textureUnit) {
             if (!this._shadowedScene) return;
 
-            this._filledOnce = false;
+            this._needRedraw = true;
 
             this.checkLightNumber();
 
@@ -879,7 +879,7 @@ utils.createPrototypeObject(
         markSceneAsNoShadow: function() {
             this.setShadowUniformsReceive(true);
             // we still clear the shadow so we filled it
-            this._filledOnce = true;
+            this._needRedraw = false;
         },
 
         // Defines the frustum from light param.
@@ -941,7 +941,7 @@ utils.createPrototypeObject(
 
             // re-apply the original traversal mask
             cullVisitor.setTraversalMask(traversalMask);
-            this._filledOnce = true;
+            this._needRedraw = false;
         },
 
         cleanReceivingStateSet: function(ignoreTexture) {
@@ -975,7 +975,7 @@ utils.createPrototypeObject(
         cleanSceneGraph: function(ignoreTexture) {
             // well release a lot more things when it works
             this._cameraShadow = undefined;
-            this._filledOnce = false;
+            this._needRedraw = true;
 
             this.cleanReceivingStateSet(ignoreTexture);
 
