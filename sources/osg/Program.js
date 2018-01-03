@@ -242,7 +242,7 @@ utils.createPrototypeStateAttribute(
 
             _onCompilationToSpector: function() {
                 if (!this._spectorOnCompiled) return;
-                this._spectorOnCompiled(this.program);
+                this._spectorOnCompiled(this._program);
             },
 
             _bindProgramToSpector: function() {
@@ -342,7 +342,7 @@ utils.createPrototypeStateAttribute(
                         compileClean = false;
                         if (this._onErrorToSpector(errLink)) return;
                     } else {
-                        this._onCompilationToSpector(this.program);
+                        this._onCompilationToSpector(this._program);
                     }
                 }
 

@@ -693,7 +693,7 @@
             // remove all lights
             while (l--) {
                 var st = this._shadowTechnique[l];
-                st.setEnabled(!this._config.shadowStatic);
+                st.setContinuousUpdate(!this._config.shadowStatic);
             }
             if (this._config.shadowStatic) {
                 this._config.lightSpeed = '0.0';
