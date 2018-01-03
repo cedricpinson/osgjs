@@ -3,7 +3,7 @@ import BufferArray from 'osg/BufferArray';
 import Geometry from 'osg/Geometry';
 import NodeVisitor from 'osg/NodeVisitor';
 import primitiveSet from 'osg/primitiveSet';
-import { vec3 } from 'osg/glMatrix';
+import {vec3} from 'osg/glMatrix';
 
 var TangentSpaceGenerator = function() {
     NodeVisitor.call(this);
@@ -56,6 +56,7 @@ utils.createPrototypeObject(
             this._texCoordUnit = texCoordUnit;
 
             if (this._texCoordUnit === undefined) this._texCoordUnit = 0;
+            if (!geometry.getAttributes()['TexCoord' + this._texCoordUnit]) return;
 
             var size = geometry.getAttributes().Vertex.getElements().length;
             this._T = new utils.Float32Array(size);
