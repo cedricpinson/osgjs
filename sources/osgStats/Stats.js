@@ -82,6 +82,7 @@ var createShader = function() {
     ].join('\n');
 
     var fragmentshader = [
+        '#define SHADER_NAME STATS',
         'varying vec2 vTexCoord0;',
         'uniform sampler2D Texture0;',
 
