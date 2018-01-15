@@ -340,14 +340,6 @@ utils.createPrototypeObject(
 
             this.checkLightNumber();
 
-            if (!this._cameraShadow) {
-                this._cameraShadow = new Camera();
-                this._cameraShadow.setCullCallback(new CameraCullCallback(this));
-                this._cameraShadow.setRenderOrder(Camera.PRE_RENDER, 0);
-                this._cameraShadow.setReferenceFrame(Transform.ABSOLUTE_RF);
-                this._cameraShadow.setClearColor(vec4.fromValues(1.0, 1.0, 1.0, 1.0));
-            }
-
             var lightNumber = this._light.getLightNumber();
 
             if (!atlasTexture) {
@@ -975,11 +967,8 @@ utils.createPrototypeObject(
         },
         cleanSceneGraph: function(ignoreTexture) {
             // well release a lot more things when it works
-            this._cameraShadow = undefined;
             this._needRedraw = true;
-
             this.cleanReceivingStateSet(ignoreTexture);
-
             // TODO: need state
             //this._texture.releaseGLObjects();
             //this._shadowReceiveAttribute = undefined;
