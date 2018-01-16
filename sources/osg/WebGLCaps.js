@@ -390,6 +390,35 @@ WebGLCaps.prototype = {
         return this._webGLExtensions;
     },
 
+    _checkShader: function(gl, t, text) {
+        var type = t;
+        if (typeof type === 'string') type = gl[t];
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, text);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
+            return false;
+        }
+        return true;
+    },
+
+    // some mobile reuse same driver
+    // GPUs with different capabilities
+    // double check if glsl compiler agree
+    // with driver
+    _doubleCheckExtension: function(gl, extension) {
+        var shader = [
+            '#version 100',
+            '#extension GL_%ext% : require',
+            'precision mediump float;',
+            'varying vec3 vColor;',
+            'void main() {',
+            'gl_FragColor = vec4(vColor, 1.0);',
+            '}'
+        ].join('\n');
+        return this._checkShader(gl, 'FRAGMENT_SHADER', shader.replace(/\%ext\%/g, extension));
+    },
+
     initWebGLExtensions: function(gl, filterBugs) {
         // nodejs, phantomjs
         if (!gl) return;
@@ -411,6 +440,16 @@ WebGLCaps.prototype = {
 
             ext[sup] = gl.getExtension(sup);
             if (!this._isGL2) this.applyExtension(gl, sup);
+        }
+
+        if (!this._isGL2) {
+            // double check extensions support
+            // for now only texture lod... might have to go in loop
+            // and start a DB of ext to check.
+            // time will tell
+            var extToCheck = 'EXT_shader_texture_lod';
+            if (ext[extToCheck] && !this._doubleCheckExtension(gl, extToCheck))
+                delete ext[extToCheck];
         }
 
         var anisoExt = this.getWebGLExtension('EXT_texture_filter_anisotropic');
