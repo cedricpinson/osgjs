@@ -3,8 +3,16 @@ import BoundingSphere from 'osg/BoundingSphere';
 import { mat4 } from 'osg/glMatrix';
 
 // Base class for Camera / User manipulator
-var Manipulator = function(boundStrategy) {
-    this._boundStrategy = boundStrategy;
+var Manipulator = function(options) {
+    if (options) {
+        if (typeof options === 'object') {
+            this._boundStrategy = options.boundStrategy;
+            this.setInputManager(options.inputManager);
+        } else {
+            this._boundStrategy = options;
+        }
+    }
+
     if (this._boundStrategy === undefined) {
         this._boundStrategy = Manipulator.COMPUTE_HOME_USING_SPHERE;
     }
@@ -35,6 +43,14 @@ Manipulator.prototype = {
     },
     getComputeBoundNodeMaskOverride: function() {
         return this._computeBoundNodeMaskOverride;
+    },
+
+    setInputManager: function(inputManager) {
+        this._inputManager = inputManager;
+    },
+
+    getInputManager: function() {
+        return this._inputManager;
     },
 
     // overrideStrat should be a bounding volume calculation strategy

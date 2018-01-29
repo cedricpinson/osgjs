@@ -1,3 +1,5 @@
+import Groups from 'osgViewer/input/InputConstants';
+
 (function() {
     'use strict';
 
@@ -1203,7 +1205,7 @@
         },
 
         setEnableInput: function(enable) {
-            this._viewer.getEventProxy().StandardMouseKeyboard.setEnable(enable);
+            this._viewer.getInputManager().setEnable(Groups.MANIPULATORS, enable);
         },
 
         createGUI: function() {

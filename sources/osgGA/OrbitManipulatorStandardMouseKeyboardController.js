@@ -2,6 +2,7 @@ import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
 import osgMath from 'osg/math';
 import OrbitManipulatorEnums from 'osgGA/orbitManipulatorEnums';
+import Groups from 'osgViewer/input/InputConstants';
 
 var OrbitManipulatorStandardMouseKeyboardController = function(manipulator) {
     Controller.call(this, manipulator);
@@ -12,161 +13,144 @@ utils.createPrototypeObject(
     OrbitManipulatorStandardMouseKeyboardController,
     utils.objectInherit(Controller.prototype, {
         init: function() {
-            this._rotateKey = 65; // a
-            this._zoomKey = 83; // s
-            this._panKey = 68; // d
-
-            this._delay = 0.15;
             this._mode = undefined;
-            this._buttonup = true;
+            this._inMotion = false;
+
+            this._initInputs(
+                Groups.ORBIT_MANIPULATOR_MOUSEKEYBOARD,
+                Groups.ORBIT_MANIPULATOR_RESETTOHOME
+            );
         },
-        // called to enable/disable controller
-        setEnable: function(bool) {
-            if (!bool) {
-                // reset mode if we disable it
-                this._mode = undefined;
-            }
-            Controller.prototype.setEnable.call(this, bool);
+
+        _initInputs: function(globalGroup, resetToHomeGroup) {
+            var manager = this._manipulator.getInputManager();
+            var setRotationMode = this.changeMode.bind(
+                this,
+                OrbitManipulatorEnums.ROTATE,
+                this._manipulator.getRotateInterpolator()
+            );
+            var setPanMode = this.changeMode.bind(
+                this,
+                OrbitManipulatorEnums.PAN,
+                this._manipulator.getPanInterpolator()
+            );
+            var setZoomMode = this.changeMode.bind(
+                this,
+                OrbitManipulatorEnums.ZOOM,
+                this._manipulator.getZoomInterpolator()
+            );
+
+            manager.group(globalGroup).addMappings(
+                {
+                    motion: 'mousemove',
+                    startPan: ['mousedown shift 0', 'mousedown 1', 'mousedown 2'],
+                    startZoom: ['mousedown ctrl 0', 'mousedown ctrl 2'],
+                    startRotate: 'mousedown 0 !shift !ctrl',
+                    stopMotion: ['mouseup', 'mouseout', 'keyup a', 'keyup s', 'keyup d'],
+                    zoom: 'wheel'
+                },
+                this
+            );
+
+            manager.group(resetToHomeGroup).addMappings(
+                {
+                    resetToHome: 'keydown space'
+                },
+                this
+            );
+
+            manager
+                .group(globalGroup)
+                .addMappings({ setRotationMode: 'keydown a' }, setRotationMode);
+            manager.group(globalGroup).addMappings({ setPanMode: 'keydown d' }, setPanMode);
+            manager.group(globalGroup).addMappings({ setZoomMode: 'keydown s' }, setZoomMode);
         },
+
         getMode: function() {
             return this._mode;
         },
+
         setMode: function(mode) {
             this._mode = mode;
         },
-        setEventProxy: function(proxy) {
-            this._eventProxy = proxy;
-        },
+
         setManipulator: function(manipulator) {
             this._manipulator = manipulator;
         },
-        mousemove: function(ev) {
-            if (this._buttonup === true) {
+
+        motion: function(ev) {
+            if (this._inMotion === false) {
                 return;
             }
-            var pos = this._eventProxy.getPositionRelativeToCanvas(ev);
+
+            var posX = ev.glX;
+            var posY = ev.glY;
+
             var manipulator = this._manipulator;
-            if (osgMath.isNaN(pos[0]) === false && osgMath.isNaN(pos[1]) === false) {
+            if (osgMath.isNaN(posX) === false && osgMath.isNaN(posY) === false) {
                 var mode = this.getMode();
                 if (mode === OrbitManipulatorEnums.ROTATE) {
-                    manipulator.getRotateInterpolator().setDelay(this._delay);
-                    manipulator.getRotateInterpolator().setTarget(pos[0], pos[1]);
+                    manipulator.getRotateInterpolator().setTarget(posX, posY);
                 } else if (mode === OrbitManipulatorEnums.PAN) {
-                    manipulator.getPanInterpolator().setTarget(pos[0], pos[1]);
+                    manipulator.getPanInterpolator().setTarget(posX, posY);
                 } else if (mode === OrbitManipulatorEnums.ZOOM) {
                     var zoom = manipulator.getZoomInterpolator();
                     if (zoom.isReset()) {
-                        zoom.setStart(pos[1]);
+                        zoom.setStart(posY);
                         zoom.set(0.0);
                     }
-                    var dy = pos[1] - zoom.getStart();
-                    zoom.setStart(pos[1]);
+                    var dy = posY - zoom.getStart();
+                    zoom.setStart(posY);
                     var v = zoom.getTarget()[0];
                     zoom.setTarget(v - dy / 20.0);
                 }
             }
-
-            ev.preventDefault();
         },
-        mousedown: function(ev) {
-            var manipulator = this._manipulator;
-            var mode = this.getMode();
-            if (mode === undefined) {
-                if (ev.button === 0) {
-                    if (ev.shiftKey) {
-                        this.setMode(OrbitManipulatorEnums.PAN);
-                    } else if (ev.ctrlKey) {
-                        this.setMode(OrbitManipulatorEnums.ZOOM);
-                    } else {
-                        this.setMode(OrbitManipulatorEnums.ROTATE);
-                    }
-                } else {
-                    // For users on Mac machines for who CTRL+LeftClick is naturally converted
-                    // into a RightClick in Firefox.
-                    if (ev.button === 2 && ev.ctrlKey) {
-                        this.setMode(OrbitManipulatorEnums.ZOOM);
-                    } else {
-                        this.setMode(OrbitManipulatorEnums.PAN);
-                    }
-                }
-            }
 
-            this.pushButton();
-
-            var pos = this._eventProxy.getPositionRelativeToCanvas(ev);
-            mode = this.getMode();
-            if (mode === OrbitManipulatorEnums.ROTATE) {
-                manipulator.getRotateInterpolator().reset();
-                manipulator.getRotateInterpolator().set(pos[0], pos[1]);
-            } else if (mode === OrbitManipulatorEnums.PAN) {
-                manipulator.getPanInterpolator().reset();
-                manipulator.getPanInterpolator().set(pos[0], pos[1]);
-            } else if (mode === OrbitManipulatorEnums.ZOOM) {
-                manipulator.getZoomInterpolator().setStart(pos[1]);
-                manipulator.getZoomInterpolator().set(0.0);
-            }
+        startPan: function(ev) {
+            var pan = this._manipulator.getPanInterpolator();
+            this.changeMode(OrbitManipulatorEnums.PAN, pan);
+            pan.reset();
+            pan.set(ev.glX, ev.glY);
         },
-        mouseup: function(/*ev */) {
-            this.releaseButton();
+
+        startRotate: function(ev) {
+            var rotate = this._manipulator.getRotateInterpolator();
+            this.changeMode(OrbitManipulatorEnums.ROTATE, rotate);
+            rotate.reset();
+            rotate.set(ev.glX, ev.glY);
+        },
+
+        startZoom: function(ev) {
+            var zoom = this._manipulator.getZoomInterpolator();
+            this.changeMode(OrbitManipulatorEnums.ZOOM, zoom);
+            zoom.setStart(ev.glY);
+            zoom.set(0.0);
+        },
+
+        stopMotion: function() {
+            this._inMotion = false;
             this.setMode(undefined);
         },
-        mouseout: function(/*ev */) {
-            this.releaseButton();
-            this.setMode(undefined);
-        },
-        mousewheel: function(ev, intDelta /*, deltaX, deltaY */) {
+
+        zoom: function(ev) {
+            var intDelta = -ev.deltaY / 40;
             var manipulator = this._manipulator;
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - intDelta;
             manipulator.getZoomInterpolator().setTarget(zoomTarget);
         },
 
-        pushButton: function() {
-            this._buttonup = false;
-        },
-        releaseButton: function() {
-            this._buttonup = true;
+        resetToHome: function() {
+            this._manipulator.computeHomePosition();
         },
 
-        keydown: function(ev) {
-            if (ev.keyCode === 32) {
-                this._manipulator.computeHomePosition();
-                ev.preventDefault();
-            } else if (
-                ev.keyCode === this._panKey &&
-                this.getMode() !== OrbitManipulatorEnums.PAN
-            ) {
-                this.setMode(OrbitManipulatorEnums.PAN);
-                this._manipulator.getPanInterpolator().reset();
-                this.pushButton();
-                ev.preventDefault();
-            } else if (
-                ev.keyCode === this._zoomKey &&
-                this.getMode() !== OrbitManipulatorEnums.ZOOM
-            ) {
-                this.setMode(OrbitManipulatorEnums.ZOOM);
-                this._manipulator.getZoomInterpolator().reset();
-                this.pushButton();
-                ev.preventDefault();
-            } else if (
-                ev.keyCode === this._rotateKey &&
-                this.getMode() !== OrbitManipulatorEnums.ROTATE
-            ) {
-                this.setMode(OrbitManipulatorEnums.ROTATE);
-                this._manipulator.getRotateInterpolator().reset();
-                this.pushButton();
-                ev.preventDefault();
+        changeMode: function(mode, interpolator) {
+            if (this.getMode() === mode) {
+                return;
             }
-        },
-
-        keyup: function(ev) {
-            if (ev.keyCode === this._panKey) {
-                this.mouseup(ev);
-            } else if (ev.keyCode === this._rotateKey) {
-                this.mouseup(ev);
-            } else if (ev.keyCode === this._rotateKey) {
-                this.mouseup(ev);
-            }
-            this.setMode(undefined);
+            this.setMode(mode);
+            interpolator.reset();
+            this._inMotion = true;
         }
     })
 );

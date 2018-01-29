@@ -8,13 +8,14 @@ import OrbitManipulatorHammerController from 'osgGA/OrbitManipulatorHammerContro
 import OrbitManipulatorStandardMouseKeyboardController from 'osgGA/OrbitManipulatorStandardMouseKeyboardController';
 import OrbitManipulatorWebVRController from 'osgGA/OrbitManipulatorWebVRController';
 import DelayInterpolator from 'osgUtil/DelayInterpolator';
+import Groups from 'osgViewer/input/InputConstants';
 
 /**
  *  OrbitManipulator
  *  @class
  */
-var OrbitManipulator = function(boundStrategy) {
-    Manipulator.call(this, boundStrategy);
+var OrbitManipulator = function(options) {
+    Manipulator.call(this, options);
     this._homePosition = vec3.create();
     this._frustum = {};
     this.init();
@@ -173,6 +174,10 @@ utils.createPrototypeObject(
                 this._distance = vec3.distance(center, eye);
             };
         })(),
+
+        setEnable: function(enabled) {
+            this.getInputManager().setEnable(Groups.ORBIT_MANIPULATOR, enabled);
+        },
 
         computeHomePosition: function(boundStrategy) {
             var bs = this.getHomeBoundingSphere(boundStrategy);

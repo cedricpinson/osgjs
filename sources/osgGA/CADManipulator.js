@@ -12,6 +12,7 @@ import CADManipulatorStandardMouseKeyboardController from 'osgGA/CADManipulatorS
 import CADManipulatorHammerController from 'osgGA/CADManipulatorHammerController';
 import DelayInterpolator from 'osgUtil/DelayInterpolator';
 import intersectionEnums from 'osgUtil/intersectionEnums';
+import Groups from 'osgViewer/input/InputConstants';
 
 /**
  *  CADManipulator
@@ -25,8 +26,8 @@ import intersectionEnums from 'osgUtil/intersectionEnums';
  *  - Spacebar resets the view.
  */
 
-var CADManipulator = function() {
-    Manipulator.call(this);
+var CADManipulator = function(options) {
+    Manipulator.call(this, options);
     this._tmpHomePosition = vec3.create();
     this._intersectionVisitor = new IntersectionVisitor();
     this._lineSegmentIntersector = new LineSegmentIntersector();
@@ -169,6 +170,10 @@ utils.createPrototypeObject(
 
         reset: function() {
             this.init();
+        },
+
+        setEnable: function(enabled) {
+            this.getInputManager().setEnable(Groups.CAD_MANIPULATOR, enabled);
         },
 
         setNode: function(node) {
@@ -454,7 +459,7 @@ utils.createPrototypeObject(
         computeIntersections: (function() {
             var hits = [];
             var pTrans = vec3.create();
-            return function(pos) {
+            return function(posX, posY) {
                 var viewer = this._camera.getView();
 
                 var cam = this._camera;
@@ -467,7 +472,7 @@ utils.createPrototypeObject(
 
                 var point, matrix;
                 if ((this._primitiveMask & intersectionEnums.TRIANGLE_PRIMITIVES) !== 0) {
-                    hits = viewer.computeIntersections(pos[0], pos[1]);
+                    hits = viewer.computeIntersections(posX, posY);
 
                     if (hits.length > 0) {
                         point = hits[0]._localIntersectionPoint;
@@ -482,10 +487,10 @@ utils.createPrototypeObject(
                     var pi = this.getOrCreatePolytopeIntersector();
                     pi.reset();
                     pi.setPolytopeFromWindowCoordinates(
-                        pos[0] - 5,
-                        pos[1] - 5,
-                        pos[0] + 5,
-                        pos[1] + 5
+                        posX - 5,
+                        posY - 5,
+                        posX + 5,
+                        posY + 5
                     );
                     var iv = this._intersectionVisitor;
                     iv.setIntersector(pi);

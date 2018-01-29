@@ -1,186 +1,72 @@
-import Controller from 'osgGA/Controller';
+import OrbitManipulatorStandardMouseKeyboardController from 'osgGA/OrbitManipulatorStandardMouseKeyboardController';
+import Groups from 'osgViewer/input/InputConstants';
 import utils from 'osg/utils';
-import OrbitManipulator from 'osgGA/OrbitManipulator';
 
 var CADManipulatorStandardMouseKeyboardController = function(manipulator) {
-    Controller.call(this, manipulator);
+    OrbitManipulatorStandardMouseKeyboardController.call(this, manipulator);
     this._timer = false;
-    this.init();
 };
 
 utils.createPrototypeObject(
     CADManipulatorStandardMouseKeyboardController,
-    utils.objectInherit(Controller.prototype, {
-        init: function() {
-            this._rotateKey = 65; // a
-            this._zoomKey = 83; // s
-            this._panKey = 68; // d
+    utils.objectInherit(OrbitManipulatorStandardMouseKeyboardController.prototype, {
+        _initInputs: function() {
+            OrbitManipulatorStandardMouseKeyboardController.prototype._initInputs.call(
+                this,
+                Groups.CAD_MANIPULATOR_MOUSEKEYBOARD,
+                Groups.CAD_MANIPULATOR_RESETTOHOME
+            );
+            var manager = this._manipulator.getInputManager();
 
-            this._mode = undefined;
-            this._buttonup = true;
-        },
-        // called to enable/disable controller
-        setEnable: function(bool) {
-            if (!bool) {
-                // reset mode if we disable it
-                this._mode = undefined;
-            }
-            Controller.prototype.setEnable.call(this, bool);
-        },
-        getMode: function() {
-            return this._mode;
-        },
-        setMode: function(mode) {
-            this._mode = mode;
-        },
-        setEventProxy: function(proxy) {
-            this._eventProxy = proxy;
-        },
-        setManipulator: function(manipulator) {
-            this._manipulator = manipulator;
+            manager.group(Groups.CAD_MANIPULATOR_MOUSEKEYBOARD).addMappings(
+                {
+                    savePosition: 'mousemove'
+                },
+                this
+            );
         },
 
-        mousemove: function(ev) {
-            if (this._buttonup === true) {
-                return;
-            }
-
-            var manipulator = this._manipulator;
-            var pos = manipulator.getPositionRelativeToCanvas(ev.clientX, ev.clientY);
-
-            if (isNaN(pos[0]) === false && isNaN(pos[1]) === false) {
-                var mode = this.getMode();
-                if (mode === OrbitManipulator.Rotate) {
-                    manipulator.getRotateInterpolator().setTarget(pos[0], pos[1]);
-                } else if (mode === OrbitManipulator.Pan) {
-                    manipulator.getPanInterpolator().setTarget(pos[0], pos[1]);
-                } else if (mode === OrbitManipulator.Zoom) {
-                    var zoom = manipulator.getZoomInterpolator();
-                    manipulator.computeIntersections(pos);
-
-                    if (zoom.isReset()) {
-                        zoom.setStart(pos[1]);
-                        zoom.set(0.0);
-                    }
-                    var dy = pos[1] - zoom.getStart();
-                    zoom.setStart(pos[1]);
-                    var v = zoom.getTarget()[0];
-                    zoom.setTarget(v - dy / 20.0);
-                }
-            }
-
-            ev.preventDefault();
-        },
-        mousedown: function(ev) {
-            var manipulator = this._manipulator;
-            var mode = this.getMode();
-            if (mode === undefined) {
-                if (ev.button === 0) {
-                    if (ev.shiftKey) {
-                        this.setMode(OrbitManipulator.Pan);
-                    } else if (ev.ctrlKey) {
-                        this.setMode(OrbitManipulator.Zoom);
-                    } else {
-                        this.setMode(OrbitManipulator.Rotate);
-                    }
-                } else {
-                    this.setMode(OrbitManipulator.Pan);
-                }
-            }
-
-            this.pushButton();
-
-            //var pos = this.getPositionRelativeToCanvas( ev );
-            var pos = manipulator.getPositionRelativeToCanvas(ev.clientX, ev.clientY);
-            manipulator.computeIntersections(pos);
-
-            mode = this.getMode();
-            if (mode === OrbitManipulator.Rotate) {
-                manipulator.getRotateInterpolator().reset();
-                manipulator.getRotateInterpolator().set(pos[0], pos[1]);
-            } else if (mode === OrbitManipulator.Pan) {
-                manipulator.getPanInterpolator().reset();
-                manipulator.getPanInterpolator().set(pos[0], pos[1]);
-            } else if (mode === OrbitManipulator.Zoom) {
-                manipulator.getZoomInterpolator().setStart(pos[1]);
-                manipulator.getZoomInterpolator().set(0.0);
-            }
-        },
-        mouseup: function(/*ev */) {
-            this.releaseButton();
-            this.setMode(undefined);
-        },
-        mousewheel: function(ev, intDelta /*, deltaX, deltaY */) {
+        zoom: function(ev) {
+            var intDelta = -ev.deltaY / 40;
             var manipulator = this._manipulator;
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - intDelta;
             manipulator.getZoomInterpolator().setTarget(zoomTarget);
-            var timer;
             if (this._timer === false) {
                 this._timer = true;
                 var that = this;
-                clearTimeout(timer);
-                timer = setTimeout(function() {
+                if (this._timerRef) {
+                    clearTimeout(this._timerRef);
+                }
+                this._timerRef = setTimeout(function() {
                     that._timer = false;
-                }, 200);
-                //var pos = this.getPositionRelativeToCanvas( ev );
-                var pos = manipulator.getPositionRelativeToCanvas(ev.clientX, ev.clientY);
-                manipulator.computeIntersections(pos);
+                }, 1000);
+                manipulator.computeIntersections(ev.glX, ev.glY);
             }
         },
 
-        dblclick: function(ev) {
-            var manipulator = this._manipulator;
-            ev.preventDefault();
+        savePosition: function(ev) {
+            this._lastX = ev.glX;
+            this._lastY = ev.glY;
+        },
 
+        changeMode: function(mode, interpolator, ev) {
+            if (!this._inMotion) {
+                this._manipulator.computeIntersections(this._lastX, this._lastY);
+            }
+            OrbitManipulatorStandardMouseKeyboardController.prototype.changeMode.call(
+                this,
+                mode,
+                interpolator,
+                ev
+            );
+        },
+
+        center: function(ev) {
+            var manipulator = this._manipulator;
             manipulator.getZoomInterpolator().set(0.0);
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - 10; // Default interval 10
             manipulator.getZoomInterpolator().setTarget(zoomTarget);
-            //var pos = this.getPositionRelativeToCanvas( ev );
-            var pos = manipulator.getPositionRelativeToCanvas(ev.clientX, ev.clientY);
-            manipulator.computeIntersections(pos);
-        },
-
-        pushButton: function() {
-            this._buttonup = false;
-        },
-        releaseButton: function() {
-            this._buttonup = true;
-        },
-
-        keydown: function(ev) {
-            if (ev.keyCode === 32) {
-                this._manipulator.computeHomePosition();
-                ev.preventDefault();
-            } else if (ev.keyCode === this._panKey && this.getMode() !== OrbitManipulator.Pan) {
-                this.setMode(OrbitManipulator.Pan);
-                this._manipulator.getPanInterpolator().reset();
-                this.pushButton();
-                ev.preventDefault();
-            } else if (ev.keyCode === this._zoomKey && this.getMode() !== OrbitManipulator.Zoom) {
-                this.setMode(OrbitManipulator.Zoom);
-                this._manipulator.getZoomInterpolator().reset();
-                this.pushButton();
-                ev.preventDefault();
-            } else if (
-                ev.keyCode === this._rotateKey &&
-                this.getMode() !== OrbitManipulator.Rotate
-            ) {
-                this.setMode(OrbitManipulator.Rotate);
-                this._manipulator.getRotateInterpolator().reset();
-                this.pushButton();
-                ev.preventDefault();
-            }
-        },
-
-        keyup: function(ev) {
-            if (ev.keyCode === this._panKey) {
-                this.mouseup(ev);
-            } else if (ev.keyCode === this._rotateKey) {
-                this.mouseup(ev);
-            } else if (ev.keyCode === this._rotateKey) {
-                this.mouseup(ev);
-            }
-            this.setMode(undefined);
+            manipulator.computeIntersections(ev.glX, ev.glY);
         }
     })
 );

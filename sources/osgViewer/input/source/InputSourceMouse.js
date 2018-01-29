@@ -47,7 +47,7 @@ utils.createPrototypeObject(
             } else {
                 this._target.removeEventListener(name, callback);
                 if (name === 'wheel') {
-                    this._target.addEventListener('mousewheel', callback);
+                    this._target.removeEventListener('mousewheel', callback);
                     this._target.removeEventListener('DOMMouseScroll', callback);
                     this._target.removeEventListener('MozMousePixelScroll', callback);
                 }

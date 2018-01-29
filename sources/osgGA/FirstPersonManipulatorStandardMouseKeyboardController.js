@@ -1,5 +1,6 @@
 import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
+import Groups from 'osgViewer/input/InputConstants';
 
 var FirstPersonManipulatorStandardMouseKeyboardController = function(manipulator) {
     Controller.call(this, manipulator);
@@ -12,7 +13,43 @@ utils.createPrototypeObject(
         init: function() {
             this._delay = 0.15;
             this._stepFactor = 1.0; // meaning radius*stepFactor to move
-            this._buttonup = true;
+            this._looking = false;
+
+            var manager = this._manipulator.getInputManager();
+            manager.group(Groups.FPS_MANIPULATOR_MOUSEKEYBOARD).addMappings(
+                {
+                    startLookAt: 'mousedown',
+                    lookAt: 'mousemove',
+                    stopLookAt: ['mouseup', 'mouseout'],
+                    goForward: ['keydown w', 'keydown z', 'keydown ArrowUp'],
+                    goBackward: ['keydown s', 'keydown ArrowDown'],
+                    goLeft: ['keydown a', 'keydown q', 'keydown ArrowLeft'],
+                    goRight: ['keydown d', 'keydown ArrowRight'],
+                    stopMoving: [
+                        'keyup w',
+                        'keyup z',
+                        'keyup ArrowUp',
+                        'keyup s',
+                        'keyup ArrowDown'
+                    ],
+                    stopStrafing: [
+                        'keyup a',
+                        'keyup q',
+                        'keyup ArrowLeft',
+                        'keyup d',
+                        'keyup ArrowRight'
+                    ],
+                    changeStepFactor: 'wheel'
+                },
+                this
+            );
+
+            manager.group(Groups.FPS_MANIPULATOR_RESETTOHOME).addMappings(
+                {
+                    resetToHome: 'keydown space'
+                },
+                this
+            );
         },
         // called to enable/disable controller
         setEnable: function(bool) {
@@ -22,9 +59,7 @@ utils.createPrototypeObject(
             }
             Controller.prototype.setEnable.call(this, bool);
         },
-        setEventProxy: function(proxy) {
-            this._eventProxy = proxy;
-        },
+
         setManipulator: function(manipulator) {
             this._manipulator = manipulator;
 
@@ -32,100 +67,63 @@ utils.createPrototypeObject(
             this._manipulator.setStepFactor(this._stepFactor);
         },
 
-        pushButton: function() {
-            this._buttonup = false;
-        },
-        releaseButton: function() {
-            this._buttonup = true;
+        stopLookAt: function() {
+            this._looking = false;
         },
 
-        mousedown: function(ev) {
-            var pos = this._eventProxy.getPositionRelativeToCanvas(ev);
+        startLookAt: function(ev) {
             var manipulator = this._manipulator;
-            manipulator.getLookPositionInterpolator().set(pos[0], pos[1]);
-            this.pushButton();
+            manipulator.getLookPositionInterpolator().set(ev.glX, ev.glY);
+            this._looking = true;
         },
-        mouseup: function(/*ev */) {
-            this.releaseButton();
-        },
-        mouseout: function(/*ev */) {
-            this.releaseButton();
-        },
-        mousemove: function(ev) {
-            if (this._buttonup === true) {
+
+        lookAt: function(ev) {
+            if (!this._looking) {
                 return;
             }
 
-            var pos = this._eventProxy.getPositionRelativeToCanvas(ev);
             this._manipulator.getLookPositionInterpolator().setDelay(this._delay);
-            this._manipulator.getLookPositionInterpolator().setTarget(pos[0], pos[1]);
-
-            ev.preventDefault();
+            this._manipulator.getLookPositionInterpolator().setTarget(ev.glX, ev.glY);
         },
-        mousewheel: function(ev, intDelta /*, deltaX, deltaY */) {
+
+        changeStepFactor: function(ev) {
+            var intDelta = -ev.deltaY / 40;
             this._stepFactor = Math.min(Math.max(0.001, this._stepFactor + intDelta * 0.01), 4.0);
             this._manipulator.setStepFactor(this._stepFactor);
         },
 
-        keydown: function(event) {
-            var manipulator = this._manipulator;
-            if (event.keyCode === 32) {
-                manipulator.computeHomePosition();
-                event.preventDefault();
-            } else if (event.keyCode === 87 || event.keyCode === 90 || event.keyCode === 38) {
-                // w/z/up
-                manipulator.getForwardInterpolator().setDelay(this._delay);
-                manipulator.getForwardInterpolator().setTarget(1);
-                event.preventDefault();
-                return false;
-            } else if (event.keyCode === 83 || event.keyCode === 40) {
-                // S/down
-                manipulator.getForwardInterpolator().setDelay(this._delay);
-                manipulator.getForwardInterpolator().setTarget(-1);
-                event.preventDefault();
-                return false;
-            } else if (event.keyCode === 68 || event.keyCode === 39) {
-                // D/right
-                manipulator.getSideInterpolator().setDelay(this._delay);
-                manipulator.getSideInterpolator().setTarget(1);
-                event.preventDefault();
-                return false;
-            } else if (event.keyCode === 65 || event.keyCode === 81 || event.keyCode === 37) {
-                // a/q/left
-                manipulator.getSideInterpolator().setDelay(this._delay);
-                manipulator.getSideInterpolator().setTarget(-1);
-                event.preventDefault();
-                return false;
-            }
-            return undefined;
+        resetToHome: function() {
+            this._manipulator.computeHomePosition();
         },
 
-        keyup: function(event) {
-            var manipulator = this._manipulator;
-            if (
-                event.keyCode === 87 ||
-                event.keyCode === 90 ||
-                event.keyCode === 38 || // w/z/up
-                event.keyCode === 83 ||
-                event.keyCode === 40
-            ) {
-                // S/down
-                manipulator.getForwardInterpolator().setDelay(this._delay);
-                manipulator.getForwardInterpolator().setTarget(0);
-                return false;
-            } else if (
-                event.keyCode === 68 ||
-                event.keyCode === 39 || // D/right
-                event.keyCode === 65 ||
-                event.keyCode === 81 ||
-                event.keyCode === 37
-            ) {
-                // a/q/left
-                manipulator.getSideInterpolator().setDelay(this._delay);
-                manipulator.getSideInterpolator().setTarget(0);
-                return false;
-            }
-            return undefined;
+        goForward: function() {
+            this._manipulator.getForwardInterpolator().setDelay(this._delay);
+            this._manipulator.getForwardInterpolator().setTarget(1);
+        },
+
+        goBackward: function() {
+            this._manipulator.getForwardInterpolator().setDelay(this._delay);
+            this._manipulator.getForwardInterpolator().setTarget(-1);
+        },
+
+        goLeft: function() {
+            this._manipulator.getSideInterpolator().setDelay(this._delay);
+            this._manipulator.getSideInterpolator().setTarget(-1);
+        },
+
+        goRight: function() {
+            this._manipulator.getSideInterpolator().setDelay(this._delay);
+            this._manipulator.getSideInterpolator().setTarget(1);
+        },
+
+        stopMoving: function() {
+            this._manipulator.getForwardInterpolator().setDelay(this._delay);
+            this._manipulator.getForwardInterpolator().setTarget(0);
+        },
+
+        stopStrafing: function() {
+            this._manipulator.getSideInterpolator().setDelay(this._delay);
+            this._manipulator.getSideInterpolator().setTarget(0);
         }
     })
 );

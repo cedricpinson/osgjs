@@ -9,6 +9,7 @@ import FirstPersonManipulatorHammerController from 'osgGA/FirstPersonManipulator
 import FirstPersonManipulatorWebVRController from 'osgGA/FirstPersonManipulatorWebVRController';
 import FirstPersonManipulatorStandardMouseKeyboardController from 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController';
 import DelayInterpolator from 'osgUtil/DelayInterpolator';
+import Groups from 'osgViewer/input/InputConstants';
 
 /**
  * Authors:
@@ -20,8 +21,8 @@ import DelayInterpolator from 'osgUtil/DelayInterpolator';
  *  FirstPersonManipulator
  *  @class
  */
-var FirstPersonManipulator = function(boundStrategy) {
-    Manipulator.call(this, boundStrategy);
+var FirstPersonManipulator = function(options) {
+    Manipulator.call(this, options);
     this.init();
 };
 
@@ -118,6 +119,10 @@ utils.createPrototypeObject(
             var dir = vec3.scale(this._tmpGetTargetDir, this._direction, this._distance);
             vec3.add(pos, this._eye, dir);
             return pos;
+        },
+
+        setEnable: function(enabled) {
+            this.getInputManager().setEnable(Groups.FPS_MANIPULATOR, enabled);
         },
 
         setTarget: function(pos) {

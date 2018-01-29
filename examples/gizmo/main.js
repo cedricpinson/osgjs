@@ -6,6 +6,9 @@
     var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
     var osgDB = OSG.osgDB;
+    var osgGA = OSG.osgGA;
+    var cadManipulator;
+    var orbitManipulator;
 
     var createScene = function(viewer) {
         var root = new osg.Node();
@@ -14,7 +17,28 @@
             var gizmo = new osgUtil.NodeGizmo(viewer);
             gizmo._autoInsertMT = true;
             root.addChild(gizmo);
-            viewer.getManipulator().computeHomePosition();
+            cadManipulator = new osgGA.CADManipulator({ inputManager: viewer.getInputManager() });
+            cadManipulator.setEnable(false);
+            orbitManipulator = viewer.getManipulator();
+            orbitManipulator.computeHomePosition();
+
+            viewer
+                .getInputManager()
+                .group('scene.example.gizmo.switchmanipulator')
+                .addMappings(
+                    {
+                        switch: 'keyup enter'
+                    },
+                    function() {
+                        var manip = viewer.getManipulator();
+                        if (manip === orbitManipulator) {
+                            viewer.setupManipulator(cadManipulator);
+                            cadManipulator.computeHomePosition();
+                        } else {
+                            viewer.setupManipulator(orbitManipulator);
+                        }
+                    }
+                );
         });
         return root;
     };
