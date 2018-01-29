@@ -27,6 +27,7 @@ OSG.osgStats = osgStats;
 OSG.osgText = osgText;
 OSG.osgWrappers = osgWrappers;
 OSG.osgPlugins = osgPlugins;
+OSG.InputGroups = osgViewer.InputGroups;
 
 // for backward compatibility
 OSG.globalify = function() {
@@ -42,6 +43,7 @@ OSG.globalify = function() {
     window.osgText = OSG.osgText;
     window.osgWrappers = OSG.osgWrappers;
     window.osgPlugins = OSG.osgPlugins;
+    window.InputGroups = OSG.InputGroups;
 };
 
 export {

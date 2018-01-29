@@ -18,10 +18,15 @@ notify.console = window.console;
  * @param { str } actual log text
  * @param { fold  } sometimes you want to hide looooong text
  */
-function logSub(intLevel, strLevel, str) {
+function logSub() {
+    var intLevel = arguments[0];
     if (!notify.console || intLevel > notify.currentNotifyLevel) return;
 
-    notify.console[strLevel](str);
+    var strLevel = arguments[1];
+    var args = Array.prototype.slice.call(arguments);
+    args = args.splice(2, arguments.length);
+
+    notify.console[strLevel].apply(notify.console, args);
     if (notify.traceLogCall && intLevel !== notify.ERROR) console.trace();
 }
 
@@ -70,6 +75,10 @@ for (var i = 0; i < levelEntries.length; ++i) {
     notify[level + 'Matrix'] = logMatrix.bind(notify, intLevel);
     notify[level + 'MatrixFold'] = logMatrixFold.bind(notify, intLevel);
 }
+
+notify.group = logSub.bind(notify, notify.LOG, 'group');
+notify.groupCollapsed = logSub.bind(notify, notify.LOG, 'groupCollapsed');
+notify.groupEnd = notify.console.groupEnd;
 
 // alias
 notify.notice = notify.log;
