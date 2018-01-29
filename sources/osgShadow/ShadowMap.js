@@ -204,8 +204,8 @@ utils.createPrototypeObject(
             return this._dirty;
         },
         /**
-     * at which Texture unit number we start adding texture shadow
-     */
+         * at which Texture unit number we start adding texture shadow
+         */
         setTextureUnitBase: function(unitBase) {
             this._textureUnitBase = unitBase;
             this._textureUnit = unitBase;
@@ -332,6 +332,15 @@ utils.createPrototypeObject(
             }
         },
 
+        _rebindFbo: function() {
+            this._cameraShadow.detachAll();
+            this._cameraShadow.attachTexture(FrameBufferObject.COLOR_ATTACHMENT0, this._texture);
+            this._cameraShadow.attachRenderBuffer(
+                FrameBufferObject.DEPTH_ATTACHMENT,
+                FrameBufferObject.DEPTH_COMPONENT16
+            );
+        },
+
         /** initialize the ShadowedScene and local cached data structures.*/
         init: function(atlasTexture, lightIndex, textureUnit) {
             if (!this._shadowedScene) return;
@@ -344,7 +353,7 @@ utils.createPrototypeObject(
 
             if (!atlasTexture) {
                 this.initTexture();
-
+                this._rebindFbo();
                 this._textureUnit = this._textureUnitBase + lightNumber;
                 this._texture.setLightNumber(lightNumber);
                 this._texture.setName('ShadowTexture' + this._textureUnit);
@@ -475,12 +484,7 @@ utils.createPrototypeObject(
                     vp.height() !== texture.getHeight()
                 ) {
                     // if texture size changed update the camera rtt params
-                    camera.detachAll();
-                    camera.attachTexture(FrameBufferObject.COLOR_ATTACHMENT0, texture);
-                    camera.attachRenderBuffer(
-                        FrameBufferObject.DEPTH_ATTACHMENT,
-                        FrameBufferObject.DEPTH_COMPONENT16
-                    );
+                    this._rebindFbo();
                     vp.setViewport(0, 0, texture.getWidth(), texture.getHeight());
                 }
             }
