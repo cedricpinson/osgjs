@@ -12,7 +12,7 @@ import CADManipulatorStandardMouseKeyboardController from 'osgGA/CADManipulatorS
 import CADManipulatorHammerController from 'osgGA/CADManipulatorHammerController';
 import DelayInterpolator from 'osgUtil/DelayInterpolator';
 import intersectionEnums from 'osgUtil/intersectionEnums';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 /**
  *  CADManipulator
@@ -173,7 +173,7 @@ utils.createPrototypeObject(
         },
 
         setEnable: function(enabled) {
-            this.getInputManager().setEnable(Groups.CAD_MANIPULATOR, enabled);
+            this.getInputManager().setEnable(InputGroups.CAD_MANIPULATOR, enabled);
         },
 
         setNode: function(node) {

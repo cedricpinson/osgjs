@@ -3,7 +3,7 @@ import utils from 'osg/utils';
 import { quat } from 'osg/glMatrix';
 import { vec3 } from 'osg/glMatrix';
 import { mat4 } from 'osg/glMatrix';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 var tempQuat = quat.create();
 var tempPos = vec3.create();
@@ -21,7 +21,7 @@ utils.createPrototypeObject(
             this._quat = quat.create();
 
             var manager = this._manipulator.getInputManager();
-            manager.group(Groups.FPS_MANIPULATOR_WEBVR).addMappings(
+            manager.group(InputGroups.FPS_MANIPULATOR_WEBVR).addMappings(
                 {
                     update: 'vrdisplayposechanged'
                 },
@@ -29,7 +29,7 @@ utils.createPrototypeObject(
             );
 
             // default to disabled
-            manager.setEnable(Groups.FPS_MANIPULATOR_WEBVR, false);
+            manager.setEnable(InputGroups.FPS_MANIPULATOR_WEBVR, false);
         },
         update: function(ev) {
             var q = ev.pose.orientation;

@@ -17,6 +17,7 @@ import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
 import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
 import shape from 'osg/shape';
 import BoundingBox from 'osg/BoundingBox';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 // Stats usages:
 // url usable in Options
@@ -53,17 +54,6 @@ import BoundingBox from 'osg/BoundingBox';
 //     getViewerStats().setShowFilter(['cull', 'myGroup']) // will display only cull
 //     and myGroup groups
 //     getViewerStats().setFontSize(50)
-
-var getCanvasCoord = function(vec, e) {
-    if (e.touches && e.touches.length) {
-        var touch = e.touches[0];
-        vec[0] = touch.pageX;
-        vec[1] = touch.pageY;
-    } else {
-        vec[0] = e.offsetX === undefined ? e.layerX : e.offsetX;
-        vec[1] = e.offsetY === undefined ? e.layerY : e.offsetY;
-    }
-};
 
 var PICKING_NODEMASK = 0x8000;
 
@@ -312,60 +302,66 @@ utils.createPrototypeObject(Stats, {
 
         this._canvas = canvas;
 
-        canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
-        canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
-        canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
-        canvas.addEventListener('mouseout', this.onMouseUp.bind(this));
+        var manager = this._viewer.getInputManager();
 
-        canvas.addEventListener('touchmove', this.onMouseMove.bind(this));
-        canvas.addEventListener('touchstart', this.onMouseDown.bind(this));
-        canvas.addEventListener('touchend', this.onMouseUp.bind(this));
-        canvas.addEventListener('touchcancel', this.onMouseUp.bind(this));
+        manager.group(InputGroups.STATS).addMappings(
+            {
+                onMouseMove: ['mousemove', 'touchmove'],
+                onMouseDown: ['mousedown', 'touchstart'],
+                onMouseUp: ['mouseup', 'mouseout', 'touchend', 'touchcancel'],
+            },
+            this
+        );
+        manager.setPriority(InputGroups.STATS, manager.getHigherPriority(InputGroups.SCENE));
+
+
+        // canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+        // canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+        // canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+        // canvas.addEventListener('mouseout', this.onMouseUp.bind(this));
+        //
+        // canvas.addEventListener('touchmove', this.onMouseMove.bind(this));
+        // canvas.addEventListener('touchstart', this.onMouseDown.bind(this));
+        // canvas.addEventListener('touchend', this.onMouseUp.bind(this));
+        // canvas.addEventListener('touchcancel', this.onMouseUp.bind(this));
     },
     onMouseDown: function(e) {
         var hits = this.computeNearestIntersection(e);
         this._onStats = !!hits.length;
         if (!this._onStats) return;
 
-        this._viewer.setEnableManipulator(false);
-
-        e.preventDefault();
+        this._viewer.getInputManager().setEnable(InputGroups.SCENE, false);
         mat4.copy(this._startTransformation, this._nodeTransform.getMatrix());
-        getCanvasCoord(this._dragStart, e);
+        vec2.set(this._dragStart, e.canvasX, e.canvasY);
         this._dragStop[1] = this._dragStart[1];
     },
     onMouseMove: (function() {
+        var tmpVec3 = vec3.create();
         return function(e) {
             if (!this._onStats) return;
 
-            getCanvasCoord(this._dragStop, e);
+            vec2.set(this._dragStop, e.canvasX, e.canvasY);
             var dy = this._dragStop[1] - this._dragStart[1];
             mat4.translate(
                 this._nodeTransform.getMatrix(),
                 this._startTransformation,
-                vec3.fromValues(0, -dy, 0)
+                vec3.set(tmpVec3, 0, -dy, 0)
             );
         };
     })(),
     onMouseUp: function() {
-        this._viewer.setEnableManipulator(true);
+        this._viewer.getInputManager().setEnable(InputGroups.SCENE, true);
         this._onStats = false;
     },
     computeNearestIntersection: (function() {
-        var coord = vec2.create();
         var lsi = new LineSegmentIntersector();
         var origIntersect = vec3.create();
         var dstIntersect = vec3.create();
         var iv = new IntersectionVisitor();
         iv.setIntersector(lsi);
         return function(e) {
-            getCanvasCoord(coord, e);
-
-            // canvas to webgl coord
-            var viewer = this._viewer;
-            var canvas = this._canvas;
-            var x = coord[0] * (viewer._canvasWidth / canvas.clientWidth);
-            var y = (canvas.clientHeight - coord[1]) * (viewer._canvasHeight / canvas.clientHeight);
+            var x = e.glX;
+            var y = e.glY;
 
             lsi.reset();
             lsi.set(vec3.set(origIntersect, x, y, 0.0), vec3.set(dstIntersect, x, y, 1.0));

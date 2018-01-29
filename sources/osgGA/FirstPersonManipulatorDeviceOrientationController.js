@@ -2,7 +2,7 @@ import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
 import { quat } from 'osg/glMatrix';
 import { vec3 } from 'osg/glMatrix';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
@@ -119,7 +119,7 @@ utils.createPrototypeObject(
             this._screenOrientation = undefined;
 
             var manager = this._manipulator.getInputManager();
-            manager.group(Groups.FPS_MANIPULATOR_DEVICEORIENTATION).addMappings(
+            manager.group(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION).addMappings(
                 {
                     setDeviceOrientation: 'deviceorientation',
                     setScreenOrientation: 'orientationchange'
@@ -128,7 +128,7 @@ utils.createPrototypeObject(
             );
 
             // default to disabled
-            manager.setEnable(Groups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
+            manager.setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
         },
 
         setDeviceOrientation: function(ev) {

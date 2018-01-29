@@ -9,7 +9,7 @@ import FirstPersonManipulatorHammerController from 'osgGA/FirstPersonManipulator
 import FirstPersonManipulatorWebVRController from 'osgGA/FirstPersonManipulatorWebVRController';
 import FirstPersonManipulatorStandardMouseKeyboardController from 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController';
 import DelayInterpolator from 'osgUtil/DelayInterpolator';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 /**
  * Authors:
@@ -122,7 +122,7 @@ utils.createPrototypeObject(
         },
 
         setEnable: function(enabled) {
-            this.getInputManager().setEnable(Groups.FPS_MANIPULATOR, enabled);
+            this.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR, enabled);
         },
 
         setTarget: function(pos) {

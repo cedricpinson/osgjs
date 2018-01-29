@@ -1,5 +1,5 @@
 import OrbitManipulatorStandardMouseKeyboardController from 'osgGA/OrbitManipulatorStandardMouseKeyboardController';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 import utils from 'osg/utils';
 
 var CADManipulatorStandardMouseKeyboardController = function(manipulator) {
@@ -7,18 +7,21 @@ var CADManipulatorStandardMouseKeyboardController = function(manipulator) {
     this._timer = false;
 };
 
+var ZOOM_OFFSET = 10;
+var PICK_INTERVAL = 200;
+
 utils.createPrototypeObject(
     CADManipulatorStandardMouseKeyboardController,
     utils.objectInherit(OrbitManipulatorStandardMouseKeyboardController.prototype, {
         _initInputs: function() {
             OrbitManipulatorStandardMouseKeyboardController.prototype._initInputs.call(
                 this,
-                Groups.CAD_MANIPULATOR_MOUSEKEYBOARD,
-                Groups.CAD_MANIPULATOR_RESETTOHOME
+                InputGroups.CAD_MANIPULATOR_MOUSEKEYBOARD,
+                InputGroups.CAD_MANIPULATOR_RESETTOHOME
             );
             var manager = this._manipulator.getInputManager();
 
-            manager.group(Groups.CAD_MANIPULATOR_MOUSEKEYBOARD).addMappings(
+            manager.group(InputGroups.CAD_MANIPULATOR_MOUSEKEYBOARD).addMappings(
                 {
                     savePosition: 'mousemove'
                 },
@@ -27,7 +30,7 @@ utils.createPrototypeObject(
         },
 
         zoom: function(ev) {
-            var intDelta = -ev.deltaY / 40;
+            var intDelta = -ev.deltaY / this._zoomFactor;
             var manipulator = this._manipulator;
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - intDelta;
             manipulator.getZoomInterpolator().setTarget(zoomTarget);
@@ -39,7 +42,7 @@ utils.createPrototypeObject(
                 }
                 this._timerRef = setTimeout(function() {
                     that._timer = false;
-                }, 1000);
+                }, PICK_INTERVAL);
                 manipulator.computeIntersections(ev.glX, ev.glY);
             }
         },
@@ -49,11 +52,11 @@ utils.createPrototypeObject(
             this._lastY = ev.glY;
         },
 
-        changeMode: function(mode, interpolator, ev) {
+        setMode: function(mode, interpolator, ev) {
             if (!this._inMotion) {
                 this._manipulator.computeIntersections(this._lastX, this._lastY);
             }
-            OrbitManipulatorStandardMouseKeyboardController.prototype.changeMode.call(
+            OrbitManipulatorStandardMouseKeyboardController.prototype.setMode.call(
                 this,
                 mode,
                 interpolator,
@@ -64,7 +67,7 @@ utils.createPrototypeObject(
         center: function(ev) {
             var manipulator = this._manipulator;
             manipulator.getZoomInterpolator().set(0.0);
-            var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - 10; // Default interval 10
+            var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - ZOOM_OFFSET;
             manipulator.getZoomInterpolator().setTarget(zoomTarget);
             manipulator.computeIntersections(ev.glX, ev.glY);
         }

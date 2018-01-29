@@ -1,6 +1,6 @@
 import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 var FirstPersonManipulatorStandardMouseKeyboardController = function(manipulator) {
     Controller.call(this, manipulator);
@@ -16,7 +16,7 @@ utils.createPrototypeObject(
             this._looking = false;
 
             var manager = this._manipulator.getInputManager();
-            manager.group(Groups.FPS_MANIPULATOR_MOUSEKEYBOARD).addMappings(
+            manager.group(InputGroups.FPS_MANIPULATOR_MOUSEKEYBOARD).addMappings(
                 {
                     startLookAt: 'mousedown',
                     lookAt: 'mousemove',
@@ -44,9 +44,9 @@ utils.createPrototypeObject(
                 this
             );
 
-            manager.group(Groups.FPS_MANIPULATOR_RESETTOHOME).addMappings(
+            manager.group(InputGroups.FPS_MANIPULATOR_RESETTOHOME).addMappings(
                 {
-                    resetToHome: 'keydown space'
+                    reset: 'keydown space'
                 },
                 this
             );
@@ -92,7 +92,7 @@ utils.createPrototypeObject(
             this._manipulator.setStepFactor(this._stepFactor);
         },
 
-        resetToHome: function() {
+        reset: function() {
             this._manipulator.computeHomePosition();
         },
 

@@ -2,8 +2,6 @@ import utils from 'osg/utils';
 import InputSource from 'osgViewer/input/source/InputSource';
 import notify from 'osg/notify';
 
-var POLL_INTERVAL = 3000;
-
 /**
  * WebVR Hmd device input handling.
  * @param canvas
@@ -21,6 +19,8 @@ var InputSourceWebVR = function() {
         this._events[eventName] = event;
     }
     this._nbCallbacks = 0;
+    // 3 seconds default poll interval
+    this._pollInterval = 3000;
 
     this._pollHeadset();
 };
@@ -108,8 +108,12 @@ utils.createPrototypeObject(
                         }
                     });
                 }.bind(this),
-                POLL_INTERVAL
+                this._pollInterval
             );
+        },
+
+        setPollInterval: function (interval) {
+            this._pollInterval = interval;
         },
 
         poll: function() {

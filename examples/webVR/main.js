@@ -11,7 +11,7 @@ import notify from 'sources/osg/notify';
     var ExampleOSGJS = window.ExampleOSGJS;
     var $ = window.$;
     var Object = window.Object;
-    var Groups = OSG.osgViewer.InputGroups;
+    var InputGroups = OSG.osgViewer.InputGroups;
 
     var Example = function() {
         ExampleOSGJS.call(this);
@@ -56,7 +56,7 @@ import notify from 'sources/osg/notify';
                 // The modelNode will be attached to it
                 if (!this._vrNode) {
                     if (navigator.getVRDisplays) {
-                        viewer.getInputManager().setEnable(Groups.FPS_MANIPULATOR_WEBVR, true);
+                        viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_WEBVR, true);
                         this._vrNode = osgUtil.WebVR.createScene(
                             viewer,
                             this._modelNode,
@@ -65,7 +65,7 @@ import notify from 'sources/osg/notify';
                     } else {
                         viewer
                             .getInputManager()
-                            .setEnable(Groups.FPS_MANIPULATOR_DEVICEORIENTATION, true);
+                            .setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, true);
                         this._vrNode = osgUtil.WebVRCustom.createScene(viewer, this._modelNode, {
                             isCardboard: true,
                             vResolution: this._canvas.height,
@@ -81,8 +81,8 @@ import notify from 'sources/osg/notify';
                 $('#button-exit-fullscreen').show();
             } else {
                 // Disable VR
-                viewer.getInputManager().setEnable(Groups.FPS_MANIPULATOR_WEBVR, false);
-                viewer.getInputManager().setEnable(Groups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
+                viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_WEBVR, false);
+                viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
 
                 // Detach the vrNode and reattach the modelNode
                 this.getRootNode().removeChild(this._vrNode);

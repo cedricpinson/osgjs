@@ -2,10 +2,11 @@ import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
 import osgMath from 'osg/math';
 import OrbitManipulatorEnums from 'osgGA/orbitManipulatorEnums';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 var OrbitManipulatorStandardMouseKeyboardController = function(manipulator) {
     Controller.call(this, manipulator);
+    this._zoomFactor = 40;
     this.init();
 };
 
@@ -17,24 +18,24 @@ utils.createPrototypeObject(
             this._inMotion = false;
 
             this._initInputs(
-                Groups.ORBIT_MANIPULATOR_MOUSEKEYBOARD,
-                Groups.ORBIT_MANIPULATOR_RESETTOHOME
+                InputGroups.ORBIT_MANIPULATOR_MOUSEKEYBOARD,
+                InputGroups.ORBIT_MANIPULATOR_RESETTOHOME
             );
         },
 
         _initInputs: function(globalGroup, resetToHomeGroup) {
             var manager = this._manipulator.getInputManager();
-            var setRotationMode = this.changeMode.bind(
+            var setRotationMode = this.setMode.bind(
                 this,
                 OrbitManipulatorEnums.ROTATE,
                 this._manipulator.getRotateInterpolator()
             );
-            var setPanMode = this.changeMode.bind(
+            var setPanMode = this.setMode.bind(
                 this,
                 OrbitManipulatorEnums.PAN,
                 this._manipulator.getPanInterpolator()
             );
-            var setZoomMode = this.changeMode.bind(
+            var setZoomMode = this.setMode.bind(
                 this,
                 OrbitManipulatorEnums.ZOOM,
                 this._manipulator.getZoomInterpolator()
@@ -42,7 +43,7 @@ utils.createPrototypeObject(
 
             manager.group(globalGroup).addMappings(
                 {
-                    motion: 'mousemove',
+                    move: 'mousemove',
                     startPan: ['mousedown shift 0', 'mousedown 1', 'mousedown 2'],
                     startZoom: ['mousedown ctrl 0', 'mousedown ctrl 2'],
                     startRotate: 'mousedown 0 !shift !ctrl',
@@ -54,7 +55,7 @@ utils.createPrototypeObject(
 
             manager.group(resetToHomeGroup).addMappings(
                 {
-                    resetToHome: 'keydown space'
+                    reset: 'keydown space'
                 },
                 this
             );
@@ -70,15 +71,28 @@ utils.createPrototypeObject(
             return this._mode;
         },
 
-        setMode: function(mode) {
+        setMode: function(mode, interpolator) {
+            if (this.getMode() === mode) {
+                return;
+            }
             this._mode = mode;
+            interpolator.reset();
+            this._inMotion = true;
         },
 
         setManipulator: function(manipulator) {
             this._manipulator = manipulator;
         },
 
-        motion: function(ev) {
+        getZoomFactor: function() {
+            return this._zoomFactor;
+        },
+
+        setZoomFactor: function(factor) {
+            this._zoomFactor = factor;
+        },
+
+        move: function(ev) {
             if (this._inMotion === false) {
                 return;
             }
@@ -109,49 +123,40 @@ utils.createPrototypeObject(
 
         startPan: function(ev) {
             var pan = this._manipulator.getPanInterpolator();
-            this.changeMode(OrbitManipulatorEnums.PAN, pan);
+            this.setMode(OrbitManipulatorEnums.PAN, pan);
             pan.reset();
             pan.set(ev.glX, ev.glY);
         },
 
         startRotate: function(ev) {
             var rotate = this._manipulator.getRotateInterpolator();
-            this.changeMode(OrbitManipulatorEnums.ROTATE, rotate);
+            this.setMode(OrbitManipulatorEnums.ROTATE, rotate);
             rotate.reset();
             rotate.set(ev.glX, ev.glY);
         },
 
         startZoom: function(ev) {
             var zoom = this._manipulator.getZoomInterpolator();
-            this.changeMode(OrbitManipulatorEnums.ZOOM, zoom);
+            this.setMode(OrbitManipulatorEnums.ZOOM, zoom);
             zoom.setStart(ev.glY);
             zoom.set(0.0);
         },
 
         stopMotion: function() {
             this._inMotion = false;
-            this.setMode(undefined);
+            this._mode = undefined;
         },
 
         zoom: function(ev) {
-            var intDelta = -ev.deltaY / 40;
+            var intDelta = -ev.deltaY / this._zoomFactor;
             var manipulator = this._manipulator;
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - intDelta;
             manipulator.getZoomInterpolator().setTarget(zoomTarget);
         },
 
-        resetToHome: function() {
+        reset: function() {
             this._manipulator.computeHomePosition();
         },
-
-        changeMode: function(mode, interpolator) {
-            if (this.getMode() === mode) {
-                return;
-            }
-            this.setMode(mode);
-            interpolator.reset();
-            this._inMotion = true;
-        }
     })
 );
 export default OrbitManipulatorStandardMouseKeyboardController;

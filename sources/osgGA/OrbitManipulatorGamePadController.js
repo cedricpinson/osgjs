@@ -1,7 +1,7 @@
 import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
 import { vec2 } from 'osg/glMatrix';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 var OrbitManipulatorGamePadController = function(manipulator) {
     Controller.call(this, manipulator);
@@ -27,7 +27,7 @@ utils.createPrototypeObject(
             this._pan.setDelay(this._delay);
 
             var manager = this._manipulator.getInputManager();
-            manager.group(Groups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
                 {
                     addZoom: 'axis 3',
                     addRotateX: 'axis 0',
@@ -36,28 +36,28 @@ utils.createPrototypeObject(
                 this
             );
 
-            manager.group(Groups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
                 {
                     panUp: 'buttonvalue 12'
                 },
                 this.pan.bind(this, vec2.fromValues(0, 1))
             );
 
-            manager.group(Groups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
                 {
                     panDown: 'buttonvalue 13'
                 },
                 this.pan.bind(this, vec2.fromValues(0, -1))
             );
 
-            manager.group(Groups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
                 {
                     panLeft: 'buttonvalue 14'
                 },
                 this.pan.bind(this, vec2.fromValues(1, 0))
             );
 
-            manager.group(Groups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
                 {
                     panRight: 'buttonvalue 15'
                 },

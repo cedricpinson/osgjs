@@ -19,7 +19,6 @@ var InputSourceTouchScreen = function(canvas) {
         'press',
         'rotate',
         'swipe',
-        'tap',
         'doubletap',
         'doubletap2fingers',
         'singletap'
@@ -115,10 +114,11 @@ utils.createPrototypeObject(
             if (this._isNativeEvent(ev.type)) {
                 //native event
                 customEvent.canvasX = customEvent.canvasY = 0;
-                var nbTouches = ev.touches.length;
+                var touches = ev.touches.length ? ev.touches : ev.changedTouches;
+                var nbTouches = touches.length;
                 for (var i = 0; i < nbTouches; ++i) {
-                    customEvent.canvasX += ev.touches[i].clientX / nbTouches;
-                    customEvent.canvasY += ev.touches[i].clientY / nbTouches;
+                    customEvent.canvasX += touches[i].clientX / nbTouches;
+                    customEvent.canvasY += touches[i].clientY / nbTouches;
                 }
                 // modifiers
                 customEvent.ctrlKey = ev.ctrlKey;
@@ -143,7 +143,7 @@ utils.createPrototypeObject(
 
             var offset = this._target.getBoundingClientRect();
             customEvent.canvasX += -offset.left;
-            customEvent.canvasX += -offset.top;
+            customEvent.canvasY += -offset.top;
 
             // x, y coordinates in the gl viewport
             var ratio = this._inputManager.getParam('pixelRatio');
@@ -205,7 +205,7 @@ utils.createPrototypeObject(
             return false;
         },
 
-        getHammer: function () {
+        getHammer: function() {
             return this._hammer;
         }
     }),

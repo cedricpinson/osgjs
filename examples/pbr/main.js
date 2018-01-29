@@ -1,4 +1,4 @@
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 (function() {
     'use strict';
@@ -1205,7 +1205,7 @@ import Groups from 'osgViewer/input/InputConstants';
         },
 
         setEnableInput: function(enable) {
-            this._viewer.getInputManager().setEnable(Groups.MANIPULATORS, enable);
+            this._viewer.getInputManager().setEnable(InputGroups.MANIPULATORS, enable);
         },
 
         createGUI: function() {

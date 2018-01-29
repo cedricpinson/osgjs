@@ -1,5 +1,5 @@
 import OrbitManipulatorHammerController from 'osgGA/OrbitManipulatorHammerController';
-import Groups from 'osgViewer/input/InputConstants';
+import InputGroups from 'osgViewer/input/InputConstants';
 import utils from 'osg/utils';
 
 var CADManipulatorHammerController = function(manipulator) {
@@ -11,7 +11,7 @@ utils.createPrototypeObject(
     CADManipulatorHammerController,
     utils.objectInherit(OrbitManipulatorHammerController.prototype, {
         _initInputs: function() {
-            OrbitManipulatorHammerController.prototype._initInputs.call(this, Groups.CAD_MANIPULATOR_TOUCH);
+            OrbitManipulatorHammerController.prototype._initInputs.call(this, InputGroups.CAD_MANIPULATOR_TOUCH);
         },
 
         startMotion: function(interpolator, factor, ev) {

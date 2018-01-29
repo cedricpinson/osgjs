@@ -110,56 +110,57 @@ var WebVR = {};
 
 WebVR.createScene = function(viewer, rttScene, HMDdevice, rootOverride, worldFactorOverride) {
     var root = rootOverride || new Node();
-    var worldFactor = worldFactorOverride !== undefined ? worldFactorOverride : 1.0;
+    HMDdevice.requestAnimationFrame(function() {
+        var worldFactor = worldFactorOverride !== undefined ? worldFactorOverride : 1.0;
 
-    var left = HMDdevice.getEyeParameters('left');
-    var right = HMDdevice.getEyeParameters('right');
+        var left = HMDdevice.getEyeParameters('left');
+        var right = HMDdevice.getEyeParameters('right');
 
-    var frameData = new window.VRFrameData();
-    HMDdevice.getFrameData(frameData);
+        var frameData = new window.VRFrameData();
+        HMDdevice.getFrameData(frameData);
 
-    // Compute projections and view matrices for both eyes
-    var viewLeft = mat4.fromTranslation(
-        mat4.create(),
-        vec3.fromValues(-worldFactor * left.offset[0], left.offset[1], left.offset[2])
-    );
-    var viewRight = mat4.fromTranslation(
-        mat4.create(),
-        vec3.fromValues(-worldFactor * right.offset[0], right.offset[1], right.offset[2])
-    );
+        // Compute projections and view matrices for both eyes
+        var viewLeft = mat4.fromTranslation(
+            mat4.create(),
+            vec3.fromValues(-worldFactor * left.offset[0], left.offset[1], left.offset[2])
+        );
+        var viewRight = mat4.fromTranslation(
+            mat4.create(),
+            vec3.fromValues(-worldFactor * right.offset[0], right.offset[1], right.offset[2])
+        );
 
-    // Each eye is rendered on a texture whose width is half of the final combined texture
-    var eyeTextureSize = {
-        width: Math.max(left.renderWidth, right.renderWidth),
-        height: Math.max(left.renderHeight, right.renderHeight)
-    };
+        // Each eye is rendered on a texture whose width is half of the final combined texture
+        var eyeTextureSize = {
+            width: Math.max(left.renderWidth, right.renderWidth),
+            height: Math.max(left.renderHeight, right.renderHeight)
+        };
 
-    var leftEyeTexture = createTexture(eyeTextureSize);
-    var rightEyeTexture = createTexture(eyeTextureSize);
+        var leftEyeTexture = createTexture(eyeTextureSize);
+        var rightEyeTexture = createTexture(eyeTextureSize);
 
-    // Setup the render cameras for both eyes
-    var camRttLeft = createCameraRtt(leftEyeTexture, frameData.leftProjectionMatrix);
-    var camRttRight = createCameraRtt(rightEyeTexture, frameData.rightProjectionMatrix);
+        // Setup the render cameras for both eyes
+        var camRttLeft = createCameraRtt(leftEyeTexture, frameData.leftProjectionMatrix);
+        var camRttRight = createCameraRtt(rightEyeTexture, frameData.rightProjectionMatrix);
 
-    // The viewMatrix of each eye is updated with the current viewer's camera viewMatrix
-    var rootViewMatrix = viewer.getCamera().getViewMatrix();
-    camRttLeft.addUpdateCallback(new UpdateRttCameraCallback(rootViewMatrix, viewLeft));
-    camRttRight.addUpdateCallback(new UpdateRttCameraCallback(rootViewMatrix, viewRight));
+        // The viewMatrix of each eye is updated with the current viewer's camera viewMatrix
+        var rootViewMatrix = viewer.getCamera().getViewMatrix();
+        camRttLeft.addUpdateCallback(new UpdateRttCameraCallback(rootViewMatrix, viewLeft));
+        camRttRight.addUpdateCallback(new UpdateRttCameraCallback(rootViewMatrix, viewRight));
 
-    // Render both textures on the canvas, using the viewer's camera viewport to render on the fullscreen canvas
-    var camCanvas = createCameraCanvas(
-        leftEyeTexture,
-        rightEyeTexture,
-        viewer.getCamera().getViewport()
-    );
+        // Render both textures on the canvas, using the viewer's camera viewport to render on the fullscreen canvas
+        var camCanvas = createCameraCanvas(
+            leftEyeTexture,
+            rightEyeTexture,
+            viewer.getCamera().getViewport()
+        );
 
-    camRttLeft.addChild(rttScene);
-    camRttRight.addChild(rttScene);
+        camRttLeft.addChild(rttScene);
+        camRttRight.addChild(rttScene);
 
-    root.addChild(camRttLeft);
-    root.addChild(camRttRight);
-    root.addChild(camCanvas);
-
+        root.addChild(camRttLeft);
+        root.addChild(camRttRight);
+        root.addChild(camCanvas);
+    });
     return root;
 };
 
