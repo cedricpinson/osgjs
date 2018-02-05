@@ -39,6 +39,29 @@ var InputGroup = function(inputManager, name) {
 };
 
 InputGroup.prototype = {
+    /**
+     * Adds mappings to this group.
+     * Mappings are of the form:
+     * {
+     *      eventName: 'nativeEvent <[params...]>'
+     *      ...
+     * }
+     *
+     * Listener can be a function or an object.
+     * If it's an object the InputManager will try to bind the listener.eventName method.
+     *
+     * @param mappings
+     * @param listener
+     */
+    addMappings: function(mappings, listener) {
+        for (var key in mappings) {
+            mappings[this._name + ':' + key] = mappings[key];
+            delete mappings[key];
+        }
+
+        this._inputManager.addMappings(mappings, listener);
+    },
+
     _collectNativeEvents: function(nativeEvent) {
         if (!this._enabled || this._mask.length) {
             return;
@@ -124,15 +147,6 @@ InputGroup.prototype = {
         return undefined;
     },
 
-    addMappings: function(mappings, listener) {
-        for (var key in mappings) {
-            mappings[this._name + ':' + key] = mappings[key];
-            delete mappings[key];
-        }
-
-        this._inputManager.addMappings(mappings, listener);
-    },
-
     _setEnable: function(enable) {
         this._enabled = enable;
         // adding / removing native events
@@ -162,6 +176,8 @@ var InputManager = function() {
     // queues[1] = [event3, event4]
     // ...
     // 0 is the top priority queue the higher the index the lowest the priority.
+    // We use an array here even if some entries are undefined.
+    // The array is the best compromise, ensuring queues order and iteration performance across browsers.
     this._queues = [];
 
     // initializing the default priority queue
@@ -175,12 +191,15 @@ var InputManager = function() {
 
     this._maskedGroups = [];
 
-    window.dumpInputGroups = this.dumpGroups.bind(this);
-    window.dumpEventSequence = this.dumpEventSequence.bind(this);
+    window.dumpInputGroups = this._dumpInputGroups.bind(this);
+    window.dumpEventSequence = this._dumpEventSequence.bind(this);
 };
 
 InputManager.prototype = {
     /**
+     * Registers an InputSource.
+     * Each time a mapping is added to the InputManager, it will try to find a suitable input source for the event,
+     * among the input sources that have been registered.
      * See osgViewer/input/InputSource.js
      * @param source
      */
@@ -192,6 +211,35 @@ InputManager.prototype = {
         source.setInputManager(this);
     },
 
+    /**
+     * Returns a registered InputSource named as the given name.
+     * @param name the name of the input source to find.
+     * @returns the input source or undefined if it was not found.
+     */
+    getInputSource: function(name) {
+        for (var i = 0; i < this._sources.length; i++) {
+            var source = this._sources[i];
+            if (source.getName() === name) {
+                return source;
+            }
+        }
+        return undefined;
+    },
+
+    /**
+     * Adds mappings to the inputManager.
+     * Mappings are of the form:
+     * {
+     *      'groupName:eventName': 'nativeEvent <[params...]>'
+     *      ...
+     * }
+     *
+     * Listener can be a function or an object.
+     * If it's an object the InputManager will try to bind the listener.eventName method.
+     *
+     * @param mappings
+     * @param listener
+     */
     addMappings: function(mappings, listener) {
         for (var key in mappings) {
             var nativeEvents = mappings[key];
@@ -233,77 +281,21 @@ InputManager.prototype = {
         }
     },
 
-    _parseNativeEvent: function(event) {
-        var tokens = event.split(' ');
-        var parsedEvent = {};
-        parsedEvent.name = tokens[0];
-        var i;
-        for (i = 1; i < tokens.length; i++) {
-            var token = tokens[i];
-            var value = true;
-            if (token.indexOf('!') === 0) {
-                value = false;
-                token = token.substring(1, token.length);
-            }
-            if (MODIFIERS.indexOf(token) >= 0) {
-                parsedEvent[token] = value;
-            } else {
-                parsedEvent.action = token.toLowerCase();
-            }
-        }
-
-        if (parsedEvent.action) {
-            // user may have used ShiftRight or ShiftLeft to specify which shift key he wants to trigger the event.
-            // in that case adding the shift modifier as the browser will report it like that.
-            for (i = 0; i < MODIFIERS.length; i++) {
-                var mod = MODIFIERS[i];
-                if (parsedEvent.action.indexOf(mod) === 0) {
-                    parsedEvent[mod] = true;
-                }
-            }
-        }
-
-        if (parsedEvent.name.indexOf('key') === 0 && !parsedEvent.action && tokens.length > 1) {
-            // Key down event, the user wants one of the modifier keys to be the action
-            // we take the last one
-            parsedEvent.action = tokens[tokens.length - 1];
-        }
-
-        parsedEvent.raw = event;
-
-        return parsedEvent;
-    },
-
-    getInputSource: function(name) {
-        for (var i = 0; i < this._sources.length; i++) {
-            var source = this._sources[i];
-            if (source.getName() === name) {
-                return source;
-            }
-        }
-        return undefined;
-    },
-
+    /**
+     * Returns a group with the given name.
+     * Note that this method looks up for an existing group with the given name, and creates it is not found.
+     * @param name the name of the group
+     * @returns the group.
+     */
     group: function(name) {
         return this._getOrCreateGroup(name);
     },
 
-    _getOrCreateGroup: function(name) {
-        var group = this._groups[name];
-        if (!group) {
-            group = new InputGroup(this, name);
-            this._groups[name] = group;
-            //check if the group should be masked
-            for (var i = 0; i < this._maskedGroups.length; i++) {
-                var mask = this._maskedGroups[i];
-                if (name.indexOf(mask) === 0) {
-                    group._mask.push(mask);
-                }
-            }
-        }
-        return group;
-    },
-
+    /**
+     * Enables or disables the group with the given name.
+     * @param groupName the group name
+     * @param enable true to enable, false to disable.
+     */
     setEnable: function(groupName, enable) {
         var group = this._groups[groupName];
         if (group) {
@@ -392,6 +384,11 @@ InputManager.prototype = {
         }
     },
 
+    /**
+     * Return a higher priority than the priority of the group with the given name.
+     * @param groupName the name of the group
+     * @returns {number} the priority.
+     */
     getHigherPriority: function(groupName) {
         var priority = DEFAULT_PRIORITY;
         for (var key in this._groups) {
@@ -405,6 +402,94 @@ InputManager.prototype = {
         return priority > 0 ? priority - 1 : 0;
     },
 
+    /**
+     * Gets the parameter for the given name
+     * @param name the name of the parameter
+     * @returns {*} the parameter value, undefined if not found
+     */
+    getParam: function(name) {
+        return this._params[name];
+    },
+
+    /**
+     * Sets a parameter with the given name and the given value.
+     * @param name the name of the parameter
+     * @param value the value of the parameter
+     */
+    setParam: function(name, value) {
+        this._params[name] = value;
+    },
+
+    /**
+     * Disables all groups on the manager and clear all listeners attached to DOM elements.
+     */
+    cleanup: function() {
+        for (var i = 0; i < this._groups.length; i++) {
+            var group = this._groups[i];
+            group._setEnable(false);
+        }
+    },
+
+    _parseNativeEvent: function(event) {
+        var tokens = event.split(' ');
+        var parsedEvent = {};
+        parsedEvent.name = tokens[0];
+        var i;
+        for (i = 1; i < tokens.length; i++) {
+            var token = tokens[i];
+            var value = true;
+            if (token.indexOf('!') === 0) {
+                value = false;
+                token = token.substring(1, token.length);
+            }
+            if (MODIFIERS.indexOf(token) >= 0) {
+                parsedEvent[token] = value;
+            } else {
+                parsedEvent.action = token.toLowerCase();
+            }
+        }
+
+        if (parsedEvent.action) {
+            // user may have used ShiftRight or ShiftLeft to specify which shift key he wants to trigger the event.
+            // in that case adding the shift modifier as the browser will report it like that.
+            for (i = 0; i < MODIFIERS.length; i++) {
+                var mod = MODIFIERS[i];
+                if (parsedEvent.action.indexOf(mod) === 0) {
+                    parsedEvent[mod] = true;
+                }
+            }
+        }
+
+        if (parsedEvent.name.indexOf('key') === 0 && !parsedEvent.action && tokens.length > 1) {
+            // Key down event, the user wants one of the modifier keys to be the action
+            // we take the last one
+            parsedEvent.action = tokens[tokens.length - 1];
+        }
+
+        parsedEvent.raw = event;
+
+        return parsedEvent;
+    },
+
+    _getOrCreateGroup: function(name) {
+        var group = this._groups[name];
+        if (!group) {
+            group = new InputGroup(this, name);
+            this._groups[name] = group;
+            //check if the group should be masked
+            for (var i = 0; i < this._maskedGroups.length; i++) {
+                var mask = this._maskedGroups[i];
+                if (name.indexOf(mask) === 0) {
+                    group._mask.push(mask);
+                }
+            }
+        }
+        return group;
+    },
+
+    /**
+     * Internal use only.
+     */
     update: function() {
         var i;
         //polling sources if relevant
@@ -441,22 +526,7 @@ InputManager.prototype = {
         }
     },
 
-    getParam: function(name) {
-        return this._params[name];
-    },
-
-    setParam: function(name, value) {
-        this._params[name] = value;
-    },
-
-    cleanup: function() {
-        for (var i = 0; i < this._groups.length; i++) {
-            var group = this._groups[i];
-            group._setEnable(false);
-        }
-    },
-
-    dumpGroups: function(filter, onlyEnabled) {
+    _dumpInputGroups: function(filter, onlyEnabled) {
         if (filter === true) {
             onlyEnabled = filter;
             filter = undefined;
@@ -504,7 +574,7 @@ InputManager.prototype = {
         }
     },
 
-    dumpEventSequence: function(filter, onlyEnabled) {
+    _dumpEventSequence: function(filter, onlyEnabled) {
         var eventList = [];
         if (filter === true) {
             onlyEnabled = filter;
@@ -568,7 +638,6 @@ InputManager.prototype = {
                 notify.groupEnd();
             }
         }
-        //console.log(eventList);
     }
 };
 
