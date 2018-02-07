@@ -7,7 +7,7 @@ var JSZip = window.JSZip;
 
 var ReaderWriterZIP = function() {
     this._options = undefined;
-    this._filesMap = new window.Map();
+    this._filesMap = {};
     this._fileName = ''; // The file containing the model of the archive ( gltf, glb, osgjs, b3dm, etc )
 };
 
@@ -22,9 +22,9 @@ ReaderWriterZIP.prototype = {
         var self = this;
         if (options && options.filesMap !== undefined) {
             // it comes  from drag'n drop
-            if (options.filesMap.has(url)) {
+            if (options.filesMap[url] !== undefined) {
                 // Now url is a File
-                var file = options.filesMap.get(url);
+                var file = options.filesMap[url];
                 return this.readZipFile(file).then( function() {
                     if (!self._fileName) return P.reject(self);
                     // At this point we have the main file name and a Map containing all the resources

@@ -37,12 +37,11 @@
             this.name = envName;
 
             var promises = [];
-            filesMap.forEach(
-                function(data, filename) {
-                    var name = filename.split('/').pop();
-                    this._files[name] = data;
-                }.bind(this)
-            );
+            for ( var filename in filesMap) {
+                var data = filesMap[filename];
+                var name = filename.split('/').pop();
+                this._files[name] = data;
+            }
             return P.all(promises).then(
                 function() {
                     return this.init(null, this._files['config.json']);

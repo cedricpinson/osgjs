@@ -83,7 +83,6 @@ var createJSONFromString = function(str) {
     return P.resolve(obj);
 };
 
-
 var fileHelper = {
     createJSONFromURL: createJSONFromURL,
     createArrayBufferFromURL: createArrayBufferFromURL,
@@ -96,7 +95,8 @@ var fileHelper = {
         var extension = fileHelper.getExtension(uri);
         var mimetype = fileHelper.getMimeType(extension);
 
-        var responseType = options && options.responseType ? options.responseType.toLowerCase() : undefined;
+        var responseType =
+            options && options.responseType ? options.responseType.toLowerCase() : undefined;
         if (responseType) return requestFile(uri, options);
 
         if (mimetype) {
@@ -128,20 +128,14 @@ var fileHelper = {
 
         if (mimetype) {
             if (mimetype.match('image')) {
-
                 if (isString(data)) createData = createImageFromURL;
                 else if (data instanceof window.Blob) createData = createImageFromBlob;
-
             } else if (mimetype.match('json')) {
-
                 if (isURL(data)) createData = createJSONFromURL;
                 else createData = createJSONFromString;
-
             } else if (mimetype.match('binary')) {
-
                 if (isString(data)) createData = createArrayBufferFromURL;
                 else if (data instanceof window.Blob) createData = createArrayBufferFromBlob;
-
             }
         }
 
@@ -157,12 +151,13 @@ var fileHelper = {
     resolveFilesMap: function(filesMap) {
         var promises = [];
 
-        filesMap.forEach(function(data, filename) {
-            var promise = fileHelper.resolveData(filename, data).then(function(dataResolved) {
-                filesMap.set(filename, dataResolved);
-            });
+        for (var filename in filesMap) {
+            var data = filesMap[filename];
+            var promise = fileHelper.resolveData(filename, data).then(function(fname, dataResolved) {
+                this[fname] = dataResolved;
+            }.bind(filesMap, filename));
             promises.push(promise);
-        });
+        }
 
         return P.all(promises).then(function() {
             return filesMap;
@@ -191,7 +186,7 @@ var fileHelper = {
     unzipBlob: function(blob) {
         return new P(function(resolve, reject) {
             // use a zip.BlobReader object to read zipped data stored into blob variable
-            var filesMap = new window.Map();
+            var filesMap = {};
             var filePromises = [];
             zip.createReader(
                 new zip.BlobReader(blob),
@@ -203,7 +198,7 @@ var fileHelper = {
 
                             var promise = fileHelper._unzipEntry(entries[i]);
                             promise.then(function(result) {
-                                filesMap.set(result.filename, result.data);
+                                filesMap[result.filename] = result.data;
                             });
                             filePromises.push(promise);
                         }
@@ -224,6 +219,11 @@ var fileHelper = {
     },
 
     unzip: function(input) {
+        if (!window.zip)
+            return P.reject(
+                'missing deps to unzip, require https://github.com/gildas-lormeau/zip.js'
+            );
+
         if (isString(input)) {
             return fileHelper.requestResource(input).then(function(arrayBuffer) {
                 var blob = new window.Blob([arrayBuffer], {type: mimeTypes.get('zip')});
@@ -240,7 +240,7 @@ var fileHelper = {
 
     readFileList: function(fileList) {
         var fileName;
-        var filesMap = new window.Map();
+        var filesMap = {};
         var promiseArray = [];
         var i;
 
@@ -268,7 +268,7 @@ var fileHelper = {
 
         return P.all(promiseArray).then(function(files) {
             for (i = 0; i < files.length; ++i) {
-                filesMap.set(fileList[i].name, files[i]);
+                filesMap[fileList[i].name] = files[i];
             }
             return fileHelper.resolveFilesMap(filesMap).then(function(filesMapResolved) {
                 return readerParser.readNodeURL(fileName, {

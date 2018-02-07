@@ -298,12 +298,12 @@ import InputGroups from 'osgViewer/input/InputConstants';
             return osgDB.fileHelper.unzip(fileOrBlob).then(function(filesMap) {
                 var gltfFile;
                 var environmentFormat;
-                filesMap.forEach(function(value, path) {
+                for ( var path in filesMap) {
                     var filename = path.split('/').pop();
                     var ext = osgDB.fileHelper.getExtension(filename);
                     if (ext === 'gltf') gltfFile = path;
                     if (filename === 'config.json') environmentFormat = true;
-                });
+                }
 
                 if (gltfFile) {
                     return osgDB.readNodeURL(gltfFile, {filesMap: filesMap}).then(function(node) {

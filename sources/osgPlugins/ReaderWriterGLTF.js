@@ -171,7 +171,7 @@ ReaderWriterGLTF.prototype = {
         this._bones = {};
         this._skeletonToInfluenceMap = {};
         this._stateSetMap = {};
-        this._filesMap = new window.Map();
+        this._filesMap = {};
         this._inputReader = new Input();
         this._rootStateSet = new StateSet();
 
@@ -937,26 +937,27 @@ ReaderWriterGLTF.prototype = {
             return base64ToArrayBuffer(uri);
         }
 
-        if (this._filesMap.has(uri)) return this._filesMap.get(uri);
-        return fileHelper.loadURI(uri, options);
+        var result = this._filesMap[uri];
+        if (result !== undefined) return result;
+        return fileHelper.requestURI(uri, options);
     }),
 
     readNodeURL: function(url, options) {
         var self = this;
 
         this.init();
-        if (options && options.filesMap !== undefined && options.filesMap.size > 0) {
+        if (options && options.filesMap !== undefined && Object.keys(options.filesMap).length > 0) {
             // it comes from the ZIP plugin or from drag'n drop
             // So we already have all the files.
             this._filesMap = options.filesMap;
-            var glTFFile = this._filesMap.get(url);
+            var glTFFile = this._filesMap[url];
             return this.readJSON(glTFFile, url);
         }
 
         var index = url.lastIndexOf('/');
         this._localPath = index === -1 ? '' : url.substr(0, index + 1);
         // Else it is a usual XHR request
-        return fileHelper.loadURI(url).then(function(file) {
+        return fileHelper.requestURI(url).then(function(file) {
             return self.readJSON(file);
         });
     },
