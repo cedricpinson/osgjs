@@ -462,12 +462,13 @@ Input.prototype = {
                 defer.resolve(image);
             };
             ddsXhr.send(null);
+
             return defer.promise;
         }
 
         return this.fetchImage(image, url, options);
-
     },
+
 
     readNodeURL: function (url, opt) {
         var options = opt;
