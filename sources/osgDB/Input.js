@@ -449,24 +449,23 @@ Input.prototype = {
         var that = this;
         var image = new Image();
 
-        if (url.indexOf('.dds') != -1) {
-            var defer = P.defer();
-                //console.log('FIND DDS PIC');
+        if (url.indexOf('.dds') !== -1) {
+            var defer = P.defer();              
                 var ddsXhr = new XMLHttpRequest();
                 ddsXhr.open('GET', url, true);
                 ddsXhr.responseType = "arraybuffer";
                 ddsXhr.onload = function () {
                     var texDatas = that.getruldds(this.response, true);
                     image.setURL = url;
-                    image.setImagedds(texDatas);
-                    //console.log(image);
+                    image.setImagedds(texDatas);                    
                     defer.resolve(image);
                 };
                 ddsXhr.send(null);
             return defer.promise;
         }
-        else
-        return this.fetchImage(image, url, options);
+        else {
+            return this.fetchImage(image, url, options);
+        }       
     },
 
     readNodeURL: function(url, opt) {
