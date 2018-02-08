@@ -14,7 +14,7 @@ import primitiveSet from 'osg/primitiveSet';
 
 var rejectObject = utils.rejectObject;
 
-var Input = function(json, identifier) {
+var Input = function (json, identifier) {
     this._json = json;
     var map = identifier;
     if (map === undefined) {
@@ -45,7 +45,7 @@ var Input = function(json, identifier) {
 
 // keep one instance of image fallback
 if (!Input.imageFallback) {
-    Input.imageFallback = (function() {
+    Input.imageFallback = (function () {
         var fallback = new window.Image();
         fallback.src =
             'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=';
@@ -54,57 +54,57 @@ if (!Input.imageFallback) {
 }
 
 Input.prototype = {
-    clone: function() {
+    clone: function () {
         var input = new Input();
         input._objectRegistry = this._objectRegistry;
         input._cacheReadObject = this._cacheReadObject;
         return input;
     },
 
-    setOptions: function(options) {
+    setOptions: function (options) {
         this._defaultOptions = options;
     },
-    getOptions: function() {
+    getOptions: function () {
         return this._defaultOptions;
     },
-    setProgressXHRCallback: function(func) {
+    setProgressXHRCallback: function (func) {
         this._defaultOptions.progressXHRCallback = func;
     },
-    setReadNodeURLCallback: function(func) {
+    setReadNodeURLCallback: function (func) {
         this._defaultOptions.readNodeURL = func;
     },
     // used to override the type from pathname
     // typically if you want to create proxy object
-    registerObject: function(fullyQualifiedObjectname, constructor) {
+    registerObject: function (fullyQualifiedObjectname, constructor) {
         this._objectRegistry[fullyQualifiedObjectname] = constructor;
     },
 
-    getJSON: function() {
+    getJSON: function () {
         return this._json;
     },
 
-    setJSON: function(json) {
+    setJSON: function (json) {
         this._json = json;
         return this;
     },
 
-    setPrefixURL: function(prefix) {
+    setPrefixURL: function (prefix) {
         this._defaultOptions.prefixURL = prefix;
     },
 
-    getPrefixURL: function() {
+    getPrefixURL: function () {
         return this._defaultOptions.prefixURL;
     },
 
-    setDatabasePath: function(path) {
+    setDatabasePath: function (path) {
         this._defaultOptions.databasePath = path;
     },
 
-    getDatabasePath: function() {
+    getDatabasePath: function () {
         return this._defaultOptions.databasePath;
     },
 
-    computeURL: function(url) {
+    computeURL: function (url) {
         if (
             typeof this._defaultOptions.prefixURL === 'string' &&
             this._defaultOptions.prefixURL.length > 0
@@ -115,11 +115,11 @@ Input.prototype = {
         return url;
     },
 
-    requestFile: function(url, options) {
+    requestFile: function (url, options) {
         return _requestFile(url, options);
     },
 
-    getObjectWrapper: function(path) {
+    getObjectWrapper: function (path) {
         if (this._objectRegistry[path]) {
             return new this._objectRegistry[path]();
         }
@@ -138,7 +138,7 @@ Input.prototype = {
         return new scope();
     },
 
-    fetchImage: function(image, url, options) {
+    fetchImage: function (image, url, options) {
         var checkInlineImage = 'data:image/';
         // crossOrigin does not work for inline data image
         var isInlineImage = url.substring(0, checkInlineImage.length) === checkInlineImage;
@@ -150,21 +150,286 @@ Input.prototype = {
         image.setImage(img);
         img.src = url;
 
-        return new P(function(resolve) {
-            img.onerror = function() {
+        return new P(function (resolve) {
+            img.onerror = function () {
                 notify.warn('warning use white texture as fallback instead of ' + url);
                 image.setImage(Input.imageFallback);
                 resolve(image);
             };
 
-            img.onload = function() {
+            img.onload = function () {
                 if (options.imageOnload) options.imageOnload.call(image);
                 resolve(image);
             };
         });
     },
 
-    readImageURL: function(url, options) {
+    getruldds: function (buffer, loadMipmaps) {
+
+        var dds = {mipmaps: [], width: 0, height: 0, format: null, mipmapCount: 1};
+
+        // Adapted from @toji's DDS utils
+        // https://github.com/toji/webgl-texture-utils/blob/master/texture-util/dds.js
+
+        // All values and structures referenced from:
+        // http://msdn.microsoft.com/en-us/library/bb943991.aspx/
+
+        var DDS_MAGIC = 0x20534444;
+
+        var DDSD_MIPMAPCOUNT = 0x20000;
+
+
+        var DDSCAPS2_CUBEMAP = 0x200,
+            DDSCAPS2_CUBEMAP_POSITIVEX = 0x400,
+            DDSCAPS2_CUBEMAP_NEGATIVEX = 0x800,
+            DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000,
+            DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000,
+            DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000,
+            DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
+
+        var DDPF_FOURCC = 0x4;
+
+        function fourCCToInt32(value) {
+
+            return value.charCodeAt(0) +
+                ( value.charCodeAt(1) << 8 ) +
+                ( value.charCodeAt(2) << 16 ) +
+                ( value.charCodeAt(3) << 24 );
+
+        }
+
+        function int32ToFourCC(value) {
+
+            return String.fromCharCode(
+                value & 0xff,
+                ( value >> 8 ) & 0xff,
+                ( value >> 16 ) & 0xff,
+                ( value >> 24 ) & 0xff
+            );
+
+        }
+
+        function loadARGBMip(buffers, dataOffset, width, height) {
+
+            var dataLength = width * height * 4;
+            var srcBuffer = new Uint8Array(buffers, dataOffset, dataLength);
+            var byteArray = new Uint8Array(dataLength);
+            var dst = 0;
+            var src = 0;
+            for (var y = 0; y < height; y++) {
+
+                for (var x = 0; x < width; x++) {
+
+                    var b = srcBuffer[src];
+                    src++;
+                    var g = srcBuffer[src];
+                    src++;
+                    var r = srcBuffer[src];
+                    src++;
+                    var a = srcBuffer[src];
+                    src++;
+                    byteArray[dst] = r;
+                    dst++;	//r
+                    byteArray[dst] = g;
+                    dst++;	//g
+                    byteArray[dst] = b;
+                    dst++;	//b
+                    byteArray[dst] = a;
+                    dst++;	//a
+
+                }
+
+            }
+            return byteArray;
+
+        }
+
+        var FOURCC_DXT1 = fourCCToInt32("DXT1");
+        var FOURCC_DXT3 = fourCCToInt32("DXT3");
+        var FOURCC_DXT5 = fourCCToInt32("DXT5");
+        var FOURCC_ETC1 = fourCCToInt32("ETC1");
+
+        var headerLengthInt = 31; // The header length in 32 bit ints
+
+        // Offsets into the header array
+
+        var off_magic = 0;
+
+        var off_size = 1;
+        var off_flags = 2;
+        var off_height = 3;
+        var off_width = 4;
+
+        var off_mipmapCount = 7;
+
+        var off_pfFlags = 20;
+        var off_pfFourCC = 21;
+        var off_RGBBitCount = 22;
+        var off_RBitMask = 23;
+        var off_GBitMask = 24;
+        var off_BBitMask = 25;
+        var off_ABitMask = 26;
+
+
+        var off_caps2 = 28;
+
+
+        // Parse header
+
+        var header = new Int32Array(buffer, 0, headerLengthInt);
+
+        if (header[off_magic] !== DDS_MAGIC) {
+
+            console.error('THREE.DDSLoader.parse: Invalid magic number in DDS header.');
+            return dds;
+
+        }
+
+        if (!header[off_pfFlags] & DDPF_FOURCC) {
+
+            console.error('THREE.DDSLoader.parse: Unsupported format, must contain a FourCC code.');
+            return dds;
+
+        }
+
+        var blockBytes;
+
+        var fourCC = header[off_pfFourCC];
+
+        var isRGBAUncompressed = false;
+
+        switch (fourCC) {
+
+            case FOURCC_DXT1:
+
+                blockBytes = 8;
+                dds.format = 0x83F1;
+                break;
+
+            case FOURCC_DXT3:
+
+                blockBytes = 16;
+                dds.format = 0x83F2;
+                break;
+
+            case FOURCC_DXT5:
+
+                blockBytes = 16;
+                dds.format = 0x83F3;
+                break;
+
+            case FOURCC_ETC1:
+
+                blockBytes = 8;
+                dds.format = 0x8D64;
+                break;
+
+            default:
+
+                if (header[off_RGBBitCount] === 32
+                    && header[off_RBitMask] & 0xff0000
+                    && header[off_GBitMask] & 0xff00
+                    && header[off_BBitMask] & 0xff
+                    && header[off_ABitMask] & 0xff000000) {
+
+                    isRGBAUncompressed = true;
+                    blockBytes = 64;
+                    dds.format = 0x8C93;
+
+                } else {
+
+                    console.error('THREE.DDSLoader.parse: Unsupported FourCC code ', int32ToFourCC(fourCC));
+                    return dds;
+
+                }
+        }
+
+        dds.mipmapCount = 1;
+
+        if (header[off_flags] & DDSD_MIPMAPCOUNT && loadMipmaps !== false) {
+
+            dds.mipmapCount = Math.max(1, header[off_mipmapCount]);
+
+        }
+
+        var caps2 = header[off_caps2];
+        dds.isCubemap = caps2 & DDSCAPS2_CUBEMAP ? true : false;
+        if (dds.isCubemap && (
+                !( caps2 & DDSCAPS2_CUBEMAP_POSITIVEX ) ||
+                !( caps2 & DDSCAPS2_CUBEMAP_NEGATIVEX ) ||
+                !( caps2 & DDSCAPS2_CUBEMAP_POSITIVEY ) ||
+                !( caps2 & DDSCAPS2_CUBEMAP_NEGATIVEY ) ||
+                !( caps2 & DDSCAPS2_CUBEMAP_POSITIVEZ ) ||
+                !( caps2 & DDSCAPS2_CUBEMAP_NEGATIVEZ )
+            )) {
+
+            console.error('THREE.DDSLoader.parse: Incomplete cubemap faces');
+            return dds;
+
+        }
+
+        dds.width = header[off_width];
+        dds.height = header[off_height];
+
+        var dataOffset = header[off_size] + 4;
+
+        // Extract mipmaps buffers
+
+        var faces = dds.isCubemap ? 6 : 1;
+
+        for (var face = 0; face < faces; face++) {
+
+            var width = dds.width;
+            var height = dds.height;
+
+            for (var i = 0; i < dds.mipmapCount; i++) {
+                var byteArray;
+                var dataLength;
+                if (isRGBAUncompressed) {
+
+                    byteArray = loadARGBMip(buffer, dataOffset, width, height);
+                    dataLength = byteArray.length;
+
+                } else {
+
+                    dataLength = Math.max(4, width) / 4 * Math.max(4, height) / 4 * blockBytes;
+                    byteArray = new Uint8Array(buffer, dataOffset, dataLength);
+
+
+                }
+
+
+                var mipmap = {
+                    data: byteArray,
+                    width: width,
+                    height: height,
+                    getWidth: function () {
+                        return this.width;
+                    },
+                    getHeight: function () {
+                        return this.height;
+                    },
+                    getImage: function () {
+                        return this.data;
+                    }
+                };
+
+                dds.mipmaps.push(mipmap);
+
+                dataOffset += dataLength;
+
+                width = Math.max(width >> 1, 1);
+                height = Math.max(height >> 1, 1);
+
+            }
+
+        }
+
+        return dds;
+
+    },
+
+    readImageURL: function (url, options) {
         if (options === undefined) {
             options = this._defaultOptions;
         }
@@ -182,12 +447,30 @@ Input.prototype = {
         if (url.substr(0, 10) !== 'data:image') {
             url = this.computeURL(url);
         }
-
+        var that = this;
         var image = new Image();
+
+        if (url.indexOf('.dds') !== -1) {
+            var defer = P.defer();
+            var ddsXhr = new XMLHttpRequest();
+            ddsXhr.open('GET', url, true);
+            ddsXhr.responseType = "arraybuffer";
+            ddsXhr.onload = function () {
+                var texDatas = that.getruldds(this.response, true);
+                image.setURL = url;
+                image.setImagedds(texDatas);
+                defer.resolve(image);
+            };
+            ddsXhr.send(null);
+
+            return defer.promise;
+        }
+
         return this.fetchImage(image, url, options);
     },
 
-    readNodeURL: function(url, opt) {
+
+    readNodeURL: function (url, opt) {
         var options = opt;
         if (options === undefined) {
             options = this._defaultOptions;
@@ -215,18 +498,20 @@ Input.prototype = {
                 prefix = url.substring(0, index + 1);
             }
             options.prefixURL = prefix;
+            options.databasePath = prefix;
+
         }
 
         var ReaderParser = require('osgDB/readerParser').default;
 
-        var readSceneGraph = function(data) {
-            return ReaderParser.parseSceneGraph(data, options).then(function(child) {
+        var readSceneGraph = function (data) {
+            return ReaderParser.parseSceneGraph(data, options).then(function (child) {
                 notify.log('loaded ' + url);
                 return child;
             });
         };
 
-        var ungzipFile = function(arrayBuffer) {
+        var ungzipFile = function (arrayBuffer) {
             function pad(n) {
                 return n.length < 2 ? '0' + n : n;
             }
@@ -254,7 +539,7 @@ Input.prototype = {
         // try to get the file as responseText to parse JSON
         var fileTextPromise = that.requestFile(url);
         return fileTextPromise
-            .then(function(str) {
+            .then(function (str) {
                 var data;
                 try {
                     data = JSON.parse(str);
@@ -271,29 +556,29 @@ Input.prototype = {
                     responseType: 'arraybuffer'
                 });
                 return fileGzipPromise
-                    .then(function(file) {
+                    .then(function (file) {
                         var strUnzip = ungzipFile(file);
                         data = JSON.parse(strUnzip);
                         return readSceneGraph(data);
                     })
-                    .catch(function(status) {
+                    .catch(function (status) {
                         var err = 'cant read file ' + url + ' status ' + status;
                         notify.error(err);
                         return err;
                     });
             })
-            .catch(function(status) {
+            .catch(function (status) {
                 var err = 'cant get file ' + url + ' status ' + status;
                 notify.error(err);
                 return err;
             })
-            .finally(function() {
+            .finally(function () {
                 // Stop the timer
                 utils.timeEnd('osgjs.metric:Input.readNodeURL');
             });
     },
 
-    _unzipTypedArray: function(binary) {
+    _unzipTypedArray: function (binary) {
         var typedArray = new Uint8Array(binary);
 
         // check magic number 1f8b
@@ -314,7 +599,7 @@ Input.prototype = {
         return binary;
     },
 
-    readBinaryArrayURL: function(url, options) {
+    readBinaryArrayURL: function (url, options) {
         if (options === undefined) {
             options = this._defaultOptions;
         }
@@ -335,14 +620,14 @@ Input.prototype = {
         });
 
         var that = this;
-        this._identifierMap[url] = filePromise.then(function(file) {
+        this._identifierMap[url] = filePromise.then(function (file) {
             return that._unzipTypedArray(file);
         });
 
         return this._identifierMap[url];
     },
 
-    initializeBufferArray: function(vb, type, buf, options) {
+    initializeBufferArray: function (vb, type, buf, options) {
         if (options === undefined) options = this.getOptions();
 
         if (options.initializeBufferArray) {
@@ -351,11 +636,11 @@ Input.prototype = {
 
         var url = vb.File;
 
-        return this.readBinaryArrayURL(url).then(function(array) {
+        return this.readBinaryArrayURL(url).then(function (array) {
             var typedArray;
             // manage endianness
             var bigEndian;
-            (function() {
+            (function () {
                 var a = new Uint8Array([0x12, 0x34]);
                 var b = new Uint16Array(a.buffer);
                 bigEndian = b[0].toString(16) === '1234';
@@ -398,7 +683,7 @@ Input.prototype = {
         });
     },
 
-    readBufferArray: function(options) {
+    readBufferArray: function (options) {
         var jsonObj = this.getJSON();
 
         var uniqueID = jsonObj.UniqueID;
@@ -458,7 +743,7 @@ Input.prototype = {
         return promise;
     },
 
-    readUserDataContainer: function() {
+    readUserDataContainer: function () {
         var jsonObj = this.getJSON();
         var osgjsObject;
         var uniqueID = jsonObj.UniqueID;
@@ -473,7 +758,7 @@ Input.prototype = {
         return jsonObj.Values;
     },
 
-    readPrimitiveSet: function() {
+    readPrimitiveSet: function () {
         var jsonObj = this.getJSON();
         var uniqueID;
         var osgjsObject;
@@ -503,7 +788,7 @@ Input.prototype = {
             obj = new DrawElements(mode);
 
             this.setJSON(drawElements.Indices);
-            promise = this.readBufferArray().then(function(array) {
+            promise = this.readBufferArray().then(function (array) {
                 obj.setIndices(array);
                 return obj;
             });
@@ -547,7 +832,7 @@ Input.prototype = {
         return promise;
     },
 
-    readObject: function() {
+    readObject: function () {
         var jsonObj = this.getJSON();
         var objKeys = window.Object.keys(jsonObj);
         var prop = objKeys[0];
