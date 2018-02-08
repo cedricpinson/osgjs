@@ -14,7 +14,7 @@ import primitiveSet from 'osg/primitiveSet';
 
 var rejectObject = utils.rejectObject;
 
-var Input = function(json, identifier) {
+var Input = function (json, identifier) {
     this._json = json;
     var map = identifier;
     if (map === undefined) {
@@ -45,7 +45,7 @@ var Input = function(json, identifier) {
 
 // keep one instance of image fallback
 if (!Input.imageFallback) {
-    Input.imageFallback = (function() {
+    Input.imageFallback = (function () {
         var fallback = new window.Image();
         fallback.src =
             'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=';
@@ -54,57 +54,57 @@ if (!Input.imageFallback) {
 }
 
 Input.prototype = {
-    clone: function() {
+    clone: function () {
         var input = new Input();
         input._objectRegistry = this._objectRegistry;
         input._cacheReadObject = this._cacheReadObject;
         return input;
     },
 
-    setOptions: function(options) {
+    setOptions: function (options) {
         this._defaultOptions = options;
     },
-    getOptions: function() {
+    getOptions: function () {
         return this._defaultOptions;
     },
-    setProgressXHRCallback: function(func) {
+    setProgressXHRCallback: function (func) {
         this._defaultOptions.progressXHRCallback = func;
     },
-    setReadNodeURLCallback: function(func) {
+    setReadNodeURLCallback: function (func) {
         this._defaultOptions.readNodeURL = func;
     },
     // used to override the type from pathname
     // typically if you want to create proxy object
-    registerObject: function(fullyQualifiedObjectname, constructor) {
+    registerObject: function (fullyQualifiedObjectname, constructor) {
         this._objectRegistry[fullyQualifiedObjectname] = constructor;
     },
 
-    getJSON: function() {
+    getJSON: function () {
         return this._json;
     },
 
-    setJSON: function(json) {
+    setJSON: function (json) {
         this._json = json;
         return this;
     },
 
-    setPrefixURL: function(prefix) {
+    setPrefixURL: function (prefix) {
         this._defaultOptions.prefixURL = prefix;
     },
 
-    getPrefixURL: function() {
+    getPrefixURL: function () {
         return this._defaultOptions.prefixURL;
     },
 
-    setDatabasePath: function(path) {
+    setDatabasePath: function (path) {
         this._defaultOptions.databasePath = path;
     },
 
-    getDatabasePath: function() {
+    getDatabasePath: function () {
         return this._defaultOptions.databasePath;
     },
 
-    computeURL: function(url) {
+    computeURL: function (url) {
         if (
             typeof this._defaultOptions.prefixURL === 'string' &&
             this._defaultOptions.prefixURL.length > 0
@@ -115,11 +115,11 @@ Input.prototype = {
         return url;
     },
 
-    requestFile: function(url, options) {
+    requestFile: function (url, options) {
         return _requestFile(url, options);
     },
 
-    getObjectWrapper: function(path) {
+    getObjectWrapper: function (path) {
         if (this._objectRegistry[path]) {
             return new this._objectRegistry[path]();
         }
@@ -138,7 +138,7 @@ Input.prototype = {
         return new scope();
     },
 
-    fetchImage: function(image, url, options) {
+    fetchImage: function (image, url, options) {
         var checkInlineImage = 'data:image/';
         // crossOrigin does not work for inline data image
         var isInlineImage = url.substring(0, checkInlineImage.length) === checkInlineImage;
@@ -150,25 +150,21 @@ Input.prototype = {
         image.setImage(img);
         img.src = url;
 
-        return new P(function(resolve) {
-            img.onerror = function() {
+        return new P(function (resolve) {
+            img.onerror = function () {
                 notify.warn('warning use white texture as fallback instead of ' + url);
                 image.setImage(Input.imageFallback);
                 resolve(image);
             };
 
-            img.onload = function() {
+            img.onload = function () {
                 if (options.imageOnload) options.imageOnload.call(image);
                 resolve(image);
             };
         });
     },
 
-<<<<<<< HEAD
     getruldds: function (buffer, loadMipmaps) {
-=======
-    getruldds:function (buffer, loadMipmaps) {
->>>>>>> ed4fc365... dds load
 
         var dds = {mipmaps: [], width: 0, height: 0, format: null, mipmapCount: 1};
 
@@ -180,23 +176,8 @@ Input.prototype = {
 
         var DDS_MAGIC = 0x20534444;
 
-<<<<<<< HEAD
         var DDSD_MIPMAPCOUNT = 0x20000;
 
-=======
-        var DDSD_CAPS = 0x1,
-            DDSD_HEIGHT = 0x2,
-            DDSD_WIDTH = 0x4,
-            DDSD_PITCH = 0x8,
-            DDSD_PIXELFORMAT = 0x1000,
-            DDSD_MIPMAPCOUNT = 0x20000,
-            DDSD_LINEARSIZE = 0x80000,
-            DDSD_DEPTH = 0x800000;
-
-        var DDSCAPS_COMPLEX = 0x8,
-            DDSCAPS_MIPMAP = 0x400000,
-            DDSCAPS_TEXTURE = 0x1000;
->>>>>>> ed4fc365... dds load
 
         var DDSCAPS2_CUBEMAP = 0x200,
             DDSCAPS2_CUBEMAP_POSITIVEX = 0x400,
@@ -204,21 +185,9 @@ Input.prototype = {
             DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000,
             DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000,
             DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000,
-<<<<<<< HEAD
             DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
 
         var DDPF_FOURCC = 0x4;
-=======
-            DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000,
-            DDSCAPS2_VOLUME = 0x200000;
-
-        var DDPF_ALPHAPIXELS = 0x1,
-            DDPF_ALPHA = 0x2,
-            DDPF_FOURCC = 0x4,
-            DDPF_RGB = 0x40,
-            DDPF_YUV = 0x200,
-            DDPF_LUMINANCE = 0x20000;
->>>>>>> ed4fc365... dds load
 
         function fourCCToInt32(value) {
 
@@ -240,17 +209,10 @@ Input.prototype = {
 
         }
 
-<<<<<<< HEAD
         function loadARGBMip(buffers, dataOffset, width, height) {
 
             var dataLength = width * height * 4;
             var srcBuffer = new Uint8Array(buffers, dataOffset, dataLength);
-=======
-        function loadARGBMip(buffer, dataOffset, width, height) {
-
-            var dataLength = width * height * 4;
-            var srcBuffer = new Uint8Array(buffer, dataOffset, dataLength);
->>>>>>> ed4fc365... dds load
             var byteArray = new Uint8Array(dataLength);
             var dst = 0;
             var src = 0;
@@ -308,16 +270,9 @@ Input.prototype = {
         var off_BBitMask = 25;
         var off_ABitMask = 26;
 
-<<<<<<< HEAD
 
         var off_caps2 = 28;
 
-=======
-        var off_caps = 27;
-        var off_caps2 = 28;
-        var off_caps3 = 29;
-        var off_caps4 = 30;
->>>>>>> ed4fc365... dds load
 
         // Parse header
 
@@ -428,7 +383,6 @@ Input.prototype = {
             var height = dds.height;
 
             for (var i = 0; i < dds.mipmapCount; i++) {
-<<<<<<< HEAD
                 var byteArray;
                 var dataLength;
                 if (isRGBAUncompressed) {
@@ -440,18 +394,7 @@ Input.prototype = {
 
                     dataLength = Math.max(4, width) / 4 * Math.max(4, height) / 4 * blockBytes;
                     byteArray = new Uint8Array(buffer, dataOffset, dataLength);
-=======
 
-                if (isRGBAUncompressed) {
-
-                    var byteArray = loadARGBMip(buffer, dataOffset, width, height);
-                    var dataLength = byteArray.length;
-
-                } else {
-
-                    var dataLength = Math.max(4, width) / 4 * Math.max(4, height) / 4 * blockBytes;
-                    var byteArray = new Uint8Array(buffer, dataOffset, dataLength);
->>>>>>> ed4fc365... dds load
 
                 }
 
@@ -462,17 +405,11 @@ Input.prototype = {
                     height: height,
                     getWidth: function () {
                         return this.width;
-<<<<<<< HEAD
                     },
                     getHeight: function () {
                         return this.height;
                     },
                     getImage: function () {
-=======
-                    }, getHeight: function () {
-                        return this.height;
-                    }, getImage: function () {
->>>>>>> ed4fc365... dds load
                         return this.data;
                     }
                 };
@@ -491,11 +428,8 @@ Input.prototype = {
         return dds;
 
     },
-<<<<<<< HEAD
-    
-=======
->>>>>>> ed4fc365... dds load
-    readImageURL: function(url, options) {
+
+    readImageURL: function (url, options) {
         if (options === undefined) {
             options = this._defaultOptions;
         }
@@ -516,42 +450,26 @@ Input.prototype = {
         var that = this;
         var image = new Image();
 
-<<<<<<< HEAD
         if (url.indexOf('.dds') !== -1) {
-            var defer = P.defer();              
-=======
-        if (url.indexOf('.dds') != -1) {
             var defer = P.defer();
-                //console.log('FIND DDS PIC');
->>>>>>> ed4fc365... dds load
-                var ddsXhr = new XMLHttpRequest();
-                ddsXhr.open('GET', url, true);
-                ddsXhr.responseType = "arraybuffer";
-                ddsXhr.onload = function () {
-                    var texDatas = that.getruldds(this.response, true);
-                    image.setURL = url;
-<<<<<<< HEAD
-                    image.setImagedds(texDatas);                    
-=======
-                    image.setImagedds(texDatas);
-                    //console.log(image);
->>>>>>> ed4fc365... dds load
-                    defer.resolve(image);
-                };
-                ddsXhr.send(null);
+            var ddsXhr = new XMLHttpRequest();
+            ddsXhr.open('GET', url, true);
+            ddsXhr.responseType = "arraybuffer";
+            ddsXhr.onload = function () {
+                var texDatas = that.getruldds(this.response, true);
+                image.setURL = url;
+                image.setImagedds(texDatas);
+                defer.resolve(image);
+            };
+            ddsXhr.send(null);
             return defer.promise;
         }
-<<<<<<< HEAD
-        else {
-            return this.fetchImage(image, url, options);
-        }       
-=======
-        else
+
         return this.fetchImage(image, url, options);
->>>>>>> ed4fc365... dds load
+
     },
 
-    readNodeURL: function(url, opt) {
+    readNodeURL: function (url, opt) {
         var options = opt;
         if (options === undefined) {
             options = this._defaultOptions;
@@ -585,14 +503,14 @@ Input.prototype = {
 
         var ReaderParser = require('osgDB/readerParser').default;
 
-        var readSceneGraph = function(data) {
-            return ReaderParser.parseSceneGraph(data, options).then(function(child) {
+        var readSceneGraph = function (data) {
+            return ReaderParser.parseSceneGraph(data, options).then(function (child) {
                 notify.log('loaded ' + url);
                 return child;
             });
         };
 
-        var ungzipFile = function(arrayBuffer) {
+        var ungzipFile = function (arrayBuffer) {
             function pad(n) {
                 return n.length < 2 ? '0' + n : n;
             }
@@ -620,7 +538,7 @@ Input.prototype = {
         // try to get the file as responseText to parse JSON
         var fileTextPromise = that.requestFile(url);
         return fileTextPromise
-            .then(function(str) {
+            .then(function (str) {
                 var data;
                 try {
                     data = JSON.parse(str);
@@ -637,29 +555,29 @@ Input.prototype = {
                     responseType: 'arraybuffer'
                 });
                 return fileGzipPromise
-                    .then(function(file) {
+                    .then(function (file) {
                         var strUnzip = ungzipFile(file);
                         data = JSON.parse(strUnzip);
                         return readSceneGraph(data);
                     })
-                    .catch(function(status) {
+                    .catch(function (status) {
                         var err = 'cant read file ' + url + ' status ' + status;
                         notify.error(err);
                         return err;
                     });
             })
-            .catch(function(status) {
+            .catch(function (status) {
                 var err = 'cant get file ' + url + ' status ' + status;
                 notify.error(err);
                 return err;
             })
-            .finally(function() {
+            .finally(function () {
                 // Stop the timer
                 utils.timeEnd('osgjs.metric:Input.readNodeURL');
             });
     },
 
-    _unzipTypedArray: function(binary) {
+    _unzipTypedArray: function (binary) {
         var typedArray = new Uint8Array(binary);
 
         // check magic number 1f8b
@@ -680,7 +598,7 @@ Input.prototype = {
         return binary;
     },
 
-    readBinaryArrayURL: function(url, options) {
+    readBinaryArrayURL: function (url, options) {
         if (options === undefined) {
             options = this._defaultOptions;
         }
@@ -701,14 +619,14 @@ Input.prototype = {
         });
 
         var that = this;
-        this._identifierMap[url] = filePromise.then(function(file) {
+        this._identifierMap[url] = filePromise.then(function (file) {
             return that._unzipTypedArray(file);
         });
 
         return this._identifierMap[url];
     },
 
-    initializeBufferArray: function(vb, type, buf, options) {
+    initializeBufferArray: function (vb, type, buf, options) {
         if (options === undefined) options = this.getOptions();
 
         if (options.initializeBufferArray) {
@@ -717,11 +635,11 @@ Input.prototype = {
 
         var url = vb.File;
 
-        return this.readBinaryArrayURL(url).then(function(array) {
+        return this.readBinaryArrayURL(url).then(function (array) {
             var typedArray;
             // manage endianness
             var bigEndian;
-            (function() {
+            (function () {
                 var a = new Uint8Array([0x12, 0x34]);
                 var b = new Uint16Array(a.buffer);
                 bigEndian = b[0].toString(16) === '1234';
@@ -764,7 +682,7 @@ Input.prototype = {
         });
     },
 
-    readBufferArray: function(options) {
+    readBufferArray: function (options) {
         var jsonObj = this.getJSON();
 
         var uniqueID = jsonObj.UniqueID;
@@ -824,7 +742,7 @@ Input.prototype = {
         return promise;
     },
 
-    readUserDataContainer: function() {
+    readUserDataContainer: function () {
         var jsonObj = this.getJSON();
         var osgjsObject;
         var uniqueID = jsonObj.UniqueID;
@@ -839,7 +757,7 @@ Input.prototype = {
         return jsonObj.Values;
     },
 
-    readPrimitiveSet: function() {
+    readPrimitiveSet: function () {
         var jsonObj = this.getJSON();
         var uniqueID;
         var osgjsObject;
@@ -869,7 +787,7 @@ Input.prototype = {
             obj = new DrawElements(mode);
 
             this.setJSON(drawElements.Indices);
-            promise = this.readBufferArray().then(function(array) {
+            promise = this.readBufferArray().then(function (array) {
                 obj.setIndices(array);
                 return obj;
             });
@@ -913,7 +831,7 @@ Input.prototype = {
         return promise;
     },
 
-    readObject: function() {
+    readObject: function () {
         var jsonObj = this.getJSON();
         var objKeys = window.Object.keys(jsonObj);
         var prop = objKeys[0];
