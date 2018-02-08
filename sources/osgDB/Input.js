@@ -164,7 +164,7 @@ Input.prototype = {
         });
     },
 
-    getruldds:function (buffer, loadMipmaps) {
+    getruldds: function (buffer, loadMipmaps) {
 
         var dds = {mipmaps: [], width: 0, height: 0, format: null, mipmapCount: 1};
 
@@ -176,18 +176,8 @@ Input.prototype = {
 
         var DDS_MAGIC = 0x20534444;
 
-        var DDSD_CAPS = 0x1,
-            DDSD_HEIGHT = 0x2,
-            DDSD_WIDTH = 0x4,
-            DDSD_PITCH = 0x8,
-            DDSD_PIXELFORMAT = 0x1000,
-            DDSD_MIPMAPCOUNT = 0x20000,
-            DDSD_LINEARSIZE = 0x80000,
-            DDSD_DEPTH = 0x800000;
+        var DDSD_MIPMAPCOUNT = 0x20000;
 
-        var DDSCAPS_COMPLEX = 0x8,
-            DDSCAPS_MIPMAP = 0x400000,
-            DDSCAPS_TEXTURE = 0x1000;
 
         var DDSCAPS2_CUBEMAP = 0x200,
             DDSCAPS2_CUBEMAP_POSITIVEX = 0x400,
@@ -195,15 +185,9 @@ Input.prototype = {
             DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000,
             DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000,
             DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000,
-            DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000,
-            DDSCAPS2_VOLUME = 0x200000;
+            DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
 
-        var DDPF_ALPHAPIXELS = 0x1,
-            DDPF_ALPHA = 0x2,
-            DDPF_FOURCC = 0x4,
-            DDPF_RGB = 0x40,
-            DDPF_YUV = 0x200,
-            DDPF_LUMINANCE = 0x20000;
+        var DDPF_FOURCC = 0x4;
 
         function fourCCToInt32(value) {
 
@@ -225,10 +209,10 @@ Input.prototype = {
 
         }
 
-        function loadARGBMip(buffer, dataOffset, width, height) {
+        function loadARGBMip(buffers, dataOffset, width, height) {
 
             var dataLength = width * height * 4;
-            var srcBuffer = new Uint8Array(buffer, dataOffset, dataLength);
+            var srcBuffer = new Uint8Array(buffers, dataOffset, dataLength);
             var byteArray = new Uint8Array(dataLength);
             var dst = 0;
             var src = 0;
@@ -286,10 +270,9 @@ Input.prototype = {
         var off_BBitMask = 25;
         var off_ABitMask = 26;
 
-        var off_caps = 27;
+
         var off_caps2 = 28;
-        var off_caps3 = 29;
-        var off_caps4 = 30;
+
 
         // Parse header
 
@@ -400,16 +383,17 @@ Input.prototype = {
             var height = dds.height;
 
             for (var i = 0; i < dds.mipmapCount; i++) {
-
+                var byteArray;
+                var dataLength;
                 if (isRGBAUncompressed) {
 
-                    var byteArray = loadARGBMip(buffer, dataOffset, width, height);
-                    var dataLength = byteArray.length;
+                    byteArray = loadARGBMip(buffer, dataOffset, width, height);
+                    dataLength = byteArray.length;
 
                 } else {
 
-                    var dataLength = Math.max(4, width) / 4 * Math.max(4, height) / 4 * blockBytes;
-                    var byteArray = new Uint8Array(buffer, dataOffset, dataLength);
+                    dataLength = Math.max(4, width) / 4 * Math.max(4, height) / 4 * blockBytes;
+                    byteArray = new Uint8Array(buffer, dataOffset, dataLength);
 
                 }
 
@@ -420,9 +404,11 @@ Input.prototype = {
                     height: height,
                     getWidth: function () {
                         return this.width;
-                    }, getHeight: function () {
+                    },
+                    getHeight: function () {
                         return this.height;
-                    }, getImage: function () {
+                    },
+                    getImage: function () {
                         return this.data;
                     }
                 };
@@ -441,6 +427,7 @@ Input.prototype = {
         return dds;
 
     },
+    
     readImageURL: function(url, options) {
         if (options === undefined) {
             options = this._defaultOptions;
