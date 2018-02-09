@@ -112,6 +112,7 @@ var NodeGizmo = function(viewer) {
     //   we insert a matrixTransform that we are going to edit
     // - otherwise we look for the nearest MatrixTransform with an editMask on the graph
     this._autoInsertMT = false;
+    this._correctPivotOnAutoInsert = false;
 
     this._viewer = viewer;
     this._canvas = viewer.getGraphicContext().canvas;
@@ -178,6 +179,7 @@ NodeGizmo.PICK_PLANE_Y = 1 << 8;
 NodeGizmo.PICK_PLANE_Z = 1 << 9;
 
 NodeGizmo.NO_FULL_CIRCLE = 1 << 10; // don't display the full non pickable circle (visual cue)
+NodeGizmo.CORRECT_PIVOT = 1 << 11; // recompute pivot to center of bound node instead of local origin
 
 NodeGizmo.PICK_ARC = NodeGizmo.PICK_ARC_X | NodeGizmo.PICK_ARC_Y | NodeGizmo.PICK_ARC_Z;
 NodeGizmo.PICK_ARROW = NodeGizmo.PICK_ARROW_X | NodeGizmo.PICK_ARROW_Y | NodeGizmo.PICK_ARROW_Z;
@@ -234,8 +236,16 @@ utils.createPrototypeNode(
             this._autoInsertMT = bool;
         },
 
+        setCorrectPivotOnAutoInsert: function(bool) {
+            this._correctPivotOnAutoInsert = bool;
+        },
+
         isEditing: function() {
             return this._isEditing;
+        },
+
+        getAttachedNode: function() {
+            return this._attachedNode;
         },
 
         init: function() {
@@ -261,7 +271,10 @@ utils.createPrototypeNode(
 
         _insertEditNode: function(parent, node) {
             var mtInsert = new MatrixTransform();
+
             mtInsert.editMask = NodeGizmo.PICK_GIZMO;
+            if (this._correctPivotOnAutoInsert) mtInsert.editMask |= NodeGizmo.CORRECT_PIVOT;
+
             parent.addChild(mtInsert);
             parent.removeChild(node);
             mtInsert.addChild(node);
@@ -332,7 +345,9 @@ utils.createPrototypeNode(
             this._attachedNode = editNode;
 
             if (userNode && userNode !== editNode) {
-                vec3.copy(this._pivotOffset, userNode.getBoundingSphere().center());
+                if (editNode.editMask & NodeGizmo.CORRECT_PIVOT) {
+                    vec3.copy(this._pivotOffset, userNode.getBoundingSphere().center());
+                }
             }
 
             this.updateGizmoMask();
