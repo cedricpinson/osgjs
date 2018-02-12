@@ -102,7 +102,7 @@ utils.createPrototypeObject(
             if (opt) {
                 if (opt.enable !== false) {
                     var elem = opt.sourceElement || defaultSrcElem;
-                    this._inputManager.registerInputSource(new sourceClass(elem));
+                    this._inputManager.registerInputSource(new sourceClass(elem, opt));
                 }
             } else {
                 this._inputManager.registerInputSource(new sourceClass(defaultSrcElem));

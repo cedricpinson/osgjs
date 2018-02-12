@@ -7,9 +7,14 @@ import notify from 'osg/notify';
  * @param canvas
  * @constructor
  */
-var InputSourceWebVR = function() {
+var InputSourceWebVR = function(elem, options) {
     InputSource.call(this);
-    this._supportedEvents = ['vrdisplayposechanged', 'vrdisplayconnected', 'vrdisplaydisconnected'];
+    this._supportedEvents = [
+        'vrdisplayposechanged',
+        'vrdisplayconnected',
+        'vrdisplaynotfound',
+        'vrdisplaydisconnected'
+    ];
 
     this._callbacks = {};
     this._events = {};
@@ -19,10 +24,12 @@ var InputSourceWebVR = function() {
         this._events[eventName] = event;
     }
     this._nbCallbacks = 0;
+    // We poll the device at regular interval, if ever a headset is plugged in.
     // 3 seconds default poll interval
-    this._pollInterval = 3000;
-
-    this._pollHeadset();
+    // If the pollInterval is set to 0 or less the polling is disabled and the user
+    // will have to poll it manually with the pollHeadset method
+    this._pollInterval =
+        options && options.pollInterval !== undefined ? options.pollInterval : 3000;
 };
 utils.createPrototypeObject(
     InputSourceWebVR,
@@ -42,11 +49,18 @@ utils.createPrototypeObject(
                 if (index < 0) {
                     callbacks.push(callback);
                     this._nbCallbacks++;
+
+                    // only poll for device if we have callbacks.
+                    this._schedulePolling();
                 }
             } else {
                 if (index >= 0) {
                     callbacks.splice(index, 1);
                     this._nbCallbacks--;
+                    if (!this._nbCallbacks) {
+                        // no more callbacks let's stop polling
+                        this._cancelPolling();
+                    }
                 }
             }
         },
@@ -62,58 +76,78 @@ utils.createPrototypeObject(
             if (!customEvent.worldScale) customEvent.worldScale = 1.0;
         },
 
-        _pollHeadset: function() {
+        _schedulePolling: function() {
+            if (this._pollInterval > 0 && this._pollingTimeout === undefined) {
+                this._pollingTimeout = setInterval(this.pollHeadset.bind(this), this._pollInterval);
+            }
+        },
+
+        _cancelPolling: function() {
+            if (this._pollingTimeout !== undefined) {
+                clearInterval(this._pollingTimeout);
+            }
+        },
+
+        pollHeadset: function() {
             if (!navigator.getVRDisplays) {
                 this._hmd = undefined;
                 this._frameData = undefined;
+                this.triggerNotFoundEvent();
                 return;
             }
 
-            setInterval(
-                function() {
-                    if (!this._nbCallbacks) {
-                        //don't poll if there is no callback registered.
+            var self = this;
+            navigator.getVRDisplays().then(
+                function(displays) {
+                    if (displays.length === 0) {
+                        this.triggerNotFoundEvent();
                         return;
                     }
-                    var self = this;
-                    navigator.getVRDisplays().then(function(displays) {
-                        if (displays.length > 0) {
-                            if (self._hmd !== displays[0]) {
-                                notify.log('Found a VR display');
-                                //fire the disconnect event
-                                var event = self._events['vrdisplaydisconnected'];
-                                event.vrDisplay = self._hmd;
-                                var i, callback;
-                                var callbacks = self._callbacks['vrdisplaydisconnected'];
-                                if (callbacks) {
-                                    for (i = 0; i < callbacks.length; i++) {
-                                        callback = callbacks[i];
-                                        callback(event);
-                                    }
-                                }
 
-                                //fire the connect event
-                                event = self._events['vrdisplayconnected'];
-                                event.vrDisplay = displays[0];
-                                callbacks = self._callbacks['vrdisplayconnected'];
-                                if (callbacks) {
-                                    for (i = 0; i < callbacks.length; i++) {
-                                        callback = callbacks[i];
-                                        callback(event);
-                                    }
-                                }
-                                self._hmd = displays[0];
-                                self._frameData = new window.VRFrameData();
-                            }
-                        }
-                    });
-                }.bind(this),
-                this._pollInterval
+                    if (self._hmd === displays[0]) {
+                        // still the same display nothing to do
+                        return;
+                    }
+
+                    notify.log('Found a VR display');
+                    //fire the disconnect event
+                    var event = self._events['vrdisplaydisconnected'];
+                    event.vrDisplay = self._hmd;
+                    this._dispatchEvent(event, self._callbacks['vrdisplaydisconnected']);
+
+                    //fire the connect event
+                    event = self._events['vrdisplayconnected'];
+                    event.vrDisplay = displays[0];
+                    this._dispatchEvent(event, self._callbacks['vrdisplayconnected']);
+
+                    self._hmd = displays[0];
+                    self._frameData = new window.VRFrameData();
+                }.bind(this)
             );
         },
 
-        setPollInterval: function (interval) {
+        triggerNotFoundEvent: function() {
+            if (this._pollInterval > 0) {
+                // we are in auto polling mode, don't trigger the event
+                return;
+            }
+
+            // in case of manual polling we trigger an event when no display was found
+            var event = this._events['vrdisplaynotfound'];
+            this._dispatchEvent(event, this._callbacks['vrdisplaynotfound']);
+        },
+
+        setPollInterval: function(interval) {
             this._pollInterval = interval;
+        },
+
+        _dispatchEvent: function(event, callbacks) {
+            if (!callbacks) return;
+
+            for (var i = 0; i < callbacks.length; i++) {
+                var callback = callbacks[i];
+                callback(event);
+            }
         },
 
         poll: function() {
@@ -143,10 +177,7 @@ utils.createPrototypeObject(
             event.pose = pose;
             event.sitToStandMatrix = sitToStand;
 
-            for (var i = 0; i < callbacks.length; i++) {
-                var callback = callbacks[i];
-                callback(event);
-            }
+            this._dispatchEvent(event, callbacks);
         }
     }),
     'osgViewer',
