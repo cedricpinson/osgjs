@@ -56,7 +56,7 @@
     "Matt Fontaine <tehqin@gmail.com>",
     "Stephane Ginier <stephane.ginier@gmail.com>"
   ],
-  "version": "0.2.7",
+  "version": "0.2.9",
   "author": "Cedric Pinson <trigrou@trigrou.com> (http://cedricpinson.com)",
   "license": "MIT",
   "description": "OpenSceneGraph implementation in javascript",
