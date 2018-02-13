@@ -328,4 +328,8 @@ RenderBin.reset = function() {
     pooledRenderBin.reset();
 };
 
+RenderBin.clean = function () {
+    pooledRenderBin.clean();
+};
+
 export default RenderBin;

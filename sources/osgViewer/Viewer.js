@@ -28,6 +28,9 @@ import InputSourceWebVR from 'osgViewer/input/source/InputSourceWebVR';
 import InputSourceGamePad from 'osgViewer/input/source/InputSourceGamePad';
 import InputSourceDeviceOrientation from 'osgViewer/input/source/InputSourceDeviceOrientation';
 import InputSourceTouchScreen from 'osgViewer/input/source/InputSourceTouchScreen';
+import RenderBin from 'osg/RenderBin';
+import RenderStage from 'osg/RenderStage';
+import StateGraph from 'osg/StateGraph';
 
 var Viewer = function(canvas, userOptions, error) {
     View.call(this);
@@ -571,6 +574,12 @@ utils.createPrototypeObject(
         setEnableManipulator: function(bool) {
             if (!this._manipulator) return;
             this._manipulator.setEnable(bool);
+        },
+
+        dispose: function () {
+            RenderBin.clean();
+            RenderStage.clean();
+            StateGraph.pooledStateGraph.clean();
         }
     }),
     'osgViewer',
