@@ -1,7 +1,8 @@
 import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
-import {quat} from 'osg/glMatrix';
-import {vec3} from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
@@ -112,17 +113,56 @@ utils.createPrototypeObject(
     FirstPersonManipulatorDeviceOrientationController,
     utils.objectInherit(Controller.prototype, {
         init: function() {
-            this._stepFactor = 1.0; // meaning radius*stepFactor to move
             this._quat = quat.create();
             this._pos = vec3.create();
+            this._deviceOrientation = undefined;
+            this._screenOrientation = undefined;
+
+            var manager = this._manipulator.getInputManager();
+            manager.group(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION).addMappings(
+                {
+                    setDeviceOrientation: 'deviceorientation',
+                    setScreenOrientation: 'orientationchange'
+                },
+                this
+            );
+
+            // default to disabled
+            manager.setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
         },
 
-        update: function(deviceOrientation, screenOrientation) {
+        setDeviceOrientation: function(ev) {
+            if (!this._deviceOrientation) {
+                this._deviceOrientation = {};
+            }
+            this._deviceOrientation.alpha = ev.alpha;
+            this._deviceOrientation.beta = ev.beta;
+            this._deviceOrientation.gamma = ev.gamma;
+
+            if (ev.screenOrientation) {
+                this.setScreenOrientation(ev);
+                return;
+            }
+
+            this._update();
+        },
+
+        setScreenOrientation: function(ev) {
+            this._screenOrientation = ev.screenOrientation;
+            this._update();
+        },
+
+        _update: function() {
+            if (!this._deviceOrientation || !this._screenOrientation) {
+                return;
+            }
+
             FirstPersonManipulatorDeviceOrientationController.computeQuaternion(
                 this._quat,
-                deviceOrientation,
-                screenOrientation
+                this._deviceOrientation,
+                this._screenOrientation
             );
+
             this._manipulator.setPoseVR(this._quat, this._pos);
         }
     })

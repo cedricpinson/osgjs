@@ -1,3 +1,5 @@
+import notify from 'sources/osg/notify';
+
 (function() {
     'use strict';
 
@@ -9,6 +11,7 @@
     var ExampleOSGJS = window.ExampleOSGJS;
     var $ = window.$;
     var Object = window.Object;
+    var InputGroups = OSG.osgViewer.InputGroups;
 
     var Example = function() {
         ExampleOSGJS.call(this);
@@ -53,14 +56,16 @@
                 // The modelNode will be attached to it
                 if (!this._vrNode) {
                     if (navigator.getVRDisplays) {
-                        viewer.getEventProxy().WebVR.setEnable(true);
+                        viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_WEBVR, true);
                         this._vrNode = osgUtil.WebVR.createScene(
                             viewer,
                             this._modelNode,
-                            viewer._eventProxy.WebVR.getHmd()
+                            viewer.getVRDisplay()
                         );
                     } else {
-                        viewer.getEventProxy().DeviceOrientation.setEnable(true);
+                        viewer
+                            .getInputManager()
+                            .setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, true);
                         this._vrNode = osgUtil.WebVRCustom.createScene(viewer, this._modelNode, {
                             isCardboard: true,
                             vResolution: this._canvas.height,
@@ -76,8 +81,9 @@
                 $('#button-exit-fullscreen').show();
             } else {
                 // Disable VR
-                viewer._eventProxy.WebVR.setEnable(false);
-                viewer._eventProxy.DeviceOrientation.setEnable(false);
+                viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_WEBVR, false);
+                viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
+
                 // Detach the vrNode and reattach the modelNode
                 this.getRootNode().removeChild(this._vrNode);
                 this.getRootNode().addChild(this._modelNode);
@@ -156,26 +162,32 @@
             );
 
             this.getRootNode().addChild(root);
-            this._manipulator = new osgGA.FirstPersonManipulator();
+            this._manipulator = new osgGA.FirstPersonManipulator({
+                inputManager: this._viewer.getInputManager()
+            });
             this._viewer.setManipulator(this._manipulator);
-
             this.initTouch();
         },
 
-        touch: function(/*e*/) {
+        goForward: function() {
             // assume the first touch in the 1/4 of the top canvas is a google cardboard touch
-            console.log('cardboard touch');
+            notify.log('cardboard touch');
             this._manipulator.getForwardInterpolator().setTarget(1);
         },
 
-        unTouch: function(/*e*/) {
-            console.log('cardboard unTouch');
+        stop: function() {
+            notify.log('cardboard unTouch');
             this._manipulator.getForwardInterpolator().setTarget(0);
         },
 
         initTouch: function() {
-            this._canvas.addEventListener('touchstart', this.touch.bind(this), false);
-            this._canvas.addEventListener('touchend', this.unTouch.bind(this), false);
+            this._viewer.getInputManager().addMappings(
+                {
+                    'scene.webvrexample:goForward': 'touchstart',
+                    'scene.webvrexample:stop': 'touchend'
+                },
+                this
+            );
         }
     });
 

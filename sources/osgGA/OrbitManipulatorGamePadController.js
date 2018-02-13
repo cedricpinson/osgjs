@@ -1,6 +1,7 @@
 import Controller from 'osgGA/Controller';
 import utils from 'osg/utils';
-import {vec2} from 'osg/glMatrix';
+import { vec2 } from 'osg/glMatrix';
+import InputGroups from 'osgViewer/input/InputConstants';
 
 var OrbitManipulatorGamePadController = function(manipulator) {
     Controller.call(this, manipulator);
@@ -12,102 +13,93 @@ utils.createPrototypeObject(
     utils.objectInherit(Controller.prototype, {
         init: function() {
             this._delay = 0.15;
-            this._threshold = 0.08;
-            this._padFactor = 10.0;
             this._zoomFactor = 0.5;
             this._rotateFactor = 5.0;
-        },
-
-        addPan: function(pan, x, y) {
-            pan.setDelay(this._delay);
-            pan.addTarget(x * this._padFactor, y * this._padFactor);
-        },
-
-        addZoom: function(zoom, z) {
-            zoom.setDelay(this._delay);
-            zoom.addTarget(z * this._zoomFactor);
-        },
-
-        addRotate: function(rotate, x, y) {
-            rotate.setDelay(this._delay);
-            //var rotateTarget = rotate.getTarget();
-            rotate.addTarget(x * this._rotateFactor, y * this._rotateFactor);
-        },
-
-        gamepadaxes: function(axes) {
-            // Block badly balanced controllers
-            var AXIS_THRESHOLD = 0.005;
+            this._panFactor = 10.0;
 
             //var rotateTarget, panTarget;
-            var rotate = this._manipulator.getRotateInterpolator();
-            var zoom = this._manipulator.getZoomInterpolator();
-            var pan = this._manipulator.getPanInterpolator();
-            // Regular gamepads
-            if (axes.length === 4) {
-                if (Math.abs(axes[0]) > AXIS_THRESHOLD || Math.abs(axes[1]) > AXIS_THRESHOLD) {
-                    this.addRotate(rotate, -axes[0], axes[1]);
-                }
-                if (Math.abs(axes[3]) > AXIS_THRESHOLD) {
-                    this.addZoom(zoom, -axes[3]);
-                }
+            this._rotate = this._manipulator.getRotateInterpolator();
+            this._zoom = this._manipulator.getZoomInterpolator();
+            this._pan = this._manipulator.getPanInterpolator();
 
-                //SpaceNavigator & 6-axis controllers
-            } else if (axes.length >= 5) {
-                //Notify.log(axes);
-                if (Math.abs(axes[0]) > AXIS_THRESHOLD || Math.abs(axes[1]) > AXIS_THRESHOLD) {
-                    this.addPan(pan, -axes[0], axes[1]);
-                }
+            this._rotate.setDelay(this._delay);
+            this._zoom.setDelay(this._delay);
+            this._pan.setDelay(this._delay);
 
-                if (Math.abs(axes[2]) > AXIS_THRESHOLD) {
-                    this.addZoom(zoom, -axes[2]);
-                }
+            var manager = this._manipulator.getInputManager();
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+                {
+                    addZoom: 'axis 3',
+                    addRotateX: 'axis 0',
+                    addRotateY: 'axis 1'
+                },
+                this
+            );
 
-                if (Math.abs(axes[3]) > AXIS_THRESHOLD || Math.abs(axes[4]) > AXIS_THRESHOLD) {
-                    this.addRotate(rotate, axes[4], axes[3]);
-                }
-            }
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+                {
+                    panUp: 'buttonvalue 12'
+                },
+                this.pan.bind(this, vec2.fromValues(0, 1))
+            );
+
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+                {
+                    panDown: 'buttonvalue 13'
+                },
+                this.pan.bind(this, vec2.fromValues(0, -1))
+            );
+
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+                {
+                    panLeft: 'buttonvalue 14'
+                },
+                this.pan.bind(this, vec2.fromValues(1, 0))
+            );
+
+            manager.group(InputGroups.ORBIT_MANIPULATOR_GAMEPAD).addMappings(
+                {
+                    panRight: 'buttonvalue 15'
+                },
+                this.pan.bind(this, vec2.fromValues(-1, 0))
+            );
+
+            // Keeping this for whenever we add the support for custom gamepad layout
+            //    this._padFactor = 10.0;
+            //    //SpaceNavigator & 6-axis controllers
+            //         } else if (axes.length >= 5) {
+            //     if (Math.abs(axes[0]) > AXIS_THRESHOLD || Math.abs(axes[1]) > AXIS_THRESHOLD) {
+            //         this.addPan(pan, -axes[0], axes[1]);
+            //     }
+            //
+            //     if (Math.abs(axes[2]) > AXIS_THRESHOLD) {
+            //         this.addZoom(zoom, -axes[2]);
+            //     }
+            //
+            //     if (Math.abs(axes[3]) > AXIS_THRESHOLD || Math.abs(axes[4]) > AXIS_THRESHOLD) {
+            //         this.addRotate(rotate, axes[4], axes[3]);
+            //     }
+            // }
         },
 
-        gamepadbuttondown: function(event /*, pressed */) {
-            // Buttons 12 to 15 are the d-pad.
-            if (event.button >= 12 && event.button <= 15) {
-                var pan = this._manipulator.getPanInterpolator();
-                var panTarget = pan.getTarget();
-                var delta = {
-                    12: vec2.fromValues(0, -1),
-                    13: vec2.fromValues(0, 1),
-                    14: vec2.fromValues(-1, 0),
-                    15: vec2.fromValues(1, 0)
-                }[event.button];
-                pan.setDelay(this._delay);
-                pan.setTarget(panTarget[0] - delta[0] * 10, panTarget[1] + delta[1] * 10);
-            }
+        pan: function(delta) {
+            var panTarget = this._pan.getTarget();
+            this._pan.setTarget(
+                panTarget[0] - delta[0] * this._panFactor,
+                panTarget[1] + delta[1] * this._panFactor
+            );
         },
 
-        update: function(gm) {
-            if (!gm) {
-                return;
-            }
+        addZoom: function(ev) {
+            this._zoom.addTarget(-ev.value * this._zoomFactor);
+        },
 
-            var axis = gm.axes;
-            var buttons = gm.buttons;
+        addRotateX: function(ev) {
+            this._rotate.addTarget(-ev.value * this._rotateFactor);
+        },
 
-            this.gamepadaxes(axis);
-
-            // Dummy event wrapper
-            var emptyFunc = function() {};
-            for (var i = 0; i < buttons.length; i++) {
-                if (buttons[i]) {
-                    this.gamepadbuttondown(
-                        {
-                            preventDefault: emptyFunc,
-                            gamepad: gm,
-                            button: i
-                        },
-                        !!buttons[i]
-                    );
-                }
-            }
+        addRotateY: function(ev) {
+            this._rotate.addTarget(0, ev.value * this._rotateFactor);
         }
     })
 );

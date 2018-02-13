@@ -47,6 +47,13 @@ var createWindowVars = function(window) {
         userAgent: 'node.js',
         vendor: ''
     };
+
+    global.Event = function(type) {
+        return {
+            type: type
+        };
+    };
+
     window.console = global.console;
     window.Map = global.Map;
     window.Set = global.Set;

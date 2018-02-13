@@ -4,9 +4,10 @@ import notify from 'osg/notify';
  *  OrbitManipulator
  *  @class
  */
-var SwitchManipulator = function() {
+var SwitchManipulator = function(inputManager) {
     this._manipulatorList = [];
     this._currentManipulator = undefined;
+    this._inputManager = inputManager;
 };
 
 /** @lends SwitchManipulator.prototype */
@@ -25,6 +26,15 @@ SwitchManipulator.prototype = {
         }
         return undefined;
     },
+
+    getInputManager: function(){
+        return this._inputManager;
+    },
+
+    setEnable: function (enable) {
+        this.getCurrentManipulator().setEnable(enable);
+    },
+
     getNode: function() {
         // we should add an accessor in the osgjs manipulator
         return this.getCurrentManipulator()._node;
