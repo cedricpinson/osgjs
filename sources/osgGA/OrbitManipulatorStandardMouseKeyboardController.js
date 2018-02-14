@@ -6,7 +6,7 @@ import InputGroups from 'osgViewer/input/InputConstants';
 
 var OrbitManipulatorStandardMouseKeyboardController = function(manipulator) {
     Controller.call(this, manipulator);
-    this._zoomFactor = 40;
+    this._zoomFactor = 1;
     this.init();
 };
 
@@ -148,7 +148,7 @@ utils.createPrototypeObject(
         },
 
         zoom: function(ev) {
-            var intDelta = -ev.deltaY / this._zoomFactor;
+            var intDelta = ev.deltaY / this._zoomFactor;
             var manipulator = this._manipulator;
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0] - intDelta;
             manipulator.getZoomInterpolator().setTarget(zoomTarget);

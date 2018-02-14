@@ -2,6 +2,16 @@ import utils from 'osg/utils';
 import InputSource from 'osgViewer/input/source/InputSource';
 import { vec2 } from 'osg/glMatrix';
 
+// Mouse Wheel event reports different values depending on the browser and OS.
+// Standard event "wheel" should report a deltaX value. This value is totally inconsistent depending on the browser and the os.
+// Chrome has a consistent mouseDelta value across OS (120 for a wheel step).
+// Edge has the same mouseDelta value than chrome.
+// Safari has the same mouseDelta value than chrome.
+var mouseDeltaFactor = 120;
+// Firefox has no mouseDelta and reports a deltaY attribute that is 3 times higher on linux and win (compared to mac) (1 on mac 3 otherwise)
+// also deltaY direction is backward compared to wheelDelta
+var deltaYFactor = navigator.platform.indexOf('Mac') === 0 ? -1 : -3;
+
 /**
  * Standard Mouse Event handled directly on the canvas.
  * @param canvas
@@ -39,18 +49,8 @@ utils.createPrototypeObject(
 
             if (enable) {
                 this._target.addEventListener(name, callback);
-                if (name === 'wheel') {
-                    this._target.addEventListener('mousewheel', callback);
-                    this._target.addEventListener('DOMMouseScroll', callback);
-                    this._target.addEventListener('MozMousePixelScroll', callback);
-                }
             } else {
                 this._target.removeEventListener(name, callback);
-                if (name === 'wheel') {
-                    this._target.removeEventListener('mousewheel', callback);
-                    this._target.removeEventListener('DOMMouseScroll', callback);
-                    this._target.removeEventListener('MozMousePixelScroll', callback);
-                }
             }
         },
 
@@ -82,30 +82,21 @@ utils.createPrototypeObject(
             customEvent.button = ev.button;
             customEvent.buttons = ev.buttons;
 
-            if (this._isMouseWheelEvent(ev)) {
-                if (ev.deltaMode !== undefined) {
-                    customEvent.deltaMode = ev.deltaMode;
-                    customEvent.deltaY = ev.deltaY;
-                    customEvent.deltaX = ev.deltaX;
-                    customEvent.deltaZ = ev.deltaZ;
+            if (ev.type === 'wheel') {
+                if (ev.wheelDelta !== undefined) {
+                    //chrome / safari / edge browser wheel delta
+                    customEvent.deltaY = ev.wheelDelta / mouseDeltaFactor;
+                } else if (ev.deltaMode === 1) {
+                    // firefox with the standard wheel event (no wheelDelta)
+                    customEvent.deltaY = ev.deltaY / deltaYFactor;
                 } else {
-                    customEvent.wheelDelta =
-                        ev.wheelDelta === undefined ? -ev.detail : ev.wheelDelta;
-                    customEvent.deltaMode = 0;
-                    customEvent.deltaY = -ev.wheelDelta / 3;
-                    customEvent.deltaX = 0;
-                    customEvent.deltaZ = 0;
+                    // firefox with the track pad (no wheelDelta), events are fired 10 times the rate.
+                    customEvent.deltaY = ev.deltaY / (deltaYFactor * 10);
                 }
+                customEvent.deltaMode = ev.deltaMode;
+                customEvent.deltaX = ev.deltaX;
+                customEvent.deltaZ = ev.deltaZ;
             }
-        },
-
-        _isMouseWheelEvent: function(ev) {
-            return (
-                ev.type === 'wheel' ||
-                ev.type === 'DOMMouseScroll' ||
-                ev.type === 'mousewheel' ||
-                ev.type === 'MozMousePixelScroll'
-            );
         },
 
         isEventRegistered: function(nativeEvent, parsedEvent) {
