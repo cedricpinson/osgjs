@@ -54,6 +54,8 @@ var createWindowVars = function(window) {
         };
     };
 
+    navigator.platform = '';
+
     window.console = global.console;
     window.Map = global.Map;
     window.Set = global.Set;
