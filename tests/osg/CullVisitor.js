@@ -71,6 +71,7 @@ export default function() {
         assert.isOk(callb === 1, 'Called b cull callback');
         assert.isOk(callc === 0, 'Did not Call c cull callback as expected');
         mockup.removeCanvas(canvas);
+        viewer.getInputManager().cleanup();
     });
     return;
     test('CullVisitor 2', function() {

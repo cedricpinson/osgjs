@@ -188,6 +188,7 @@ var createFakeRenderer = function() {
 var createFakeWebGLCanvas = function() {
     var obj = {
         addEventListener: function() {},
+        removeEventListener: function() {},
         getContext: function(dimension) {
             var grey = true;
             if (dimension === '2d') {

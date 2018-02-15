@@ -72,6 +72,7 @@ export default function() {
             viewer.frame();
 
             mockup.removeCanvas(canvas);
+            viewer.getInputManager().cleanup();
         })();
 
         (function() {
@@ -122,6 +123,7 @@ export default function() {
 
             root.accept(cull);
             mockup.removeCanvas(canvas);
+            viewer.getInputManager().cleanup();
         })();
 
         assert.isOk(true, 'check no exception');

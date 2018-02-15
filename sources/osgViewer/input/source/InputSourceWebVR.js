@@ -49,7 +49,6 @@ utils.createPrototypeObject(
                 if (index < 0) {
                     callbacks.push(callback);
                     this._nbCallbacks++;
-
                     // only poll for device if we have callbacks.
                     this._schedulePolling();
                 }
