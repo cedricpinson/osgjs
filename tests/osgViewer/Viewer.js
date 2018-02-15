@@ -4,11 +4,22 @@ import Shape from 'osg/shape';
 
 
 export default function() {
+    var canvas;
+    var viewer;
+
+    beforeEach(function () {
+        canvas = mockup.createCanvas();
+        viewer = new mockup.Viewer(canvas);
+    });
+
+    afterEach(function () {
+        mockup.removeCanvas(canvas);
+        viewer.getInputManager().cleanup();
+    });
     test('Viewer', function() {
 
+
         (function() {
-            var canvas = mockup.createCanvas();
-            var viewer = new mockup.Viewer(canvas);
             assert.isOk(viewer.getCamera() !== undefined, 'Check camera creation');
             assert.isOk(viewer.getCamera().getViewport() !== undefined, 'Check camera viewport');
             assert.isOk(viewer.getCamera().getRenderer() !== undefined, 'Check camera Renderer');
@@ -19,12 +30,10 @@ export default function() {
                 viewer.getState().getGraphicContext() !== undefined,
                 'Check state graphic context'
             );
-            mockup.removeCanvas(canvas);
         })();
 
         (function() {
-            var canvas = mockup.createCanvas();
-            var viewer = new mockup.Viewer(canvas);
+
             var createScene = function() {
                 return Shape.createTexturedBoxGeometry(0, 0, 0, 10, 10, 10);
             };
@@ -54,14 +63,10 @@ export default function() {
                 Number.NEGATIVE_INFINITY,
                 'Check far after reset'
             );
-
-            mockup.removeCanvas(canvas);
         })();
 
         // test device
         (function() {
-            var canvas = mockup.createCanvas();
-            var viewer = new mockup.Viewer(canvas);
 
             var mouseInput = viewer.getInputManager().getInputSource('Mouse');
             var keyboardInput = viewer.getInputManager().getInputSource('Keyboard');
@@ -69,13 +74,10 @@ export default function() {
             assert.notEqual(mouseInput, undefined, 'detected mouse');
             assert.notEqual(keyboardInput, undefined, 'detected keyboard');
 
-            mockup.removeCanvas(canvas);
         })();
 
         // test context lost
         (function() {
-            var canvas = mockup.createCanvas();
-            var viewer = new mockup.Viewer(canvas);
 
             viewer.setContextLostCallback(function() {
                 assert.isOk(true, 'detected contextLost Lost');

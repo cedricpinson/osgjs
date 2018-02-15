@@ -7,25 +7,31 @@ import { mat4 } from 'osg/glMatrix';
 
 export default function() {
     var viewer;
-    before(function(){
-        var canvas = mockup.createCanvas();
+    var canvas;
+    before(function() {
+        canvas = mockup.createCanvas();
         viewer = new mockup.Viewer(canvas);
     });
 
+    after(function() {
+        mockup.removeCanvas(canvas);
+        viewer.getInputManager().cleanup();
+    });
+
     test('FirstPersonManipulator', function() {
-        var manipulator = new FirstPersonManipulator({inputManager: viewer.getInputManager()});
+        var manipulator = new FirstPersonManipulator({ inputManager: viewer.getInputManager() });
         var matrix = manipulator.getInverseMatrix();
         assert.isOk(matrix !== undefined, 'check getInverseMatrix method');
     });
 
     test('FirstPersonManipulator check controllers', function() {
-        var manipulator = new FirstPersonManipulator({inputManager: viewer.getInputManager()});
+        var manipulator = new FirstPersonManipulator({ inputManager: viewer.getInputManager() });
         var list = manipulator.getControllerList();
         assert.isOk(list.StandardMouseKeyboard !== undefined, 'check mouse support');
     });
 
     test('FirstPersonManipulator check computation', function() {
-        var manipulator = new FirstPersonManipulator({inputManager: viewer.getInputManager()});
+        var manipulator = new FirstPersonManipulator({ inputManager: viewer.getInputManager() });
 
         var fakeFS = {
             getFrameStamp: function() {

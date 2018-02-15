@@ -4,19 +4,25 @@ import mockup from 'tests/mockup/mockup';
 
 export default function() {
     var viewer;
-    before(function(){
-        var canvas = mockup.createCanvas();
+    var canvas;
+    before(function() {
+        canvas = mockup.createCanvas();
         viewer = new mockup.Viewer(canvas);
     });
 
+    after(function() {
+        mockup.removeCanvas(canvas);
+        viewer.getInputManager().cleanup();
+    });
+
     test('OrbitManipulator', function() {
-        var manipulator = new OrbitManipulator({inputManager: viewer.getInputManager()});
+        var manipulator = new OrbitManipulator({ inputManager: viewer.getInputManager() });
         var matrix = manipulator.getInverseMatrix();
         assert.isOk(matrix !== undefined, 'check getInverseMatrix method');
     });
 
     test('OrbitManipulator check controllers', function() {
-        var manipulator = new OrbitManipulator({inputManager: viewer.getInputManager()});
+        var manipulator = new OrbitManipulator({ inputManager: viewer.getInputManager() });
         var list = manipulator.getControllerList();
         assert.isOk(list.StandardMouseKeyboard !== undefined, 'check mouse support');
         assert.isOk(list.Hammer !== undefined, 'check hammer support');
@@ -24,7 +30,7 @@ export default function() {
     });
 
     test('OrbitManipulator test limits yaw', function() {
-        var orbit = new OrbitManipulator({inputManager: viewer.getInputManager()});
+        var orbit = new OrbitManipulator({ inputManager: viewer.getInputManager() });
         var yaw;
 
         //small angle no offset
@@ -186,10 +192,7 @@ export default function() {
         //edge case when prev yaw is slightly over limit
         orbit.setLimitYawLeft(1.8500490071139892);
         orbit.setLimitYawRight(1.9198621771937625);
-        yaw = orbit._computeYaw(
-            1.9198621771937627,
-            0.00296099990606308
-        );
+        yaw = orbit._computeYaw(1.9198621771937627, 0.00296099990606308);
         assert.isOk(
             yaw === 1.9198621771937625,
             'Right left same quadrant / small inc outside range (right, rounding issue on equal). Yaw is ' +

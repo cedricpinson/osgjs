@@ -424,8 +424,8 @@ InputManager.prototype = {
      * Disables all groups on the manager and clear all listeners attached to DOM elements.
      */
     cleanup: function() {
-        for (var i = 0; i < this._groups.length; i++) {
-            var group = this._groups[i];
+        for (var key in this._groups) {
+            var group = this._groups[key];
             group._setEnable(false);
         }
     },
