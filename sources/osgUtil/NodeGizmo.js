@@ -267,7 +267,10 @@ utils.createPrototypeNode(
                 },
                 this
             );
-            manager.setPriority(InputGroups.NODE_GIZMO, manager.getHigherPriority(InputGroups.MANIPULATORS));
+            manager.setPriority(
+                InputGroups.NODE_GIZMO,
+                manager.getHigherPriority(InputGroups.MANIPULATORS)
+            );
         },
 
         _insertEditNode: function(parent, node) {
@@ -345,7 +348,7 @@ utils.createPrototypeNode(
         _attachEditNode: function(editNode, userNode) {
             this._attachedNode = editNode;
 
-            if (userNode && userNode !== editNode) {
+            if (editNode && userNode && userNode !== editNode) {
                 if (editNode.editMask & NodeGizmo.CORRECT_PIVOT) {
                     vec3.copy(this._pivotOffset, userNode.getBoundingSphere().center());
                 }
