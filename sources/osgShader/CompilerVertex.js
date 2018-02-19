@@ -170,9 +170,9 @@ var CompilerVertex = {
         return boneMatrix;
     },
 
-    getTarget: function(name, i) {
-        var type = name.indexOf('Tangent') !== -1 ? 'vec4' : 'vec3';
-        return this.getOrCreateAttribute(type, name + '_' + i);
+    getTarget: function(inputName, i) {
+        var type = inputName.indexOf('Tangent') !== -1 ? 'vec4' : 'vec3';
+        return this.getOrCreateAttribute(type, inputName + '_' + i);
     },
 
     morphTangentApproximation: function(inputVertex, outputVertex) {
@@ -203,10 +203,30 @@ var CompilerVertex = {
         return outputVertex;
     },
 
+    getTargetWeights: function(inputName) {
+        var targetWeights = this.getOrCreateUniform('vec4', 'uTargetWeights');
+        if (inputName.indexOf('Normal') === -1 && inputName.indexOf('Tangent') === -1) {
+            return targetWeights;
+        }
+
+        var nWeights = this.getVariable('nTargetWeights');
+        if (nWeights) return nWeights;
+
+        nWeights = this.createVariable('vec4', 'nTargetWeights');
+
+        // normalize weights to avoid negative weight for base normal/tangent
+        this.getNode('InlineCode')
+            .code('%output = %wts / max(1.0, %wts[0] + %wts[1] + %wts[2] + %wts[3]);')
+            .inputs({ wts: targetWeights })
+            .outputs({ output: nWeights });
+
+        return nWeights;
+    },
+
     morphTransformVec3: function(inputVertex, outputVertex) {
         var inputs = {
             vertex: inputVertex,
-            weights: this.getOrCreateUniform('vec4', 'uTargetWeights')
+            weights: this.getTargetWeights(inputVertex.getVariable())
         };
 
         var numTargets = this._morphAttribute.getNumTargets();
