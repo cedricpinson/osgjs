@@ -313,4 +313,8 @@ utils.createPrototypeObject(
     'RenderStage'
 );
 
+RenderStage.clean = function () {
+    pooledRenderStageOrder.clean();
+};
+
 export default RenderStage;
