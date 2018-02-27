@@ -97,8 +97,8 @@ utils.createPrototypeObject(
                 return;
             }
 
-            var posX = ev.glX;
-            var posY = ev.glY;
+            var posX = ev.canvasX;
+            var posY = -ev.canvasY;
 
             var manipulator = this._manipulator;
             if (osgMath.isNaN(posX) === false && osgMath.isNaN(posY) === false) {
@@ -125,20 +125,20 @@ utils.createPrototypeObject(
             var pan = this._manipulator.getPanInterpolator();
             this.setMode(OrbitManipulatorEnums.PAN, pan);
             pan.reset();
-            pan.set(ev.glX, ev.glY);
+            pan.set(ev.canvasX, -ev.canvasY);
         },
 
         startRotate: function(ev) {
             var rotate = this._manipulator.getRotateInterpolator();
             this.setMode(OrbitManipulatorEnums.ROTATE, rotate);
             rotate.reset();
-            rotate.set(ev.glX, ev.glY);
+            rotate.set(ev.canvasX, -ev.canvasY);
         },
 
         startZoom: function(ev) {
             var zoom = this._manipulator.getZoomInterpolator();
             this.setMode(OrbitManipulatorEnums.ZOOM, zoom);
-            zoom.setStart(ev.glY);
+            zoom.setStart(-ev.canvasY);
             zoom.set(0.0);
         },
 

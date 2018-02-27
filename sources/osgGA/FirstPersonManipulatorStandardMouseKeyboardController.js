@@ -82,7 +82,7 @@ utils.createPrototypeObject(
 
         startLookAt: function(ev) {
             var manipulator = this._manipulator;
-            manipulator.getLookPositionInterpolator().set(ev.glX, ev.glY);
+            manipulator.getLookPositionInterpolator().set(ev.canvasX, -ev.canvasY);
             this._looking = true;
         },
 
@@ -92,7 +92,7 @@ utils.createPrototypeObject(
             }
 
             this._manipulator.getLookPositionInterpolator().setDelay(this._delay);
-            this._manipulator.getLookPositionInterpolator().setTarget(ev.glX, ev.glY);
+            this._manipulator.getLookPositionInterpolator().setTarget(ev.canvasX, -ev.canvasY);
         },
 
         changeStepFactor: function(ev) {
