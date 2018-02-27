@@ -6,7 +6,7 @@ import osgWrappers from 'osgWrappers/serializers/osg';
 import osgAnimationWrappers from 'osgWrappers/serializers/osgAnimation';
 import osgTextWrappers from 'osgWrappers/serializers/osgText';
 import Registry from 'osgDB/Registry';
-import FileHelper from 'osgDB/FileHelper';
+import fileHelper from 'osgDB/fileHelper';
 import requestFile from 'osgDB/requestFile';
 import zlib from 'osgDB/zlib';
 
@@ -18,7 +18,7 @@ osgDB.ObjectWrapper.serializers.osg = osgWrappers;
 osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
 osgDB.ObjectWrapper.serializers.osgText = osgTextWrappers;
 osgDB.Registry = Registry;
-osgDB.FileHelper = FileHelper;
+osgDB.fileHelper = fileHelper;
 osgDB.requestFile = requestFile;
 
 utils.objectMix(osgDB, zlib);

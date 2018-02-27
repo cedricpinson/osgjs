@@ -1,7 +1,7 @@
 import P from 'bluebird';
 import utils from 'osg/utils';
 import osgNameSpace from 'osgNameSpace';
-import _requestFile from 'osgDB/requestFile';
+import fileHelper from 'osgDB/fileHelper';
 import Options from 'osgDB/options';
 import zlib from 'osgDB/zlib';
 import notify from 'osg/notify';
@@ -116,7 +116,7 @@ Input.prototype = {
     },
 
     requestFile: function(url, options) {
-        return _requestFile(url, options);
+        return fileHelper.requestURI(url, options);
     },
 
     getObjectWrapper: function(path) {

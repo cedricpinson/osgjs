@@ -5,9 +5,7 @@
     var osgViewer = OSG.osgViewer;
     var osgUtil = OSG.osgUtil;
     var osgShader = OSG.osgShader;
-
     var osgDB = OSG.osgDB;
-    var requestFile = osgDB.requestFile;
 
     var osg = OSG.osg;
 
@@ -637,7 +635,7 @@
                 }
 
                 promises.push(
-                    requestFile(file, {
+                    osgDB.fileHelper.requestURI(file, {
                         requestType: 'string'
                     })
                 );

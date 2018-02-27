@@ -26,9 +26,9 @@
         handleDroppedFiles: function(files) {
             var self = this;
             //$( '#loading' ).show();
-            var filesMap = new window.Map();
-            filesMap.set(files[0].name, files[0]);
-            osgDB.FileHelper.readFileList(files).then(function(node) {
+            var filesMap = {};
+            filesMap[files[0].name] = files[0];
+            osgDB.fileHelper.readFileList(files).then(function(node) {
                 self.getRootNode().addChild(node);
                 self._viewer.getManipulator().computeHomePosition();
             });

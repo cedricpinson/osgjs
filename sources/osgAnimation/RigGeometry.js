@@ -12,7 +12,7 @@ import ComputeMatrixFromNodePath from 'osg/computeMatrixFromNodePath';
 
 // RigGeometry is a Geometry deformed by bones
 // To connect bones to RigGeometry it requires:
-//     - a map of bones with index / weight eg also called VertexInfluenceMap
+//     - a map of bones with index / weight eg also called BoneMapID or VertexInfluenceMap
 // {
 //     bone0: { index: [],  // vertex index
 //              weight: []  // weight for this index
@@ -40,6 +40,7 @@ var RigGeometry = function() {
     this._invMatrixFromSkeletonToGeometry = mat4.create();
 
     this._rigTransformImplementation = new RigTransformHardware();
+    this._geometry = undefined;
 
     // RigGeometry have a special stateset that will be pushed at the very end of the culling
     // this stateSet only represents animation (and shouldn't contain any rendering attributes)

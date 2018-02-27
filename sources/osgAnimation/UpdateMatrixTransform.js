@@ -23,6 +23,15 @@ utils.createPrototypeObject(
             return this._stackedTransforms;
         },
 
+        setMatrix: function(matrix) {
+            mat4.copy(this._matrix, matrix);
+            this._dirty = true;
+        },
+
+        getMatrix: function() {
+            return this._matrix;
+        },
+
         computeChannels: function() {
             this._dirty = true;
             var matrix = this._matrix;
