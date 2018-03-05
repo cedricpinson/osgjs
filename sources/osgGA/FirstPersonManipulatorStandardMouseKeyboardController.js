@@ -4,7 +4,6 @@ import InputGroups from 'osgViewer/input/InputConstants';
 
 var FirstPersonManipulatorStandardMouseKeyboardController = function(manipulator) {
     Controller.call(this, manipulator);
-    this._zoomFactor = 40;
     this.init();
 };
 
@@ -61,14 +60,6 @@ utils.createPrototypeObject(
             Controller.prototype.setEnable.call(this, bool);
         },
 
-        getZoomFactor: function() {
-            return this._zoomFactor;
-        },
-
-        setZoomFactor: function(factor) {
-            this._zoomFactor = factor;
-        },
-
         setManipulator: function(manipulator) {
             this._manipulator = manipulator;
 
@@ -96,8 +87,7 @@ utils.createPrototypeObject(
         },
 
         changeStepFactor: function(ev) {
-            var intDelta = -ev.deltaY / this._zoomFactor;
-            this._stepFactor = Math.min(Math.max(0.001, this._stepFactor + intDelta * 0.01), 4.0);
+            this._stepFactor = Math.min(Math.max(0.001, this._stepFactor + ev.deltaY * 0.01), 4.0);
             this._manipulator.setStepFactor(this._stepFactor);
         },
 
