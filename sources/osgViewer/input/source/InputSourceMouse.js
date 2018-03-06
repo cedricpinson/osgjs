@@ -15,9 +15,10 @@ var deltaYFactor = navigator.platform.indexOf('Mac') === 0 ? -1 : -3;
 /**
  * Standard Mouse Event handled directly on the canvas.
  * @param canvas
+ * @param scrollwheel
  * @constructor
  */
-var InputSourceMouse = function(canvas) {
+var InputSourceMouse = function(canvas, options) {
     InputSource.call(this, canvas);
     this._defaultRatio = vec2.fromValues(1.0, 1.0);
 
@@ -31,9 +32,12 @@ var InputSourceMouse = function(canvas) {
         'mousemove',
         'mouseover',
         'mouseout',
-        'mouseup',
-        'wheel'
+        'mouseup'
     ];
+
+    if (!options || options.scrollwheel !== false) {
+        this._supportedEvents.push('wheel');
+    }
 };
 utils.createPrototypeObject(
     InputSourceMouse,
