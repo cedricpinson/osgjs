@@ -63,4 +63,20 @@
         }
         return set;
     };
+
+    // IE11 doesn't support Event() constructor
+    // see https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent
+    // Here we define window.Event instead of window.CustomEvent so that it can be instantiated in the InputManager
+    if (typeof window.Event === 'object') {
+        function CustomEvent(event, params) {
+            params = params || { bubbles: false, cancelable: false, detail: undefined };
+            var evt = document.createEvent('CustomEvent');
+            evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+            return evt;
+        }
+
+        CustomEvent.prototype = window.Event.prototype;
+
+        window.Event = CustomEvent;
+    }
 })();
