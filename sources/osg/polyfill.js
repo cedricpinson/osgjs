@@ -1,7 +1,5 @@
-(function() {
-    // prevent crash on old browser
-    if (!window.Set || !window.Map || !window.Uint8ClampedArray) return;
-
+// prevent crash on old browser
+if (window.Set && window.Map && window.Uint8ClampedArray) {
     // This file contains needed polyfills mainly for IE11
     if (!Math.sign) {
         Math.sign = function(a) {
@@ -52,17 +50,18 @@
     // IE11 does not support Set with constructing arguments. May 2017.
     var setTest = new window.Set(['test']);
     var hasConstructorParameterSupport = setTest.has('test');
-    if (hasConstructorParameterSupport) return;
-    var nativeSetConstructor = window.Set;
-    window.Set = function(init) {
-        var set = new nativeSetConstructor();
-        if (init) {
-            for (var i = 0; i < init.length; ++i) {
-                set.add(init[i]);
+    if (!hasConstructorParameterSupport) {
+        var nativeSetConstructor = window.Set;
+        window.Set = function(init) {
+            var set = new nativeSetConstructor();
+            if (init) {
+                for (var i = 0; i < init.length; ++i) {
+                    set.add(init[i]);
+                }
             }
-        }
-        return set;
-    };
+            return set;
+        };
+    }
 
     // IE11 doesn't support Event() constructor
     // see https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent
@@ -79,4 +78,4 @@
 
         window.Event = CustomEvent;
     }
-})();
+}
