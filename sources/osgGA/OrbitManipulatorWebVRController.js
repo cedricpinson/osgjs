@@ -50,9 +50,9 @@ utils.createPrototypeObject(
                     pos = vec3.transformMat4(tempPos, pos, ev.sitToStandMatrix);
                 }
 
-                this._pos[0] = pos[0] * ev.worldScale;
-                this._pos[1] = -pos[2] * ev.worldScale;
-                this._pos[2] = pos[1] * ev.worldScale;
+                this._pos[0] = pos[0] * ev.worldFactor;
+                this._pos[1] = -pos[2] * ev.worldFactor;
+                this._pos[2] = pos[1] * ev.worldFactor;
             }
             this._manipulator.setPoseVR(this._quat, this._pos);
         }

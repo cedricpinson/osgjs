@@ -71,8 +71,8 @@ utils.createPrototypeObject(
             }
             customEvent.pose = ev.pose;
             customEvent.sitToStandMatrix = ev.sitToStandMatrix;
-            customEvent.worldScale = this._inputManager.getParam('worldScale');
-            if (!customEvent.worldScale) customEvent.worldScale = 1.0;
+            customEvent.worldFactor = this._inputManager.getParam('worldFactor');
+            if (!customEvent.worldFactor) customEvent.worldFactor = 1.0;
         },
 
         _schedulePolling: function() {
