@@ -346,8 +346,6 @@ utils.createPrototypeStateAttribute(
                     }
                 }
 
-                this._bindProgramToSpector();
-
                 this._uniformsCache = {};
                 this._attributesCache = {};
 
@@ -359,6 +357,7 @@ utils.createPrototypeStateAttribute(
                     this.cacheAttributeList(gl, window.Object.keys(this._attributeMap));
                     this.cacheUniformList(gl, window.Object.keys(this._uniformMap));
                 }
+                this._bindProgramToSpector();
                 return compileClean;
             },
 
