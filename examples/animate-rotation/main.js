@@ -3,7 +3,6 @@
 var OSG = window.OSG;
 var osg = OSG.osg;
 var osgViewer = OSG.osgViewer;
-var osgGA = OSG.osgGA;
 
 var SimpleUpdateCallback = function() {};
 
@@ -72,7 +71,7 @@ var main = function() {
         rotate.addChild(createScene());
         viewer.setSceneData(rotate);
 
-        viewer.setupManipulator(new osgGA.OrbitManipulator());
+        viewer.setupManipulator();
         // set distance
         viewer.getManipulator().setDistance(20.0);
 
