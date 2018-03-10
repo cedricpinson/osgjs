@@ -50,7 +50,7 @@ ReaderWriterZIP.prototype = {
     },
 
     readZipFile: function(fileOrBlob) {
-        fileHelper.unzipFile(fileOrBlob).then(
+        fileHelper.unzip(fileOrBlob).then(
             function(filesMap) {
                 for (var fileName in filesMap) {
                     var extension = fileHelper.getExtension(fileName);
