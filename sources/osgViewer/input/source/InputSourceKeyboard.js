@@ -43,13 +43,14 @@ utils.createPrototypeObject(
             if (!parsedEvent.action) {
                 return true;
             }
-            if (!nativeEvent.key) {
-                // Sentry reports errors with the nativeEvent key undefined.
-                // We can't reproduce the issue so this code is supposed to give us more information when that happens.
+            if (!nativeEvent.key || typeof nativeEvent.key !== 'string') {
+                // Throw Errors reports  with the nativeEvent key undefined.
+                // We can't reproduce the issue so this code should
+                // give us more information when that happens.
                 var error = new Error(
-                    'Invalid keyboard event',
-                    'InputSourceKeyboard.js ' + JSON.stringify(nativeEvent),
-                    47
+                    'Invalid keyboard event: ' +
+                        'InputSourceKeyboard.js ' +
+                        JSON.stringify(nativeEvent)
                 );
                 throw error;
                 return false;
