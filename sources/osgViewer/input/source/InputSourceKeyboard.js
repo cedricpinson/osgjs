@@ -43,15 +43,17 @@ utils.createPrototypeObject(
             if (!parsedEvent.action) {
                 return true;
             }
+
             if (!nativeEvent.key || typeof nativeEvent.key !== 'string') {
-                // Throw Errors reports  with the nativeEvent key undefined.
-                // We can't reproduce the issue so this code should
-                // give us more information when that happens.
-                var error = new Error(
-                    'Invalid keyboard event: ' +
-                        'InputSourceKeyboard.js ' +
-                        JSON.stringify(nativeEvent)
-                );
+                // Throw Errors when nativeEvent key undefined.
+                // so that we can investigate those errors.
+                var str = '';
+                for (var k in nativeEvent) {
+                    if (k !== undefined && nativeEvent[k] !== undefined) {
+                        str += k + ':' + nativeEvent[k] + ',\n';
+                    }
+                }
+                var error = new Error('Invalid keyboard event: ' + str);
                 throw error;
                 return false;
             }
