@@ -55,6 +55,16 @@ utils.createPrototypeObject(
             return img instanceof ImageObject === false ? new ImageObject(img) : img;
         },
 
+        setImageDDS: function (img) {
+            this._mipmap = img.mipmaps;
+            this.setWidth(img.width);
+            this.setHeight(img.height);
+            this._mipmap.length = img.mipmapCount;
+            this._imageObject = this._mipmap[0].data;
+            this.format = img.format;
+            this.dirty();
+        },
+
         setImage: function(img) {
             if (!this._url && img && (img.src || img.currentSrc)) {
                 // TODO what is currentSrc ?
