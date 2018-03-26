@@ -96,33 +96,41 @@ utils.createPrototypeObject(
             }
 
             var self = this;
-            navigator.getVRDisplays().then(
-                function(displays) {
-                    if (displays.length === 0) {
-                        this.triggerNotFoundEvent();
-                        return;
-                    }
+            navigator
+                .getVRDisplays()
+                .then(
+                    function(displays) {
+                        if (displays.length === 0) {
+                            this.triggerNotFoundEvent();
+                            return;
+                        }
 
-                    if (self._hmd === displays[0]) {
-                        // still the same display nothing to do
-                        return;
-                    }
+                        if (self._hmd === displays[0]) {
+                            // still the same display nothing to do
+                            return;
+                        }
 
-                    notify.log('Found a VR display');
-                    //fire the disconnect event
-                    var event = self._events['vrdisplaydisconnected'];
-                    event.vrDisplay = self._hmd;
-                    this._dispatchEvent(event, self._callbacks['vrdisplaydisconnected']);
+                        notify.log('Found a VR display');
+                        //fire the disconnect event
+                        var event = self._events['vrdisplaydisconnected'];
+                        event.vrDisplay = self._hmd;
+                        this._dispatchEvent(event, self._callbacks['vrdisplaydisconnected']);
 
-                    //fire the connect event
-                    event = self._events['vrdisplayconnected'];
-                    event.vrDisplay = displays[0];
-                    this._dispatchEvent(event, self._callbacks['vrdisplayconnected']);
+                        //fire the connect event
+                        event = self._events['vrdisplayconnected'];
+                        event.vrDisplay = displays[0];
+                        this._dispatchEvent(event, self._callbacks['vrdisplayconnected']);
 
-                    self._hmd = displays[0];
-                    self._frameData = new window.VRFrameData();
-                }.bind(this)
-            );
+                        self._hmd = displays[0];
+                        self._frameData = new window.VRFrameData();
+                    }.bind(this)
+                )
+                .catch(function(ex) {
+                    this._hmd = undefined;
+                    this._frameData = undefined;
+                    this.triggerNotFoundEvent();
+                    notify.warn(ex.message);
+                });
         },
 
         triggerNotFoundEvent: function() {
