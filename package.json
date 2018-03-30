@@ -48,6 +48,7 @@
     "webpack": "^3.7.1",
     "webpack-dev-server": "^2.9.2",
     "webpack-strip-block": "^0.2.0",
+    "zlibjs": "^0.3.1",
     "@trigrou/zip-js": "1.0.0"
   },
   "contributors": [
