@@ -1,5 +1,3 @@
-import notify from 'sources/osg/notify';
-
 (function() {
     'use strict';
 
@@ -82,7 +80,9 @@ import notify from 'sources/osg/notify';
             } else {
                 // Disable VR
                 viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_WEBVR, false);
-                viewer.getInputManager().setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
+                viewer
+                    .getInputManager()
+                    .setEnable(InputGroups.FPS_MANIPULATOR_DEVICEORIENTATION, false);
 
                 // Detach the vrNode and reattach the modelNode
                 this.getRootNode().removeChild(this._vrNode);
@@ -171,12 +171,12 @@ import notify from 'sources/osg/notify';
 
         goForward: function() {
             // assume the first touch in the 1/4 of the top canvas is a google cardboard touch
-            notify.log('cardboard touch');
+            osg.log('cardboard touch');
             this._manipulator.getForwardInterpolator().setTarget(1);
         },
 
         stop: function() {
-            notify.log('cardboard unTouch');
+            osg.log('cardboard unTouch');
             this._manipulator.getForwardInterpolator().setTarget(0);
         },
 

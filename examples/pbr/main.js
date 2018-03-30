@@ -1,5 +1,3 @@
-import InputGroups from 'osgViewer/input/InputConstants';
-
 (function() {
     'use strict';
 
@@ -12,6 +10,8 @@ import InputGroups from 'osgViewer/input/InputConstants';
     var osgShader = OSG.osgShader;
     var $ = window.$;
     var Object = window.Object;
+
+    var InputGroups = osgViewer.InputGroups;
 
     var Environment = window.Environment;
 
@@ -295,31 +295,36 @@ import InputGroups from 'osgViewer/input/InputConstants';
 
         loadZipFile: function(fileOrBlob, zipFileName) {
             var self = this;
-            return osgDB.fileHelper.unzip(fileOrBlob).then(function(filesMap) {
-                var gltfFile;
-                var environmentFormat;
-                for ( var path in filesMap) {
-                    var filename = path.split('/').pop();
-                    var ext = osgDB.fileHelper.getExtension(filename);
-                    if (ext === 'gltf') gltfFile = path;
-                    if (filename === 'config.json') environmentFormat = true;
-                }
+            return osgDB.fileHelper
+                .unzip(fileOrBlob)
+                .then(function(filesMap) {
+                    var gltfFile;
+                    var environmentFormat;
+                    for (var path in filesMap) {
+                        var filename = path.split('/').pop();
+                        var ext = osgDB.fileHelper.getExtension(filename);
+                        if (ext === 'gltf') gltfFile = path;
+                        if (filename === 'config.json') environmentFormat = true;
+                    }
 
-                if (gltfFile) {
-                    return osgDB.readNodeURL(gltfFile, {filesMap: filesMap}).then(function(node) {
-                        return self.loadNode(node);
-                    });
-                } else if (environmentFormat) {
-                    var name = zipFileName;
-                    return self.createEnvironment(zipFileName, name).then(function(env) {
-                        return self.setEnvironment(env.name);
-                    });
-                }
+                    if (gltfFile) {
+                        return osgDB
+                            .readNodeURL(gltfFile, { filesMap: filesMap })
+                            .then(function(node) {
+                                return self.loadNode(node);
+                            });
+                    } else if (environmentFormat) {
+                        var name = zipFileName;
+                        return self.createEnvironment(zipFileName, name).then(function(env) {
+                            return self.setEnvironment(env.name);
+                        });
+                    }
 
-                return P.reject();
-            }).catch(function() {
-                osg.warn('cant unzip ' + zipFileName);
-            });
+                    return P.reject();
+                })
+                .catch(function() {
+                    osg.warn('cant unzip ' + zipFileName);
+                });
         },
 
         handleDroppedFiles: function(files) {
@@ -333,15 +338,18 @@ import InputGroups from 'osgViewer/input/InputConstants';
                     .pop()
                     .toLowerCase() === 'zip'
             ) {
-                return this.loadZipFile(files[0], files[0].name).then(function() {
-                    $('#loading').hide();
-                }).catch(function() {
-                    osg.warn('cant load ' + files[0].name);
-                    $('#loading').hide();
-                });
+                return this.loadZipFile(files[0], files[0].name)
+                    .then(function() {
+                        $('#loading').hide();
+                    })
+                    .catch(function() {
+                        osg.warn('cant load ' + files[0].name);
+                        $('#loading').hide();
+                    });
             }
 
-            return osgDB.fileHelper.readFileList(files)
+            return osgDB.fileHelper
+                .readFileList(files)
                 .then(function(root) {
                     self.loadNode(root);
                 })
@@ -375,7 +383,8 @@ import InputGroups from 'osgViewer/input/InputConstants';
 
         handleDroppedURL: function(url) {
             $('#loading').show();
-            return osgDB.fileHelper.requestURI(url, {
+            return osgDB.fileHelper
+                .requestURI(url, {
                     responseType: 'blob'
                 })
                 .then(
@@ -384,7 +393,8 @@ import InputGroups from 'osgViewer/input/InputConstants';
                             $('#loading').hide();
                         });
                     }.bind(this)
-                ).catch( function() {
+                )
+                .catch(function() {
                     $('#loading').hide();
                     osg.warn('cant load url ' + url);
                 });
