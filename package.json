@@ -40,7 +40,7 @@
     "grunt-shell": "*",
     "grunt-webpack": "^3.0.2",
     "hammerjs": "^2.0.8",
-    "jquery": "^2.2.4",
+    "jquery": "3.0.0",
     "json-loader": "^0.5.4",
     "path": "^0.11.14",
     "prettier": "^1.7.0",
@@ -48,6 +48,7 @@
     "webpack": "^3.7.1",
     "webpack-dev-server": "^2.9.2",
     "webpack-strip-block": "^0.2.0",
+    "zlibjs": "^0.3.1",
     "@trigrou/zip-js": "1.0.0"
   },
   "contributors": [
