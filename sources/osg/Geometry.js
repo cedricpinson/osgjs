@@ -30,6 +30,7 @@ var Geometry = function() {
 
     // null means the kdTree builder will skip the kdTree creation
     this._shape = undefined;
+    this._instancedArrayMap = undefined;
 };
 
 Geometry.enableVAO = true;
@@ -49,8 +50,9 @@ utils.createPrototypeNode(
             for (var i = 0, h = this._primitives.length; i < h; i++) {
                 var prim = this._primitives[i];
                 if (prim.getIndices !== undefined) {
-                    if (prim.getIndices() !== undefined && prim.getIndices() !== null) {
-                        prim.indices.releaseGLObjects();
+                    var indices = prim.getIndices();
+                    if (indices !== undefined && indices !== null) {
+                        indices.releaseGLObjects();
                     }
                 }
             }
@@ -120,6 +122,15 @@ utils.createPrototypeNode(
             }
         },
 
+        setAttribArrayDivisor: function(attributeName, divisor) {
+            if (this._attributes[attributeName] === undefined) {
+                notify.error('Attribute' + attributeName + 'does not exist.');
+                return;
+            }
+            if (this._instancedArrayMap === undefined) this._instancedArrayMap = new window.Map();
+            this._instancedArrayMap.set(attributeName, divisor);
+        },
+
         _generateVertexSetup: function(
             validAttributeKeyList,
             validAttributeIndexList,
@@ -134,6 +145,14 @@ utils.createPrototypeNode(
             ];
 
             for (var i = 0, l = validAttributeKeyList.length; i < l; i++) {
+                // Check if the attribute is instanced
+                var divisor = undefined;
+                if (
+                    this._instancedArrayMap &&
+                    this._instancedArrayMap.has(validAttributeKeyList[i])
+                ) {
+                    divisor = this._instancedArrayMap.get(validAttributeKeyList[i]);
+                }
                 vertexAttributeSetup.push(
                     "attr = this._attributes['" + validAttributeKeyList[i] + "'];"
                 );
@@ -144,7 +163,9 @@ utils.createPrototypeNode(
                 vertexAttributeSetup.push(
                     'state.setVertexAttribArray(' +
                         validAttributeIndexList[i] +
-                        ', attr, attr.getNormalize() );'
+                        ', attr, attr.getNormalize(), ' +
+                        divisor +
+                        ')'
                 );
             }
 
@@ -393,6 +414,9 @@ utils.createPrototypeNode(
         },
 
         computeBoundingBox: function(boundingBox) {
+            if (this._computeBoundingBoxCallback !== undefined) {
+                return this._computeBoundingBoxCallback(boundingBox);
+            }
             boundingBox.init();
 
             var vertexArray = this.getVertexAttributeList().Vertex;

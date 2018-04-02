@@ -36,6 +36,8 @@ var Node = function() {
 
     // it's a tmp object for internal use, do not use
     this._tmpBox = new BoundingBox();
+    this._computeBoundingBoxCallback = undefined;
+    this._computeBoundingSphereCallback = undefined;
 };
 
 var pooledMatrix = new PooledResource(mat4.create);
@@ -345,7 +347,18 @@ utils.createPrototypeNode(
             return this._boundingBox;
         },
 
+        setComputeBoundingBoxCallback: function(callback) {
+            this._computeBoundingBoxCallback = callback;
+        },
+
+        getComputeBoundingBoxCallback: function() {
+            return this._computeBoundingBoxCallback;
+        },
+
         computeBoundingBox: function(bbox) {
+            if (this._computeBoundingBoxCallback !== undefined) {
+                return this._computeBoundingBoxCallback(bbox);
+            }
             // circular dependency... not sure if the global visitor instance should be instancied here
             var ComputeBoundsVisitor = require('osg/ComputeBoundsVisitor').default;
             var cbv = (ComputeBoundsVisitor.instance =

@@ -79,6 +79,9 @@ utils.createPrototypeNode(
         },
 
         computeBoundingBox: function(boundingBox) {
+            if (this._computeBoundingBoxCallback !== undefined) {
+                return this._computeBoundingBoxCallback(boundingBox);
+            }
             boundingBox.init();
 
             var vertexArray = this.getVertexAttributeList().Vertex;

@@ -9,6 +9,7 @@ var files = {
         'frustum-culling',
         'geometry',
         'gizmo',
+        'instanced-arrays',
         'lights',
         'materials',
         'morph',

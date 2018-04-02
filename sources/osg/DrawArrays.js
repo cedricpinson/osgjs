@@ -5,44 +5,44 @@ import primitiveSet from 'osg/primitiveSet';
  * @class DrawArrays
  */
 var DrawArrays = function(mode, first, count) {
-    this.mode = mode;
+    this._mode = mode;
     if (mode !== undefined) {
         if (typeof mode === 'string') {
             mode = primitiveSet[mode];
         }
-        this.mode = mode;
+        this._mode = mode;
     }
-    this.first = first;
-    this.count = count;
+    this._first = first;
+    this._count = count;
 };
 
 /** @lends DrawArrays.prototype */
 DrawArrays.prototype = {
     draw: function(state) {
-        if (this.count === 0) return;
+        if (this._count === 0) return;
         var gl = state.getGraphicContext();
-        gl.drawArrays(this.mode, this.first, this.count);
+        gl.drawArrays(this._mode, this._first, this._count);
     },
     getMode: function() {
-        return this.mode;
+        return this._mode;
     },
     setCount: function(count) {
-        this.count = count;
+        this._count = count;
     },
     getCount: function() {
-        return this.count;
+        return this._count;
     },
     setFirst: function(first) {
-        this.first = first;
+        this._first = first;
     },
     getFirst: function() {
-        return this.first;
+        return this._first;
     },
     getNumIndices: function() {
-        return this.count;
+        return this._count;
     },
     index: function(i) {
-        return this.first + i;
+        return this._first + i;
     }
 };
 

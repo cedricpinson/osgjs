@@ -70,7 +70,7 @@ TriangleIndexFunctor.prototype = {
             if (primitive instanceof DrawElements) {
                 cbFunctor = functorDrawElements[primitive.getMode()];
                 if (cbFunctor) {
-                    var indexes = primitive.indices.getElements();
+                    var indexes = primitive.getIndices().getElements();
                     cbFunctor(
                         primitive.getFirst() / indexes.BYTES_PER_ELEMENT,
                         primitive.getCount(),

@@ -192,9 +192,9 @@ ReaderParser.parseSceneGraphDeprecated = function(node) {
         node = geom;
 
         for (var p = 0, lp = primitives.length; p < lp; p++) {
-            var mode = primitives[p].mode;
-            if (primitives[p].indices) {
-                var array = primitives[p].indices;
+            var mode = primitives[p]._mode || primitives[p].mode;
+            var array = primitives[p]._indices || primitives[p].indices;
+            if (array) {
                 array = new BufferArray(BufferArray[array.type], array.elements, array.itemSize);
                 if (!mode) {
                     mode = 'TRIANGLES';
@@ -204,8 +204,8 @@ ReaderParser.parseSceneGraphDeprecated = function(node) {
                 geom.getPrimitiveSetList().push(new DrawElements(mode, array));
             } else {
                 mode = primitiveSet[mode];
-                var first = primitives[p].first;
-                var count = primitives[p].count;
+                var first = primitives[p].first || primitives[p]._first;
+                var count = primitives[p].count || primitives[p]._count;
 
                 geom.getPrimitiveSetList().push(new DrawArrays(mode, first, count));
             }
