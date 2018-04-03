@@ -99,7 +99,7 @@
 
         var canvas = document.getElementById('View');
 
-        var manipulator = new osgGA.OrbitManipulator();
+        var manipulator = new osgGA.OrbitManipulator({ inputManager: viewer.getInputManager() });
         manipulator._cameraSwitcher = new CameraSwitcher(10, [0, 0, 0], [2000, 20, 2000]);
         manipulator.update = function(nv) {
             this._cameraSwitcher.update(nv);

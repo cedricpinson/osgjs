@@ -87,7 +87,9 @@ var main = function() {
 
         rotate.addChild(createScene());
         viewer.setSceneData(rotate);
-        viewer.setupManipulator(new osgGA.OrbitManipulator());
+        viewer.setupManipulator(
+            new osgGA.OrbitManipulator({ inputManager: viewer.getInputManager() })
+        );
         // set distance
         viewer.getManipulator().setDistance(20.0);
 
