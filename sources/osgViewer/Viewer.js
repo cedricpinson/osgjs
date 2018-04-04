@@ -311,8 +311,11 @@ utils.createPrototypeObject(
                 var renderer = this.getCamera().getRenderer();
 
                 if (stats) stats.getCounter('cull').start();
+                utils.time('cull');
 
                 renderer.cull();
+
+                utils.timeEnd('cull');
 
                 if (stats) stats.getCounter('cull').end();
 
@@ -322,12 +325,14 @@ utils.createPrototypeObject(
                 if (stats) {
                     stats.getCounter('render').start();
                 }
+                utils.time('render');
 
                 renderer.draw();
 
                 if (stats) {
                     stats.getCounter('render').end();
                 }
+                utils.timeEnd('render');
 
                 timerGPU.end('glframe');
 
