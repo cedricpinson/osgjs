@@ -179,7 +179,6 @@ utils.createPrototypeObject(
         },
         compile: function(gl) {
             if (this._dirty) {
-                utils.timeStamp('osgjs.metrics:bufferData');
                 gl.bufferData(this._target, this._elements, this._usage);
                 this._dirty = false;
             }

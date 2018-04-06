@@ -159,11 +159,9 @@ utils.createPrototypeObject(
 
             var shaderText = this.text;
             gl.shaderSource(this.shader, shaderText);
-            utils.timeStamp('osgjs.metrics:compileShader');
             gl.compileShader(this.shader);
             if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
                 var err = gl.getShaderInfoLog(this.shader);
-
 
                 this.processErrors(err, shaderText);
 

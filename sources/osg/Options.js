@@ -9,6 +9,7 @@ var OptionsDefault = {
     scrollwheel: true,
     webgl2: false,
     powerPreference: 'high-performance',
+    shaderStats: false, // display compilation timing in the console
     stats: false // display stats, check in osgStats/Stats for all url options
     // statsFilter=cull;myGroup;webgl filters groups to display
     // statsFontSize=12 change the size of the fonts default 12

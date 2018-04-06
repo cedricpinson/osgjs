@@ -1,9 +1,12 @@
 import utils from 'osg/utils';
 import notify from 'osg/notify';
+import Options from 'osg/Options';
 import GLObject from 'osg/GLObject';
 import StateAttribute from 'osg/StateAttribute';
 import ShaderProcessor from 'osgShader/ShaderProcessor';
 import Timer from 'osg/Timer';
+
+var shaderStats = Options.getOptionsURL().shaderStats ? {} : undefined;
 
 // singleton
 var sp = new ShaderProcessor();
@@ -273,48 +276,79 @@ utils.createPrototypeStateAttribute(
             _glAttachAndCompile: function(gl, programGL, vertexShader, fragmentShader) {
                 gl.attachShader(programGL, vertexShader.shader);
                 gl.attachShader(programGL, fragmentShader.shader);
-                utils.timeStamp('osgjs.metrics:linkShader');
                 gl.linkProgram(programGL);
+            },
+
+            _glShaderCompile: function(gl, shader) {
+                if (shader.shader) return true;
+
+                if (shaderStats) {
+                    if (shader === this._vertex) shaderStats.vert = Timer.tick();
+                    else shaderStats.frag = Timer.tick();
+                }
+
+                var success = shader.compile(gl, errorCallback);
+
+                if (shaderStats) {
+                    gl.finish();
+                    if (shader === this._vertex) shaderStats.vert = Timer.tick() - shaderStats.vert;
+                    else shaderStats.frag = Timer.tick() - shaderStats.frag;
+                }
+
+                return success;
             },
 
             compile: function() {
                 var gl = this._gl;
 
-                var shaderName = this._fragment
-                    .getText()
-                    .match(/#define[\s]+SHADER_NAME[\s]+([\S]+)(\n|$)/);
+                var fragmentText = this._fragment.getText();
+                var vertexText = this._vertex.getText();
 
-                var compileClean = true;
+                this._attributeMap = getAttributeList(vertexText);
+                this._uniformMap = getUniformList(fragmentText + '\n' + vertexText);
 
-                this._shaderName = shaderName ? shaderName[1] : '';
-
-                if (!this._vertex.shader) {
-                    compileClean = this._vertex.compile(gl, errorCallback);
+                // gl.finish and gl.getProgramParameter are used to wait for the end of gpu calls (shader compilation)
+                // it's not clear if it's working or not though
+                if (shaderStats) {
+                    shaderStats.vert = 0;
+                    shaderStats.frag = 0;
+                    shaderStats.link = 0;
+                    shaderStats.total = 0;
+                    gl.finish();
+                    shaderStats.total = Timer.tick();
                 }
 
-                if (!this._fragment.shader) {
-                    compileClean = this._fragment.compile(gl, errorCallback);
-                }
+                // compile both vertex even if the first one fail (error reporting)
+                var success = this._glShaderCompile(gl, this._vertex);
+                success = this._glShaderCompile(gl, this._fragment) && success;
+                if (!success) return false;
 
-                this._attributeMap = getAttributeList(this._vertex.getText());
-
-                if (!compileClean) {
-                    // Any error, Any
-                    // Pink must die.
-                    return false;
-                }
+                if (shaderStats) shaderStats.link = Timer.tick();
 
                 this._program = gl.createProgram();
 
-                if (this._attributeMap.Vertex) {
-                    // force Vertex to be on 0
-                    gl.bindAttribLocation(this._program, 0, 'Vertex');
-                }
+                // force Vertex to be on 0
+                if (this._attributeMap.Vertex) gl.bindAttribLocation(this._program, 0, 'Vertex');
                 this._glAttachAndCompile(gl, this._program, this._vertex, this._fragment);
 
-                this._uniformMap = getUniformList(
-                    this._fragment.getText() + '\n' + this._vertex.getText()
-                );
+                if (shaderStats) {
+                    gl.getProgramParameter(this._program, gl.LINK_STATUS);
+                    gl.finish();
+
+                    shaderStats.link = Timer.tick() - shaderStats.link;
+                    shaderStats.total = Timer.tick() - shaderStats.total;
+
+                    var shaderName = fragmentText.match(/^#define\s+SHADER_NAME\s+(.*)$/m);
+                    shaderName = shaderName && shaderName[1] ? shaderName[1] : '';
+                    var groupName = shaderName + ' - ' + shaderStats.total.toFixed(2) + 'ms';
+
+                    console.group(groupName);
+                    console.log('vertex : ' + shaderStats.vert.toFixed(2) + 'ms');
+                    console.log('fragment : ' + shaderStats.frag.toFixed(2) + 'ms');
+                    console.log('link : ' + shaderStats.link.toFixed(2) + 'ms');
+                    console.log('total : ' + shaderStats.total.toFixed(2) + 'ms');
+                    console.groupEnd(groupName);
+                }
 
                 return true;
             },
