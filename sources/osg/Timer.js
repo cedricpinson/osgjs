@@ -32,6 +32,8 @@ Timer.instance = function() {
     return Timer._instance;
 };
 
+Timer.tick = now;
+
 Timer.prototype = {
     // delta in seconds
     deltaS: function(t0, t1) {
