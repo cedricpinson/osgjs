@@ -721,7 +721,6 @@ utils.createPrototypeStateAttribute(
 
             applyTexImage2D: function(gl) {
                 var args = Array.prototype.slice.call(arguments, 1);
-                utils.timeStamp('osgjs.metrics:Texture.texImage2d');
 
                 // use parameters of pixel store
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);

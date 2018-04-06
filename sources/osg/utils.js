@@ -345,9 +345,6 @@ utils.timeEnd = function(name) {
     utils.logTimeEnd(name);
 };
 
-utils.timeStamp = (notify.console.timeStamp || notify.console.markTimeline || function() {}).bind(
-    notify.console
-);
 utils.profile = (notify.console.profile || function() {}).bind(notify.console);
 utils.profileEnd = (notify.console.profileEnd || function() {}).bind(notify.console);
 

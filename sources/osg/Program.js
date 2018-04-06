@@ -273,7 +273,6 @@ utils.createPrototypeStateAttribute(
             _glAttachAndCompile: function(gl, programGL, vertexShader, fragmentShader) {
                 gl.attachShader(programGL, vertexShader.shader);
                 gl.attachShader(programGL, fragmentShader.shader);
-                utils.timeStamp('osgjs.metrics:linkShader');
                 gl.linkProgram(programGL);
             },
 
