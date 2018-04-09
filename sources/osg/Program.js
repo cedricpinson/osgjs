@@ -8,6 +8,14 @@ import Timer from 'osg/Timer';
 
 var shaderStats = Options.getOptionsURL().shaderStats ? {} : undefined;
 
+var dummy = new Uint8Array(4);
+var glSync = function(gl) {
+    // finish should be enough but on chrome it's identical to flush, so we use readPixel instead
+    gl.flush();
+    gl.finish();
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, dummy);
+};
+
 // singleton
 var sp = new ShaderProcessor();
 var errorCallback;
@@ -290,7 +298,7 @@ utils.createPrototypeStateAttribute(
                 var success = shader.compile(gl, errorCallback);
 
                 if (shaderStats) {
-                    gl.finish();
+                    glSync(gl);
                     if (shader === this._vertex) shaderStats.vert = Timer.tick() - shaderStats.vert;
                     else shaderStats.frag = Timer.tick() - shaderStats.frag;
                 }
@@ -307,14 +315,12 @@ utils.createPrototypeStateAttribute(
                 this._attributeMap = getAttributeList(vertexText);
                 this._uniformMap = getUniformList(fragmentText + '\n' + vertexText);
 
-                // gl.finish and gl.getProgramParameter are used to wait for the end of gpu calls (shader compilation)
-                // it's not clear if it's working or not though
                 if (shaderStats) {
                     shaderStats.vert = 0;
                     shaderStats.frag = 0;
                     shaderStats.link = 0;
                     shaderStats.total = 0;
-                    gl.finish();
+                    glSync(gl);
                     shaderStats.total = Timer.tick();
                 }
 
@@ -333,7 +339,7 @@ utils.createPrototypeStateAttribute(
 
                 if (shaderStats) {
                     gl.getProgramParameter(this._program, gl.LINK_STATUS);
-                    gl.finish();
+                    glSync(gl);
 
                     shaderStats.link = Timer.tick() - shaderStats.link;
                     shaderStats.total = Timer.tick() - shaderStats.total;
