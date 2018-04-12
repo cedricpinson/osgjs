@@ -6,10 +6,10 @@
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-node": "^5.1.0",
-    "eslint-plugin-prettier": "^2.3.1",
+    "eslint-plugin-prettier": "^2.6.0",
+    "eslint-plugin-private-variables": "*",
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^3.0.1",
-    "eslint-plugin-private-variables": "*",
     "grunt-contrib-connect": "~0.9",
     "grunt-documentation": "*",
     "grunt-execute": "^0.2.2",
@@ -18,7 +18,8 @@
     "grunt-update-submodules": "^0.4.1",
     "jsdom": "11.0.0",
     "jsdom-global": "3.0.2",
-    "mocha": "^2.5.3"
+    "mocha": "^2.5.3",
+    "prettier": "1.12.0"
   },
   "peerDependencies": {
     "grunt": ">=0.4.0"
@@ -43,7 +44,6 @@
     "jquery": "3.0.0",
     "json-loader": "^0.5.4",
     "path": "^0.11.14",
-    "prettier": "^1.7.0",
     "raw-loader": "^0.5.1",
     "webpack": "^3.7.1",
     "webpack-dev-server": "^2.9.2",
