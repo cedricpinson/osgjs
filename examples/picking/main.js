@@ -242,9 +242,12 @@
         viewer.setupManipulator();
         viewer.run();
 
-        viewer.getInputManager().addMappings({
-            'scene.examples.picking:onMouseMove': 'mousemove'
-        }, onMouseMove.bind(this, canvas, viewer, unifs));
+        viewer.getInputManager().addMappings(
+            {
+                'scene.examples.picking:onMouseMove': 'mousemove'
+            },
+            onMouseMove.bind(this, canvas, viewer, unifs)
+        );
     };
 
     window.addEventListener('load', onLoad, true);

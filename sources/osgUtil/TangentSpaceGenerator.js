@@ -3,7 +3,7 @@ import BufferArray from 'osg/BufferArray';
 import Geometry from 'osg/Geometry';
 import NodeVisitor from 'osg/NodeVisitor';
 import primitiveSet from 'osg/primitiveSet';
-import {vec3} from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
 
 var TangentSpaceGenerator = function() {
     NodeVisitor.call(this);

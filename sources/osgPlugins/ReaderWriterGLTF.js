@@ -31,7 +31,7 @@ import UpdateMatrixTransform from 'osgAnimation/UpdateMatrixTransform';
 import fileHelper from 'osgDB/fileHelper';
 
 import Uniform from 'osg/Uniform';
-import {mat4, vec3} from 'osg/glMatrix';
+import { mat4, vec3 } from 'osg/glMatrix';
 
 var createQuatChannel = channelFactory.createQuatChannel;
 var createVec3Channel = channelFactory.createVec3Channel;
@@ -218,7 +218,9 @@ ReaderWriterGLTF.prototype = {
         for (var i = 0; i < buffers.length; i++) {
             var buffer = buffers[i];
             promises.push(
-                this.loadURI(buffer.uri, {responseType: 'arraybuffer'}).then(function(arrayBuffer) {
+                this.loadURI(buffer.uri, { responseType: 'arraybuffer' }).then(function(
+                    arrayBuffer
+                ) {
                     buffer.data = arrayBuffer;
                 })
             );

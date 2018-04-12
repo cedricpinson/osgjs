@@ -62,7 +62,6 @@ utils.createPrototypeStateAttribute(
         },
 
         createUniforms: function(lightNumber, uniforms) {
-
             uniforms['ViewRight_' + lightNumber] = Uniform.createFloat4(
                 this.getUniformName(lightNumber, 'ViewRight')
             );
@@ -86,7 +85,6 @@ utils.createPrototypeStateAttribute(
         },
 
         getOrCreateUniforms: function(unit) {
-
             // uniform are once per CLASS attribute, not per instance
             var obj = ShadowTextureAtlas;
             notify.assert(unit !== undefined || this._lightNumberArray.length !== 0);
@@ -120,7 +118,6 @@ utils.createPrototypeStateAttribute(
             this._viewMatrices[lightNumber] = viewMatrix;
         },
 
-
         setProjection: function(lightNumber, projection) {
             this._projection[lightNumber] = projection;
         },
@@ -152,16 +149,15 @@ utils.createPrototypeStateAttribute(
                     this.createUniforms(lightNumber, uniformMap);
                 }
 
-                ShadowTexture.prototype._updateViewMatrixUniforms.call(this,
+                ShadowTexture.prototype._updateViewMatrixUniforms.call(
+                    this,
                     this._viewMatrices[lightNumber],
                     uniformMap['ViewRight_' + lightNumber],
                     uniformMap['ViewUp_' + lightNumber],
                     uniformMap['ViewLook_' + lightNumber]
                 );
 
-                uniformMap['Projection_' + lightNumber].setFloat3(
-                    this._projection[lightNumber]
-                );
+                uniformMap['Projection_' + lightNumber].setFloat3(this._projection[lightNumber]);
                 uniformMap['DepthRange_' + lightNumber].setFloat2(this._depthRanges[lightNumber]);
                 uniformMap['MapSize_' + lightNumber].setFloat4(this._mapSizes[lightNumber]);
             }

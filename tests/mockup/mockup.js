@@ -356,11 +356,7 @@ var Viewer = function() {
     ViewerOriginal.apply(this, arguments);
 };
 
-Utils.createPrototypeObject(
-    Viewer,
-    Utils.objectInherit(ViewerOriginal.prototype, {
-    })
-);
+Utils.createPrototypeObject(Viewer, Utils.objectInherit(ViewerOriginal.prototype, {}));
 
 var createCanvas = function(noGL) {
     if (noGL || isNodeContext()) {

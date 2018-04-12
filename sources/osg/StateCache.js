@@ -332,11 +332,13 @@ StateCache.prototype = {
         buffer.width = attribute._width;
         buffer.height = attribute._height;
 
-        if (state.enable !== enable ||
+        if (
+            state.enable !== enable ||
             state.x !== attribute._x ||
             state.y !== attribute._y ||
             state.width !== attribute._width ||
-            state.height !== attribute._height ) {
+            state.height !== attribute._height
+        ) {
             data.changed = true;
         }
     },
@@ -422,10 +424,12 @@ StateCache.prototype = {
         buffer.far = attribute._far;
         buffer.near = attribute._near;
 
-        if (state.enable !== enable ||
+        if (
+            state.enable !== enable ||
             state.func !== attribute._func ||
             state.near !== attribute._near ||
-            state.far !== attribute._far ) {
+            state.far !== attribute._far
+        ) {
             data.changed = true;
         }
 
@@ -477,7 +481,8 @@ StateCache.prototype = {
         buffer.sourceFactorAlpha = attribute._sourceFactorAlpha;
         buffer.destinationFactorAlpha = attribute._destinationFactorAlpha;
 
-        if (state.enable !== enable ||
+        if (
+            state.enable !== enable ||
             state.sourceFactor !== attribute._sourceFactor ||
             state.destinationFactor !== attribute._destinationFactor ||
             state.sourceFactorAlpha !== attribute._sourceFactorAlpha ||

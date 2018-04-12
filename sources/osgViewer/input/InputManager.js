@@ -73,7 +73,10 @@ InputGroup.prototype = {
         }
         for (var i = 0; i < events.length; i++) {
             var event = events[i];
-            if (event._source.isEventRegistered && !event._source.isEventRegistered(nativeEvent, event._parsedEvent)) {
+            if (
+                event._source.isEventRegistered &&
+                !event._source.isEventRegistered(nativeEvent, event._parsedEvent)
+            ) {
                 continue;
             }
             event._source.populateEvent(nativeEvent, event);

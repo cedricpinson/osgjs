@@ -4,7 +4,6 @@ var Controller = function(manipulator) {
 };
 
 Controller.prototype = {
-
     // All eventProxy must check isEnabled before injecting
     // event into Controllers
     isEnabled: function() {
@@ -17,7 +16,6 @@ Controller.prototype = {
     setEnable: function(bool) {
         this._enable = bool;
     }
-
 };
 
 export default Controller;

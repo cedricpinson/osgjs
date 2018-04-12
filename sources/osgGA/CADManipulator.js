@@ -486,12 +486,7 @@ utils.createPrototypeObject(
                 if (hits.length === 0 && this._usePolytopeIntersector) {
                     var pi = this.getOrCreatePolytopeIntersector();
                     pi.reset();
-                    pi.setPolytopeFromWindowCoordinates(
-                        posX - 5,
-                        posY - 5,
-                        posX + 5,
-                        posY + 5
-                    );
+                    pi.setPolytopeFromWindowCoordinates(posX - 5, posY - 5, posX + 5, posY + 5);
                     var iv = this._intersectionVisitor;
                     iv.setIntersector(pi);
                     viewer.getCamera().accept(iv);

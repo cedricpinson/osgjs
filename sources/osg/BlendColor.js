@@ -29,9 +29,9 @@ utils.createPrototypeStateAttribute(
         },
 
         /**
-     *
-     * @param {} color
-     */
+         *
+         * @param {} color
+         */
         setConstantColor: function(color) {
             vec4.copy(this._constantColor, color);
         },

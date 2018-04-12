@@ -129,7 +129,9 @@
 
             this.getRootNode().addChild(scene);
 
-            this._manipulator = new osgGA.FirstPersonManipulator({inputManager: this._viewer.getInputManager()});
+            this._manipulator = new osgGA.FirstPersonManipulator({
+                inputManager: this._viewer.getInputManager()
+            });
             this._viewer.setManipulator(this._manipulator);
             this._viewer.getManipulator().setNode(scene);
             this._viewer.getManipulator().computeHomePosition();

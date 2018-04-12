@@ -37,7 +37,7 @@
             this.name = envName;
 
             var promises = [];
-            for ( var filename in filesMap) {
+            for (var filename in filesMap) {
                 var data = filesMap[filename];
                 var name = filename.split('/').pop();
                 this._files[name] = data;

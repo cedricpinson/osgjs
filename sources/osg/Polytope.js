@@ -339,7 +339,7 @@ utils.createPrototypeObject(
         },
 
         /** Transform the clipping set by provide a pre inverted matrix.
-     * see transform for details. */
+         * see transform for details. */
         transformProvidingInverse: function(matrix) {
             var polytopeBack = this._maskStack.back();
             if (!polytopeBack) return;
