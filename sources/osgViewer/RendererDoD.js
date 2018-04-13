@@ -6,11 +6,12 @@ import Transform from 'osg/Transform';
 import Camera from 'osg/Camera';
 import BoundingBox from 'osg/BoundingBox';
 import Geometry from 'osg/Geometry';
+import MatrixTransform from 'osg/MatrixTransform';
 import NodeVisitor from 'osg/NodeVisitor';
 import RenderStage from 'osg/RenderStage';
 import State from 'osg/State';
 import StateGraph from 'osg/StateGraph';
-import {vec3, vec4, mat4} from 'osg/glMatrix';
+import { vec3, vec4, mat4 } from 'osg/glMatrix';
 import osgShader from 'osgShader/osgShader';
 import DisplayGraph from 'osgUtil/DisplayGraph';
 import notify from 'osg/notify';
@@ -96,13 +97,6 @@ var renderGeometry = function(state, geom, modelView, model, view, projection) {
     geom.drawImplementation(state);
 };
 
-var createParentChildren = function() {
-    return {
-        _parent: 0,
-        _children: []
-    };
-};
-
 var MatrixTransformComponent = function() {
     this._local = [];
     this._world = [];
@@ -115,15 +109,25 @@ var MatrixTransformComponent = function() {
 MatrixTransformComponent.Component = ComponentInstance++;
 
 MatrixTransformComponent.prototype = {
+    reset: function() {
+        this._local = [];
+        this._world = [];
+
+        this._parent = [];
+        this._children = [];
+    },
     createResource: function() {
         var id = this._local.length;
         this._local.push(mat4.create());
         this._world.push(mat4.create());
         return id;
     },
-    addParentChildren: function(id, children) {
-        this._parent.push(id);
+    addParentChildren: function(parent, children) {
+        this._parent.push(parent);
         this._children.push(children);
+    },
+    setParentChildren: function(id, children) {
+        this._children[id] = children;
     },
     getWorldMatrix: function(id) {
         return this._world[id];
@@ -146,35 +150,17 @@ MatrixTransformComponent.prototype = {
     }
 };
 
-var CameraComponent = function() {
-    this._view = [];
-    this._projection = [];
-
-    this.Component = CameraComponent.Component;
-};
-
-CameraComponent.Component = ComponentInstance++;
-CameraComponent.prototype = {
-    createResource: function() {
-        var id = this._view.length;
-        this._view.push(mat4.create());
-        this._projection.push(mat4.create());
-        return id;
-    },
-    getViewMatrix: function(id) {
-        return this._view[id];
-    },
-    getProjectionMatrix: function(id) {
-        return this._projection[id];
-    }
-};
-
 var GeometryData = function() {
     this._geometry = [];
     this._boundingBox = [];
     this._map = {};
 };
 GeometryData.prototype = {
+    reset: function() {
+        this._geometry = [];
+        this._boundingBox = [];
+        this._map = {};
+    },
     addGeometry: function(geom) {
         if (this._map[geom.getInstanceID()] !== undefined) return this._map[geom.getInstanceID()];
         var idx = this._geometry.length;
@@ -198,10 +184,16 @@ var GeometryComponent = function() {
     this._transformParent = [];
     this._geometry = []; // reference a real geometry data
     this._stateSetPath = [];
+    this.Component = GeometryComponent.Component;
 };
 
 GeometryComponent.Component = ComponentInstance++;
 GeometryComponent.prototype = {
+    reset: function() {
+        this._transformParent = [];
+        this._geometry = []; // reference a real geometry data
+        this._stateSetPath = [];
+    },
     createResource: function() {
         var id = this._geometry.length;
         this._transformParent.push(0);
@@ -221,7 +213,7 @@ GeometryComponent.prototype = {
     getGeometry: function(id) {
         return this._geometry[id];
     },
-    addStateSetPath: function(geomId, stateSetIdList) {
+    setStateSetPath: function(geomId, stateSetIdList) {
         this._stateSetPath[geomId] = stateSetIdList;
     },
     getStateSetPath: function(geomId) {
@@ -232,11 +224,16 @@ GeometryComponent.prototype = {
 // the idea of StateSet component is to keep a list of a stateSet to apply to render a geometry
 var StateSetComponent = function() {
     this._stateSets = [];
+    this.Component = StateSetComponent.Component;
 };
 StateSetComponent.Component = ComponentInstance++;
 StateSetComponent.prototype = {
+    reset: function() {
+        this._stateSets = [];
+    },
     createResource: function() {
-        var id = this._stateSets.push(null);
+        var id = this._stateSets.length;
+        this._stateSets.push(null);
         return id;
     },
     setStateSet: function(id, stateSet) {
@@ -250,61 +247,103 @@ StateSetComponent.prototype = {
 var RenderStageQueue = function() {
     this._projectionMatrix = [];
     this._viewMatrix = [];
-    this._boundingBox = [];
+    this._geometry = [];
+    this._stateSet = [];
+    this._cameraNode = [];
+    this._geometryToDraw = [];
+    this._geometryCountToDraw = [];
+    this.Component = RenderStageQueue.Component;
 };
-RenderStageQueue.prototype = {};
-
-var HierarchyComponent = function() {
-    this._hierarchy = []; // could be sorted in different way
-    this._data = []; // index is id cant be changed
-    this.Component = HierarchyComponent.Component;
-};
-HierarchyComponent.Component = ComponentInstance++;
-HierarchyComponent.prototype = {
+RenderStageQueue.Component = ComponentInstance++;
+RenderStageQueue.prototype = {
+    reset: function() {
+        this._projectionMatrix = [];
+        this._viewMatrix = [];
+        this._geometry = [];
+        this._stateSet = [];
+        this._cameraNode = [];
+        this._geometryToDraw = [];
+        this._geometryCountToDraw = [];
+    },
     createResource: function() {
-        var data = createParentChildren();
-        var id = this._data.length;
-        this._data.push(data);
-        this._hierarchy.push(id);
+        var id = this._projectionMatrix.length;
+        this._projectionMatrix.push(mat4.create());
+        this._viewMatrix.push(mat4.create());
+        this._geometry.push([]);
+        this._stateSet.push(null);
+        this._cameraNode.push(null);
+        this._geometryToDraw.push([]);
+        this._geometryCountToDraw.push(0);
         return id;
     },
-    getParentChildren: function(id) {
-        return this._data[id];
+    getViewMatrix: function(id) {
+        return this._viewMatrix[id];
+    },
+    getProjectionMatrix: function(id) {
+        return this._projectionMatrix[id];
+    },
+    getGeometry: function(id) {
+        return this._geometry[id];
+    },
+    setCameraNode: function(id, node) {
+        this._cameraNode[id] = node;
+        this._stateSet[id] = node.getStateSet();
+    },
+    setGeometryCountToDraw: function(id, count) {
+        this._geometryCountToDraw[id] = count;
+    },
+    getGeometriesToDraw: function(id) {
+        return this._geometryToDraw[id];
+    },
+    getGeometryCountToDraw: function(id) {
+        return this._geometryCountToDraw[id];
+    },
+    getStateSet: function(id) {
+        return this._stateSet[id];
+    },
+    update: function() {
+        for (var i = 0; i < this._cameraNode.length; i++) {
+            // grow the array count
+            if (this._geometryToDraw[i].length < this._geometry[i].length) {
+                for (var j = this._geometryToDraw[i].length; j < this._geometry[i].length; j++) {
+                    this._geometryToDraw[i].push(0);
+                }
+            }
+            var camera = this._cameraNode[i];
+            mat4.copy(this._viewMatrix[i], camera.getViewMatrix());
+            mat4.copy(this._projectionMatrix[i], camera.getProjectionMatrix());
+        }
     }
 };
 
-// to simplify the multi parent issue
-// we will create a shadowNodekk
-
-var ShadowNode = function(node) {
-    Node.call(this);
-    this._node = node;
-};
-utils.createPrototypeNode(
-    ShadowNode,
-    utils.objectInherit(Node.prototype, {
-        getRealNode: function() {
-            return this._node;
-        },
-        getStateSet: function() {
-            return this._node.getStateSet();
-        }
-    })
-);
-
-var System = function() {
+var System = function(camera) {
+    this._root = camera;
     this._entities = [];
     this._instance = 0;
 
+    this._renderStageQueue = new RenderStageQueue();
     this._stateSetComponent = new StateSetComponent();
     this._geometryData = new GeometryData();
-    this._hierarchyComponent = new HierarchyComponent();
     this._transformComponent = new MatrixTransformComponent();
-    this._cameraComponent = new CameraComponent();
     this._geometryComponent = new GeometryComponent();
 };
 
 System.prototype = {
+    reset: function() {
+        utils.time('RenderDoD-reset');
+        this._instance = 0;
+        this._entities.length = 0;
+
+        this._renderStageQueue.reset();
+        this._stateSetComponent.reset();
+        this._geometryData.reset();
+        this._transformComponent.reset();
+        this._geometryComponent.reset();
+
+        this.initNode(this._root);
+        utils.timeEnd('RenderDoD-reset');
+    },
+
     createEntity: function() {
         var id = this._instance++;
         var entity = {
@@ -318,7 +357,8 @@ System.prototype = {
 
     _getStateSetPath: function(nodePath) {
         var stateSets = [];
-        for (var n = 0; n < nodePath.length; n++) {
+        // n = 1 to skip stateSet of camera
+        for (var n = 1; n < nodePath.length; n++) {
             var node = nodePath[n];
             var stateSet = node.getStateSet();
             if (stateSet) stateSets.push(stateSet);
@@ -333,152 +373,192 @@ System.prototype = {
         }
         return undefined;
     },
-
+    _listGeometriesPerCamera: function(nodePathsGeometryMap) {
+        var keys = window.Object.keys(nodePathsGeometryMap);
+        var cameras = {};
+        for (var i = 0; i < keys.length; i++) {
+            var geometryInstanceId = keys[i];
+            var nodePath = nodePathsGeometryMap[geometryInstanceId];
+            for (var j = nodePath.length - 2; j >= 0; j--) {
+                var node = nodePath[j];
+                if (node instanceof Camera) {
+                    var geometryList = cameras[node.getInstanceID()];
+                    if (!geometryList) {
+                        geometryList = [];
+                        cameras[node.getInstanceID()] = geometryList;
+                    }
+                    geometryList.push(geometryInstanceId);
+                    break;
+                }
+            }
+        }
+        return cameras;
+    },
     initNode: function(camera) {
+        utils.time('initNode');
         //var root = camera.getChildren()[0];
         var osgjsNodeEntityMap = {};
         var osgjsEntityNodeMap = {};
 
-        // var id = this.createEntity(camera);
-        // this.addComponent(id, this._cameraComponent);
-
         // instanceId -> nodepath to root
         var nodePathsGeometryMap = {};
+        var nodePathsGeometryOrder = []; //need to process them in order of traversing
+
+        // keep camera order
+        var cameraOrder = [];
 
         // traverse the osgjs graph and create entity
         // we will set components after
         var nv = new NodeVisitor();
-        nv.setNodeMaskOverride(~0x0);
         var self = this;
         nv.apply = function(node) {
-            // replace multi parents node with shadow node
             // does not work for root node
             // works only for a node but not really for a fullscene graph
-            var toAdd = [];
-            var toRemove = [];
             var children = node.getChildren();
             for (var j = 0; j < children.length; j++) {
                 var child = children[j];
                 if (child.getParents().length > 1) {
-                    console.log('found a multi parent node');
-                    // replace
-                    toRemove.push(child);
-                    toAdd.push(new ShadowNode(child));
+                    console.error('found a multi parent node');
                 }
             }
-            for (j = 0; j < toRemove.length; j++) node.removeChild(toRemove[j]);
-            for (j = 0; j < toAdd.length; j++) node.addChild(toAdd[j]);
 
             // reference node path per geometry
             // we will then extract stateSet from geometry to root
-            var realNode = node instanceof ShadowNode ? node.getRealNode() : node;
-            if (realNode instanceof Geometry) {
-                nodePathsGeometryMap[node.getInstanceID()] = this.getNodePath().slice(1);
+            if (node instanceof Geometry) {
+                var nodePath = this.getNodePath();
+                // we want only camera->geometry not camera->camera->geometry
+                var cameraIndex = 0;
+                for (j = nodePath.length - 1; j >= 0; j--) {
+                    if (nodePath[j] instanceof Camera) {
+                        cameraIndex = j;
+                        break;
+                    }
+                }
+                nodePathsGeometryMap[node.getInstanceID()] = nodePath.slice(cameraIndex);
+                // but we dont want to
+                nodePathsGeometryOrder.push(node.getInstanceID());
+            }
+            if (node instanceof Camera) {
+                cameraOrder.push(node.getInstanceID());
             }
 
             var id = self.createEntity(node);
             osgjsNodeEntityMap[node.getInstanceID()] = id;
             osgjsEntityNodeMap[id] = node;
+
             this.traverse(node);
         };
         camera.accept(nv);
 
-        // this loop on entites and add component
-        for (var i = 0; i < this._entities.length; i++) {
-            var entity = this._entities[i];
+        var geometriesInstanceId = nodePathsGeometryOrder;
 
-            var osgjsNode = osgjsEntityNodeMap[entity._id];
-            var osgjsChildren = osgjsNode.getChildren();
+        // create transform entity and set them
+        var transformParentChildren = {};
+        var transformId;
+        var entityId;
+        for (var i = 0; i < geometriesInstanceId.length; i++) {
+            var nodePath = nodePathsGeometryMap[geometriesInstanceId[i]];
+            var nodePathTransform = [];
+            var node, j;
 
-            var realNode = osgjsNode;
-            if (osgjsNode instanceof ShadowNode) {
-                realNode = osgjsNode.getRealNode();
-            }
+            // create transform component and filter only matrix transform
+            // convert
+            // [T5, T0, N0, T1, G1]
+            // [T5, T4, N1, N2, G2]
+            // [T5, T7, G3]
 
-            if (realNode instanceof Geometry) {
-                var geometryDataId = this._geometryData.addGeometry(realNode);
-                var geomId = this.addComponent(entity._id, this._geometryComponent);
-                this._geometryComponent.setGeometry(geomId, geometryDataId);
+            // to
 
-                var nodePath = nodePathsGeometryMap[osgjsNode.getInstanceID()];
-                var stateSetArray = [];
-
-                // get stateSet list
-                var stateSets = this._getStateSetPath(nodePath);
-                for (var n = 0; n < stateSets.length; n++) {
-                    var stateSetId = this.addComponent(entity._id, this._stateSetComponent);
-                    this._stateSetComponent.setStateSet(stateSetId, stateSets[n]);
-                    stateSetArray.push(stateSetId);
+            // [T5, T0, T1]
+            // [T5, T4]
+            // [T5, T7]
+            for (j = 0; j < nodePath.length - 1; j++) {
+                node = nodePath[j];
+                if (node instanceof MatrixTransform) {
+                    nodePathTransform.push(node);
+                    entityId = osgjsNodeEntityMap[node.getInstanceID()];
+                    if (!this.hasComponent(entityId, this._transformComponent)) {
+                        transformId = this.addComponent(entityId, this._transformComponent);
+                        mat4.copy(
+                            this._transformComponent.getLocalMatrix(transformId),
+                            node.getMatrix()
+                        );
+                    }
                 }
-                this._geometryComponent.addStateSetPath(geomId, stateSetArray);
+            }
 
-                var instanceId = this._getGeometryParentTransform(nodePath);
-                if (instanceId === undefined) {
-                    notify.error('no parent transform');
+            // convert
+            // [T5, T0, T1]
+            // [T5, T4]
+            // [T5, T7]
+
+            // to
+
+            // T5: [ T0, T4, T7 ]
+            // T0: [ T1 ]
+            for (j = 1; j < nodePathTransform.length; j++) {
+                var parent = nodePathTransform[j - 1];
+                var children = transformParentChildren[parent.getInstanceID()];
+                if (!children) {
+                    children = [];
+                    transformParentChildren[parent.getInstanceID()] = children;
                 }
-                var parentId = osgjsNodeEntityMap[instanceId];
-                var transformId = this.getComponentResource(parentId, this._transformComponent);
-                this._geometryComponent.setTransformId(geomId, transformId);
-            }
-
-            // no children no needs to have relationship
-            if (!osgjsChildren.length) continue;
-
-            if (osgjsNode instanceof Camera) {
-                this.addComponent(entity._id, this._cameraComponent);
-                continue;
-            }
-
-            // handle hierarchy
-            var id = this.addComponent(entity._id, this._hierarchyComponent);
-            var data = this._hierarchyComponent.getParentChildren(id);
-            data._parent = entity._id;
-            for (var c = 0; c < osgjsChildren.length; c++) {
-                var instanceId = osgjsChildren[c].getInstanceID();
-                var entityId = osgjsNodeEntityMap[instanceId];
-                if (entityId === undefined) {
-                    console.log('uncool');
-                }
-                data._children.push(entityId);
-            }
-
-            // handle transform
-            if (osgjsNode instanceof Transform) {
-                var trId = this.addComponent(entity._id, this._transformComponent);
-                mat4.copy(this._transformComponent.getLocalMatrix(trId), osgjsNode.getMatrix());
+                node = nodePathTransform[j];
+                entityId = osgjsNodeEntityMap[node.getInstanceID()];
+                transformId = this.getComponentResource(entityId, this._transformComponent);
+                if (children.indexOf(transformId) === -1) children.push(transformId);
             }
         }
+        for (var parentInstanceId in transformParentChildren) {
+            entityId = osgjsNodeEntityMap[parentInstanceId];
+            var childrenTransformId = transformParentChildren[parentInstanceId];
+            transformId = this.getComponentResource(entityId, this._transformComponent);
+            this._transformComponent.addParentChildren(transformId, childrenTransformId);
+        }
 
-        console.log('hierarchy', this._hierarchyComponent._data.length);
+        // create and setup geom component on entity
+        for (var i = 0; i < geometriesInstanceId.length; i++) {
+            entityId = osgjsNodeEntityMap[geometriesInstanceId[i]];
+            var osgjsNode = osgjsEntityNodeMap[entityId];
+            var geometryDataId = this._geometryData.addGeometry(osgjsNode);
+            var geomId = this.addComponent(entityId, this._geometryComponent);
+            this._geometryComponent.setGeometry(geomId, geometryDataId);
+            var nodePath = nodePathsGeometryMap[osgjsNode.getInstanceID()];
+            var stateSetArray = [];
 
-        this._prepareTransform();
-    },
+            // get stateSet list
+            var stateSets = this._getStateSetPath(nodePath);
+            for (var n = 0; n < stateSets.length; n++) {
+                var stateSetId = this.addComponent(entityId, this._stateSetComponent);
+                this._stateSetComponent.setStateSet(stateSetId, stateSets[n]);
+                stateSetArray.push(stateSetId);
+            }
+            this._geometryComponent.setStateSetPath(geomId, stateSetArray);
 
-    _prepareTransform: function() {
-        // handle transform data from hierarchy
-        var hierarchy = this._hierarchyComponent._hierarchy;
-        for (var h = 0; h < hierarchy.length; h++) {
-            var data = this._hierarchyComponent.getParentChildren(hierarchy[h]);
-            var parentId = data._parent;
-            var resourceIdComponent = this.getComponentResource(parentId, this._transformComponent);
-            if (resourceIdComponent !== undefined) {
-                var childrenEnitities = data._children;
-                var childrenResource = [];
-                for (var ci = 0; ci < childrenEnitities.length; ci++) {
-                    var resourceIdChild = this.getComponentResource(
-                        childrenEnitities[ci],
-                        this._transformComponent
-                    );
-                    if (resourceIdChild !== undefined) childrenResource.push(resourceIdChild);
-                }
-                if (childrenResource.length)
-                    this._transformComponent.addParentChildren(
-                        resourceIdComponent,
-                        childrenResource
-                    );
+            var parentTranformInstanceId = this._getGeometryParentTransform(nodePath);
+            if (parentTranformInstanceId === undefined) {
+                notify.error('no parent transform');
+            }
+            var parentId = osgjsNodeEntityMap[parentTranformInstanceId];
+            transformId = this.getComponentResource(parentId, this._transformComponent);
+            this._geometryComponent.setTransformId(geomId, transformId);
+        }
+
+        // handle camera
+        var geometriesPerCamera = this._listGeometriesPerCamera(nodePathsGeometryMap);
+        for (var i = 0; i < cameraOrder.length; i++) {
+            var cameraInstanceId = cameraOrder[i];
+            entityId = osgjsNodeEntityMap[cameraInstanceId];
+            var renderQueueId = this.addComponent(entityId, this._renderStageQueue);
+            this._renderStageQueue.setCameraNode(renderQueueId, osgjsEntityNodeMap[entityId]);
+            var geoms = geometriesPerCamera[cameraInstanceId];
+            for (var k = 0; k < geoms.length; k++) {
+                entityId = osgjsNodeEntityMap[geoms[k]];
+                var geomId = this.getComponentResource(entityId, this._geometryComponent);
+                this._renderStageQueue.getGeometry(renderQueueId).push(geomId);
             }
         }
-        console.log('transform', this._transformComponent._local.length);
+        utils.timeEnd('initNode');
     },
 
     hasComponent: function(id, component) {
@@ -555,8 +635,6 @@ System.prototype = {
             var zfarPushRatio = 1.02;
             var znearPullRatio = 0.98;
 
-            //znearPullRatio = 0.99;
-
             desiredZnear = znear * znearPullRatio;
             desiredZfar = zfar * zfarPushRatio;
 
@@ -602,136 +680,134 @@ System.prototype = {
         return true;
     },
 
-    cull: function(camera) {
-        if (!this._cameraComponent.getProjectionMatrix(0)) return;
-
-        mat4.copy(this._cameraComponent.getProjectionMatrix(0), camera.getProjectionMatrix());
-        mat4.copy(this._cameraComponent.getViewMatrix(0), camera.getViewMatrix());
-        this._cameraStateSet = camera.getStateSet();
+    cull: function() {
+        this._renderStageQueue.update();
 
         // update transform
         this._transformComponent.compute();
 
-        var projectionMatrix = this._cameraComponent.getProjectionMatrix(0);
-        var viewMatrix = this._cameraComponent.getViewMatrix(0);
-        var geometryDataList = this._geometryData;
+        var renderQueue = this._renderStageQueue;
         var geometries = this._geometryComponent._geometry;
-        var transformParent = this._geometryComponent._transformParent;
-        var transformComponent = this._transformComponent;
+        for (var i = 0; i < renderQueue._projectionMatrix.length; i++) {
+            var projectionMatrix = renderQueue.getProjectionMatrix(i);
+            var viewMatrix = renderQueue.getViewMatrix(i);
+            var renderQueueGeoms = renderQueue.getGeometry(i);
+            var resultGeometries = renderQueue.getGeometriesToDraw(i);
 
-        var computedNear = Number.POSITIVE_INFINITY;
-        var computedFar = Number.NEGATIVE_INFINITY;
-        var sceneBoundingBox = new BoundingBox();
-        var bboxTmp = new BoundingBox();
+            var geometryDataList = this._geometryData;
+            var transformParent = this._geometryComponent._transformParent;
+            var transformComponent = this._transformComponent;
 
-        var resultGeometries = [];
+            var computedNear = Number.POSITIVE_INFINITY;
+            var computedFar = Number.NEGATIVE_INFINITY;
+            var sceneBoundingBox = new BoundingBox();
+            var bboxTmp = new BoundingBox();
 
-        var nearVec = vec3.create();
-        var farVec = vec3.create();
+            var nearVec = vec3.create();
+            var farVec = vec3.create();
 
-        // update near / far
-        var dNear, dFar;
+            var nbGeometry = 0;
+            // update near / far
+            var dNear, dFar;
 
-        // actually this part could be a choice, per geometry or for the entire scene
-        // per geometry can make sense for big scene but for only a few geometry always on screen
-        // per scene is enough
-        for (var i = 0, l = geometries.length; i < l; i++) {
-            var geometryData = geometryDataList.getGeometry(geometries[i]);
-            var bbox = geometryData.getBoundingBox();
-            var matrix = transformComponent.getWorldMatrix(transformParent[i]);
-            bbox.transformMat4(bboxTmp, matrix);
-            sceneBoundingBox.expandByBoundingBox(bboxTmp);
+            // actually this part could be a choice, per geometry or for the camera draw or for the scene draw
+            // per geometry can make sense for big scene but for only a few geometry always on screen per scene is enough
+            for (var j = 0, l = renderQueueGeoms.length; j < l; j++) {
+                var geomId = renderQueueGeoms[j];
+                var geometryData = geometryDataList.getGeometry(geometries[geomId]);
+                var bbox = geometryData.getBoundingBox();
+                var matrix = transformComponent.getWorldMatrix(transformParent[j]);
+                bbox.transformMat4(bboxTmp, matrix);
+                sceneBoundingBox.expandByBoundingBox(bboxTmp);
 
-            // compute near / far and reject geometries behind view
-            // efficient computation of near and far, only taking into account the nearest and furthest
-            // corners of the bounding box.
-            var farBits = 1 | 2 | 0;
-            var nearBits = ~farBits & 7;
-            dNear = this.distance(bboxTmp.corner(nearBits, nearVec), viewMatrix);
-            dFar = this.distance(bboxTmp.corner(farBits, farVec), viewMatrix);
+                // compute near / far and reject geometries behind view
+                // efficient computation of near and far, only taking into account the nearest and furthest
+                // corners of the bounding box.
+                var farBits = 1 | 2 | 0;
+                var nearBits = ~farBits & 7;
+                dNear = this.distance(bboxTmp.corner(nearBits, nearVec), viewMatrix);
+                dFar = this.distance(bboxTmp.corner(farBits, farVec), viewMatrix);
 
-            if (dNear > dFar) {
-                var tmp = dNear;
-                dNear = dFar;
-                dFar = tmp;
+                if (dNear > dFar) {
+                    var tmp = dNear;
+                    dNear = dFar;
+                    dFar = tmp;
+                }
+
+                if (dFar < 0.0) {
+                    // whole object behind the eye point so discard
+                    continue;
+                }
+
+                if (dNear < computedNear) computedNear = dNear;
+                if (dFar > computedFar) computedFar = dFar;
+
+                resultGeometries[nbGeometry++] = geomId;
             }
+            renderQueue.setGeometryCountToDraw(i, nbGeometry);
 
-            if (dFar < 0.0) {
-                // whole object behind the eye point so discard
-                continue;
-            }
-
-            if (dNear < computedNear) computedNear = dNear;
-            if (dFar > computedFar) computedFar = dFar;
-
-            resultGeometries.push(i);
+            // update projection and near far
+            var nearFarRatio = 0.005;
+            this.clampProjectionMatrix(projectionMatrix, computedNear, computedFar, nearFarRatio);
         }
-
-        // update projection and near far
-        var nearFarRatio = 0.005;
-        this.clampProjectionMatrix(projectionMatrix, computedNear, computedFar, nearFarRatio);
-
-        // organize data per stategraph
-        // the order is always the same if there is no sort or change in geometry order so we can
-        // build a list that will be always the same in multiple frames
-        this._resultGeometries = resultGeometries;
     },
 
     render: function(state) {
-        var resultGeometries = this._resultGeometries;
-        if (!resultGeometries) return;
+        var renderQueue = this._renderStageQueue;
         var geometryDataList = this._geometryData;
-
-        var projectionMatrix = this._cameraComponent.getProjectionMatrix(0);
-        var viewMatrix = this._cameraComponent.getViewMatrix(0);
+        var nbDrawCall = 0;
         var modelViewList = [mat4.create(), mat4.create()];
 
-        state.pushStateSet(this._cameraStateSet);
+        for (var r = 0; r < renderQueue._projectionMatrix.length; r++) {
+            var resultGeometries = renderQueue.getGeometriesToDraw(r);
+            var nbGeoms = renderQueue.getGeometryCountToDraw(r);
+            if (!nbGeoms) continue;
 
-        for (var i = 0; i < resultGeometries.length; i++) {
-            var geomId = resultGeometries[i];
-            var geometryData = geometryDataList.getGeometry(geomId);
+            var projectionMatrix = renderQueue.getProjectionMatrix(r);
+            var viewMatrix = renderQueue.getViewMatrix(r);
 
-            // push stateSets
-            var stateSets = this._geometryComponent.getStateSetPath(geomId);
-            var stateSet;
-            var l = stateSets.length - 1;
-            for (var j = 0; j < l; j++) {
-                stateSet = this._stateSetComponent.getStateSet(stateSets[j]);
-                state.pushStateSet(stateSet);
+            state.pushStateSet(renderQueue.getStateSet(r));
+
+            for (var i = 0; i < nbGeoms; i++) {
+                var geomId = resultGeometries[i];
+                var geometryData = geometryDataList.getGeometry(geomId);
+
+                // push stateSets
+                var stateSets = this._geometryComponent.getStateSetPath(geomId);
+                var stateSet;
+                var l = stateSets.length - 1;
+                for (var j = 0; j < l; j++) {
+                    stateSet = this._stateSetComponent.getStateSet(stateSets[j]);
+                    state.pushStateSet(stateSet);
+                }
+                stateSet = this._stateSetComponent.getStateSet(stateSets[l]);
+                state.applyStateSet(stateSet);
+
+                // draw
+                var transformId = this._geometryComponent.getTransformId(geomId);
+                var worldMatrix = this._transformComponent.getWorldMatrix(transformId);
+
+                // because state cache the reference
+                var m = modelViewList[nbDrawCall % 2];
+                var modelView = mat4.mul(m, viewMatrix, worldMatrix);
+                renderGeometry(
+                    state,
+                    geometryData,
+                    modelView,
+                    worldMatrix,
+                    viewMatrix,
+                    projectionMatrix
+                );
+                nbDrawCall++;
+                // restore previous states
+                // pop stateSets
+                for (j = 0; j < l; j++) {
+                    state.popStateSet();
+                }
             }
-            stateSet = this._stateSetComponent.getStateSet(stateSets[l]);
-            state.applyStateSet(stateSet);
-
-            // draw
-            var transformId = this._geometryComponent.getTransformId(geomId);
-            var worldMatrix = this._transformComponent.getWorldMatrix(transformId);
-
-            // because state cache the reference
-            var m = modelViewList[i % 2];
-            var modelView = mat4.mul(m, viewMatrix, worldMatrix);
-            renderGeometry(
-                state,
-                geometryData,
-                modelView,
-                worldMatrix,
-                viewMatrix,
-                projectionMatrix
-            );
-            // restore previous states
-            // pop stateSets
-            for (j = 0; j < l; j++) {
-                state.popStateSet();
-            }
+            state.popStateSet();
         }
-
-        state.popStateSet();
     }
-};
-
-var createSystem = function() {
-    console.log('testing DoD renderer');
-    return new System();
 };
 
 var RendererDoD = function(camera) {
@@ -748,7 +824,11 @@ var RendererDoD = function(camera) {
 
     this.setDefaults();
 
-    this._system = createSystem(camera);
+    this._system = new System(camera);
+    var self = this;
+    window.reset = function() {
+        self._system.reset();
+    };
 };
 
 RendererDoD.debugGraph = false;
@@ -931,11 +1011,12 @@ utils.createPrototypeObject(
             state.resetStats();
 
             this._system.render(state);
+            state.applyDefault();
             return;
 
             this._renderStage.setCamera(this._camera);
 
-            // this._renderStage.draw(state);
+            this._renderStage.draw(state);
 
             if (RendererDoD.debugGraph) {
                 DisplayGraph.instance().createRenderGraph(this._renderStage);
