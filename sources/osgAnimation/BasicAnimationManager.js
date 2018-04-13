@@ -1,9 +1,9 @@
 import notify from 'osg/notify';
 import utils from 'osg/utils';
 import BaseObject from 'osg/Object';
-import {quat} from 'osg/glMatrix';
-import {vec3} from 'osg/glMatrix';
-import {mat4} from 'osg/glMatrix';
+import { quat } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 import Channel from 'osgAnimation/channel';
 import Animation from 'osgAnimation/animation';
 import Interpolator from 'osgAnimation/interpolator';

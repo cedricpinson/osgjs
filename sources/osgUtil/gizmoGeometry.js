@@ -124,7 +124,7 @@ var getOrCreateShaderQuadCircle = function() {
     return programQC;
 };
 
-var resetPrograms = function () {
+var resetPrograms = function() {
     program = undefined;
     program2D = undefined;
     programQC = undefined;

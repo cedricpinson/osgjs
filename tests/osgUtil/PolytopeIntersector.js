@@ -473,7 +473,6 @@ export default function() {
         );
     });
 
-
     test('PolytopeIntersector with kdtree and camera', function() {
         // This test will never work with kdtree
         var camera = new Camera();

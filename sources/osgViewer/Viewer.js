@@ -576,7 +576,7 @@ utils.createPrototypeObject(
             this._manipulator.setEnable(bool);
         },
 
-        dispose: function () {
+        dispose: function() {
             RenderBin.clean();
             RenderStage.clean();
             StateGraph.pooledStateGraph.clean();

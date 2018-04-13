@@ -27,11 +27,11 @@ SwitchManipulator.prototype = {
         return undefined;
     },
 
-    getInputManager: function(){
+    getInputManager: function() {
         return this._inputManager;
     },
 
-    setEnable: function (enable) {
+    setEnable: function(enable) {
         this.getCurrentManipulator().setEnable(enable);
     },
 

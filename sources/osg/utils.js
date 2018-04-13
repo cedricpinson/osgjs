@@ -315,13 +315,15 @@ var times = {};
 var registeredTimers = {};
 // we bind the function to notify.console once and for all to avoid costly apply function
 
-utils.logTime = (notify.console.time ||
+utils.logTime = (
+    notify.console.time ||
     function(name) {
         times[name] = Timer.instance().tick();
     }
 ).bind(notify.console);
 
-utils.logTimeEnd = (notify.console.timeEnd ||
+utils.logTimeEnd = (
+    notify.console.timeEnd ||
     function(name) {
         if (times[name] === undefined) return;
 

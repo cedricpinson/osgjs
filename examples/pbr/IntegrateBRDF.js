@@ -49,7 +49,8 @@ window.IntegrateBRDFMap = (function() {
             if (this._data) {
                 return readInputArray(this._data);
             } else {
-                return osgDB.fileHelper.requestURI(this._file, {
+                return osgDB.fileHelper
+                    .requestURI(this._file, {
                         responseType: 'arraybuffer'
                     })
                     .then(readInputArray);

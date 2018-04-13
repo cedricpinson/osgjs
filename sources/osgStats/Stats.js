@@ -308,12 +308,11 @@ utils.createPrototypeObject(Stats, {
             {
                 onMouseMove: ['mousemove', 'touchmove'],
                 onMouseDown: ['mousedown', 'touchstart'],
-                onMouseUp: ['mouseup', 'mouseout', 'touchend', 'touchcancel'],
+                onMouseUp: ['mouseup', 'mouseout', 'touchend', 'touchcancel']
             },
             this
         );
         manager.setPriority(InputGroups.STATS, manager.getHigherPriority(InputGroups.SCENE));
-
 
         // canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
         // canvas.addEventListener('mousedown', this.onMouseDown.bind(this));

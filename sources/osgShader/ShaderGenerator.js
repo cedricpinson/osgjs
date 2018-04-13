@@ -299,10 +299,9 @@ ShaderGenerator.prototype = {
         };
     })(),
 
-    resetCache: function(){
+    resetCache: function() {
         this._cache = {};
     }
-
 };
 
 export default ShaderGenerator;

@@ -28,14 +28,13 @@ var funcWeights = function(a, b) {
 utils.createPrototypeObject(
     UpdateMorph,
     utils.objectInherit(AnimationUpdateCallback.prototype, {
-
         _initNode: function(geom) {
             var morph;
             if (geom instanceof MorphGeometry) {
                 morph = geom;
             } else if (
                 geom instanceof RigGeometry &&
-                    geom.getSourceGeometry() instanceof MorphGeometry
+                geom.getSourceGeometry() instanceof MorphGeometry
             ) {
                 morph = geom.getSourceGeometry();
             }
@@ -46,10 +45,7 @@ utils.createPrototypeObject(
                 if (!morph.isInitialized()) morph.init();
 
                 this._morphs.push(morph);
-                this._maxMorphGPU = Math.min(
-                    this._maxMorphGPU,
-                    morph.getMaximumPossibleMorphGPU()
-                );
+                this._maxMorphGPU = Math.min(this._maxMorphGPU, morph.getMaximumPossibleMorphGPU());
             }
         },
 
@@ -59,7 +55,7 @@ utils.createPrototypeObject(
 
             //Find the morph geometry & init it
             var children = node.getChildren();
-            if (!children.length ) {
+            if (!children.length) {
                 this._initNode(node);
                 return;
             }

@@ -11,7 +11,10 @@ utils.createPrototypeObject(
     FirstPersonManipulatorHammerController,
     utils.objectInherit(OrbitManipulatorHammerController.prototype, {
         _initInputs: function() {
-            OrbitManipulatorHammerController.prototype._initInputs.call(this, InputGroups.FPS_MANIPULATOR_TOUCH);
+            OrbitManipulatorHammerController.prototype._initInputs.call(
+                this,
+                InputGroups.FPS_MANIPULATOR_TOUCH
+            );
         }
     })
 );

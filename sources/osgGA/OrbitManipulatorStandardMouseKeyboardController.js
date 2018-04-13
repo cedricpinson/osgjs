@@ -156,7 +156,7 @@ utils.createPrototypeObject(
 
         reset: function() {
             this._manipulator.computeHomePosition();
-        },
+        }
     })
 );
 export default OrbitManipulatorStandardMouseKeyboardController;

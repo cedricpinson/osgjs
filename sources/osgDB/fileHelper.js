@@ -153,9 +153,11 @@ var fileHelper = {
 
         for (var filename in filesMap) {
             var data = filesMap[filename];
-            var promise = fileHelper.resolveData(filename, data).then(function(fname, dataResolved) {
-                this[fname] = dataResolved;
-            }.bind(filesMap, filename));
+            var promise = fileHelper.resolveData(filename, data).then(
+                function(fname, dataResolved) {
+                    this[fname] = dataResolved;
+                }.bind(filesMap, filename)
+            );
             promises.push(promise);
         }
 
@@ -226,13 +228,13 @@ var fileHelper = {
 
         if (isString(input)) {
             return fileHelper.requestResource(input).then(function(arrayBuffer) {
-                var blob = new window.Blob([arrayBuffer], {type: mimeTypes.get('zip')});
+                var blob = new window.Blob([arrayBuffer], { type: mimeTypes.get('zip') });
                 return fileHelper.unzipBlob(blob);
             });
         } else if (input instanceof window.Blob) {
             return fileHelper.unzipBlob(input);
         } else if (input instanceof window.ArrayBuffer) {
-            var blob = new window.Blob([input], {type: mimeTypes.get('zip')});
+            var blob = new window.Blob([input], { type: mimeTypes.get('zip') });
             return fileHelper.unzipBlob(blob);
         }
         return P.reject('cant unzip input');

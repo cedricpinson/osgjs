@@ -2,23 +2,20 @@ import { assert } from 'chai';
 import mockup from 'tests/mockup/mockup';
 import Shape from 'osg/shape';
 
-
 export default function() {
     var canvas;
     var viewer;
 
-    beforeEach(function () {
+    beforeEach(function() {
         canvas = mockup.createCanvas();
         viewer = new mockup.Viewer(canvas);
     });
 
-    afterEach(function () {
+    afterEach(function() {
         mockup.removeCanvas(canvas);
         viewer.getInputManager().cleanup();
     });
     test('Viewer', function() {
-
-
         (function() {
             assert.isOk(viewer.getCamera() !== undefined, 'Check camera creation');
             assert.isOk(viewer.getCamera().getViewport() !== undefined, 'Check camera viewport');
@@ -33,7 +30,6 @@ export default function() {
         })();
 
         (function() {
-
             var createScene = function() {
                 return Shape.createTexturedBoxGeometry(0, 0, 0, 10, 10, 10);
             };
@@ -67,18 +63,15 @@ export default function() {
 
         // test device
         (function() {
-
             var mouseInput = viewer.getInputManager().getInputSource('Mouse');
             var keyboardInput = viewer.getInputManager().getInputSource('Keyboard');
 
             assert.notEqual(mouseInput, undefined, 'detected mouse');
             assert.notEqual(keyboardInput, undefined, 'detected keyboard');
-
         })();
 
         // test context lost
         (function() {
-
             viewer.setContextLostCallback(function() {
                 assert.isOk(true, 'detected contextLost Lost');
             });

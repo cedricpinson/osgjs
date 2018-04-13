@@ -36,7 +36,7 @@ utils.createPrototypeNode(
         },
 
         /** Set the object-space reference radius of the volume enclosed by the LOD.
-     * Used to determine the bounding sphere of the LOD in the absence of any children.*/
+         * Used to determine the bounding sphere of the LOD in the absence of any children.*/
         setRadius: function(radius) {
             this._radius = radius;
         },

@@ -313,7 +313,7 @@ utils.createPrototypeObject(
     'RenderStage'
 );
 
-RenderStage.clean = function () {
+RenderStage.clean = function() {
     pooledRenderStageOrder.clean();
 };
 
