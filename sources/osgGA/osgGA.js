@@ -6,6 +6,7 @@ import FirstPersonManipulator from 'osgGA/FirstPersonManipulator';
 import FirstPersonManipulatorDeviceOrientationController from 'osgGA/FirstPersonManipulatorDeviceOrientationController';
 import FirstPersonManipulatorHammerController from 'osgGA/FirstPersonManipulatorHammerController';
 import FirstPersonManipulatorStandardMouseKeyboardController from 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController';
+import FirstPersonManipulatorGamePadController from 'osgGA/FirstPersonManipulatorGamePadController';
 import FirstPersonManipulatorWebVRController from 'osgGA/FirstPersonManipulatorWebVRController';
 import Manipulator from 'osgGA/Manipulator';
 import OrbitManipulator from 'osgGA/OrbitManipulator';
@@ -38,6 +39,9 @@ osgGA.getFirstPersonManipulatorHammerController = function() {
 };
 osgGA.getFirstPersonStandardMouseKeyboardControllerClass = function() {
     return FirstPersonManipulatorStandardMouseKeyboardController;
+};
+osgGA.getFirstPersonManipulatorGamePadControllerClass = function() {
+    return FirstPersonManipulatorGamePadController;
 };
 osgGA.getFirstPersonWebVRControllerClass = function() {
     return FirstPersonManipulatorWebVRController;

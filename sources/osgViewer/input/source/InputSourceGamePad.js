@@ -20,7 +20,7 @@ var InputSourceGamePad = function() {
     this._nbCallbacks = 0;
     this._gamePadState = [];
 
-    this._valueThreshold = 0.05;
+    this._valueThreshold = 0.01;
 
     window.addEventListener(
         'gamepadconnected',

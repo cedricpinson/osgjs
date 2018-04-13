@@ -8,6 +8,7 @@ import FirstPersonManipulatorDeviceOrientationController from 'osgGA/FirstPerson
 import FirstPersonManipulatorHammerController from 'osgGA/FirstPersonManipulatorHammerController';
 import FirstPersonManipulatorWebVRController from 'osgGA/FirstPersonManipulatorWebVRController';
 import FirstPersonManipulatorStandardMouseKeyboardController from 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController';
+import FirstPersonManipulatorGamePadController from 'osgGA/FirstPersonManipulatorGamePadController';
 import DelayInterpolator from 'osgUtil/DelayInterpolator';
 import InputGroups from 'osgViewer/input/InputConstants';
 
@@ -29,12 +30,14 @@ var FirstPersonManipulator = function(options) {
 FirstPersonManipulator.AvailableControllerList = [
     'StandardMouseKeyboard',
     'WebVR',
+    'GamePad',
     'DeviceOrientation',
     'Hammer'
 ];
 FirstPersonManipulator.ControllerList = [
     'StandardMouseKeyboard',
     'WebVR',
+    'GamePad',
     'DeviceOrientation',
     'Hammer'
 ];
@@ -299,6 +302,7 @@ utils.createPrototypeObject(
 );
 
 FirstPersonManipulator.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
+FirstPersonManipulator.GamePad = FirstPersonManipulatorGamePadController;
 FirstPersonManipulator.Hammer = FirstPersonManipulatorHammerController;
 FirstPersonManipulator.WebVR = FirstPersonManipulatorWebVRController;
 FirstPersonManipulator.StandardMouseKeyboard = FirstPersonManipulatorStandardMouseKeyboardController;
