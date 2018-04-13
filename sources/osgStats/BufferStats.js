@@ -188,6 +188,7 @@ utils.createPrototypeObject(BufferStats, {
         }
 
         this._geometry = new Geometry();
+        this._geometry.setName('osgStats-Stats');
 
         this._geometry.getAttributes().Vertex = new BufferArray(
             BufferArray.ARRAY_BUFFER,

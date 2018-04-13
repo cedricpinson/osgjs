@@ -152,6 +152,7 @@ var Stats = function(viewer, options) {
 
     // inputs data
     this._backgroundPicking = shape.createTexturedQuadGeometry(0, 0, 0, 10, 0, 0, 0, 10, 0);
+    this._backgroundPicking.setName('osgStats-Background-picking');
     this._dragStop = vec2.create();
     this._dragStart = vec2.create();
     this._startTransformation = mat4.create();
@@ -281,7 +282,6 @@ utils.createPrototypeObject(Stats, {
             function(canvas) {
                 this._dirtyCaptions = true;
                 var geometry = this._bufferStats.getGeometry();
-                geometry.setName('StatsGeometry');
                 geometry.setNodeMask(~PICKING_NODEMASK);
                 node.addChild(geometry);
                 texture.setImage(canvas);
@@ -388,9 +388,9 @@ utils.createPrototypeObject(Stats, {
 
         vertexes[9] = x + w;
         vertexes[10] = y + h;
+        this._backgroundPicking.getVertexAttributeList().Vertex.dirty();
         this._backgroundPicking.dirtyBound();
     },
-
     _generateCaptions: function() {
         var initialX = 0;
         var characterHeight = this._text.getCharacterHeight();
