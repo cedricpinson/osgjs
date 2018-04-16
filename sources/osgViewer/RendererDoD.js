@@ -17,6 +17,36 @@ import notify from 'osg/notify';
 
 var ComponentInstance = 0;
 
+var directMat4 = mat4;
+var mat4GL = directMat4;
+var _mat4ByteSize = 16 * 8; // 8 (float64) bytes * 16 (mat4x4)
+var _poolIncrement = 256;
+var _matrixPoolSize = 8400 * _mat4ByteSize;
+var _matrixPool = new ArrayBuffer(_matrixPoolSize);
+var _matrixPoolIndex = 0;
+
+var _resizeMatrixPool = function() {
+    var newSize = _matrixPoolSize + _poolIncrement * _mat4ByteSize;
+    var newPool = new ArrayBuffer(newSize);
+    var newBytePool = new Uint8Array(newPool);
+
+    newBytePool.set(new Uint8Array(_matrixPool), 0);
+
+    //delete _matrixPool;
+    _matrixPool = undefined;
+
+    _matrixPool = newBytePool;
+    _matrixPoolSize = newSize;
+    console.log('resize:' + newSize / _mat4ByteSize);
+};
+
+var getOrCreateMat4 = function() {
+    if (_matrixPoolIndex + _mat4ByteSize >= _matrixPoolSize) _resizeMatrixPool();
+    var newMat4 = new Float64Array(_matrixPool, _matrixPoolIndex, 16);
+    _matrixPoolIndex += _mat4ByteSize;
+    return newMat4;
+};
+
 // just use inline function, it's faster than having the test in the code
 var applyUniformCache = [
     // apply just modelview and projection
@@ -129,8 +159,8 @@ MatrixTransformComponent.prototype = {
     },
     createResource: function() {
         var id = this._local.length;
-        this._local.push(mat4.create());
-        this._world.push(mat4.create());
+        this._local.push(getOrCreateMat4());
+        this._world.push(getOrCreateMat4());
         this._dirtyChild.push(0);
         this._dirtyParent.push(0);
         this._dirtyParentChildren.push(0);
@@ -158,7 +188,7 @@ MatrixTransformComponent.prototype = {
                 var child = children[c];
                 var localMatrix = this.getLocalMatrix(child);
                 var worldMatrix = this.getWorldMatrix(child);
-                mat4.mul(worldMatrix, parentMatrix, localMatrix);
+                mat4GL.mul(worldMatrix, parentMatrix, localMatrix);
             }
         }
     },
@@ -182,7 +212,7 @@ MatrixTransformComponent.prototype = {
             parentMatrix = this.getWorldMatrix(parentId);
             localMatrix = this.getLocalMatrix(childId);
             worldMatrix = this.getWorldMatrix(childId);
-            mat4.mul(worldMatrix, parentMatrix, localMatrix);
+            mat4GL.mul(worldMatrix, parentMatrix, localMatrix);
         }
         this._dirtyParentCount = 0;
 
@@ -198,7 +228,7 @@ MatrixTransformComponent.prototype = {
                 childId = children[c];
                 localMatrix = this.getLocalMatrix(childId);
                 worldMatrix = this.getWorldMatrix(childId);
-                mat4.mul(worldMatrix, parentMatrix, localMatrix);
+                mat4GL.mul(worldMatrix, parentMatrix, localMatrix);
             }
         }
         this._dirtyParentChildrenCount = 0;
@@ -345,8 +375,8 @@ RenderStageQueue.prototype = {
     },
     createResource: function() {
         var id = this._projectionMatrix.length;
-        this._projectionMatrix.push(mat4.create());
-        this._viewMatrix.push(mat4.create());
+        this._projectionMatrix.push(getOrCreateMat4());
+        this._viewMatrix.push(getOrCreateMat4());
         this._geometry.push([]);
         this._stateSet.push(null);
         this._cameraNode.push(null);
@@ -388,11 +418,11 @@ RenderStageQueue.prototype = {
                 }
             }
             var camera = this._cameraNode[i];
-            mat4.copy(this._viewMatrix[i], camera.getViewMatrix());
+            mat4GL.copy(this._viewMatrix[i], camera.getViewMatrix());
             // if (i === 0) {
-            //     mat4.copy(
+            //     mat4GL.copy(
             //         this._viewMatrix[i],
-            //         mat4.fromValues(
+            //         mat4GL.fromValues(
             //             0.9004856224259998,
             //             -0.22139246140884053,
             //             0.3743140684443947,
@@ -412,7 +442,7 @@ RenderStageQueue.prototype = {
             //         )
             //     );
             // }
-            mat4.copy(this._projectionMatrix[i], camera.getProjectionMatrix());
+            mat4GL.copy(this._projectionMatrix[i], camera.getProjectionMatrix());
         }
     }
 };
@@ -581,8 +611,8 @@ System.prototype = {
                     if (!this.hasComponent(entityId, this._transformComponent)) {
                         transformId = this.addComponent(entityId, this._transformComponent);
                         var matrix = node.getMatrix();
-                        mat4.copy(this._transformComponent.getLocalMatrix(transformId), matrix);
-                        mat4.copy(this._transformComponent.getWorldMatrix(transformId), matrix);
+                        mat4GL.copy(this._transformComponent.getLocalMatrix(transformId), matrix);
+                        mat4GL.copy(this._transformComponent.getWorldMatrix(transformId), matrix);
                     }
                 }
             }
@@ -779,7 +809,7 @@ System.prototype = {
             //     0.0, 0.0, ratio, 0.0,
             //     0.0, 0.0, center * ratio, 1.0
             // ];
-            // mat4.mul( projection , matrix, projection );
+            // mat4GL.mul( projection , matrix, projection );
 
             // OSG_INFO << 'Persepective matrix after clamping'<<projection<<std::endl;
         }
@@ -882,7 +912,11 @@ System.prototype = {
         var renderQueue = this._renderStageQueue;
         var geometryDataList = this._geometryData;
         var nbDrawCall = 0;
-        var modelViewList = [mat4.create(), mat4.create()];
+
+        var modelViewList = this._modelViewList
+            ? [this._modelViewList[0], this._modelViewList[1]]
+            : [getOrCreateMat4(), getOrCreateMat4()];
+        this._modelViewList = modelViewList;
 
         for (var r = 0; r < renderQueue._projectionMatrix.length; r++) {
             var resultGeometries = renderQueue.getGeometriesToDraw(r);
@@ -915,7 +949,7 @@ System.prototype = {
 
                 // because state cache the reference
                 var m = modelViewList[nbDrawCall % 2];
-                var modelView = mat4.mul(m, viewMatrix, worldMatrix);
+                var modelView = mat4GL.mul(m, viewMatrix, worldMatrix);
                 renderGeometry(
                     state,
                     geometryData,
