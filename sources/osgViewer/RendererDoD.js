@@ -2,7 +2,6 @@ import utils from 'osg/utils';
 import CullSettings from 'osg/CullSettings';
 import CullVisitor from 'osg/CullVisitor';
 import Object from 'osg/Object';
-import Transform from 'osg/Transform';
 import Camera from 'osg/Camera';
 import BoundingBox from 'osg/BoundingBox';
 import Geometry from 'osg/Geometry';
@@ -104,6 +103,7 @@ var MatrixTransformComponent = function() {
     this._parent = [];
     this._children = [];
     this.Component = MatrixTransformComponent.Component;
+    this.createResource();
 };
 
 MatrixTransformComponent.Component = ComponentInstance++;
@@ -115,6 +115,12 @@ MatrixTransformComponent.prototype = {
 
         this._parent = [];
         this._children = [];
+        this.createResource();
+    },
+    // default parent id is for geometry with no transform
+    // we use the first transform as identity
+    getDefaultParentID: function() {
+        return 0;
     },
     createResource: function() {
         var id = this._local.length;
@@ -369,7 +375,7 @@ System.prototype = {
     _getGeometryParentTransform: function(nodePath) {
         for (var n = nodePath.length - 2; n >= 0; n--) {
             var node = nodePath[n];
-            if (node instanceof Transform) return node.getInstanceID();
+            if (node instanceof MatrixTransform) return node.getInstanceID();
         }
         return undefined;
     },
@@ -479,10 +485,9 @@ System.prototype = {
                     entityId = osgjsNodeEntityMap[node.getInstanceID()];
                     if (!this.hasComponent(entityId, this._transformComponent)) {
                         transformId = this.addComponent(entityId, this._transformComponent);
-                        mat4.copy(
-                            this._transformComponent.getLocalMatrix(transformId),
-                            node.getMatrix()
-                        );
+                        var matrix = node.getMatrix();
+                        mat4.copy(this._transformComponent.getLocalMatrix(transformId), matrix);
+                        mat4.copy(this._transformComponent.getWorldMatrix(transformId), matrix);
                     }
                 }
             }
@@ -537,10 +542,11 @@ System.prototype = {
 
             var parentTranformInstanceId = this._getGeometryParentTransform(nodePath);
             if (parentTranformInstanceId === undefined) {
-                notify.error('no parent transform');
+                transformId = this._transformComponent.getDefaultParentID();
+            } else {
+                var parentId = osgjsNodeEntityMap[parentTranformInstanceId];
+                transformId = this.getComponentResource(parentId, this._transformComponent);
             }
-            var parentId = osgjsNodeEntityMap[parentTranformInstanceId];
-            transformId = this.getComponentResource(parentId, this._transformComponent);
             this._geometryComponent.setTransformId(geomId, transformId);
         }
 
@@ -562,11 +568,15 @@ System.prototype = {
     },
 
     hasComponent: function(id, component) {
+        if (id >= this._entities.length) return false;
+
         var componentId = component.Component;
         return this._entities[id]._components[componentId] !== undefined;
     },
 
     getComponentResource: function(id, component) {
+        if (id >= this._entities.length) return undefined;
+
         var componentId = component.Component;
         return this._entities[id]._components[componentId];
     },
