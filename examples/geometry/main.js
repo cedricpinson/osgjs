@@ -45,6 +45,7 @@
             var geom = osg.createTexturedSphereGeometry(0.2, segment, segment);
             var n = geom.getVertexAttributeList().Vertex.getElements().length / 3;
             var colors = this.createColorsArray(n);
+            geom.setName('Points');
 
             geom.setVertexAttribArray(
                 'Color',
@@ -99,6 +100,7 @@
             var normals = this.createNormalArray(8, 0, -1, 0);
             var colors = this.createColorsArray(8);
             var geom = new osg.Geometry();
+            geom.setName('Lines');
 
             geom.setVertexAttribArray(
                 'Vertex',
@@ -140,6 +142,7 @@
             var colors = this.createColorsArray(5);
 
             var geom = new osg.Geometry();
+            geom.setName('LineStrip');
 
             geom.setVertexAttribArray(
                 'Vertex',
@@ -183,6 +186,7 @@
             var colors = this.createColorsArray(6);
 
             var geom = new osg.Geometry();
+            geom.setName('LineLoop');
 
             geom.setVertexAttribArray(
                 'Vertex',
@@ -271,6 +275,7 @@
             var colors = this.createColorsArray(17);
 
             var geom = new osg.Geometry();
+            geom.setName('Triangles');
 
             geom.setVertexAttribArray(
                 'Vertex',
