@@ -97,13 +97,8 @@ var renderGeometry = function(state, geom, modelView, model, view, projection) {
 };
 
 var MatrixTransformComponent = function() {
-    this._local = [];
-    this._world = [];
-
-    this._parent = [];
-    this._children = [];
     this.Component = MatrixTransformComponent.Component;
-    this.createResource();
+    this.reset();
 };
 
 MatrixTransformComponent.Component = ComponentInstance++;
@@ -115,6 +110,16 @@ MatrixTransformComponent.prototype = {
 
         this._parent = [];
         this._children = [];
+
+        // for a full parent children dirty
+        this._dirtyParentChildren = [];
+        this._dirtyParentChildrenCount = 0;
+
+        // for just a parent / child dirty
+        this._dirtyParent = [];
+        this._dirtyChild = [];
+        this._dirtyParentCount = 0;
+
         this.createResource();
     },
     // default parent id is for geometry with no transform
@@ -126,6 +131,9 @@ MatrixTransformComponent.prototype = {
         var id = this._local.length;
         this._local.push(mat4.create());
         this._world.push(mat4.create());
+        this._dirtyChild.push(0);
+        this._dirtyParent.push(0);
+        this._dirtyParentChildren.push(0);
         return id;
     },
     addParentChildren: function(parent, children) {
@@ -153,6 +161,47 @@ MatrixTransformComponent.prototype = {
                 mat4.mul(worldMatrix, parentMatrix, localMatrix);
             }
         }
+    },
+    dirty: function() {
+        // simulate a dirty all
+        // actually we would need to keep track of dirty transforms with a inverse map
+        // to not recompute more than once time the transform in the update
+        var count = 0;
+        for (var i = 0; i < this._parent.length; i++) {
+            this._dirtyParentChildren[i] = i;
+            count++;
+        }
+        this._dirtyParentChildrenCount = count;
+    },
+    update: function() {
+        var i, j, parentId, parentMatrix, childId, localMatrix, worldMatrix;
+        // recompute only the parent dirty
+        for (i = 0; i < this._dirtyParentCount; i++) {
+            parentId = this._dirtyParent[i];
+            childId = this._dirtyChild[i];
+            parentMatrix = this.getWorldMatrix(parentId);
+            localMatrix = this.getLocalMatrix(childId);
+            worldMatrix = this.getWorldMatrix(childId);
+            mat4.mul(worldMatrix, parentMatrix, localMatrix);
+        }
+        this._dirtyParentCount = 0;
+
+        var parents = this._parent;
+        var childrenList = this._children;
+        var children;
+        for (i = 0; i < this._dirtyParentChildrenCount; i++) {
+            j = this._dirtyParentChildren[i];
+            parentId = parents[j];
+            children = childrenList[j];
+            parentMatrix = this.getWorldMatrix(parentId);
+            for (var c = 0; c < children.length; c++) {
+                childId = children[c];
+                localMatrix = this.getLocalMatrix(childId);
+                worldMatrix = this.getWorldMatrix(childId);
+                mat4.mul(worldMatrix, parentMatrix, localMatrix);
+            }
+        }
+        this._dirtyParentChildrenCount = 0;
     }
 };
 
@@ -187,9 +236,7 @@ GeometryData.prototype = {
 
 var GeometryComponent = function() {
     // this component is more to mimic renderleaf
-    this._transformParent = [];
-    this._geometry = []; // reference a real geometry data
-    this._stateSetPath = [];
+    this.reset();
     this.Component = GeometryComponent.Component;
 };
 
@@ -197,14 +244,20 @@ GeometryComponent.Component = ComponentInstance++;
 GeometryComponent.prototype = {
     reset: function() {
         this._transformParent = [];
+        this._boundingBoxWorldSpace = [];
         this._geometry = []; // reference a real geometry data
         this._stateSetPath = [];
+
+        this._dirty = [];
+        this._dirtyCount = 0;
     },
     createResource: function() {
         var id = this._geometry.length;
         this._transformParent.push(0);
         this._geometry.push(0);
         this._stateSetPath.push(null);
+        this._dirty.push(0);
+        this._boundingBoxWorldSpace.push(new BoundingBox());
         return id;
     },
     setTransformId: function(id, transformId) {
@@ -219,11 +272,30 @@ GeometryComponent.prototype = {
     getGeometry: function(id) {
         return this._geometry[id];
     },
+    getBoundingBoxWorldSpace: function(id) {
+        return this._boundingBoxWorldSpace[id];
+    },
     setStateSetPath: function(geomId, stateSetIdList) {
         this._stateSetPath[geomId] = stateSetIdList;
     },
     getStateSetPath: function(geomId) {
         return this._stateSetPath[geomId];
+    },
+    dirty: function() {
+        this._dirtyCount = this._geometry.length;
+        for (var i = 0; i < this._dirtyCount; i++) {
+            this._dirty[i] = i;
+        }
+    },
+    update: function(geometryDataList, transformComponent) {
+        for (var i = 0; i < this._dirtyCount; i++) {
+            var geometryId = this._geometry[this._dirty[i]];
+            var geometryData = geometryDataList.getGeometry(geometryId);
+            var bbox = geometryData.getBoundingBox();
+            var worldMatrix = transformComponent.getWorldMatrix(this._transformParent[geometryId]);
+            bbox.transformMat4(this._boundingBoxWorldSpace[geometryId], worldMatrix);
+        }
+        this._dirtyCount = 0;
     }
 };
 
@@ -317,6 +389,29 @@ RenderStageQueue.prototype = {
             }
             var camera = this._cameraNode[i];
             mat4.copy(this._viewMatrix[i], camera.getViewMatrix());
+            // if (i === 0) {
+            //     mat4.copy(
+            //         this._viewMatrix[i],
+            //         mat4.fromValues(
+            //             0.9004856224259998,
+            //             -0.22139246140884053,
+            //             0.3743140684443947,
+            //             0,
+            //             0.4348857824809406,
+            //             0.45842089220495763,
+            //             -0.7750642823572447,
+            //             0,
+            //             -0,
+            //             0.8607181092676891,
+            //             0.5090818562654285,
+            //             0,
+            //             -0,
+            //             2.220446049250313e-16,
+            //             -2.759232798986803,
+            //             1
+            //         )
+            //     );
+            // }
             mat4.copy(this._projectionMatrix[i], camera.getProjectionMatrix());
         }
     }
@@ -558,12 +653,17 @@ System.prototype = {
             var renderQueueId = this.addComponent(entityId, this._renderStageQueue);
             this._renderStageQueue.setCameraNode(renderQueueId, osgjsEntityNodeMap[entityId]);
             var geoms = geometriesPerCamera[cameraInstanceId];
+            if (geoms === undefined) continue;
             for (var k = 0; k < geoms.length; k++) {
                 entityId = osgjsNodeEntityMap[geoms[k]];
                 var geomId = this.getComponentResource(entityId, this._geometryComponent);
                 this._renderStageQueue.getGeometry(renderQueueId).push(geomId);
             }
         }
+
+        this._transformComponent.dirty();
+        this._geometryComponent.dirty();
+
         utils.timeEnd('initNode');
     },
 
@@ -694,49 +794,56 @@ System.prototype = {
         this._renderStageQueue.update();
 
         // update transform
-        this._transformComponent.compute();
+        this._transformComponent.update();
+
+        // update geometries bbox in worldspace
+        this._geometryComponent.update(this._geometryData, this._transformComponent);
+
+        // corners of the bounding box.
+        var farBits = 1 | 2 | 0;
+        var nearBits = ~farBits & 7;
+
+        // compute look vector to get the nearBits/farBits
+        var lookVector = vec3.create();
+        var nearVec = vec3.create();
+        var farVec = vec3.create();
 
         var renderQueue = this._renderStageQueue;
-        var geometries = this._geometryComponent._geometry;
         for (var i = 0; i < renderQueue._projectionMatrix.length; i++) {
             var projectionMatrix = renderQueue.getProjectionMatrix(i);
             var viewMatrix = renderQueue.getViewMatrix(i);
+
+            vec3.set(lookVector, -viewMatrix[2], -viewMatrix[6], -viewMatrix[10]);
+            farBits =
+                (lookVector[0] >= 0 ? 1 : 0) |
+                (lookVector[1] >= 0 ? 2 : 0) |
+                (lookVector[2] >= 0 ? 4 : 0);
+            nearBits = ~farBits & 7;
+
             var renderQueueGeoms = renderQueue.getGeometry(i);
             var resultGeometries = renderQueue.getGeometriesToDraw(i);
 
-            var geometryDataList = this._geometryData;
-            var transformParent = this._geometryComponent._transformParent;
-            var transformComponent = this._transformComponent;
-
             var computedNear = Number.POSITIVE_INFINITY;
             var computedFar = Number.NEGATIVE_INFINITY;
-            var sceneBoundingBox = new BoundingBox();
-            var bboxTmp = new BoundingBox();
-
-            var nearVec = vec3.create();
-            var farVec = vec3.create();
 
             var nbGeometry = 0;
+
             // update near / far
             var dNear, dFar;
 
-            // actually this part could be a choice, per geometry or for the camera draw or for the scene draw
-            // per geometry can make sense for big scene but for only a few geometry always on screen per scene is enough
+            // actually this part could be avoided. We can either compute near/far per geometry
+            // but if we see that the nearest z is viewed we could cache the bbox for the scene and compute only near/far for the entire scene. And switch back to per geometry if the nearest z start to be behind the camera
             for (var j = 0, l = renderQueueGeoms.length; j < l; j++) {
                 var geomId = renderQueueGeoms[j];
-                var geometryData = geometryDataList.getGeometry(geometries[geomId]);
-                var bbox = geometryData.getBoundingBox();
-                var matrix = transformComponent.getWorldMatrix(transformParent[j]);
-                bbox.transformMat4(bboxTmp, matrix);
-                sceneBoundingBox.expandByBoundingBox(bboxTmp);
+                var boundingBoxWorldSpace = this._geometryComponent.getBoundingBoxWorldSpace(
+                    geomId
+                );
 
-                // compute near / far and reject geometries behind view
-                // efficient computation of near and far, only taking into account the nearest and furthest
-                // corners of the bounding box.
-                var farBits = 1 | 2 | 0;
-                var nearBits = ~farBits & 7;
-                dNear = this.distance(bboxTmp.corner(nearBits, nearVec), viewMatrix);
-                dFar = this.distance(bboxTmp.corner(farBits, farVec), viewMatrix);
+                boundingBoxWorldSpace.corner(nearBits, nearVec);
+                boundingBoxWorldSpace.corner(farBits, farVec);
+
+                dNear = this.distance(nearVec, viewMatrix);
+                dFar = this.distance(farVec, viewMatrix);
 
                 if (dNear > dFar) {
                     var tmp = dNear;
@@ -758,10 +865,19 @@ System.prototype = {
 
             // update projection and near far
             var nearFarRatio = 0.005;
-            this.clampProjectionMatrix(projectionMatrix, computedNear, computedFar, nearFarRatio);
+            if (
+                computedNear !== Number.POSITIVE_INFINITY &&
+                computedFar !== Number.NEGATIVE_INFINITY
+            ) {
+                this.clampProjectionMatrix(
+                    projectionMatrix,
+                    computedNear,
+                    computedFar,
+                    nearFarRatio
+                );
+            }
         }
     },
-
     render: function(state) {
         var renderQueue = this._renderStageQueue;
         var geometryDataList = this._geometryData;
