@@ -465,6 +465,7 @@ ReaderWriterGLTF.prototype = {
 
         for (var i = 0; i < meshes.length; i++) {
             var mesh = meshes[i];
+            var name = mesh.name;
             var osgjsGeometries = [];
             for (var j = 0; j < mesh.primitives.length; j++) {
                 var geometry = undefined;
@@ -498,6 +499,8 @@ ReaderWriterGLTF.prototype = {
                     this._assignGeometryAttributes(geometry, primitive.attributes);
                     this._assignGeometryPrimitives(geometry, primitive);
                 }
+
+                if (name) geometry.setName(name);
 
                 // if has a morph geometry we addd the update callback on the top geometry
                 if (morphUpdateCallback) geometry.addUpdateCallback(morphUpdateCallback);

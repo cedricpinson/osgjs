@@ -295,7 +295,7 @@ utils.createPrototypeObject(
                 // camera is relatif or absolute.
                 // When we detect an absolute camera we keep it's index to get it when needed to
                 // compute the World/View matrix
-                // Th    ere is an exception for the root camera, the root camera is not pushed on the
+                // There is an exception for the root camera, the root camera is not pushed on the
                 // CullVisitor but only its matrixes, so to handle this we compute the inverse camera
                 // when the nodepath has a lenght of 0
                 // To avoid to compute too much inverse matrix, we keep a cache of them during the
@@ -354,9 +354,9 @@ utils.createPrototypeObject(
 
                 /*jshint bitwise: false */
                 this._bbCornerFar =
-                    (lookVector[0] >= 0.0 ? 1.0 : 0.0) |
-                    (lookVector[1] >= 0 ? 2.0 : 0.0) |
-                    (lookVector[2] >= 0 ? 4.0 : 0.0);
+                    (lookVector[0] >= 0.0 ? 1 : 0) |
+                    (lookVector[1] >= 0.0 ? 2 : 0) |
+                    (lookVector[2] >= 0.0 ? 4 : 0);
                 this._bbCornerNear = ~this._bbCornerFar & 7;
                 /*jshint bitwise: true */
             };
