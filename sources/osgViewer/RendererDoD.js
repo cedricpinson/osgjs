@@ -17,6 +17,65 @@ import notify from 'osg/notify';
 
 var ComponentInstance = 0;
 
+class NodeDoD {
+    constructor(app) {
+        this._parent = null;
+        this._children = [];
+        this._name = 'noname';
+        this._components = {};
+        this._app = app;
+    }
+
+    addComponent() {}
+    removeComponent() {}
+    getComponents() {}
+
+    addChild() {}
+    removeChild() {}
+
+    getParent() {}
+    getChildren() {}
+
+    setNodeMask() {}
+    getNodeMask() {}
+
+    findByName() {}
+
+    // problem is that we need to add a component before
+    // could be lazy component creation
+    setStateSet() {}
+    getStateSet() {}
+
+    // problem is that we need to add a component before
+    // could be lazy component creation
+    setMatrix() {}
+    getMatrix() {}
+}
+
+var ConvertSceneGraph = function() {
+    NodeVisitor.call(this);
+    this._nodePaths = [];
+    this._leafs = {};
+    this._nodeMap = {};
+
+    this.apply = function(node) {
+        var instanceId = node.getInstanceID();
+        this._nodeMap[instanceId] = node;
+
+        if (!node.getChildren()) {
+            var np = this.getNodePath().slice();
+            this._nodePaths.push(np);
+            this._leafs[instanceId] = np;
+        }
+
+        this.traverse(node);
+    };
+
+    this.doit = function() {
+
+    };
+};
+
 // just use inline function, it's faster than having the test in the code
 var applyUniformCache = [
     // apply just modelview and projection
@@ -207,13 +266,11 @@ MatrixTransformComponent.prototype = {
 
 var GeometryData = function() {
     this._geometry = [];
-    this._boundingBox = [];
     this._map = {};
 };
 GeometryData.prototype = {
     reset: function() {
         this._geometry = [];
-        this._boundingBox = [];
         this._map = {};
     },
     addGeometry: function(geom) {
@@ -228,8 +285,7 @@ GeometryData.prototype = {
     },
     computeBoundingBox: function() {
         for (var i = 0; i < this._geometry.length; i++) {
-            var bb = this._geometry[i].getBoundingBox();
-            this._boundingBox[i] = bb;
+            this._geometry[i].getBoundingBox();
         }
     }
 };
