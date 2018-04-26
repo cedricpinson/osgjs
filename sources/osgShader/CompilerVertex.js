@@ -214,9 +214,14 @@ var CompilerVertex = {
 
         nWeights = this.createVariable('vec4', 'nTargetWeights');
 
+        var str = '%output = abs(%wts)\n;';
+        str += '%output = %wts / max(1.0, %output.x + %output.y + %output.z + %output.w);';
+        // alternative version that could handle negative weights as well
+        // var str = '%output = %wts / max(1.0, abs(%wts.x + %wts.y + %wts.z + %wts.w));';
+
         // normalize weights to avoid negative weight for base normal/tangent
         this.getNode('InlineCode')
-            .code('%output = %wts / max(1.0, %wts[0] + %wts[1] + %wts[2] + %wts[3]);')
+            .code(str)
             .inputs({ wts: targetWeights })
             .outputs({ output: nWeights });
 
