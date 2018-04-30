@@ -97,6 +97,10 @@ RenderLeaf.prototype = {
         this._modelView = modelView;
     },
 
+    getRenderingMask: function() {
+        return this._parent._stateset.getRenderingMask();
+    },
+
     drawGeometry: (function() {
         return function(state) {
             var program = state.getLastProgramApplied();

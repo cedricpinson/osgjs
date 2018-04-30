@@ -49,10 +49,14 @@ var pooledRenderBin = new PooledResource(createRenderBin);
 
 RenderBin.BinPrototypes = {
     RenderBin: function() {
-        return pooledRenderBin.getOrCreateObject().init();
+        var bin = pooledRenderBin.getOrCreateObject().init();
+        bin.setName('RenderBin');
+        return bin;
     },
     DepthSortedBin: function() {
-        return pooledRenderBin.getOrCreateObject().init(RenderBin.SORT_BACK_TO_FRONT);
+        var bin = pooledRenderBin.getOrCreateObject().init(RenderBin.SORT_BACK_TO_FRONT);
+        bin.setName('DepthSortedBin');
+        return bin;
     }
 };
 
@@ -225,13 +229,18 @@ utils.createPrototypeObject(
             RenderBin.prototype._initInternal.call(this);
         },
 
-        draw: function(state, previousRenderLeaf) {
+        draw: function(state, previousRenderLeaf, renderingMask) {
             var previousLeaf = previousRenderLeaf;
             // use callback drawImplementation if exist
             if (this._drawCallback && this._drawCallback.drawImplementation) {
-                previousLeaf = this._drawCallback.drawImplementation(this, state, previousLeaf);
+                previousLeaf = this._drawCallback.drawImplementation(
+                    this,
+                    state,
+                    previousLeaf,
+                    renderingMask
+                );
             } else {
-                previousLeaf = this.drawImplementation(state, previousLeaf);
+                previousLeaf = this.drawImplementation(state, previousLeaf, renderingMask);
             }
 
             return previousLeaf;
@@ -253,7 +262,7 @@ utils.createPrototypeObject(
             }
         },
 
-        drawImplementation: function(state, previousRenderLeaf) {
+        drawImplementation: function(state, previousRenderLeaf, renderingMask) {
             var previousLeaf = previousRenderLeaf;
 
             var binsArray = [];
@@ -278,32 +287,36 @@ utils.createPrototypeObject(
                 if (bin.getBinNumber() > 0) {
                     break;
                 }
-                previousLeaf = bin.draw(state, previousLeaf);
+                previousLeaf = bin.draw(state, previousLeaf, renderingMask);
             }
 
             // draw leafs
-            previousLeaf = this.drawLeafs(state, previousLeaf);
+            previousLeaf = this.drawLeafs(state, previousLeaf, renderingMask);
 
             // draw post bins
             for (; current < end; current++) {
                 bin = binsArray[current];
-                previousLeaf = bin.draw(state, previousLeaf);
+                previousLeaf = bin.draw(state, previousLeaf, renderingMask);
             }
             return previousLeaf;
         },
 
-        drawLeafs: function(state, previousRenderLeaf) {
+        drawLeafs: function(state, previousRenderLeaf, renderingMask) {
             var stateList = this._stateGraphList.getArray();
             var stateListLength = this._stateGraphList.getLength();
             var leafs = this._leafs;
             var previousLeaf = previousRenderLeaf;
-            var leaf;
+            var leaf, mask;
+            var validRenderingMask = renderingMask !== undefined ? renderingMask : ~0x0;
 
             // draw fine grained ordering.
             for (var d = 0, dl = leafs.length; d < dl; d++) {
                 leaf = leafs[d];
-                leaf.render(state, previousLeaf);
-                previousLeaf = leaf;
+                mask = leaf.getRenderingMask();
+                if (validRenderingMask & mask) {
+                    leaf.render(state, previousLeaf);
+                    previousLeaf = leaf;
+                }
             }
 
             // draw coarse grained ordering.
@@ -313,8 +326,11 @@ utils.createPrototypeObject(
                 var leafArrayLength = sg._leafs.getLength();
                 for (var j = 0; j < leafArrayLength; j++) {
                     leaf = leafArray[j];
-                    leaf.render(state, previousLeaf);
-                    previousLeaf = leaf;
+                    mask = leaf.getRenderingMask();
+                    if (validRenderingMask & mask) {
+                        leaf.render(state, previousLeaf);
+                        previousLeaf = leaf;
+                    }
                 }
             }
             return previousLeaf;

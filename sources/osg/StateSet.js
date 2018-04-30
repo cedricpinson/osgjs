@@ -38,6 +38,7 @@ var StateSet = function() {
     this._hasUniform = false;
 
     this._drawID = -1; // used by the RenderLeaf to decide if it should apply the stateSet
+    this._renderingMask = ~0x0;
 };
 
 StateSet.AttributePair = function(attr, value) {
@@ -70,15 +71,21 @@ utils.createPrototypeObject(
         getDrawID: function() {
             return this._drawID;
         },
+        setRenderingMask: function(mask) {
+            this._renderingMask = mask;
+        },
+        getRenderingMask: function() {
+            return this._renderingMask;
+        },
 
-        getAttributePair: function(attribute, value) {
+        _getAttributePair: function(attribute, value) {
             return new StateSet.AttributePair(attribute, value);
         },
 
         addUniform: function(uniform, originalMode) {
             var mode = originalMode !== undefined ? originalMode : StateAttribute.ON;
             var name = uniform.getName();
-            this.uniforms[name] = this.getAttributePair(uniform, mode);
+            this.uniforms[name] = this._getAttributePair(uniform, mode);
             this._hasUniform = true;
         },
 
@@ -118,7 +125,7 @@ utils.createPrototypeObject(
         setTextureAttributeAndModes: function(unit, attribute, mode) {
             this._setTextureAttribute(
                 unit,
-                this.getAttributePair(attribute, mode !== undefined ? mode : StateAttribute.ON)
+                this._getAttributePair(attribute, mode !== undefined ? mode : StateAttribute.ON)
             );
         },
 
@@ -152,9 +159,16 @@ utils.createPrototypeObject(
             return this._attributeArray[index].getAttribute();
         },
 
+        getAttributePair: function(typeMember) {
+            var index = utils.getIdFromTypeMember(typeMember);
+            if (index === undefined || !this._hasAttribute(index)) return undefined;
+
+            return this._attributeArray[index];
+        },
+
         setAttributeAndModes: function(attribute, mode) {
             this._setAttribute(
-                this.getAttributePair(attribute, mode !== undefined ? mode : StateAttribute.ON)
+                this._getAttributePair(attribute, mode !== undefined ? mode : StateAttribute.ON)
             );
         },
 
@@ -261,7 +275,7 @@ utils.createPrototypeObject(
             return list;
         },
         setShaderGeneratorName: function(generatorName, mode) {
-            this._shaderGeneratorPair = this.getAttributePair(
+            this._shaderGeneratorPair = this._getAttributePair(
                 generatorName,
                 mode !== undefined ? mode : StateAttribute.ON
             );
