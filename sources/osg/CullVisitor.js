@@ -376,10 +376,10 @@ utils.createPrototypeObject(
             },
 
             createOrReuseRenderStage: function(classInstance) {
-                var type = !classInstance ? 'RenderStage' : classInstance.className();
+                var type = classInstance.className();
 
                 if (!this._pooledRenderStages[type]) {
-                    var classCtor = !classInstance ? RenderStage : classInstance.constructor;
+                    var classCtor = classInstance.constructor;
                     var createRenderStage = function() {
                         return new classCtor();
                     };
@@ -516,22 +516,23 @@ var cameraApply = function(camera) {
         var previousStage = renderBin.getStage();
 
         // use render to texture stage
-        var rtts = this.createOrReuseRenderStage(this._rootRenderStage);
+        var renderStageInstance = camera.getRenderStage() ? camera.getRenderStage() : this._rootRenderStage;
+        var renderStage = this.createOrReuseRenderStage(renderStageInstance);
 
-        rtts.setCamera(camera);
-        rtts.setClearDepth(camera.getClearDepth());
-        rtts.setClearColor(camera.getClearColor());
-        rtts.setClearMask(camera.getClearMask());
+        renderStage.setCamera(camera);
+        renderStage.setClearDepth(camera.getClearDepth());
+        renderStage.setClearColor(camera.getClearColor());
+        renderStage.setClearMask(camera.getClearMask());
 
         var viewport = camera.getViewport() ? camera.getViewport() : previousStage.getViewport();
         var scissor = camera.getScissor() ? camera.getScissor() : previousStage.getScissor();
-        rtts.setViewport(viewport);
-        rtts.setScissor(scissor);
+        renderStage.setViewport(viewport);
+        renderStage.setScissor(scissor);
 
         // skip positional state for now
         // ...
 
-        this.setCurrentRenderBin(rtts);
+        this.setCurrentRenderBin(renderStage);
 
         this.handleCullCallbacksAndTraverse(camera);
 
@@ -540,11 +541,11 @@ var cameraApply = function(camera) {
         if (camera.getRenderOrder() === Camera.PRE_RENDER) {
             this.getCurrentRenderBin()
                 .getStage()
-                .addPreRenderStage(rtts, camera.renderOrderNum);
+                .addPreRenderStage(renderStage, camera.renderOrderNum);
         } else {
             this.getCurrentRenderBin()
                 .getStage()
-                .addPostRenderStage(rtts, camera.renderOrderNum);
+                .addPostRenderStage(renderStage, camera.renderOrderNum);
         }
     }
 

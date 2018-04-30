@@ -33,6 +33,7 @@ var Camera = function() {
     this._view = undefined;
     this._renderer = undefined;
     this._attachments = {};
+    this._renderStage = undefined;
 };
 
 Camera.PRE_RENDER = 0;
@@ -49,6 +50,12 @@ utils.createPrototypeNode(
     utils.objectInherit(
         CullSettings.prototype,
         utils.objectInherit(Transform.prototype, {
+            getRenderStage: function() {
+                return this._renderStage;
+            },
+            setRenderStage: function(rs) {
+                this._renderStage = rs;
+            },
             // at which view this camera is attached
             getView: function() {
                 return this._view;

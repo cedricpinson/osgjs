@@ -137,7 +137,7 @@ utils.createPrototypeObject(
             renderStageOrder.order = order;
             renderStageOrder.renderStage = rs;
             if (i < this._preRenderList.length) {
-                this._preRenderList = this._preRenderList.splice(i, 0, renderStageOrder);
+                this._preRenderList.splice(i, 0, renderStageOrder);
             } else {
                 this._preRenderList.push(renderStageOrder);
             }
@@ -155,32 +155,32 @@ utils.createPrototypeObject(
             renderStageOrder.order = order;
             renderStageOrder.renderStage = rs;
             if (i < this._postRenderList.length) {
-                this._postRenderList = this._postRenderList.splice(i, 0, renderStageOrder);
+                this._postRenderList.splice(i, 0, renderStageOrder);
             } else {
                 this._postRenderList.push(renderStageOrder);
             }
         },
 
-        drawPreRenderStages: function(state, previousRenderLeaf) {
+        drawPreRenderStages: function(state, previousRenderLeaf, renderingMask) {
             var previousLeaf = previousRenderLeaf;
             for (var i = 0, l = this._preRenderList.length; i < l; ++i) {
                 var sg = this._preRenderList[i].renderStage;
-                previousLeaf = sg.draw(state, previousLeaf);
+                previousLeaf = sg.draw(state, previousLeaf, renderingMask);
             }
             return previousLeaf;
         },
 
-        draw: function(state, previousRenderLeaf) {
+        draw: function(state, previousRenderLeaf, renderingMask) {
             if (this._camera && this._camera.getInitialDrawCallback()) {
                 // if we have a camera with a final callback invoke it.
                 this._camera.getInitialDrawCallback()(state);
             }
 
-            var previousLeaf = this.drawPreRenderStages(state, previousRenderLeaf);
+            var previousLeaf = this.drawPreRenderStages(state, previousRenderLeaf, renderingMask);
 
-            previousLeaf = this.drawImplementation(state, previousLeaf);
+            previousLeaf = this.drawImplementation(state, previousLeaf, renderingMask);
 
-            previousLeaf = this.drawPostRenderStages(state, previousLeaf);
+            previousLeaf = this.drawPostRenderStages(state, previousLeaf, renderingMask);
 
             if (this._camera && this._camera.getFinalDrawCallback()) {
                 // if we have a camera with a final callback invoke it.
@@ -202,31 +202,31 @@ utils.createPrototypeObject(
             }
         },
 
-        drawPostRenderStages: function(state, previousRenderLeaf) {
+        drawPostRenderStages: function(state, previousRenderLeaf, renderingMask) {
             var previousLeaf = previousRenderLeaf;
             for (var i = 0, l = this._postRenderList.length; i < l; ++i) {
                 var sg = this._postRenderList[i].renderStage;
-                previousLeaf = sg.draw(state, previousLeaf);
+                previousLeaf = sg.draw(state, previousLeaf, renderingMask);
             }
             return previousLeaf;
         },
 
-        applyCamera: function(state) {
+        applyCamera: function(state, camera) {
             var gl = state.getGraphicContext();
-            if (this._camera === undefined) {
+            if (!camera) {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 return;
             }
-            var viewport = this._camera.getViewport();
-            var fbo = this._camera.frameBufferObject;
+            var viewport = camera.getViewport();
+            var fbo = camera.frameBufferObject;
 
             if (!fbo) {
                 fbo = new FrameBufferObject();
-                this._camera.frameBufferObject = fbo;
+                camera.frameBufferObject = fbo;
             }
 
             if (fbo.isDirty()) {
-                var attachments = this._camera.getAttachments();
+                var attachments = camera.getAttachments();
 
                 // framebuffer texture and renderbuffer must be same dimension
                 // otherwise framebuffer is incomplete
@@ -270,10 +270,9 @@ utils.createPrototypeObject(
             fbo.apply(state);
         },
 
-        drawImplementation: function(state, previousRenderLeaf) {
+        drawImplementation: function(state, previousRenderLeaf, renderingMask) {
             var gl = state.getGraphicContext();
-
-            this.applyCamera(state);
+            this.applyCamera(state, this._camera);
 
             // projection clipping
             if (this._viewport === undefined) {
@@ -303,7 +302,8 @@ utils.createPrototypeObject(
             var previousLeaf = RenderBin.prototype.drawImplementation.call(
                 this,
                 state,
-                previousRenderLeaf
+                previousRenderLeaf,
+                renderingMask
             );
 
             return previousLeaf;
