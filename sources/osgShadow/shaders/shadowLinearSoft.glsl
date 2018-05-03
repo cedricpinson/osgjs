@@ -1,4 +1,5 @@
 #pragma include "floatFromTex.glsl"
+#pragma include "rand.glsl"
 
 // simulation of texture2Dshadow glsl call on HW
 // http://codeflow.org/entries/2013/feb/15/soft-shadow-mapping/
@@ -11,13 +12,11 @@ float texture2DCompare(const in sampler2D depths,
 }
 
 #ifdef _JITTER_OFFSET
-#define INT_SCALE3_JITTER vec3(.1031, .1030, .0973)
-// uniform rand
-vec3 randJitter(const in vec3 p2) {
-    vec3 p3  = fract(p2.xyz * INT_SCALE3_JITTER);
-    p3 += dot(p3, p3.yzx + 19.19);
-    p3 = fract((p3.xxy + p3.yzz) * p3.zyx);
-    return p3;
+// TODO could be in a random.glsl file
+// https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Shaders/Private/Random.ush#L27
+float shadowInterleavedGradientNoise(const in vec2 fragCoord, const in float frameMod) {
+    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+    return fract(magic.z * fract(dot(fragCoord.xy + frameMod * vec2(47.0, 17.0) * 0.695, magic.xy)));
 }
 #endif
 
@@ -35,7 +34,7 @@ float texture2DShadowLerp(
 
 #ifdef _JITTER_OFFSET
     if (jitter > 0.0){
-        centroidCoord += randJitter(vec3(gl_FragCoord.xy, jitter)).xy;
+        centroidCoord += shadowInterleavedGradientNoise(gl_FragCoord.xy, jitter).xy;
     }
 #endif
 
