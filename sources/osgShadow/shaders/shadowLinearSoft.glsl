@@ -34,7 +34,7 @@ float texture2DShadowLerp(
 
 #ifdef _JITTER_OFFSET
     if (jitter > 0.0){
-        centroidCoord += shadowInterleavedGradientNoise(gl_FragCoord.xy, jitter).xy;
+        centroidCoord += shadowInterleavedGradientNoise(gl_FragCoord.xy, jitter);
     }
 #endif
 
