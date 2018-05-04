@@ -15,6 +15,8 @@ import WebGLCaps from 'osg/WebGLCaps';
 import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
 import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
 import Renderer from 'osgViewer/Renderer';
+import RendererDoD from 'osgViewer/RendererDoD';
+import Options from 'osg/Options';
 import Scene from 'osgViewer/Scene';
 import DisplayGraph from 'osgUtil/DisplayGraph';
 import notify from 'osg/notify';
@@ -60,8 +62,15 @@ View.prototype = {
         this._requestContinousUpdate = bool;
     },
     createRenderer: function(camera) {
-        var render = new Renderer(camera);
-        //camera->setStats(new osg::Stats("Camera"));
+        var options = new Options();
+        var optionUrl = Options.getOptionsURL();
+        options.extend(optionUrl);
+        var render;
+        if (options.getBoolean('dod')) {
+            render = new RendererDoD(camera);
+        } else {
+            render = new Renderer(camera);
+        }
         return render;
     },
 

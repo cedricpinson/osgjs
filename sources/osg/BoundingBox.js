@@ -2,9 +2,12 @@ import notify from 'osg/notify';
 import utils from 'osg/utils';
 import { vec3, mat4 } from 'osg/glMatrix';
 
+var vec3GL = vec3;
+var mat4GL = mat4;
+
 var BoundingBox = function() {
-    this._min = vec3.create();
-    this._max = vec3.create();
+    this._min = vec3GL.create();
+    this._max = vec3GL.create();
     this.init();
 };
 
@@ -12,8 +15,8 @@ utils.createPrototypeObject(
     BoundingBox,
     {
         init: function() {
-            vec3.copy(this._min, vec3.INFINITY);
-            vec3.copy(this._max, vec3.NEGATIVE_INFINITY);
+            vec3GL.copy(this._min, vec3GL.INFINITY);
+            vec3GL.copy(this._max, vec3GL.NEGATIVE_INFINITY);
         },
 
         volume: function() {
@@ -24,8 +27,8 @@ utils.createPrototypeObject(
         },
 
         copy: function(box) {
-            vec3.copy(this._min, box._min);
-            vec3.copy(this._max, box._max);
+            vec3GL.copy(this._min, box._min);
+            vec3GL.copy(this._max, box._max);
         },
 
         valid: function() {
@@ -121,12 +124,12 @@ utils.createPrototypeObject(
         },
 
         setMin: function(min) {
-            vec3.copy(this._min, min);
+            vec3GL.copy(this._min, min);
             return this;
         },
 
         setMax: function(max) {
-            vec3.copy(this._max, max);
+            vec3GL.copy(this._max, max);
             return this;
         },
 
@@ -178,15 +181,15 @@ utils.createPrototypeObject(
         // http://dev.theomader.com/transform-bounding-boxes/
         // https://github.com/erich666/GraphicsGems/blob/master/gems/TransBox.c
         transformMat4: (function() {
-            var tmpMin = vec3.create();
-            var tmpMax = vec3.create();
+            var tmpMin = vec3GL.create();
+            var tmpMax = vec3GL.create();
             return function(out, m) {
                 var inMin = this.getMin();
                 var inMax = this.getMax();
 
                 /* Take care of translation by beginning at T. */
-                mat4.getTranslation(tmpMin, m);
-                vec3.copy(tmpMax, tmpMin);
+                mat4GL.getTranslation(tmpMin, m);
+                vec3GL.copy(tmpMax, tmpMin);
 
                 /* Now find the extreme points by considering the product of the */
                 /* min and max with each component of M.  */
