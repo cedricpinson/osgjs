@@ -272,7 +272,7 @@
         },
 
         getOrCreateModel: function() {
-            this._rootItems = new osg.Node();
+            this._rootItems = new osg.MatrixTransform();
 
             this._rootItems.addUpdateCallback(new FPSUpdateCallback(this._config));
 

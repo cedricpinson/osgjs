@@ -10,71 +10,12 @@ import NodeVisitor from 'osg/NodeVisitor';
 import RenderStage from 'osg/RenderStage';
 import State from 'osg/State';
 import StateGraph from 'osg/StateGraph';
-import { vec3, vec4, mat4 } from 'osg/glMatrix';
+import {vec3, vec4, mat4} from 'osg/glMatrix';
 import osgShader from 'osgShader/osgShader';
 import DisplayGraph from 'osgUtil/DisplayGraph';
 import notify from 'osg/notify';
 
 var ComponentInstance = 0;
-
-class NodeDoD {
-    constructor(app) {
-        this._parent = null;
-        this._children = [];
-        this._name = 'noname';
-        this._components = {};
-        this._app = app;
-    }
-
-    addComponent() {}
-    removeComponent() {}
-    getComponents() {}
-
-    addChild() {}
-    removeChild() {}
-
-    getParent() {}
-    getChildren() {}
-
-    setNodeMask() {}
-    getNodeMask() {}
-
-    findByName() {}
-
-    // problem is that we need to add a component before
-    // could be lazy component creation
-    setStateSet() {}
-    getStateSet() {}
-
-    // problem is that we need to add a component before
-    // could be lazy component creation
-    setMatrix() {}
-    getMatrix() {}
-}
-
-var ConvertSceneGraph = function() {
-    NodeVisitor.call(this);
-    this._nodePaths = [];
-    this._leafs = {};
-    this._nodeMap = {};
-
-    this.apply = function(node) {
-        var instanceId = node.getInstanceID();
-        this._nodeMap[instanceId] = node;
-
-        if (!node.getChildren()) {
-            var np = this.getNodePath().slice();
-            this._nodePaths.push(np);
-            this._leafs[instanceId] = np;
-        }
-
-        this.traverse(node);
-    };
-
-    this.doit = function() {
-
-    };
-};
 
 // just use inline function, it's faster than having the test in the code
 var applyUniformCache = [
@@ -161,14 +102,18 @@ var MatrixTransformComponent = function() {
 };
 
 MatrixTransformComponent.Component = ComponentInstance++;
-
+MatrixTransformComponent.DIRTY_LIST = 2;
+MatrixTransformComponent.DIRTY = 1;
 MatrixTransformComponent.prototype = {
     reset: function() {
         this._local = [];
         this._world = [];
 
-        this._parent = [];
-        this._children = [];
+        this._children = []; // children of the id
+        this._parent = []; // parent of the id
+
+        this._depth = []; // depth in the hierarchy, used to order update of transform
+        this._dirty = []; // dirty state
 
         // for a full parent children dirty
         this._dirtyParentChildren = [];
@@ -178,6 +123,9 @@ MatrixTransformComponent.prototype = {
         this._dirtyParent = [];
         this._dirtyChild = [];
         this._dirtyParentCount = 0;
+
+        this._dirtyByDepthList = [];
+        this._dirtyByDepthListCount = [];
 
         this.createResource();
     },
@@ -190,17 +138,42 @@ MatrixTransformComponent.prototype = {
         var id = this._local.length;
         this._local.push(mat4.create());
         this._world.push(mat4.create());
+        this._children.push([]);
+        this._parent.push(-1);
+        this._depth.push(0);
+        this._dirty.push(0);
+
         this._dirtyChild.push(0);
         this._dirtyParent.push(0);
         this._dirtyParentChildren.push(0);
+
         return id;
     },
-    addParentChildren: function(parent, children) {
-        this._parent.push(parent);
-        this._children.push(children);
+    addChild: function(parent, child) {
+        if (this._children[parent].indexOf(child) !== -1) return;
+        this._children[parent].push(child);
+        this._parent[child] = parent;
+        let depth = this._depth[parent] + 1;
+        this._depth[child] = depth;
+
+        if (depth >= this._dirtyByDepthListCount.length) {
+            this._dirtyByDepthListCount.push(0);
+            this._dirtyByDepthList.push([0]);
+        }
+
+        // needs to dirty children
+        // this._dirty();
     },
-    setParentChildren: function(id, children) {
-        this._children[id] = children;
+    removeChild: function(parent, child) {
+        var index = this._children[parent].indexOf(child);
+        if (index === -1) return;
+        this._children[parent].splice(index, 1);
+        this._parent[child] = -1;
+        // needs to dirty children
+        // this._dirty();
+    },
+    getChildren: function(parentId) {
+        return this._children[parentId];
     },
     getWorldMatrix: function(id) {
         return this._world[id];
@@ -208,58 +181,101 @@ MatrixTransformComponent.prototype = {
     getLocalMatrix: function(id) {
         return this._local[id];
     },
-    compute: function() {
-        var parent = this._parent;
-        for (var l = 0; l < parent.length; l++) {
-            var parentMatrix = this.getWorldMatrix(parent[l]);
-            var children = this._children[l];
-            for (var c = 0; c < children.length; c++) {
-                var child = children[c];
-                var localMatrix = this.getLocalMatrix(child);
-                var worldMatrix = this.getWorldMatrix(child);
-                mat4.mul(worldMatrix, parentMatrix, localMatrix);
-            }
-        }
+    setLocalMatrix: function(id, matrix) {
+        mat4.copy(this._local[id], matrix);
     },
+
+    dirtyId: function(id) {
+        if (this._parent[id] === -1) return;
+        if (this._dirty[id]) return;
+        this._dirty[id] = MatrixTransformComponent.DIRTY;
+        var depth = this._depth[id];
+        this._dirtyByDepthList[depth][this._dirtyByDepthListCount[depth]++] = id;
+    },
+
     dirty: function() {
         // simulate a dirty all
         // actually we would need to keep track of dirty transforms with a inverse map
         // to not recompute more than once time the transform in the update
         var count = 0;
-        for (var i = 0; i < this._parent.length; i++) {
-            this._dirtyParentChildren[i] = i;
-            count++;
+        var nbItems = this._parent.length;
+        // skip item 0 (root dummy node)
+        for (var i = 1; i < nbItems; i++) {
+            if (this._children[i].length && this._parent[i] !== -1) {
+                this._dirtyParentChildren[count++] = i;
+            }
         }
         this._dirtyParentChildrenCount = count;
     },
-    update: function() {
-        var i, j, parentId, parentMatrix, childId, localMatrix, worldMatrix;
-        // recompute only the parent dirty
-        for (i = 0; i < this._dirtyParentCount; i++) {
-            parentId = this._dirtyParent[i];
-            childId = this._dirtyChild[i];
-            parentMatrix = this.getWorldMatrix(parentId);
-            localMatrix = this.getLocalMatrix(childId);
-            worldMatrix = this.getWorldMatrix(childId);
-            mat4.mul(worldMatrix, parentMatrix, localMatrix);
-        }
-        this._dirtyParentCount = 0;
 
-        var parents = this._parent;
-        var childrenList = this._children;
-        var children;
-        for (i = 0; i < this._dirtyParentChildrenCount; i++) {
-            j = this._dirtyParentChildren[i];
-            parentId = parents[j];
-            children = childrenList[j];
-            parentMatrix = this.getWorldMatrix(parentId);
-            for (var c = 0; c < children.length; c++) {
-                childId = children[c];
-                localMatrix = this.getLocalMatrix(childId);
-                worldMatrix = this.getWorldMatrix(childId);
-                mat4.mul(worldMatrix, parentMatrix, localMatrix);
+    _dirtyChildren: function(parentId) {
+        let children = this._children[parentId];
+        for (let i = 0; i < children.length; i++) {
+            let childrenId = children[i];
+            if (
+                this._dirty[childrenId] !== MatrixTransformComponent.DIRTY_LIST &&
+                this._children[childrenId].length
+            ) {
+                this._dirty[childrenId] = MatrixTransformComponent.DIRTY_LIST;
+                this._dirtyChildren(childrenId);
+                this._dirtyParentChildren[this._dirtyParentChildrenCount++] = childrenId;
             }
         }
+    },
+    _createDirtyList: function() {
+        this._dirtyParentCount = 0;
+        this._dirtyParentChildrenCount = 0;
+        for (let depth = 0; depth < this._dirtyByDepthList.length; depth++) {
+            let nbDirty = this._dirtyByDepthListCount[depth];
+            let dirtyList = this._dirtyByDepthList[depth];
+            for (let i = 0; i < nbDirty; i++) {
+                let currentId = dirtyList[i];
+                let parentId = this._parent[currentId];
+                if (
+                    this._dirty[currentId] === MatrixTransformComponent.DIRTY_LIST ||
+                    this._dirty[parentId] === MatrixTransformComponent.DIRTY_LIST
+                ) {
+                    continue;
+                }
+
+                if (this._dirty[parentId] !== MatrixTransformComponent.DIRTY) {
+                    this._dirtyParent[this._dirtyParentCount++] = currentId;
+                }
+
+                this._dirty[currentId] = MatrixTransformComponent.DIRTY_LIST;
+                this._dirtyParentChildren[this._dirtyParentChildrenCount++] = currentId;
+                this._dirtyChildren(currentId);
+            }
+            this._dirtyByDepthListCount[depth] = 0;
+        }
+    },
+    update: function() {
+        //this._createDirtyList();
+
+        // recompute only the parent dirty
+        for (let i = 0; i < this._dirtyParentCount; i++) {
+            let childId = this._dirtyParent[i];
+            let parentId = this._parent[childId];
+            let parentMatrix = this.getWorldMatrix(parentId);
+            let localMatrix = this.getLocalMatrix(childId);
+            let worldMatrix = this.getWorldMatrix(childId);
+            mat4.mul(worldMatrix, parentMatrix, localMatrix);
+        }
+
+        for (let i = 0; i < this._dirtyParentChildrenCount; i++) {
+            let parentId = this._dirtyParentChildren[i];
+            let children = this._children[parentId];
+            let parentMatrix = this.getWorldMatrix(parentId);
+            this._dirty[parentId] = 0;
+            for (let c = 0; c < children.length; c++) {
+                let childId = children[c];
+                let localMatrix = this.getLocalMatrix(childId);
+                let worldMatrix = this.getWorldMatrix(childId);
+                mat4.mul(worldMatrix, parentMatrix, localMatrix);
+                this._dirty[childId] = 0;
+            }
+        }
+        this._dirtyParentCount = 0;
         this._dirtyParentChildrenCount = 0;
     }
 };
@@ -437,7 +453,7 @@ RenderStageQueue.prototype = {
     },
     update: function() {
         for (var i = 0; i < this._cameraNode.length; i++) {
-            // grow the array count
+            // grow the array count if needed
             if (this._geometryToDraw[i].length < this._geometry[i].length) {
                 for (var j = this._geometryToDraw[i].length; j < this._geometry[i].length; j++) {
                     this._geometryToDraw[i].push(0);
@@ -499,6 +515,17 @@ System.prototype = {
 
         this.initNode(this._root);
         utils.timeEnd('RenderDoD-reset');
+    },
+
+    notifyAddChild: function(parent, child) {
+        var parentId = this.getComponentResource(parent, this._transformComponent);
+        var childId = this.getComponentResource(child, this._transformComponent);
+        this._transformComponent.addChild(parentId, childId);
+    },
+    notifyRemoveChild: function(parent, child) {
+        var parentId = this.getComponentResource(parent, this._transformComponent);
+        var childId = this.getComponentResource(child, this._transformComponent);
+        this._transformComponent.removeChild(parentId, childId);
     },
 
     createEntity: function() {
@@ -669,7 +696,9 @@ System.prototype = {
             entityId = osgjsNodeEntityMap[parentInstanceId];
             var childrenTransformId = transformParentChildren[parentInstanceId];
             transformId = this.getComponentResource(entityId, this._transformComponent);
-            this._transformComponent.addParentChildren(transformId, childrenTransformId);
+            for (var cc = 0; cc < childrenTransformId.length; cc++) {
+                this._transformComponent.addChild(transformId, childrenTransformId[cc]);
+            }
         }
 
         // create and setup geom component on entity
@@ -850,6 +879,8 @@ System.prototype = {
         this._renderStageQueue.update();
 
         // update transform
+        //this._transformComponent.dirtyId(2);
+        //this._transformComponent.dirty();
         this._transformComponent.update();
 
         // update geometries bbox in worldspace
