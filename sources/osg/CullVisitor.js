@@ -487,7 +487,6 @@ var cameraApply = function(camera) {
 
     this._computedNear = Number.POSITIVE_INFINITY;
     this._computedFar = Number.NEGATIVE_INFINITY;
-    //
 
     this.setCullSettings(camera);
     // global override
@@ -516,7 +515,9 @@ var cameraApply = function(camera) {
         var previousStage = renderBin.getStage();
 
         // use render to texture stage
-        var renderStageInstance = camera.getRenderStage() ? camera.getRenderStage() : this._rootRenderStage;
+        var renderStageInstance = camera.getRenderStage()
+            ? camera.getRenderStage()
+            : this._rootRenderStage;
         var renderStage = this.createOrReuseRenderStage(renderStageInstance);
 
         renderStage.setCamera(camera);

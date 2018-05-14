@@ -141,67 +141,6 @@ utils.createPrototypeObject(
         popViewport: function() {
             this._viewportStack.pop();
         },
-
-        getFrustumPlanes: (function() {
-            var mvp = mat4.create();
-
-            return function(out, projection, view, withNearFar) {
-                mat4.mul(mvp, projection, view);
-
-                var computeNearFar = !!withNearFar;
-
-                // Right clipping plane.
-                var right = out[0];
-                right[0] = mvp[3] - mvp[0];
-                right[1] = mvp[7] - mvp[4];
-                right[2] = mvp[11] - mvp[8];
-                right[3] = mvp[15] - mvp[12];
-
-                // Left clipping plane.
-                var left = out[1];
-                left[0] = mvp[3] + mvp[0];
-                left[1] = mvp[7] + mvp[4];
-                left[2] = mvp[11] + mvp[8];
-                left[3] = mvp[15] + mvp[12];
-
-                // Bottom clipping plane.
-                var bottom = out[2];
-                bottom[0] = mvp[3] + mvp[1];
-                bottom[1] = mvp[7] + mvp[5];
-                bottom[2] = mvp[11] + mvp[9];
-                bottom[3] = mvp[15] + mvp[13];
-
-                // Top clipping plane.
-                var top = out[3];
-                top[0] = mvp[3] - mvp[1];
-                top[1] = mvp[7] - mvp[5];
-                top[2] = mvp[11] - mvp[9];
-                top[3] = mvp[15] - mvp[13];
-
-                if (computeNearFar) {
-                    // Far clipping plane.
-                    var far = out[4];
-                    far[0] = mvp[3] - mvp[2];
-                    far[1] = mvp[7] - mvp[6];
-                    far[2] = mvp[11] - mvp[10];
-                    far[3] = mvp[15] - mvp[14];
-
-                    // Near clipping plane.
-                    var near = out[5];
-                    near[0] = mvp[3] + mvp[2];
-                    near[1] = mvp[7] + mvp[6];
-                    near[2] = mvp[11] + mvp[10];
-                    near[3] = mvp[15] + mvp[14];
-                }
-
-                //Normalize the planes
-                var j = withNearFar ? 6 : 4;
-                for (var i = 0; i < j; i++) {
-                    Plane.normalizeEquation(out[i]);
-                }
-            };
-        })(),
-
         pushCullingSet: function() {
             var cs = this._pooledCullingSet.getOrCreateObject();
             if (this._enableFrustumCulling) {
