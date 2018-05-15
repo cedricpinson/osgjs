@@ -127,6 +127,12 @@ MatrixTransformComponent.prototype = {
         this._dirtyByDepthList = [];
         this._dirtyByDepthListCount = [];
 
+        this._traverseId = [];
+        this._traverseIdCount = 0;
+        this._accessDirty = [];
+
+        this._needSort = false;
+
         this.createResource();
     },
     // default parent id is for geometry with no transform
@@ -147,6 +153,9 @@ MatrixTransformComponent.prototype = {
         this._dirtyParent.push(0);
         this._dirtyParentChildren.push(0);
 
+        this._traverseId.push(0);
+        this._accessDirty.push(0);
+
         return id;
     },
     addChild: function(parent, child) {
@@ -156,41 +165,64 @@ MatrixTransformComponent.prototype = {
         let depth = this._depth[parent] + 1;
         this._depth[child] = depth;
 
-        if (depth >= this._dirtyByDepthListCount.length) {
-            this._dirtyByDepthListCount.push(0);
-            this._dirtyByDepthList.push([0]);
-        }
-
-        // needs to dirty children
-        // this._dirty();
+        this._needSort = true;
     },
     removeChild: function(parent, child) {
-        var index = this._children[parent].indexOf(child);
+        let index = this._children[parent].indexOf(child);
         if (index === -1) return;
         this._children[parent].splice(index, 1);
         this._parent[child] = -1;
-        // needs to dirty children
-        // this._dirty();
+
+        this._needSort = true;
     },
+
     getChildren: function(parentId) {
         return this._children[parentId];
     },
+
     getWorldMatrix: function(id) {
         return this._world[id];
     },
+
     getLocalMatrix: function(id) {
         return this._local[id];
     },
+
     setLocalMatrix: function(id, matrix) {
         mat4.copy(this._local[id], matrix);
     },
 
+    _sortTraverse: function(id) {
+        this._traverseId[this._traverseIdCount++] = id;
+        let children = this._children[id];
+        for (let i = 0; i < children.length; i++) {
+            this.sortTraverse(children[i]);
+        }
+    },
+
+    _sort: function() {
+        this._traverseIdCount = 0;
+        for (let i = 0; i < this._parent.length; i++) {
+            if (this._parent[i] === -1) {
+                this._sortTraverse(i);
+            }
+        }
+    },
+
     dirtyId: function(id) {
-        if (this._parent[id] === -1) return;
+        var parentId = this._parent[id];
+        if (parentId === -1) return;
         if (this._dirty[id]) return;
         this._dirty[id] = MatrixTransformComponent.DIRTY;
-        var depth = this._depth[id];
-        this._dirtyByDepthList[depth][this._dirtyByDepthListCount[depth]++] = id;
+
+        // tag access to dirty node, but if parent already dirty it's not needed
+        if (this._dirty[parentId]) return;
+
+        // 0 is the root parent
+        while (parentId === 0 || parentId === -1) {
+            this._accessDirty[parentId] = 1;
+            parentId = this._parent[parentId];
+        }
     },
 
     dirty: function() {
@@ -222,6 +254,7 @@ MatrixTransformComponent.prototype = {
             }
         }
     },
+
     _createDirtyList: function() {
         this._dirtyParentCount = 0;
         this._dirtyParentChildrenCount = 0;
@@ -249,7 +282,21 @@ MatrixTransformComponent.prototype = {
             this._dirtyByDepthListCount[depth] = 0;
         }
     },
+
+    _createDirtyList2: function() {
+        for (let i = 1; i < this._traverseIdCount; i++) {
+            var id = this._traverseId[i];
+
+            ///////////////////////////
+            Need to generate node to go if skipped
+            if (this._accessDirty[id]) {
+                
+            }
+        }
+    },
+
     update: function() {
+        if (this._needSort) this._sort();
         //this._createDirtyList();
 
         // recompute only the parent dirty
