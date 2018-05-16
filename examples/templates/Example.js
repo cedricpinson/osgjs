@@ -238,7 +238,8 @@
             var cameraView = debugComposerCamera.getViewMatrix();
             osg.mat4.fromTranslation(cameraView, [0, 0, 0]);
 
-            debugComposerCamera.setRenderOrder(osg.Camera.NESTED_RENDER, 0);
+            debugComposerCamera.setRenderOrder(osg.Camera.POST_RENDER, 20);
+            debugComposerCamera.setClearMask(0x0);
             debugComposerCamera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
             debugComposerCamera.addChild(debugComposerNode);
 
