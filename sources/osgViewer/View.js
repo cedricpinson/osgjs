@@ -15,6 +15,8 @@ import WebGLCaps from 'osg/WebGLCaps';
 import IntersectionVisitor from 'osgUtil/IntersectionVisitor';
 import LineSegmentIntersector from 'osgUtil/LineSegmentIntersector';
 import Renderer from 'osgViewer/Renderer';
+import RendererFlat from 'osgViewer/RendererFlat';
+import Options from 'osg/Options';
 import Scene from 'osgViewer/Scene';
 import DisplayGraph from 'osgUtil/DisplayGraph';
 import notify from 'osg/notify';
@@ -59,9 +61,17 @@ View.prototype = {
     requestContinuousUpdate: function(bool) {
         this._requestContinousUpdate = bool;
     },
+
     createRenderer: function(camera) {
-        var render = new Renderer(camera);
-        //camera->setStats(new osg::Stats("Camera"));
+        var options = new Options();
+        var optionUrl = Options.getOptionsURL();
+        options.extend(optionUrl);
+        var render;
+        if (options.getBoolean('flat')) {
+            render = new RendererFlat(camera);
+        } else {
+            render = new Renderer(camera);
+        }
         return render;
     },
 

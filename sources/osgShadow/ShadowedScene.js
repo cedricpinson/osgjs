@@ -162,6 +162,7 @@ utils.createPrototypeNode(
         traverse: function(nv) {
             // update the scene
             if (nv.getVisitorType() === NodeVisitor.CULL_VISITOR) {
+                var renderStage = nv.getCurrentRenderBin().getStage();
                 var i,
                     st,
                     lt = this._shadowTechniques.length;
@@ -170,6 +171,12 @@ utils.createPrototypeNode(
                 if (lt) nv.pushStateSet(this._receivingStateset);
                 this.nodeTraverse(nv);
                 if (lt) nv.popStateSet();
+
+                if (renderStage.className() === 'RenderStageCustom') {
+                    nv.getCurrentRenderBin().getStage()._castsShadowDrawTraversalMask = this._castsShadowDrawTraversalMask;
+                    nv.getCurrentRenderBin().getStage()._shadows = this;
+                    return;
+                }
 
                 var isDirty = false;
                 for (i = 0; i < lt; i++) {

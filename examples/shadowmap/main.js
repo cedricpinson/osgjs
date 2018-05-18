@@ -972,7 +972,7 @@
             var size = 2;
             var dist = 15;
             var cube = osg.createTexturedBoxGeometry(0, 0, 0, size, size, size * 10);
-
+            cube.setName('cube');
             var cubeSubNodeTrans = new osg.MatrixTransform();
             cubeSubNodeTrans.setMatrix(
                 osg.mat4.fromTranslation(osg.mat4.create(), [0, 0, dist / 2])
@@ -1049,7 +1049,12 @@
                 groundSize,
                 0
             );
-
+            ground
+                .getOrCreateStateSet()
+                .setRenderingMask(
+                    ~(this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask)
+                );
+            ground.setName('ground');
             osgDB.readImageURL(texturePath).then(function(groundImage) {
                 var groundTex = osg.Texture.createFromImage(groundImage);
                 groundTex.setWrapT('MIRRORED_REPEAT');
@@ -1178,6 +1183,12 @@
             // light debug axis view
             // totally independant scene tree than light
             /////////
+            lightNodemodel.setName('debugLightAxis');
+            lightNodemodel
+                .getOrCreateStateSet()
+                .setRenderingMask(
+                    ~(this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask)
+                );
             group.addChild(lightNodemodelNode);
             ///////////////////
 

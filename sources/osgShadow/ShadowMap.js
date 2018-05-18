@@ -830,13 +830,13 @@ utils.createPrototypeObject(
         // culling is done,
         // now try for a the tightest frustum
         // possible for shadowcasting
-        frameShadowCastingFrustum: function(cullVisitor) {
+        frameShadowCastingFrustum: function(nearFarRatio) {
             if (!this._infiniteFrustum) {
                 CullVisitor.prototype.clampProjectionMatrix(
                     this._projectionMatrix,
                     this._depthRange[0],
                     this._depthRange[1],
-                    cullVisitor.getNearFarRatio(),
+                    nearFarRatio,
                     this._depthRange
                 );
             }
@@ -928,7 +928,7 @@ utils.createPrototypeObject(
             // Here culling is done, we do have near/far.
             // and cull/non-culled info
             // if we wanted a tighter frustum.
-            this.frameShadowCastingFrustum(cullVisitor);
+            this.frameShadowCastingFrustum(cullVisitor.getNearFarRatio());
 
             // disabling to prevent cullvisitor breaking
             // the projection matrix by "clamping" it

@@ -5,72 +5,106 @@ import Object from 'osg/Object';
 import RenderStage from 'osg/RenderStage';
 import State from 'osg/State';
 import StateGraph from 'osg/StateGraph';
-import vec4 from 'osg/glMatrix';
-import vec3 from 'osg/glMatrix';
-import mat4 from 'osg/glMatrix';
+import { vec4 } from 'osg/glMatrix';
+import { vec3 } from 'osg/glMatrix';
+import { mat4 } from 'osg/glMatrix';
 import osgShader from 'osgShader/osgShader';
 import DisplayGraph from 'osgUtil/DisplayGraph';
 import NodeVisitor from 'osg/NodeVisitor';
-import MatrixTransform from 'osg/MatrixTransform';
-import PooledArray from 'osg/PooledArray';
 import BoundingBox from 'osg/BoundingBox';
 import BoundingSphere from 'osg/BoundingSphere';
 import Polytope from 'osg/Polytope';
-import PooledResource from 'osg/PooledResource';
 import Camera from 'osg/Camera';
-import Plane from 'osg/Plane';
+import StateAttribute from 'osg/StateAttribute';
 import osgMath from 'osg/math';
 import notify from 'osg/notify';
+
+var getInsertPosition = function(state, previous) {
+    var sg = previous ? previous._parent : undefined;
+    var num = 0;
+    // need to pop back all statesets and matrices.
+    while (sg) {
+        if (sg.stateset) num++;
+        sg = sg.parent;
+    }
+
+    if (num > 1) num--;
+    return state.getStateSetStackSize() - num;
+};
+
+var distance = function(coord, matrix) {
+    return -(coord[0] * matrix[2] + coord[1] * matrix[6] + coord[2] * matrix[10] + matrix[14]);
+};
+
+var cullShadowMapLeaf = function(leaf) {
+    var geometry = leaf._geometry;
+    var boundingSphereLeaf = geometry.getBound();
+    var worldMatrix = leaf._model;
+    boundingSphereLeaf.transformMat4(this.boundingSphereWorld, worldMatrix);
+    var isContained = this.frustum.containsBoundingSphere(this.boundingSphereWorld);
+    if (!isContained) return;
+
+    var boundingBox = geometry.getBoundingBox();
+    boundingBox.transformMat4(this.boundingBoxWorld, worldMatrix);
+
+    this.boundingBoxWorld.corner(this.nearBits, this.nearVec);
+    this.boundingBoxWorld.corner(this.farBits, this.farVec);
+
+    var dNear = distance(this.nearVec, this.viewMatrix);
+
+    var dFar = distance(this.farVec, this.viewMatrix);
+
+    if (dNear > dFar) {
+        var tmp = dNear;
+        dNear = dFar;
+        dFar = tmp;
+    }
+
+    if (dFar < 0.0) {
+        // whole object behind the eye point so discard
+        return;
+    }
+
+    if (dNear < this.computedNear) this.computedNear = dNear;
+    if (dFar > this.computedFar) this.computedFar = dFar;
+
+    this.renderLeafList.push(leaf);
+};
+
+var computeSceneBoundingBox = function(leaf) {
+    var worldMatrix = leaf._model;
+    var geometryBbox = leaf._geometry.getBoundingBox();
+    geometryBbox.transformMat4(this.bboxTmp, worldMatrix);
+    this.bbox.expandByBoundingBox(this.bboxTmp);
+};
 
 var RenderStageCustom = function() {
     RenderStage.apply(this, arguments);
     RenderStageCustom.prototype.init.call(this);
+
+    var context = {
+        boundingSphereWorld: new BoundingSphere(),
+        boundingBoxWorld: new BoundingBox(),
+        nearVec: vec3.create(),
+        farVec: vec3.create(),
+        renderLeafList: [],
+        frustum: new Polytope()
+    };
+    this._cullShadowMapLeaf = cullShadowMapLeaf.bind(context);
+    this._cullShadowMapLeafContext = context;
+
+    var bboxContext = {
+        bboxTmp: new BoundingBox(),
+        bbox: new BoundingBox()
+    };
+    this._computeSceneBoundingBox = computeSceneBoundingBox.bind(bboxContext);
+    this._computeSceneBoundingBoxContext = bboxContext;
 };
 
 utils.createPrototypeObject(
     RenderStageCustom,
     utils.objectInherit(RenderStage.prototype, {
         constructor: RenderStageCustom,
-
-        _computeBoundingBoxPerBin: function(bbox, bin, renderingMask) {
-            var stateList = bin._stateGraphList.getArray();
-            var stateListLength = bin._stateGraphList.getLength();
-            var leafs = bin._leafs;
-            var leaf, mask;
-            var validRenderingMask = renderingMask !== undefined ? renderingMask : ~0x0;
-
-            var bbTmp = new BoundingBox();
-            var worldMatrix, geometryBbox;
-
-            // draw fine grained ordering.
-            for (var d = 0, dl = leafs.length; d < dl; d++) {
-                leaf = leafs[d];
-                mask = leaf.getRenderingMask();
-                if (validRenderingMask & mask) {
-                    worldMatrix = leaf._model;
-                    geometryBbox = leaf._geometry.getBoundingBox();
-                    geometryBbox.transformMat4(bbTmp, worldMatrix);
-                    bbox.expandByBoundingBox(bbTmp);
-                }
-            }
-
-            // draw coarse grained ordering.
-            for (var i = 0, l = stateListLength; i < l; i++) {
-                var sg = stateList[i];
-                var leafArray = sg._leafs.getArray();
-                var leafArrayLength = sg._leafs.getLength();
-                for (var j = 0; j < leafArrayLength; j++) {
-                    leaf = leafArray[j];
-                    mask = leaf.getRenderingMask();
-                    if (validRenderingMask & mask) {
-                        worldMatrix = leaf._model;
-                        geometryBbox = leaf._geometry.getBoundingBox();
-                        geometryBbox.transformMat4(bbTmp, worldMatrix);
-                        bbox.expandByBoundingBox(bbTmp);
-                    }
-                }
-            }
-        },
 
         _binExecutor: function(bin, func, renderingMask) {
             var stateList = bin._stateGraphList.getArray();
@@ -115,22 +149,7 @@ utils.createPrototypeObject(
                 this._binExecutor(bin, func, renderingMask);
             }
 
-            this._binExecutor(bin, func, renderingMask);
-        },
-
-        _computeBoundSceneForShadow: function(boundingBox) {
-            var bins = this._bins.getMap();
-            var binsKeys = this._bins.getKeys();
-            var binsKeysLength = binsKeys.getLength();
-            var binsKeysArray = binsKeys.getArray();
-
-            for (var i = 0; i < binsKeysLength; i++) {
-                var keyBin = binsKeysArray[i];
-                var bin = bins[keyBin];
-                this._computeBoundingBoxPerBin(boundingBox, bin, 0x1);
-            }
-
-            this._computeBoundingBoxPerBin(boundingBox, this, 0x1);
+            this._binExecutor(this, func, renderingMask);
         },
 
         _aimShadowCastingCamera: function(shadowMap, bbox) {
@@ -230,136 +249,153 @@ utils.createPrototypeObject(
             mat4.copy(camera.getViewMatrix(), shadowMap._viewMatrix);
         },
 
-        _distance: function(coord, matrix) {
-            return -(
-                coord[0] * matrix[2] +
-                coord[1] * matrix[6] +
-                coord[2] * matrix[10] +
-                matrix[14]
-            );
-        },
-
-        _cullShadowCasting: function(shadowMap, bbox, renderingMask) {
-            shadowMap._emptyCasterScene = false;
-            this._aimShadowCastingCamera(shadowMap, bbox);
-
-            if (shadowMap._emptyCasterScene) {
-                // nothing to draw, tell receiver to do early out
-                // ie: in shader, no texfetch
-                shadowMap.markSceneAsNoShadow();
-                // Early out, no need to traverse scene either
-                return;
-            }
-
-            // TO finalize:
-            // in classic execution with traversal
-            // first we cull geometry outside the frustrum
-            // see CullCallback in ShadowMap
-            var frustum = new Polytope();
-            var viewMatrix = shadowMap.getCamera().getViewMatrix();
-            mat4.getFrustumPlanes(
-                frustum.getPlanes(),
-                shadowMap.getCamera().getProjectionMatrix(),
-                viewMatrix,
-                false
-            );
-            var boundingSphereWorld = new BoundingSphere();
-            var boundingBoxWorld = new BoundingBox();
-            var renderLeafList = [];
+        _cullShadowCasting: (function() {
+            var modelViewMatrix = [mat4.create(), mat4.create()];
             var lookVector = vec3.create();
-            vec3.set(lookVector, -viewMatrix[2], -viewMatrix[6], -viewMatrix[10]);
-            var farBits =
-                (lookVector[0] >= 0 ? 1 : 0) |
-                (lookVector[1] >= 0 ? 2 : 0) |
-                (lookVector[2] >= 0 ? 4 : 0);
-            var nearBits = ~farBits & 7;
-            var nearVec = vec3.create();
-            var farVec = vec3.create();
-            var computedNear = Number.POSITIVE_INFINITY;
-            var computedFar = Number.NEGATIVE_INFINITY;
-            var distance = this._distance;
-            var cullShadowMapLeaf = function(leaf) {
-                var boundingSphereLeaf = leaf.getBound();
-                var worldMatrix = leaf._model;
-                boundingSphereLeaf.transformMat4(boundingSphereWorld, worldMatrix);
-                var culled = frustum.containsBoundingSphere(boundingSphereWorld);
-                if (culled) return;
 
-                var boundingBox = leaf.getBoundingBox();
-                boundingBox.transformMat4(boundingBoxWorld, worldMatrix);
-
-                boundingBoxWorld.corner(nearBits, nearVec);
-                boundingBoxWorld.corner(farBits, farVec);
-
-                var dNear = distance(nearVec, viewMatrix);
-                var dFar = distance(farVec, viewMatrix);
-
-                if (dNear > dFar) {
-                    var tmp = dNear;
-                    dNear = dFar;
-                    dFar = tmp;
+            return function(state, previousRenderLeaf, shadowMap, bbox, renderingMask) {
+                shadowMap._emptyCasterScene = false;
+                this._aimShadowCastingCamera(shadowMap, bbox);
+                var previous = previousRenderLeaf;
+                if (shadowMap._emptyCasterScene) {
+                    // nothing to draw, tell receiver to do early out
+                    // ie: in shader, no texfetch
+                    shadowMap.markSceneAsNoShadow();
+                    // Early out, no need to traverse scene either
+                    return previous;
                 }
 
-                if (dFar < 0.0) {
-                    // whole object behind the eye point so discard
-                    return;
+                var cullShadowMapLeafContext = this._cullShadowMapLeafContext;
+
+                // TO finalize:
+                // in classic execution with traversal
+                // first we cull geometry outside the frustrum
+                // see CullCallback in ShadowMap
+                cullShadowMapLeafContext.frustum.setupMask(4);
+                var viewMatrix = shadowMap.getCamera().getViewMatrix();
+                mat4.getFrustumPlanes(
+                    cullShadowMapLeafContext.frustum.getPlanes(),
+                    shadowMap.getCamera().getProjectionMatrix(),
+                    viewMatrix,
+                    false
+                );
+                cullShadowMapLeafContext.viewMatrix = viewMatrix;
+                cullShadowMapLeafContext.renderLeafList.length = 0;
+                vec3.set(lookVector, -viewMatrix[2], -viewMatrix[6], -viewMatrix[10]);
+                cullShadowMapLeafContext.farBits =
+                    (lookVector[0] >= 0 ? 1 : 0) |
+                    (lookVector[1] >= 0 ? 2 : 0) |
+                    (lookVector[2] >= 0 ? 4 : 0);
+                cullShadowMapLeafContext.nearBits = ~cullShadowMapLeafContext.farBits & 7;
+                cullShadowMapLeafContext.computedNear = Number.POSITIVE_INFINITY;
+                cullShadowMapLeafContext.computedFar = Number.NEGATIVE_INFINITY;
+
+                this._binsExecutor(this._cullShadowMapLeaf, renderingMask);
+
+                if (
+                    cullShadowMapLeafContext.computedNear === Number.POSITIVE_INFINITY &&
+                    cullShadowMapLeafContext.computedFar === Number.NEGATIVE_INFINITY
+                ) {
+                    shadowMap.markSceneAsNoShadow();
+                    return previous;
                 }
 
-                if (dNear < computedNear) computedNear = dNear;
-                if (dFar > computedFar) computedFar = dFar;
+                shadowMap.setLightFrustum(
+                    cullShadowMapLeafContext.frustum,
+                    cullShadowMapLeafContext.computedNear,
+                    cullShadowMapLeafContext.computedFar
+                );
 
-                renderLeafList.push(leaf);
+                // make sure no negative near
+                shadowMap.nearFarBounding();
+
+                // Here culling is done, we do have near/far.
+                // and cull/non-culled info
+                // if we wanted a tighter frustum.
+                shadowMap.frameShadowCastingFrustum(0.005); // default near far ratio of cullvisitor
+
+                var insertStateSetPosition = getInsertPosition(state, previous);
+
+                var camera = shadowMap.getCamera();
+
+                var cameraStateSet = camera.getStateSet();
+                // transform stateSet of camera to override
+                var attributePair = cameraStateSet.getAttributePair('Viewport');
+                if (!(attributePair.getValue() & StateAttribute.OVERRIDE)) {
+                    cameraStateSet.setAttributeAndModes(
+                        cameraStateSet.getAttribute('Viewport'),
+                        StateAttribute.OVERRIDE
+                    );
+                    if (cameraStateSet.getAttribute('Scissor')) {
+                        cameraStateSet.setAttributeAndModes(
+                            cameraStateSet.getAttribute('Scissor'),
+                            StateAttribute.OVERRIDE
+                        );
+                    }
+                }
+
+                // cast geometries into depth shadow map
+                state.insertStateSet(insertStateSetPosition, cameraStateSet);
+                state.insertStateSet(insertStateSetPosition + 1, shadowMap._casterStateSet);
+
+                RenderStage.prototype.applyCamera(state, camera);
+                var clearMask = camera.getClearMask();
+                if (clearMask !== 0x0) {
+                    if (clearMask & Camera.COLOR_BUFFER_BIT) {
+                        state.clearColor(camera.getClearColor());
+                    }
+                    if (clearMask & Camera.DEPTH_BUFFER_BIT) {
+                        state.depthMask(true);
+                        state.clearDepth(camera.getClearDepth());
+                    }
+                    state.clear(clearMask);
+                }
+
+                var projectionMatrix = shadowMap.getCamera().getProjectionMatrix();
+                CullVisitor.prototype.clampProjectionMatrix.call(
+                    null,
+                    projectionMatrix,
+                    cullShadowMapLeafContext.computedNear,
+                    cullShadowMapLeafContext.computedFar,
+                    shadowMap.getCamera().getNearFarRatio()
+                );
+
+                var renderLeafList = cullShadowMapLeafContext.renderLeafList;
+                for (var i = 0; i < renderLeafList.length; i++) {
+                    var projection = renderLeafList[i]._projection;
+                    var view = renderLeafList[i]._view;
+                    var modelView = renderLeafList[i]._modelView;
+                    var model = renderLeafList[i]._model;
+
+                    renderLeafList[i]._view = viewMatrix;
+                    renderLeafList[i]._projection = projectionMatrix;
+                    var m = modelViewMatrix[i % 2];
+                    mat4.mul(m, viewMatrix, model);
+                    renderLeafList[i]._modelView = m;
+
+                    renderLeafList[i].render(state, previous);
+                    previous = renderLeafList[i];
+
+                    renderLeafList[i]._projection = projection;
+                    renderLeafList[i]._view = view;
+                    renderLeafList[i]._modelView = modelView;
+                }
+
+                state.removeStateSet(insertStateSetPosition + 1);
+                state.removeStateSet(insertStateSetPosition);
+
+                shadowMap._needRedraw = false;
+
+                return previous;
             };
+        })(),
 
-            this._binsExecutor(cullShadowMapLeaf, renderingMask);
-
-            ///////////////////// STOP HERE
-            if (computedNear === Number.POSITIVE_INFINITY && computedFar === Number.NEGATIVE_INFINITY) {
-                this._shadowTechnique.markSceneAsNoShadow();
-            }
-
-            // get renderer to make the cull program
-            // record the traversal mask on entry so we can reapply it later.
-            var traversalMask = cullVisitor.getTraversalMask();
-
-            cullVisitor.setTraversalMask(shadowMap._castsShadowDrawTraversalMask);
-
-            // cast geometries into depth shadow map
-            cullVisitor.pushStateSet(shadowMap._casterStateSet);
-
-            shadowMap._cameraShadow.setEnableFrustumCulling(true);
-            shadowMap._cameraShadow.setComputeNearFar(true);
-
-            if (shadowMap._debug) {
-                shadowMap._debugNode.accept(cullVisitor);
-            }
-
-            // do RTT from the camera traversal mimicking light pos/orient
-            shadowMap._cameraShadow.accept(cullVisitor);
-
-            // make sure no negative near
-            shadowMap.nearFarBounding();
-
-            // Here culling is done, we do have near/far.
-            // and cull/non-culled info
-            // if we wanted a tighter frustum.
-            shadowMap.frameShadowCastingFrustum(cullVisitor);
-
-            // disabling to prevent cullvisitor breaking
-            // the projection matrix by "clamping" it
-            shadowMap._cameraShadow.setComputeNearFar(false);
-
-            cullVisitor.popStateSet();
-
-            // re-apply the original traversal mask
-            cullVisitor.setTraversalMask(traversalMask);
-            shadowMap._needRedraw = false;
-        },
-        drawShadow: function() {
+        drawShadow: function(state, previousRenderLeaf) {
             var lt = this._shadows._shadowTechniques.length;
             var isDirty = false;
+            var previous = previousRenderLeaf;
             for (var i = 0; i < lt; i++) {
-                var shadowTechnique = this._shadowTechniques[i];
+                var shadowTechnique = this._shadows._shadowTechniques[i];
 
                 // dirty check for user playing with shadows inside update traverse
                 if (!shadowTechnique || !shadowTechnique.valid()) continue;
@@ -373,10 +409,13 @@ utils.createPrototypeObject(
                     isDirty = true;
                 }
             }
-            if (!isDirty) return;
+            if (!isDirty) return previous;
 
-            var boundingBox = new BoundingBox();
-            this._computeBoundSceneForShadow(boundingBox);
+            var boundingBox = this._computeSceneBoundingBoxContext.bbox;
+            this._computeSceneBoundingBoxContext.bboxTmp.init();
+            boundingBox.init();
+            this._binsExecutor(this._computeSceneBoundingBox, this._castsShadowDrawTraversalMask);
+
             var hasCastingScene = boundingBox.valid();
             if (!hasCastingScene) {
                 // no shadow but still may need to clear
@@ -386,7 +425,7 @@ utils.createPrototypeObject(
                     shadowTechnique = this._shadows._shadowTechniques[i];
                     shadowTechnique.markSceneAsNoShadow();
                 }
-                return;
+                return previous;
             }
 
             // cull Casters
@@ -394,20 +433,24 @@ utils.createPrototypeObject(
                 shadowTechnique = this._shadows._shadowTechniques[i];
                 if (shadowTechnique.isContinuousUpdate() || shadowTechnique.needRedraw()) {
                     shadowTechnique.updateShadowTechnique();
-                    this._cullShadowCasting(
+                    previous = this._cullShadowCasting(
+                        state,
+                        previous,
                         shadowTechnique,
                         boundingBox,
-                        shadowTechnique._castsShadowDrawTraversalMask
+                        this._castsShadowDrawTraversalMask
                     );
                 }
             }
+            return previous;
         },
 
         draw: function(state, previousRenderLeaf, renderingMask) {
+            var previousLeaf = previousRenderLeaf;
             if (this._shadows) {
-                this.drawShadow();
+                previousLeaf = this.drawShadow(state, previousLeaf);
             }
-            var previousLeaf = this.drawPreRenderStages(state, previousRenderLeaf, renderingMask);
+            previousLeaf = this.drawPreRenderStages(state, previousLeaf, renderingMask);
             previousLeaf = this.drawImplementation(state, previousLeaf, renderingMask);
             previousLeaf = this.drawPostRenderStages(state, previousLeaf, renderingMask);
             return previousLeaf;
@@ -421,7 +464,9 @@ utils.createPrototypeObject(
                 renderingMask
             );
         }
-    })
+    }),
+    'osg',
+    'RenderStageCustom'
 );
 var renderStageInstance = new RenderStageCustom();
 
