@@ -14,6 +14,7 @@ import {vec3, vec4, mat4} from 'osg/glMatrix';
 import osgShader from 'osgShader/osgShader';
 import DisplayGraph from 'osgUtil/DisplayGraph';
 import notify from 'osg/notify';
+import TransformComponent from 'osgViewer/TransformComponent';
 
 var ComponentInstance = 0;
 
@@ -104,6 +105,7 @@ var MatrixTransformComponent = function() {
 MatrixTransformComponent.Component = ComponentInstance++;
 MatrixTransformComponent.DIRTY_LIST = 2;
 MatrixTransformComponent.DIRTY = 1;
+
 MatrixTransformComponent.prototype = {
     reset: function() {
         this._local = [];
@@ -128,6 +130,7 @@ MatrixTransformComponent.prototype = {
         this._dirtyByDepthListCount = [];
 
         this._traverseId = [];
+        this._traverseNextIndexIfSkipped = [];
         this._traverseIdCount = 0;
         this._accessDirty = [];
 
@@ -155,6 +158,7 @@ MatrixTransformComponent.prototype = {
 
         this._traverseId.push(0);
         this._accessDirty.push(0);
+        this._traverseNextIndexIfSkipped.push(0);
 
         return id;
     },
@@ -196,8 +200,13 @@ MatrixTransformComponent.prototype = {
         this._traverseId[this._traverseIdCount++] = id;
         let children = this._children[id];
         for (let i = 0; i < children.length; i++) {
-            this.sortTraverse(children[i]);
+            this._sortTraverse(children[i]);
         }
+        // for (let i = 0; i < children.length - 1; i++) {
+        //     let childId = children[i];
+        //     let nextId = children[i + 1];
+        //     this._traverseNextId[childId] = nextId;
+        // }
     },
 
     _sort: function() {
@@ -206,6 +215,50 @@ MatrixTransformComponent.prototype = {
             if (this._parent[i] === -1) {
                 this._sortTraverse(i);
             }
+        }
+    },
+
+    _sortTraverse2: function() {
+        let stack = [];
+        let idToIndex = [];
+        this._traverseIdCount = 0;
+
+        stack.push(0);
+        // 0 is like invalid and there is nothing to jump
+        idToIndex[0] = 0;
+
+        for (let i = this._children[1].length - 1; i >= 0; i--) {
+            let childId = this._children[1][i];
+            stack.push(childId);
+        }
+
+        while (stack.length > 1) {
+            let id = stack.pop();
+
+            let index = this._traverseIdCount;
+
+            this._traverseId[index] = id;
+            // keep where the id is in the traverseId array
+            idToIndex[id] = index;
+
+            // id in the stack is the next id to jump if skip current id
+            // becauset the id is not yet in the traverseId array we store the id
+            // and will replace it when finish to fill the array
+            this._traverseNextIndexIfSkipped[index] = stack[stack.length - 1];
+
+            this._traverseIdCount++;
+
+            let children = this._children[id];
+            for (let i = children.length - 1; i >= 0; i--) {
+                let childId = children[i];
+                stack.push(childId);
+            }
+        }
+
+        for (let i = 0; i < this._traverseIdCount; i++) {
+            let id = this._traverseNextIndexIfSkipped[i];
+            let index = idToIndex[id];
+            this._traverseNextIndexIfSkipped[i] = index;
         }
     },
 
@@ -288,15 +341,17 @@ MatrixTransformComponent.prototype = {
             var id = this._traverseId[i];
 
             ///////////////////////////
-            Need to generate node to go if skipped
+            //Need to generate node to go if skipped
             if (this._accessDirty[id]) {
-                
             }
         }
     },
 
     update: function() {
-        if (this._needSort) this._sort();
+        if (this._needSort) {
+            //this._sort();
+            this._sortTraverse2();
+        }
         //this._createDirtyList();
 
         // recompute only the parent dirty
