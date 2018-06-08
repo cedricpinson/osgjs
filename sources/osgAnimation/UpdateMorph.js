@@ -259,6 +259,13 @@ utils.createPrototypeObject(
             }
         },
 
+        reset: function() {
+            var targets = this._targets;
+            for (var i = 0, nbTarget = targets.length; i < nbTarget; ++i) {
+                targets[i].value = targets[i].defaultValue;
+            }
+        },
+
         update: function(node /*, nv*/) {
             if (!this.isInitialized()) this.init(node);
 

@@ -10,6 +10,8 @@ import Interpolator from 'osgAnimation/interpolator';
 import CollectAnimationUpdateCallbackVisitor from 'osgAnimation/CollectAnimationUpdateCallbackVisitor';
 import Target from 'osgAnimation/target';
 import UpdateMorph from 'osgAnimation/UpdateMorph';
+import UpdateBone from 'osgAnimation/UpdateBone';
+import UpdateMatrixTransform from 'osgAnimation/UpdateMatrixTransform';
 
 var Float = {
     lerp: function(a, b, t) {
@@ -415,33 +417,33 @@ utils.createPrototypeObject(
             var uniqueTargetName;
 
             for (var keyAnimation in this._animationsUpdateCallback) {
-                var animationCallback = this._animationsUpdateCallback[keyAnimation];
+                var animCb = this._animationsUpdateCallback[keyAnimation];
 
-                // handle UpdateBone and UpdateMatrixTransform but not stateSet
-                if (
-                    animationCallback.getStackedTransforms &&
-                    animationCallback.getStackedTransforms().length
-                ) {
-                    this._animationsUpdateCallbackArray.push(animationCallback);
+                if (animCb instanceof UpdateMatrixTransform || animCb instanceof UpdateBone) {
+                    var stackedTransforms = animCb.getStackedTransforms();
+                    var numStacked = stackedTransforms.length;
+                    if (!numStacked) continue;
 
-                    var stackedTransforms = animationCallback.getStackedTransforms();
-                    for (var j = 0, nj = stackedTransforms.length; j < nj; j++) {
+                    this._animationsUpdateCallbackArray.push(animCb);
+
+                    for (var j = 0; j < numStacked; j++) {
                         var stackedTransform = stackedTransforms[j];
                         target = stackedTransform.getTarget();
                         name = stackedTransform.getName();
-                        uniqueTargetName = animationCallback.getName() + '.' + name;
+                        uniqueTargetName = animCb.getName() + '.' + name;
 
                         registerTarget(uniqueTargetName, target, name);
                     }
-                } else if (animationCallback instanceof UpdateMorph) {
-                    for (
-                        var t = 0, numTarget = animationCallback.getNumTarget();
-                        t < numTarget;
-                        t++
-                    ) {
-                        name = animationCallback.getTargetName(t);
+                } else if (animCb instanceof UpdateMorph) {
+                    var numTarget = animCb.getNumTarget();
+                    if (!numTarget) continue;
+
+                    this._animationsUpdateCallbackArray.push(animCb);
+
+                    for (var t = 0; t < numTarget; t++) {
+                        name = animCb.getTargetName(t);
                         uniqueTargetName = name + '.' + t;
-                        target = animationCallback.getTarget(t);
+                        target = animCb.getTarget(t);
 
                         registerTarget(uniqueTargetName, target, name);
                     }
@@ -619,18 +621,17 @@ utils.createPrototypeObject(
             }
         },
 
-        resetAllStackedTransforms: function() {
+        resetUpdateCallbacks: function() {
             var anims = this._animationsUpdateCallbackArray;
             for (var i = 0, nbAnims = anims.length; i < nbAnims; i++) {
-                var stacked = anims[i].getStackedTransforms();
-                for (var j = 0, nbStacked = stacked.length; j < nbStacked; j++) {
-                    stacked[j].resetToDefaultValue();
-                }
-
-                // computeChannels is not mandatory here as the following frame will call
-                // this function anyway
-                anims[i].computeChannels();
+                anims[i].reset();
             }
+        },
+
+        resetAllStackedTransforms: function() {
+            // resetAllStackedTransforms used to reset stacked only (not morph target)
+            notify.warn('Uses resetUpdateCallback instead');
+            this.resetUpdateCallbacks();
         },
 
         setAnimationLerpEndStart: function(anim, lerpDuration) {
