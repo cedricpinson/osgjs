@@ -44,6 +44,17 @@ utils.createPrototypeObject(
             }
         },
 
+        reset: function() {
+            var stacked = this._stackedTransforms;
+            for (var i = 0, nbStacked = stacked.length; i < nbStacked; i++) {
+                stacked[i].resetToDefaultValue();
+            }
+
+            // computeChannels is not mandatory here as the following frame will call
+            // this function anyway
+            this.computeChannels();
+        },
+
         update: function(node /*, nv */) {
             mat4.copy(node.getMatrix(), this._matrix);
             if (this._dirty) {
