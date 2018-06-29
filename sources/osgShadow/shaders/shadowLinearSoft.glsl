@@ -1,5 +1,4 @@
 #pragma include "floatFromTex.glsl"
-#pragma include "rand.glsl"
 
 // simulation of texture2Dshadow glsl call on HW
 // http://codeflow.org/entries/2013/feb/15/soft-shadow-mapping/
