@@ -145,6 +145,8 @@ var ComposerPostProcess = function() {
 
     this._firstTexture = '';
 
+    this._offScreen = false;
+
     var stateSet = this.getOrCreateStateSet();
     stateSet.setAttributeAndModes(new Depth(Depth.DISABLE));
     stateSet.setAttributeAndModes(new CullFace(CullFace.BACK));
@@ -191,6 +193,10 @@ ComposerPostProcess.FragmentShader = [
 utils.createPrototypeObject(
     ComposerPostProcess,
     utils.objectInherit(Node.prototype, {
+        setOffscreen: function(offscreen) {
+            this._offScreen = offscreen;
+        },
+
         clear: function() {
             this._textures = {};
             this._internalPasses.length = 0;
@@ -604,7 +610,7 @@ utils.createPrototypeObject(
             }
 
             var outputTexture = undefined;
-            if (index !== passes.length - 1) {
+            if (index !== passes.length - 1 || this._offScreen) {
                 var outputKey = this._textures[passName].key;
                 outputTexture = this._texturePool[outputKey].texture;
             }
