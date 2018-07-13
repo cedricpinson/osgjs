@@ -129,7 +129,7 @@ WebGLCaps.prototype = {
         // order is important
         // to allow webgl extensions filtering
         this.initPlatformSupport();
-        this.initBugDB();
+        this.initBugDB(gl);
 
         this.initContextDependant(gl);
 
@@ -165,7 +165,7 @@ WebGLCaps.prototype = {
     },
 
     // inevitable bugs per platform (browser/OS/GPU)
-    initBugDB: function() {
+    initBugDB: function(gl) {
         var p = this._webGLPlatforms;
         var ext = this._webGLParameters;
 
@@ -177,6 +177,45 @@ WebGLCaps.prototype = {
                 this._bugsDB['OES_standard_derivatives'] = true;
             }
         }
+
+        if (gl.getExtension('EXT_shader_texture_lod')) {
+            // https://forums.imgtec.com/t/texturecubelod-is-removed-after-version-140/2260
+            var test = {
+                type: 'FRAGMENT_SHADER',
+                text: [
+                    '#version 100',
+                    '#extension GL_EXT_shader_texture_lod : require',
+                    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+                    '  precision highp float;',
+                    '#else',
+                    ' precision mediump float;',
+                    '#endif',
+                    'uniform samplerCube uT0;',
+                    'varying vec3 vC;',
+                    'void main(void) {',
+                    '  gl_FragColor = textureCubeLodEXT(uT0, vC, 1.0);',
+                    '}'
+                ].join('\n')
+            };
+            var hasSupport = this.checkShader(gl, test.type, test.text);
+            if (!hasSupport) {
+                this._bugsDB['EXT_shader_texture_lod'] = true;
+            }
+        }
+    },
+
+    checkShader: function(gl, t, text) {
+        var type = t;
+        if (typeof type === 'string') type = gl[t];
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, text);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
+            notify.warn(gl.getShaderInfoLog(shader));
+            return false;
+        }
+        return true;
     },
 
     initPlatformSupport: function() {
