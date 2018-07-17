@@ -153,27 +153,24 @@ utils.createPrototypeObject(
             }
         },
 
-        compile: function(gl, errorCallback) {
+        compile: function(gl) {
             if (!this._gl) this.setGraphicContext(gl);
             this.shader = gl.createShader(this.type);
-
-            var shaderText = this.text;
-            gl.shaderSource(this.shader, shaderText);
+            gl.shaderSource(this.shader, this.text);
             gl.compileShader(this.shader);
+        },
+        getCompilationResult: function(gl, errorCallback) {
             if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
                 var err = gl.getShaderInfoLog(this.shader);
-
-                this.processErrors(err, shaderText);
-
-                var tmpText = shaderText;
-                var splittedText = tmpText.split('\n');
+                this.processErrors(err, this.text);
+                var splittedText = this.text.split('\n');
                 var newText = '\n';
                 for (var i = 0, l = splittedText.length; i < l; ++i) {
                     newText += i + ' ' + splittedText[i] + '\n';
                 }
                 // still logging whole source but folded
                 notify.errorFold("can't compile shader", newText);
-                if (errorCallback) errorCallback(this.shaderText, newText, err);
+                if (errorCallback) errorCallback(this.text, newText, err);
 
                 return false;
             }
