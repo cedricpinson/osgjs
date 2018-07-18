@@ -251,6 +251,9 @@ utils.createPrototypeObject(
 
             return function(dx, dy) {
                 var prevPitch = Math.atan(-this._rotation[6] / this._rotation[5]);
+                if (isNaN(prevPitch)) {
+                    prevPitch = 0.0;
+                }
                 var pitch = this._computePitch(prevPitch, dy);
 
                 var deltaYaw = dx / 10.0;
