@@ -137,7 +137,7 @@ utils.createPrototypeObject(
             renderStageOrder.order = order;
             renderStageOrder.renderStage = rs;
             if (i < this._preRenderList.length) {
-                this._preRenderList = this._preRenderList.splice(i, 0, renderStageOrder);
+                this._preRenderList.splice(i, 0, renderStageOrder);
             } else {
                 this._preRenderList.push(renderStageOrder);
             }
@@ -155,7 +155,7 @@ utils.createPrototypeObject(
             renderStageOrder.order = order;
             renderStageOrder.renderStage = rs;
             if (i < this._postRenderList.length) {
-                this._postRenderList = this._postRenderList.splice(i, 0, renderStageOrder);
+                this._postRenderList.splice(i, 0, renderStageOrder);
             } else {
                 this._postRenderList.push(renderStageOrder);
             }
