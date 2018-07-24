@@ -248,8 +248,10 @@ utils.createPrototypeStateAttribute(
                 this.invalidate();
                 this._vertex.setText(vertexShaderText);
                 this._fragment.setText(fragmentShaderText);
+                this._program = null;
                 this._spectorOnCompiled = onCompiled;
                 this._spectorOnError = onError;
+                this._compileClean = undefined;
             },
 
             _onErrorToSpector: function(errLink) {
