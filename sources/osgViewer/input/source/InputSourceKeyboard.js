@@ -44,20 +44,8 @@ utils.createPrototypeObject(
                 return true;
             }
 
-            if (!nativeEvent.key || typeof nativeEvent.key !== 'string') {
-                // Throw Errors when nativeEvent key undefined.
-                // so that we can investigate those errors.
-                var str = '';
-                for (var k in nativeEvent) {
-                    if (k !== undefined && nativeEvent[k] !== undefined) {
-                        str += k + ':' + nativeEvent[k] + ',\n';
-                    }
-                }
-                var error = new Error('Invalid keyboard event: ' + str);
-                throw error;
-                return false;
-            }
-            if (nativeEvent.key.toLowerCase() !== parsedEvent.action) {
+            // IE11 has no nativeEvent.key when hitting "modifer" (shift)
+            if (nativeEvent.key && nativeEvent.key.toLowerCase() !== parsedEvent.action) {
                 if (nativeEvent.code.toLowerCase() !== parsedEvent.action) {
                     return false;
                 }
