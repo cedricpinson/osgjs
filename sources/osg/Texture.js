@@ -809,8 +809,9 @@ utils.createPrototypeStateAttribute(
                     // image update like video
                     if (this._image !== undefined && this._image.isDirty()) {
                         this.applyImage(gl);
+                        this.dirtyMipmap();
                     }
-                    // then we must regenerate the mipmaps explicitely.
+                    // then we must regenerate the mipmaps explicitly.
                     // In all other cases, don't set this flag because it can be costly
                     if (this.isDirtyMipmap()) {
                         this.generateMipmap(gl, this._textureTarget);
