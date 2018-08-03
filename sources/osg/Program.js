@@ -307,7 +307,6 @@ utils.createPrototypeStateAttribute(
             },
 
             _glShaderCompilationResult: function(gl, shader) {
-                if (shader.shader) return true;
                 var success = shader.getCompilationResult(gl, errorCallback);
                 if (shaderStats) {
                     if (this._asyncCompilation === undefined) glSync(gl);
