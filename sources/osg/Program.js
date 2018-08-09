@@ -233,6 +233,7 @@ utils.createPrototypeStateAttribute(
                 this._foreignUniforms = undefined;
                 this._trackAttributes = undefined;
 
+                this._compileClean = undefined;
                 this._program = undefined;
             },
 
