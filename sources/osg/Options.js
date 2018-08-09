@@ -71,7 +71,7 @@ Options.getOptionsURL = function() {
                 var divLogger = document.createElement('div');
                 var codeElement = document.createElement('pre');
                 document.addEventListener('DOMContentLoaded', function() {
-                    document.body.appendChild(divLogger);
+                    document.body.insertBefore(divLogger, document.body.firstChild);
                     divLogger.appendChild(codeElement);
                 });
                 var logFunc = function(str) {
@@ -83,10 +83,12 @@ Options.getOptionsURL = function() {
                 divLogger.style.zIndex = '10000';
                 divLogger.style.height = '100%';
                 divLogger.style.maxWidth = '600px';
+                divLogger.style.pointerEvents = 'none';
                 codeElement.style.overflow = 'scroll';
                 codeElement.style.width = '105%';
                 codeElement.style.height = '100%';
                 codeElement.style.fontSize = '10px';
+                codeElement.style.pointerEvents = 'none';
 
                 ['log', 'error', 'warn', 'info', 'debug'].forEach(function(value) {
                     window.console[value] = logFunc;
