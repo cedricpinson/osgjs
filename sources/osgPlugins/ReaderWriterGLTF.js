@@ -739,7 +739,8 @@ ReaderWriterGLTF.prototype = {
                     ReaderWriterGLTF.EMISSIVE_TEXTURE_UNIT,
                     osgjsTexture
                 );
-            } else if (material.emissiveFactor) {
+            }
+            if (material.emissiveFactor) {
                 stateSet.addUniform(
                     Uniform.createFloat3(material.emissiveFactor, 'uEmissiveFactor')
                 );
