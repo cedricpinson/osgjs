@@ -91,11 +91,28 @@ View.prototype = {
     // http://tripleodeon.com/2011/12/first-understand-your-screen/
     // touchy is touchy: many things to know
     // http://webglfundamentals.org/webgl/lessons/webgl-anti-patterns.html
+    // ResizeObserver allows to handle that without polling
+    // https://developers.google.com/web/updates/2016/10/resizeobserver
     computeCanvasSize: (function() {
+        var clientWidth;
+        var clientHeight;
+        var sizeObserver;
         return function(canvas) {
-            var clientWidth, clientHeight;
-            clientWidth = canvas.clientWidth;
-            clientHeight = canvas.clientHeight;
+            if (!sizeObserver) {
+                if (window.ResizeObserver) {
+                    sizeObserver = new ResizeObserver(function() {
+                        clientWidth = canvas.clientWidth;
+                        clientHeight = canvas.clientHeight;
+                    });
+                    sizeObserver.observe(canvas);
+
+                    clientWidth = canvas.clientWidth;
+                    clientHeight = canvas.clientHeight;
+                } else {
+                    clientWidth = canvas.clientWidth;
+                    clientHeight = canvas.clientHeight;
+                }
+            }
 
             if (clientWidth < 1) clientWidth = 1;
             if (clientHeight < 1) clientHeight = 1;
