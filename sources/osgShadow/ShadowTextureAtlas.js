@@ -63,13 +63,13 @@ utils.createPrototypeStateAttribute(
 
         createUniforms: function(lightNumber, uniforms) {
             uniforms['ViewRight_' + lightNumber] = Uniform.createFloat4(
-                this.getUniformName(lightNumber, 'ViewRight')
+                this.getUniformName(lightNumber, 'viewRight')
             );
             uniforms['ViewUp_' + lightNumber] = Uniform.createFloat4(
-                this.getUniformName(lightNumber, 'ViewUp')
+                this.getUniformName(lightNumber, 'viewUp')
             );
             uniforms['ViewLook_' + lightNumber] = Uniform.createFloat4(
-                this.getUniformName(lightNumber, 'ViewLook')
+                this.getUniformName(lightNumber, 'viewLook')
             );
 
             uniforms['Projection_' + lightNumber] = Uniform.createFloat3(
