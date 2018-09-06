@@ -337,13 +337,21 @@ utils.createPrototypeStateAttribute(
                 var attachments = this._attachments;
 
                 // ?
-                if (attachments.length === 0 && !this._fbo) {
+                var nbAttachments = attachments.length;
+                if (nbAttachments === 0 && !this._fbo) {
                     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                     return;
                 }
 
+                var i = 0;
+
                 // each frame
                 if (!this.isDirty()) {
+                    for (i = 0; i < nbAttachments; ++i) {
+                        var tex = attachments[i].texture;
+                        if (tex) tex.apply(state);
+                    }
+
                     gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
                     if (notify.reportWebGLError === true) this.checkStatus();
                     return;
@@ -358,7 +366,7 @@ utils.createPrototypeStateAttribute(
                 var bufs = this._hasMRT ? this._buffers : undefined;
                 var hasRenderBuffer = false;
 
-                for (var i = 0, l = attachments.length; i < l; ++i) {
+                for (i = 0; i < nbAttachments; ++i) {
                     var attachment = attachments[i];
 
                     // render buffer
