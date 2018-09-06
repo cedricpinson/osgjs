@@ -359,7 +359,7 @@ utils.createPrototypeObject(
                     vec3.scale(dir, dir, this._limitZoomIn - newValue);
                     vec3.add(this._target, this._target, dir);
                 }
-
+                this._distance = newValue;
                 if (this._constrainZoom) {
                     this._distance = Math.max(
                         this._limitZoomIn,
