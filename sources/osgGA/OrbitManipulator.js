@@ -88,6 +88,11 @@ utils.createPrototypeObject(
             this._limitZoomIn = 1e-4;
             this._limitZoomOut = Infinity;
 
+            this._constrainYaw = false;
+            this._constrainPitch = false;
+            this._constrainYaw = false;
+            this._constrainZoom = false;
+
             // instance of controller
             var self = this;
 
@@ -109,16 +114,47 @@ utils.createPrototypeObject(
         },
         setLimitYawLeft: function(left) {
             this._limitYawLeft = left;
+            this._constrainYaw = true;
         },
         setLimitYawRight: function(right) {
             this._limitYawRight = right;
+            this._constrainYaw = true;
         },
         setLimitZoomOut: function(zoomOut) {
             this._limitZoomOut = zoomOut;
+            this._constrainZoom = true;
         },
         setLimitZoomIn: function(zoomIn) {
             this._limitZoomIn = zoomIn;
+            this._constrainZoom = true;
         },
+
+        setConstrainPitch: function(limit) {
+            this._constrainPitch = limit;
+            this._previousPitch = undefined;
+        },
+
+        isConstrainPitch: function() {
+            return this._constrainPitch;
+        },
+
+        setConstrainYaw: function(constrain) {
+            this._constrainYaw = constrain;
+            this._previousYaw = undefined;
+        },
+
+        isConstrainYaw: function() {
+            return this._constrainYaw;
+        },
+
+        setConstrainZoom: function(limit) {
+            this._constrainZoom = limit;
+        },
+
+        isConstrainZoom: function() {
+            return this._constrainZoom;
+        },
+
         setDelay: function(dt) {
             this._rotate.setDelay(dt);
             this._pan.setDelay(dt);
@@ -274,7 +310,7 @@ utils.createPrototypeObject(
             var left = this._limitYawLeft;
             var right = this._limitYawRight;
 
-            if (right !== Math.PI || left !== -Math.PI) {
+            if (this._constrainYaw) {
                 if (right < left) {
                     if (yaw > Math.PI) {
                         previousYaw -= TWO_PI;
@@ -324,10 +360,12 @@ utils.createPrototypeObject(
                     vec3.add(this._target, this._target, dir);
                 }
 
-                this._distance = Math.max(
-                    this._limitZoomIn,
-                    Math.min(this._limitZoomOut, newValue)
-                );
+                if (this._constrainZoom) {
+                    this._distance = Math.max(
+                        this._limitZoomIn,
+                        Math.min(this._limitZoomOut, newValue)
+                    );
+                }
             };
         })(),
 
