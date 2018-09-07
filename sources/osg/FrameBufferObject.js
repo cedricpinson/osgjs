@@ -349,7 +349,7 @@ utils.createPrototypeStateAttribute(
                 if (!this.isDirty()) {
                     for (i = 0; i < nbAttachments; ++i) {
                         var tex = attachments[i].texture;
-                        if (tex) tex.apply(state);
+                        if (tex && tex.isDirty()) state.applyTextureAttribute(1, tex);
                     }
 
                     gl.bindFramebuffer(gl.FRAMEBUFFER, this._fbo);
