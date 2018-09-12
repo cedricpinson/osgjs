@@ -67,7 +67,7 @@ void hemiLight(
         const in vec3 normal,
         const in vec3 eyeVector,
         const in float dotNL,
-        const in float eyeLightDir,
+        const in vec3 eyeLightDir,
 
         const in vec3 materialDiffuse,
         const in vec3 materialSpecular,
