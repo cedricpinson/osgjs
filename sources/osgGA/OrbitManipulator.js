@@ -42,6 +42,9 @@ var lowerOrEqual = function(val, limit) {
     return val < limit + 0.00001;
 };
 
+var MIN_ZOOM = 1e-4;
+var MAX_ZOOM = Infinity;
+
 /** @lends OrbitManipulator.prototype */
 utils.createPrototypeObject(
     OrbitManipulator,
@@ -85,8 +88,8 @@ utils.createPrototypeObject(
             this._limitYawLeft = -Math.PI;
             this._limitYawRight = -this._limitYawLeft;
 
-            this._limitZoomIn = 1e-4;
-            this._limitZoomOut = Infinity;
+            this._limitZoomIn = MIN_ZOOM;
+            this._limitZoomOut = MAX_ZOOM;
 
             this._constrainYaw = false;
             this._constrainPitch = false;
@@ -359,13 +362,10 @@ utils.createPrototypeObject(
                     vec3.scale(dir, dir, this._limitZoomIn - newValue);
                     vec3.add(this._target, this._target, dir);
                 }
-                this._distance = newValue;
-                if (this._constrainZoom) {
-                    this._distance = Math.max(
-                        this._limitZoomIn,
-                        Math.min(this._limitZoomOut, newValue)
-                    );
-                }
+
+                var min = this._constrainZoom ? this._limitZoomIn : MIN_ZOOM;
+                var max = this._constrainZoom ? this._limitZoomOut : MAX_ZOOM;
+                this._distance = Math.max(min, Math.min(max, newValue));
             };
         })(),
 
