@@ -22,9 +22,9 @@ ReaderWriterZIP.prototype = {
         var self = this;
         if (options && options.filesMap !== undefined) {
             // it comes  from drag'n drop
-            if (options.filesMap[url] !== undefined) {
+            if (options.filesMap.has(url) !== undefined) {
                 // Now url is a File
-                var file = options.filesMap[url];
+                var file = options.filesMap.get(url);
                 return this.readZipFile(file).then(function() {
                     if (!self._fileName) return P.reject(self);
                     // At this point we have the main file name and a Map containing all the resources
