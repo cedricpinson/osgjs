@@ -40,7 +40,7 @@ ReaderWriterZIP.prototype = {
         });
 
         return filePromise.then(function(zfile) {
-            self.readZipFile(zfile).then(function() {
+            return self.readZipFile(zfile).then(function() {
                 // At this point we have the main file name and a Map containing all the resources
                 return ReaderParser.readNodeURL(self._fileName, {
                     filesMap: self._filesMap
@@ -50,7 +50,7 @@ ReaderWriterZIP.prototype = {
     },
 
     readZipFile: function(fileOrBlob) {
-        fileHelper.unzip(fileOrBlob).then(
+        return fileHelper.unzip(fileOrBlob).then(
             function(filesMap) {
                 for (var fileName in filesMap) {
                     var extension = fileHelper.getExtension(fileName);
