@@ -945,7 +945,7 @@ ReaderWriterGLTF.prototype = {
 
         var result = this._filesMap[uri];
         if (result !== undefined) return result;
-        return fileHelper.requestURI(uri, options);
+        return fileHelper.requestResource(uri, options);
     }),
 
     readNodeURL: function(url, options) {
