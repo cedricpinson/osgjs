@@ -64,9 +64,7 @@ ReaderWriterZIP.prototype = {
                         break;
                     }
                 }
-
                 this._filesMap = filesMap;
-
             }.bind(this)
         );
     }
