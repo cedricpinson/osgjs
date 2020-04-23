@@ -6,7 +6,6 @@
 OSG.JS WebGL framework
 ----------------------------
 
-(http://osgjs.org/)
 
 OSGJS is a WebGL framework based on OpenSceneGraph concepts. It allows an individual to use an “OpenSceneGraph-like” toolbox to interact with WebGL via JavaScript, and provides facilities for exporting various assets to the osgjs format. The API is kept as similar to OpenSceneGraph as possible, providing a familiar environment to veterans of the library and introducing newcomers to a popular and heavily-scrutinzed set of interfaces
 
@@ -18,7 +17,6 @@ If you are interested in contributing, contact us on the osgjs gitter channel ( 
 Examples / Tutorials
 -----------------------
 - using osgjs with typescript http://marino.dk/mproject/ with sourcecode https://github.com/Crisium/mproject
-- examples http://osgjs.org/#examples
 - tutorials on codepen http://codepen.io/collection/CbvIg/
 
 
