@@ -945,7 +945,7 @@ ReaderWriterGLTF.prototype = {
 
         var result = this._filesMap[uri];
         if (result !== undefined) return result;
-        return fileHelper.requestURI(uri, options);
+        return fileHelper.requestResource(uri, options);
     }),
 
     readNodeURL: function(url, options) {
@@ -964,6 +964,9 @@ ReaderWriterGLTF.prototype = {
         this._localPath = index === -1 ? '' : url.substr(0, index + 1);
         // Else it is a usual XHR request
         return fileHelper.requestURI(url).then(function(file) {
+            if (typeof file === 'string') {
+                file = JSON.parse(file);
+            }
             return self.readJSON(file);
         });
     },
