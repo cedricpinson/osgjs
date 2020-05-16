@@ -1,4 +1,4 @@
-import pkg from 'json-loader!../package.json';
+import pkg from '../package.json';
 
 export default {
     name: pkg.name,

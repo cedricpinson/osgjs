@@ -42,7 +42,6 @@
     "grunt-webpack": "^3.0.2",
     "hammerjs": "^2.0.8",
     "jquery": "3.0.0",
-    "json-loader": "^0.5.4",
     "path": "^0.11.14",
     "raw-loader": "^0.5.1",
     "webpack": "^3.7.1",
