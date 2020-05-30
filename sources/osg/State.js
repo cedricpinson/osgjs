@@ -1133,11 +1133,9 @@ utils.createPrototypeObject(
             var _attributeArrayStack = this._attributeArray;
 
             var attributeKeys = program.getTrackAttributes().attributeKeys;
-
             if (attributeKeys.length > 0) {
                 for (var i = 0, l = attributeKeys.length; i < l; i++) {
-                    var key = attributeKeys[i];
-                    var index = this.typeMember[key];
+                    var index = utils.getIdFromTypeMember(attributeKeys[i]);
                     var attributeStack = _attributeArrayStack[index];
                     if (!attributeStack) {
                         continue;
@@ -1169,9 +1167,9 @@ utils.createPrototypeObject(
                 if (!unitTextureAttributeList) continue;
 
                 for (var i = 0, l = textureAttributeKeys.length; i < l; i++) {
-                    var key = textureAttributeKeys[i];
+                    var index = utils.getTextureIdFromTypeMember(textureAttributeKeys[i]);
 
-                    var attributeStack = unitTextureAttributeList[key];
+                    var attributeStack = unitTextureAttributeList[index];
                     if (!attributeStack) {
                         continue;
                     }
@@ -1180,7 +1178,7 @@ utils.createPrototypeObject(
                     if (!attribute.getOrCreateUniforms) {
                         continue;
                     }
-                    var uniformMap = attribute.getOrCreateUniforms();
+                    var uniformMap = attribute.getOrCreateUniforms(unit);
                     for (var keyUniform in uniformMap) {
                         activeUniformsList.push(uniformMap[keyUniform]);
                     }
@@ -1243,7 +1241,10 @@ utils.createPrototypeObject(
                     var hasStateSetUniformPair = stateset && stateset.uniforms[uniformName];
 
                     if (!uniformStack && !hasStateSetUniformPair) {
-                        if (programTrackUniformMap === undefined) {
+                        if (
+                            programTrackUniformMap === undefined ||
+                            programTrackUniformMap[uniformName] === undefined
+                        ) {
                             this._checkErrorUniform(uniformName);
                             continue;
                         }
